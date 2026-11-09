@@ -1,1 +1,466 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yams – Feuille de score</title>
+<style>
+  :root{
+    --bg:#f4f1ea; --paper:#ffffff; --ink:#22252b; --muted:#7a7f88;
+    --line:#d3d6db; --grey:#bfbfbf; --accent:#1f6feb; --accent-soft:#e3edff;
+    --hold:#e8590c; --hold-soft:#fff1e6; --ok:#2b8a3e; --zero:#c92a2a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 14px 40px;
+    display:grid;grid-template-columns:1fr;gap:18px}
+  @media(min-width:900px){.wrap{grid-template-columns:380px 1fr;align-items:start}}
+  h1{margin:0;font-size:22px;letter-spacing:.5px}
+  h1 span{color:var(--muted);font-weight:500;font-size:15px}
+  .card{background:var(--paper);border-radius:14px;padding:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08),0 6px 20px rgba(0,0,0,.05)}
+  .panel{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
+  .stack{display:flex;flex-direction:column;gap:14px}
+
+  .turn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .who{font-weight:800;font-size:19px}
+  .who.flash{animation:flash 1s}
+  @keyframes flash{0%{color:var(--accent);transform:scale(1.15)}100%{transform:scale(1)}}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+
+  .rolls{display:flex;gap:8px}
+  .pill{flex:1;text-align:center;padding:7px 4px;border-radius:999px;border:1.5px solid var(--line);
+    font-size:13px;font-weight:600;color:var(--muted);transition:.2s}
+  .pill.done{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pill.next{border-color:var(--accent);color:var(--accent)}
+
+  .dice{display:flex;justify-content:space-between;gap:8px;padding:6px 0}
+  .die{width:58px;height:58px;border-radius:12px;background:#fff;border:2px solid #cfd3d9;
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    padding:8px;cursor:pointer;position:relative;transition:transform .15s,border-color .15s,background .15s;
+    box-shadow:0 2px 0 #cfd3d9;user-select:none;-webkit-tap-highlight-color:transparent}
+  .die:hover{transform:translateY(-2px)}
+  .die.blank{background:#f1f3f5}
+  .die.blank::before{content:"?";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:24px;font-weight:800;color:#c4c9cf}
+  .auto .die.blank{cursor:default}
+  .auto .die.blank::before{content:""}
+  .die.locked{cursor:default}
+  .die.locked:hover{transform:none}
+  .die.held{border-color:var(--hold);background:var(--hold-soft);box-shadow:0 2px 0 var(--hold)}
+  .die.held::after{content:"GARDÉ";position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+    font-size:10px;font-weight:700;color:var(--hold);letter-spacing:.5px}
+  .die.shake{animation:shake .45s}
+  @keyframes shake{0%{transform:rotate(0)}20%{transform:rotate(-14deg) scale(.95)}40%{transform:rotate(12deg)}
+    60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}100%{transform:rotate(0)}}
+  .pip{width:10px;height:10px;border-radius:50%;background:var(--ink);align-self:center;justify-self:center}
+  .dice-gap{height:16px}
+  .manual .dice-gap{height:0}
+
+  .btns{display:flex;gap:8px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:none;padding:11px 14px;font-weight:700}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .primary{background:var(--accent);color:#fff;flex:1}
+  .confirm{background:var(--ok);color:#fff;flex:1}
+  .ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink);font-weight:600}
+  .hint{font-size:13.5px;color:var(--muted);min-height:38px;line-height:1.4}
+  .hint b{color:var(--ink)}
+  .manual .auto-only, .auto .manual-only{display:none !important}
+
+  table{width:100%;border-collapse:separate;border-spacing:3px;font-size:14px}
+  th{font-weight:600;color:#555;font-size:14px;padding:4px 2px;max-width:90px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  th.cur{color:var(--accent);font-weight:800}
+  td.lbl{font-weight:700;font-size:12.5px;padding:0 6px;white-space:nowrap;letter-spacing:.2px}
+  td.lbl .mini{display:inline-grid;grid-template-columns:repeat(3,4px);grid-template-rows:repeat(3,4px);gap:1px;
+    width:22px;height:22px;padding:2px;border-radius:4px;background:#ccc;vertical-align:middle;margin-left:6px;float:right}
+  td.lbl .mini i{width:4px;height:4px;border-radius:50%;background:#fff;display:block}
+  td.c{height:32px;min-width:48px;border:1px solid var(--line);border-radius:3px;text-align:center;
+    font-weight:700;font-size:15px;background:#fff;transition:background .12s}
+  td.c.cur{border-color:#9ec0f7}
+  td.c.can{cursor:pointer;color:#9aa3ad;font-weight:600;font-style:italic}
+  td.c.can:hover{background:var(--accent-soft)}
+  td.c.can.zero{color:#e0a0a0}
+  td.c.sel{background:var(--accent);color:#fff !important;font-style:normal;border-color:var(--accent)}
+  td.c.z{color:var(--zero)}
+  tr.tot td{background:var(--grey)}
+  tr.tot td.lbl{background:var(--grey);font-weight:800;border-radius:3px;padding:7px 6px}
+  tr.tot td.c{background:var(--grey);border-color:var(--grey)}
+  tr.score td.lbl{font-size:16px;font-weight:900}
+  tr.score td.c{height:40px;font-size:18px}
+  td.c.bonusok{color:var(--ok)}
+  .sheet-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .sheet-head small{color:var(--muted)}
+
+  .banner{display:none;background:#fff8db;border:1.5px solid #f2c94c;border-radius:12px;padding:12px;
+    text-align:center;font-weight:700}
+  .banner.show{display:block}
+
+  /* écran de départ */
+  .setup{position:fixed;inset:0;background:rgba(244,241,234,.97);display:none;align-items:flex-start;
+    justify-content:center;z-index:8;overflow:auto;padding:30px 14px}
+  .setup.show{display:flex}
+  .setup .card{max-width:460px;width:100%;display:flex;flex-direction:column;gap:16px}
+  .setup h2{margin:0;font-size:24px}
+  .setup h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mode{border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;
+    font-weight:400;display:flex;flex-direction:column;gap:4px}
+  .mode strong{font-size:15px}
+  .mode span{font-size:12.5px;color:var(--muted);line-height:1.35}
+  .mode.on{border-color:var(--accent);background:var(--accent-soft)}
+  .count{display:flex;gap:6px}
+  .count button{flex:1;padding:9px 0;background:#fff;border:2px solid var(--line);color:var(--ink)}
+  .count button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+  .names{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .names label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
+  .names input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--ink);font-weight:600;
+    padding:7px 9px;border:1px solid var(--line);border-radius:8px}
+  .names input:focus{outline:none;border-color:var(--accent)}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:9}
+  .modal.show{display:flex}
+  .modal .box{background:#fff;border-radius:14px;padding:18px;max-width:320px;width:90%}
+  .modal .box p{margin:0 0 14px}
+</style>
+</head>
+<body class="auto">
+
+<!-- Écran de départ -->
+<div class="setup" id="setup">
+  <div class="card">
+    <h2>🎲 Nouvelle partie de Yams</h2>
+    <div>
+      <h3>Mode de jeu</h3>
+      <div class="modes">
+        <button class="mode" data-mode="auto"><strong>Jeu automatique</strong>
+          <span>La page lance les dés. 3 lancers par tour, tu gardes les dés que tu veux.</span></button>
+        <button class="mode" data-mode="manual"><strong>Feuille de score</strong>
+          <span>Vous jouez avec de vrais dés. Tu indiques les 5 valeurs, la page calcule et note le score.</span></button>
+      </div>
+    </div>
+    <div>
+      <h3>Nombre de joueurs</h3>
+      <div class="count" id="count"></div>
+    </div>
+    <div>
+      <h3>Noms des joueurs</h3>
+      <div class="names" id="names"></div>
+    </div>
+    <div class="btns">
+      <button class="ghost" id="setupCancel">Reprendre la partie</button>
+      <button class="primary" id="start">Commencer la partie</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="card stack">
+      <div class="turn">
+        <h1>YAMS</h1>
+        <span class="tag" id="modeTag"></span>
+      </div>
+      <div class="who" id="who"></div>
+
+      <div class="rolls auto-only">
+        <div class="pill" id="p1">Lancer 1</div>
+        <div class="pill" id="p2">Lancer 2</div>
+        <div class="pill" id="p3">Lancer 3</div>
+      </div>
+
+      <div class="dice" id="dice"></div>
+      <div class="dice-gap"></div>
+
+      <div class="btns">
+        <button class="primary auto-only" id="roll">🎲 Lancer les dés</button>
+        <button class="ghost manual-only" id="clear" style="flex:1">Effacer les dés</button>
+        <button class="confirm" id="validate" disabled>✔ Valider</button>
+      </div>
+      <div class="hint" id="hint"></div>
+      <div class="banner" id="banner"></div>
+      <div class="btns">
+        <button class="ghost" id="newgame" style="flex:1">Nouvelle partie</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sheet-head">
+      <strong>Feuille de score</strong>
+      <small>Bonus +35 si total ≥ 63</small>
+    </div>
+    <table id="sheet"></table>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <p>Une partie est en cours. La remplacer par une nouvelle ? Les scores seront effacés.</p>
+    <div class="btns">
+      <button class="ghost" id="mNo" style="flex:1">Annuler</button>
+      <button class="primary" id="mYes">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAXP = 6;
+const UPPER = [
+  {id:'as', label:'AS', face:1},{id:'deux', label:'DEUX', face:2},{id:'trois', label:'TROIS', face:3},
+  {id:'quatre', label:'QUATRE', face:4},{id:'cinq', label:'CINQ', face:5},{id:'six', label:'SIX', face:6}
+];
+const LOWER = [
+  {id:'brelan', label:'BRELAN'},{id:'carre', label:'CARRÉ'},{id:'full', label:'FULL'},
+  {id:'ps', label:'PETITE SUITE'},{id:'gs', label:'GRANDE SUITE'},{id:'yams', label:"YAM'S"},
+  {id:'chance', label:'CHANCE'}
+];
+const ALL = [...UPPER, ...LOWER];
+const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const defNames = ()=>Array.from({length:MAXP},(_,i)=>`Joueur ${i+1}`);
+
+let S;
+function fresh(cfg){
+  return {started:false, mode:cfg.mode||'auto', nb:cfg.nb||2, names:cfg.names||defNames(),
+    cur:0, rolls:0, dice:[0,0,0,0,0], held:[false,false,false,false,false], sel:null,
+    scores:Array.from({length:MAXP},()=>({}))};
+}
+try{ S = JSON.parse(localStorage.getItem('yams-state-v2')) }catch(e){}
+if(!S || !S.scores) S = fresh({});
+function save(){ try{ localStorage.setItem('yams-state-v2', JSON.stringify(S)) }catch(e){} }
+const pname = p => (S.names[p]||'').trim() || `Joueur ${p+1}`;
+const esc = s => String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+/* ---------- calcul des combinaisons ---------- */
+function counts(d){ const c=[0,0,0,0,0,0,0]; d.forEach(v=>c[v]++); return c; }
+function sum(d){ return d.reduce((a,b)=>a+b,0); }
+function hasRun(c, len){
+  let run=0;
+  for(let v=1; v<=6; v++){ run = c[v] ? run+1 : 0; if(run>=len) return true; }
+  return false;
+}
+function scoreFor(id, d){
+  const c = counts(d), s = sum(d), mx = Math.max(...c.slice(1));
+  const u = UPPER.find(x=>x.id===id);
+  if(u) return c[u.face]*u.face;
+  switch(id){
+    case 'brelan': return mx>=3 ? s : 0;
+    case 'carre':  return mx>=4 ? s : 0;
+    case 'full':   return (c.includes(3) && c.includes(2)) ? 25 : 0;
+    case 'ps':     return hasRun(c,4) ? 30 : 0;
+    case 'gs':     return hasRun(c,5) ? 40 : 0;
+    case 'yams':   return mx===5 ? 50 : 0;
+    case 'chance': return s;
+  }
+  return 0;
+}
+function totals(p){
+  const sc = S.scores[p];
+  const upperFilled = UPPER.every(r=>sc[r.id]!=null);
+  const t = UPPER.reduce((a,r)=>a+(sc[r.id]||0),0);
+  const bonus = t>=63 ? 35 : (upperFilled ? 0 : null);
+  const t1 = t + (bonus||0);
+  const t2 = LOWER.reduce((a,r)=>a+(sc[r.id]||0),0);
+  const any = ALL.some(r=>sc[r.id]!=null);
+  return {t, bonus, t1, t2, score:t1+t2, any};
+}
+const playerDone = p => ALL.every(r=>S.scores[p][r.id]!=null);
+function gameOver(){ for(let p=0;p<S.nb;p++) if(!playerDone(p)) return false; return true; }
+const isAuto = () => S.mode==='auto';
+// les dés sont-ils prêts à être notés ?
+const ready = () => !gameOver() && (isAuto() ? S.rolls>0 : S.dice.every(v=>v>0));
+
+/* ---------- écran de départ ---------- */
+let draft;
+function openSetup(){
+  draft = {mode:S.mode, nb:S.nb, names:[...S.names]};
+  document.getElementById('setupCancel').style.display = S.started ? '' : 'none';
+  renderSetup();
+  document.getElementById('setup').classList.add('show');
+}
+function renderSetup(){
+  document.querySelectorAll('.mode').forEach(b=>{
+    b.classList.toggle('on', b.dataset.mode===draft.mode);
+    b.onclick = ()=>{ draft.mode=b.dataset.mode; renderSetup(); };
+  });
+  const cnt = document.getElementById('count'); cnt.innerHTML='';
+  for(let n=1;n<=MAXP;n++){
+    const b=document.createElement('button'); b.textContent=n; b.className = n===draft.nb?'on':'';
+    b.onclick=()=>{ draft.nb=n; renderSetup(); }; cnt.appendChild(b);
+  }
+  const box = document.getElementById('names'); box.innerHTML='';
+  for(let p=0;p<draft.nb;p++){
+    const l = document.createElement('label'); l.textContent = `#${p+1}`;
+    const inp = document.createElement('input');
+    inp.value = draft.names[p]; inp.maxLength = 16; inp.placeholder = `Joueur ${p+1}`;
+    inp.onfocus = ()=>inp.select();
+    inp.oninput = ()=>{ draft.names[p] = inp.value; };
+    inp.onkeydown = e=>{ e.stopPropagation(); if(e.key==='Enter') startGame(); };
+    l.appendChild(inp); box.appendChild(l);
+  }
+}
+function startGame(){
+  const inProgress = S.started && !gameOver() && S.scores.some(sc=>Object.keys(sc).length);
+  if(inProgress && !confirmed){ document.getElementById('modal').classList.add('show'); return; }
+  confirmed = false;
+  S = fresh(draft); S.started = true; save();
+  document.getElementById('setup').classList.remove('show');
+  renderAll();
+}
+let confirmed = false;
+document.getElementById('start').onclick = startGame;
+document.getElementById('setupCancel').onclick = ()=>document.getElementById('setup').classList.remove('show');
+document.getElementById('mNo').onclick = ()=>document.getElementById('modal').classList.remove('show');
+document.getElementById('mYes').onclick = ()=>{ document.getElementById('modal').classList.remove('show'); confirmed=true; startGame(); };
+document.getElementById('newgame').onclick = openSetup;
+
+/* ---------- rendu ---------- */
+function dieHTML(v){
+  let h=''; for(let i=0;i<9;i++) h += PIPS[v]&&PIPS[v].includes(i) ? '<span class="pip"></span>' : '<span></span>';
+  return h;
+}
+function miniDie(v){
+  let h='<span class="mini">'; for(let i=0;i<9;i++) h += PIPS[v].includes(i)?'<i></i>':'<span></span>'; return h+'</span>';
+}
+function renderDice(shakeIdx){
+  const box = document.getElementById('dice'); box.innerHTML='';
+  const over = gameOver();
+  S.dice.forEach((v,i)=>{
+    const el = document.createElement('div');
+    const locked = over || (isAuto() && (S.rolls===0 || S.rolls>=3));
+    el.className = 'die' + (v===0?' blank':'') + (isAuto()&&S.held[i]?' held':'') +
+      (locked?' locked':'') + (shakeIdx&&shakeIdx.includes(i)?' shake':'');
+    el.innerHTML = v ? dieHTML(v) : '';
+    el.title = isAuto() ? (v?'Cliquer pour garder / relâcher':'') : 'Cliquer pour changer la valeur';
+    el.onclick = ()=>{
+      if(locked) return;
+      if(isAuto()) S.held[i] = !S.held[i];
+      else { S.dice[i] = S.dice[i]%6 + 1; S.sel = null; }
+      save(); isAuto() ? (renderDice(), renderHint()) : renderAll();
+    };
+    box.appendChild(el);
+  });
+}
+function renderSheet(){
+  const tb = document.getElementById('sheet');
+  const N = S.nb, over = gameOver(), can = ready();
+  let h = '<tr><th style="text-align:left;color:#bbb;font-size:13px;font-weight:700">Le YAMS</th>';
+  for(let c=0;c<N;c++) h += `<th class="${c===S.cur && !over?'cur':''}" title="${esc(pname(c))}">${esc(pname(c))}</th>`;
+  h += '</tr>';
+  const row = (r, isUpper)=>{
+    let x = `<tr><td class="lbl">${r.label}${isUpper?miniDie(r.face):''}</td>`;
+    for(let c=0;c<N;c++){
+      const v = S.scores[c][r.id];
+      if(v!=null){ x += `<td class="c${v===0?' z':''}">${v}</td>`; continue; }
+      if(c===S.cur && can){
+        const p = scoreFor(r.id, S.dice);
+        x += `<td class="c cur can${p===0?' zero':''}${S.sel===r.id?' sel':''}" data-id="${r.id}">${p}</td>`;
+      } else x += `<td class="c${c===S.cur && !over?' cur':''}"></td>`;
+    }
+    return x+'</tr>';
+  };
+  const totRow = (label, key, cls='tot')=>{
+    let x = `<tr class="${cls}"><td class="lbl">${label}</td>`;
+    for(let c=0;c<N;c++){ const t = totals(c); x += `<td class="c">${t.any? t[key] : ''}</td>`; }
+    return x+'</tr>';
+  };
+  UPPER.forEach(r=> h+=row(r,true));
+  h += totRow('TOTAL','t');
+  h += '<tr><td class="lbl">BONUS</td>';
+  for(let c=0;c<N;c++){
+    const t = totals(c);
+    if(t.bonus===35) h += '<td class="c bonusok">35</td>';
+    else if(t.bonus===0) h += '<td class="c z">0</td>';
+    else h += `<td class="c" style="color:#aaa;font-weight:500;font-size:11px">${t.any?(63-t.t)+' à faire':''}</td>`;
+  }
+  h += '</tr>';
+  h += totRow('TOTAL 1','t1');
+  LOWER.forEach(r=> h+=row(r,false));
+  h += totRow('TOTAL 2','t2');
+  h += totRow('SCORE','score','score');
+  tb.innerHTML = h;
+  tb.querySelectorAll('td.can').forEach(td=>{
+    td.onclick = ()=>{ S.sel = (S.sel===td.dataset.id)?null:td.dataset.id; save(); renderAll(); };
+    td.ondblclick = ()=>{ S.sel = td.dataset.id; validate(); };
+  });
+}
+function renderHint(){
+  const hint = document.getElementById('hint');
+  const who = `<b>${esc(pname(S.cur))}</b>`;
+  if(gameOver()){ hint.innerHTML = 'Partie terminée !'; return; }
+  if(S.sel){
+    const r = ALL.find(x=>x.id===S.sel), p = scoreFor(S.sel,S.dice);
+    hint.innerHTML = `<b>${r.label}</b> sélectionné → <b>${p} pt${p>1?'s':''}</b>. Clique sur <b>Valider</b>.`;
+    return;
+  }
+  if(isAuto()){
+    if(S.rolls===0) hint.innerHTML = `Au tour de ${who} : clique sur <b>Lancer les dés</b>.`;
+    else if(S.rolls<3) hint.innerHTML = `Clique sur les dés à <b>garder</b>, puis relance (${3-S.rolls} lancer${3-S.rolls>1?'s':''} restant${3-S.rolls>1?'s':''}), ou choisis une ligne dans la feuille.`;
+    else hint.innerHTML = 'Plus de lancer : choisis une ligne dans la feuille puis <b>Valider</b>.';
+  } else {
+    const missing = S.dice.filter(v=>!v).length;
+    if(missing) hint.innerHTML = `Au tour de ${who} : touche chaque dé pour indiquer sa valeur (${missing} à remplir).`;
+    else hint.innerHTML = 'Choisis la ligne où noter ce résultat, puis <b>Valider</b>.';
+  }
+}
+function renderAll(shake){
+  const over = gameOver();
+  document.body.className = isAuto() ? 'auto' : 'manual';
+  document.getElementById('modeTag').textContent = isAuto() ? 'Jeu automatique' : 'Feuille de score';
+  document.getElementById('who').textContent = over ? '🏁 Fin de partie' : `🎲 ${pname(S.cur)}`;
+  for(let i=1;i<=3;i++){
+    document.getElementById('p'+i).className = 'pill' + (i<=S.rolls?' done':'') + (i===S.rolls+1 && !over?' next':'');
+  }
+  document.getElementById('roll').disabled = over || S.rolls>=3 || (S.rolls>0 && S.held.every(Boolean));
+  document.getElementById('clear').disabled = over || S.dice.every(v=>!v);
+  document.getElementById('validate').disabled = !S.sel || !ready();
+  renderDice(shake); renderSheet(); renderHint();
+  const b = document.getElementById('banner');
+  if(over){
+    let best=-1, win=[];
+    for(let p=0;p<S.nb;p++){ const s=totals(p).score; if(s>best){best=s;win=[p]} else if(s===best) win.push(p); }
+    const nm = win.map(w=>esc(pname(w)));
+    b.innerHTML = S.nb===1 ? `🏁 Score final : ${best} points` :
+      `🏆 ${nm.length>1?'Égalité entre '+nm.join(' et '):'Victoire de '+nm[0]} avec ${best} points !`;
+    b.classList.add('show');
+  } else b.classList.remove('show');
+}
+
+/* ---------- actions ---------- */
+function roll(){
+  if(!isAuto() || S.rolls>=3 || gameOver()) return;
+  const idx = [];
+  S.dice = S.dice.map((v,i)=>{ if(S.held[i] && S.rolls>0) return v; idx.push(i); return 1+Math.floor(Math.random()*6); });
+  S.rolls++; S.sel=null; save(); renderAll(idx);
+}
+function validate(){
+  if(!S.sel || !ready()) return;
+  S.scores[S.cur][S.sel] = scoreFor(S.sel, S.dice);
+  S.rolls=0; S.dice=[0,0,0,0,0]; S.held=[false,false,false,false,false]; S.sel=null;
+  for(let k=1;k<=S.nb;k++){ const n=(S.cur+k)%S.nb; if(!playerDone(n)){ S.cur=n; break; } }
+  save(); renderAll();
+  const w = document.getElementById('who'); w.classList.remove('flash'); void w.offsetWidth; w.classList.add('flash');
+}
+document.getElementById('roll').onclick = roll;
+document.getElementById('validate').onclick = validate;
+document.getElementById('clear').onclick = ()=>{ S.dice=[0,0,0,0,0]; S.sel=null; save(); renderAll(); };
+document.addEventListener('keydown', e=>{
+  if(document.querySelector('.setup.show, .modal.show')) return;
+  if(e.code==='Space'){ e.preventDefault(); roll(); }
+  if(e.key==='Enter') validate();
+  if(!isAuto() && /^[1-6]$/.test(e.key)){ // saisie clavier des dés en mode feuille
+    const i = S.dice.indexOf(0); if(i>=0){ S.dice[i]=+e.key; S.sel=null; save(); renderAll(); }
+  }
+  if(!isAuto() && e.key==='Backspace'){
+    let i = S.dice.indexOf(0); i = i<0 ? 4 : i-1; if(i>=0){ S.dice[i]=0; S.sel=null; save(); renderAll(); }
+  }
+});
+
+renderAll();
+if(!S.started) openSetup();
+</script>
+</body>
+</html>
 
