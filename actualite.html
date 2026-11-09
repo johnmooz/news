@@ -41,6 +41,13 @@
   @media(max-width:640px){.row{grid-template-columns:1fr}}
   .msg{margin-top:10px;font-size:.92rem;color:var(--muted);min-height:1.2em}
   .msg.err{color:var(--accent)} .msg.ok{color:var(--ok)}
+  .custom{grid-column:1/-1;border:1px dashed var(--line);border-radius:10px;padding:4px}
+  .custom .chk{border:none}
+  .custom .box{display:none;padding:0 13px 13px}
+  .custom:has(input[type=checkbox]:checked){border-color:var(--accent);border-style:solid;background:var(--accent-soft)}
+  .custom:has(input[type=checkbox]:checked) .chk{background:transparent}
+  .custom:has(input[type=checkbox]:checked) .box{display:block}
+  .hint{font-size:.85rem;color:var(--muted);margin-top:6px}
   #results{display:none}
   .domain{border-top:1px solid var(--line);padding:16px 0}
   .domain:first-of-type{border-top:none;padding-top:0}
@@ -73,15 +80,9 @@
     </div>
 
     <h2 style="margin-top:26px">2. Recevoir par e-mail (facultatif)</h2>
-    <div class="row">
-      <div>
-        <label class="field" for="email">Votre adresse e-mail</label>
-        <input type="email" id="email" placeholder="prenom.nom@exemple.fr" autocomplete="email">
-      </div>
-      <div>
-        <label class="field" for="extra">Mot-clé personnel (facultatif)</label>
-        <input type="text" id="extra" placeholder="ex. : Lyon, Nintendo, Bourse…">
-      </div>
+    <div>
+      <label class="field" for="email">Votre adresse e-mail</label>
+      <input type="email" id="email" placeholder="prenom.nom@exemple.fr" autocomplete="email" style="max-width:460px">
     </div>
 
     <div class="tools">
@@ -159,7 +160,17 @@ $("#today").textContent = new Date().toLocaleDateString("fr-FR",{weekday:"long",
 const saved = store.get("news_domains") || [];
 $("#grid").innerHTML = DOMAINS.map(d => `
   <label class="chk"><input type="checkbox" value="${d.id}" ${saved.includes(d.id)?"checked":""}>
-  <span class="ico" aria-hidden="true">${d.ico}</span><span>${d.name}</span></label>`).join("");
+  <span class="ico" aria-hidden="true">${d.ico}</span><span>${d.name}</span></label>`).join("") + `
+  <div class="custom">
+    <label class="chk"><input type="checkbox" id="customChk" value="custom" ${saved.includes("custom")?"checked":""}>
+    <span class="ico" aria-hidden="true">✏️</span><span>Personnalisé</span></label>
+    <div class="box">
+      <input type="text" id="customTxt" placeholder="ex. : voile, Vendée Globe, Bretagne" aria-label="Sujet personnalisé">
+      <div class="hint">Écrivez le sujet de votre choix. Séparez jusqu'à 3 mots-clés par des virgules.</div>
+    </div>
+  </div>`;
+const savedCustom = store.get("news_custom"); if(savedCustom) $("#customTxt").value = savedCustom;
+$("#customChk").addEventListener("change", e => { if(e.target.checked) setTimeout(()=>$("#customTxt").focus(), 0); });
 const savedEmail = store.get("news_email"); if(savedEmail) $("#email").value = savedEmail;
 
 $("#all").onclick = () => document.querySelectorAll("#grid input").forEach(c=>c.checked=true);
@@ -178,22 +189,33 @@ $("#form").addEventListener("submit", e => {
   e.preventDefault();
   const checked = [...document.querySelectorAll("#grid input:checked")].map(c=>c.value);
   const email = $("#email").value.trim();
-  const extra = $("#extra").value.trim();
+  const customTxt = $("#customTxt").value.trim();
   const msg = $("#formMsg");
 
   if(!checked.length){ msg.className="msg err"; msg.textContent="Cochez au moins un domaine."; return; }
+  if(checked.includes("custom") && !customTxt){ msg.className="msg err"; msg.textContent="Écrivez votre sujet dans le champ « Personnalisé »."; $("#customTxt").focus(); return; }
+  store.set("news_custom", customTxt);
   if(email && !$("#email").checkValidity()){ msg.className="msg err"; msg.textContent="L'adresse e-mail ne semble pas valide."; return; }
   msg.className="msg"; msg.textContent="";
   store.set("news_domains", checked);
   if(email) store.set("news_email", email);
 
   const chosen = DOMAINS.filter(d => checked.includes(d.id));
+  if(checked.includes("custom")){
+    let k = customTxt.split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+    if(k.length === 1 && k[0].split(/\s+/).length > 1 && k[0].split(/\s+/).length <= 3) k = k[0].split(/\s+/);
+    k = k.slice(0,3);
+    const pad = ["actualité","France","analyse"];
+    const a = [...k]; for(const p of pad){ if(a.length>=3) break; a.push(p); }
+    const kw = [a, [k[0], k[1]||"actualité", "dernières infos"], [k[0], k[2]||k[1]||"France", "analyse"]];
+    chosen.push({id:"custom", name:"Personnalisé : " + k.join(", "), ico:"✏️", kw, fixed:true,
+      intl:{label:"Recherche web en français", url:"https://www.google.com/search?hl=fr&lr=lang_fr&q="+encodeURIComponent(k.join(" ")), fr:true}});
+  }
   const dateTxt = $("#today").textContent;
   let html = "", text = `Mes actualités – ${dateTxt}\n`;
 
   chosen.forEach(d => {
-    let sets = shuffle(d.kw).slice(0,3);
-    if(extra){ sets[2] = [extra, sets[2][0], sets[2][1]]; }
+    const sets = d.fixed ? d.kw : shuffle(d.kw).slice(0,3);
     const links = sets.map(w => ({label: w.join(" · "), url: newsUrl(w)}));
     html += `<div class="domain"><h3><span aria-hidden="true">${d.ico}</span>${d.name}</h3><div class="links">` +
       links.map(l => `<a href="${l.url}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("") +
@@ -229,4 +251,3 @@ $("#copy").onclick = async () => {
 </script>
 </body>
 </html>
-
