@@ -62,4 +62,84 @@ select{padding:6px 8px;border-radius:6px;font-size:15px}
 <div class="fails">Dés ratés (−5 chacun) :
 <button class="f" data-i="0"></button><button class="f" data-i="1"></button><button class="f" data-i="2"></button><button class="f" data-i="3"></button></div>
 <div class="final">
-<small>Score final : lignes (orange, jaune,
+<small>Score final : lignes (orange, jaune, violet) + losanges − dés ratés</small>
+<div class="b o" id="so">0</div><div class="b y" id="sy">0</div><div class="b p" id="sp">0</div>
+<span>+</span>
+<div class="d"><i id="d0"></i></div><div class="d"><i id="d1"></i></div><div class="d"><i id="d2"></i></div><div class="d"><i id="d3"></i></div><div class="d"><i id="d4"></i></div>
+<span>−</span><div class="b" id="sf">0</div><span>=</span><div class="b tot" id="tot">0</div>
+</div>
+<button class="r" id="reset">Nouvelle partie</button>
+<script>
+const rows=[{k:'o',sh:3,pent:[1,5]},{k:'y',sh:5,pent:[7]},{k:'p',sh:4,pent:[2,9]}];
+const players=Array.from({length:4},()=>({vals:rows.map(()=>Array(10).fill(null)),fails:[0,0,0,0],total:0}));
+let cur=0,vals=players[0].vals,fails=players[0].fails;
+const inputs=[], grid=document.getElementById('grid'), msg=document.getElementById('msg');
+rows.forEach((r,ri)=>{
+  const d=document.createElement('div'); d.className='row '+r.k; inputs[ri]=[];
+  for(let i=0;i<10;i++){
+    if(i===r.sh){const s=document.createElement('div');s.className='sh';d.appendChild(s);continue;}
+    const e=document.createElement('input'); e.type='number'; e.min=1; e.max=18; e.inputMode='numeric';
+    e.className='c'+(r.pent.includes(i)?' pent':'');
+    e.addEventListener('change',()=>onChange(ri,i,e));
+    e.addEventListener('click',()=>{if(e.value!=='')return;if(dice[ri]===0){msg.textContent='Le dé '+dnm[ri]+' est à 0 : impossible de jouer sur la ligne '+dnm[ri]+'.';e.blur();return;}const t=diceTotal();if(t>0){e.value=t;onChange(ri,i,e);e.blur();}});
+    inputs[ri][i]=e; d.appendChild(e);
+  }
+  grid.appendChild(d);
+});
+function onChange(ri,i,e){
+  const raw=e.value.trim();
+  if(raw===''){vals[ri][i]=null;calc();return;}
+  const v=Number(raw); let err='';
+  if(!Number.isInteger(v)||v<1||v>18) err='Entrez un nombre entre 1 et 18.';
+  else for(let j=0;j<10;j++){
+    const w=vals[ri][j]; if(w===null||j===i) continue;
+    if(j<i&&w>=v){err='Règle : un nombre doit être plus grand que ceux à sa gauche ('+w+').';break;}
+    if(j>i&&w<=v){err='Règle : un nombre doit être plus petit que ceux à sa droite ('+w+').';break;}
+  }
+  if(err){e.classList.add('bad');msg.textContent=err;e.value=vals[ri][i]??'';setTimeout(()=>e.classList.remove('bad'),400);return;}
+  msg.textContent=''; vals[ri][i]=v; calc();
+}
+function rowScore(ri){
+  const r=rows[ri]; const idx=[...Array(10).keys()].filter(i=>i!==r.sh);
+  const f=idx.filter(i=>vals[ri][i]!==null);
+  return f.length===9?vals[ri][idx[8]]:f.length;
+}
+function calc(){
+  const s=[0,1,2].map(rowScore);
+  ['so','sy','sp'].forEach((id,k)=>document.getElementById(id).textContent=s[k]);
+  const pv=[];rows.forEach((r,ri)=>r.pent.forEach(i=>pv.push(vals[ri][i])));
+  pv.forEach((v,k)=>document.getElementById('d'+k).textContent=v??'');
+  const fp=fails.reduce((a,b)=>a+b,0)*5, pt=pv.reduce((a,b)=>a+(b||0),0);
+  document.getElementById('sf').textContent=fp;
+  const T=s[0]+s[1]+s[2]+pt-fp;document.getElementById('tot').textContent=T;players[cur].total=T;drawTabs();
+}
+document.querySelectorAll('.f').forEach(b=>b.addEventListener('click',()=>{
+  const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
+}));
+document.getElementById('reset').addEventListener('click',()=>{
+  players.forEach(p=>{p.vals.forEach(a=>a.fill(null));p.fails.fill(0);p.total=0;});
+  inputs.forEach(a=>a.forEach(e=>e.value='')); document.querySelectorAll('.f').forEach(b=>b.textContent='');
+  msg.textContent=''; calc();
+});
+const np=document.getElementById('np'),tabs=document.getElementById('tabs');
+function drawTabs(){const n=+np.value;tabs.innerHTML='';for(let k=0;k<n;k++){const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');b.textContent='J'+(k+1)+' : '+players[k].total;b.onclick=()=>pick(k);tabs.appendChild(b);}}
+function pick(k){cur=k;vals=players[k].vals;fails=players[k].fails;
+ rows.forEach((r,ri)=>inputs[ri].forEach((e,i)=>{e.value=vals[ri][i]??'';}));
+ document.querySelectorAll('.f').forEach((b,i)=>b.textContent=fails[i]?'✕':'');
+ msg.textContent='';calc();}
+np.onchange=()=>{if(cur>=+np.value)cur=0;pick(cur);};
+const dice=[0,0,0],dcol=['var(--o)','var(--y)','var(--p)'],dnm=['orange','jaune','violet'];
+const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function face(n){let h='';for(let q=0;q<9;q++)h+='<span class="pip'+(PIPS[n].includes(q)?' on':'')+'"></span>';return h;}
+function diceTotal(){return dice[0]+dice[1]+dice[2];}
+const dbox=document.getElementById('dice');
+function drawDice(open){dbox.innerHTML='<span>Dés :</span>';dice.forEach((v,k)=>{const w=document.createElement('div');w.className='dw';
+ const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>drawDice(open===k?-1:k);w.appendChild(b);
+ if(open===k){const p=document.createElement('div');p.className='pick';for(let n=0;n<=6;n++){const o=document.createElement('button');o.className='die s';o.style.background=dcol[k];o.style.color=k===1?'#111':'#fff';o.innerHTML=face(n);o.onclick=()=>{dice[k]=n;drawDice(-1);};p.appendChild(o);}w.appendChild(p);}
+ dbox.appendChild(w);});
+ const t=document.createElement('span');t.textContent='Total : '+diceTotal();dbox.appendChild(t);}
+drawDice(-1);
+pick(0);
+</script>
+</body>
+</html>
