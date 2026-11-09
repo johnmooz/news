@@ -1,1 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piscines autour de moi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/opening_hours/build/opening_hours.min.js"></script>
+<style>
+  :root{
+    --deep:#063b5c; --water:#0a7fb5; --lagoon:#18b4c9; --foam:#e8f7fb; --sand:#fff8ec;
+    --ink:#10222e; --muted:#5b707d; --line:#d7e7ee; --today:#ffb703; --todaybg:#fff3cf;
+    --open:#1a9e5c; --closed:#c8463d; --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Outfit",system-ui,sans-serif;color:var(--ink);background:var(--foam)}
+  header{
+    background:linear-gradient(160deg,var(--deep) 0%,var(--water) 60%,var(--lagoon) 100%);
+    color:#fff;padding:40px 20px 70px;position:relative;overflow:hidden
+  }
+  header::after{
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:50px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 50' preserveAspectRatio='none'%3E%3Cpath d='M0 25 Q150 0 300 25 T600 25 T900 25 T1200 25 V50 H0Z' fill='%23e8f7fb'/%3E%3C/svg%3E") no-repeat;background-size:100% 100%
+  }
+  .wrap{max-width:1150px;margin:0 auto}
+  h1{margin:0 0 6px;font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:-.5px}
+  header p{margin:0 0 22px;opacity:.85}
+  .search{display:flex;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,.14);padding:10px;border-radius:var(--radius);backdrop-filter:blur(6px)}
+  .search input{flex:1 1 260px;font:inherit;font-size:17px;padding:13px 16px;border:0;border-radius:12px;outline:none}
+  .search button{font:inherit;font-weight:600;font-size:16px;padding:13px 18px;border:0;border-radius:12px;cursor:pointer}
+  #btnSearch{background:var(--today);color:var(--deep)}
+  #btnGeo{background:#fff;color:var(--deep)}
+  .search button:hover{filter:brightness(1.05)}
+  .search button:disabled{opacity:.6;cursor:wait}
+  #suggest{list-style:none;margin:6px 0 0;padding:0;background:#fff;border-radius:12px;color:var(--ink);overflow:hidden;max-width:560px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  #suggest li{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
+  #suggest li:hover{background:var(--foam)}
+  main{padding:10px 20px 60px}
+  #status{margin:0 0 16px;color:var(--muted);min-height:24px}
+  #status.err{color:var(--closed);font-weight:500}
+  #map{height:340px;border-radius:var(--radius);margin-bottom:24px;display:none;box-shadow:0 4px 18px rgba(6,59,92,.12)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+  .card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 18px rgba(6,59,92,.08);display:flex;flex-direction:column}
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);height:170px}
+  .ph{position:relative;background:linear-gradient(135deg,#cdeef5,#9fd9e7);overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block}
+  .ph .tag{position:absolute;left:8px;bottom:8px;background:rgba(6,59,92,.8);color:#fff;font-size:12px;padding:3px 8px;border-radius:20px}
+  .ph .none{font-size:13px;color:var(--deep);padding:10px}
+  .ph .none a{color:var(--deep);font-weight:600}
+  .ph .credit{position:absolute;right:6px;top:6px;font-size:10px;background:rgba(255,255,255,.75);padding:1px 6px;border-radius:10px;color:#333;text-decoration:none}
+  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--water);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .name{flex:1;font-size:19px;font-weight:600;line-height:1.2;margin:0}
+  .dist{white-space:nowrap;color:var(--water);font-weight:600}
+  .badge{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .b-open{background:#ddf5e8;color:var(--open)} .b-closed{background:#fbe3e1;color:var(--closed)} .b-unk{background:#eef2f4;color:var(--muted)}
+  .row{display:flex;gap:8px;font-size:15px;line-height:1.4}
+  .row .ic{flex:0 0 20px}
+  .row a{color:var(--water)}
+  table.hours{width:100%;border-collapse:collapse;font-size:14px}
+  table.hours td{padding:5px 8px;border-bottom:1px solid var(--line)}
+  table.hours td:first-child{width:90px;font-weight:500;color:var(--muted)}
+  table.hours tr.today td{background:var(--todaybg);color:var(--deep);font-weight:700;border-bottom:2px solid var(--today)}
+  table.hours tr.today td:first-child{border-left:4px solid var(--today)}
+  .raw{font-size:12px;color:var(--muted);word-break:break-word}
+  .nohours{font-size:14px;color:var(--muted);background:#f5f9fb;padding:10px;border-radius:10px}
+  .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+  .links a{font-size:14px;text-decoration:none;padding:7px 12px;border-radius:10px;background:var(--foam);color:var(--deep);font-weight:500}
+  .links a:hover{background:#d3eef6}
+  .legend{display:flex;gap:16px;align-items:center;font-size:14px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+  .legend span.sw{display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--todaybg);border:2px solid var(--today);vertical-align:-2px;margin-right:4px}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:20px}
+  footer a{color:var(--water)}
+  .spinner{display:inline-block;width:16px;height:16px;border:3px solid var(--line);border-top-color:var(--water);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .numicon{background:var(--water);color:#fff;border-radius:50%;width:26px!important;height:26px!important;display:flex!important;align-items:center;justify-content:center;font-weight:700;font-family:Outfit,sans-serif;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>🏊 Piscines autour de moi</h1>
+    <p>Les 10 piscines les plus proches, avec horaires, tarifs, adresse et photos.</p>
+    <form class="search" id="form" autocomplete="off">
+      <input id="q" placeholder="Ville ou code postal (ex. Lyon, 33000…)" aria-label="Ville ou code postal">
+      <button type="submit" id="btnSearch">Rechercher</button>
+      <button type="button" id="btnGeo">📍 Me géolocaliser</button>
+    </form>
+    <ul id="suggest" hidden></ul>
+  </div>
+</header>
 
+<main class="wrap">
+  <p id="status">Entrez une ville ou un code postal, ou utilisez la géolocalisation.</p>
+  <div id="map"></div>
+  <div class="legend" id="legend" hidden>
+    <span><span class="sw"></span>Aujourd'hui</span>
+    <span>Données : OpenStreetMap (horaires et tarifs tels que renseignés par les contributeurs) · Photos : Wikimedia Commons</span>
+  </div>
+  <div class="grid" id="results"></div>
+</main>
+
+<footer>
+  Données © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributeurs OpenStreetMap</a>,
+  géocodage <a href="https://adresse.data.gouv.fr" target="_blank" rel="noopener">Base Adresse Nationale</a>,
+  photos <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>.
+  Vérifiez les horaires auprès de la piscine (vacances scolaires, fermetures techniques).
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const statusEl = $("#status"), resultsEl = $("#results"), suggestEl = $("#suggest");
+const DAYS_FR = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+const OSM_DAYS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+const OVERPASS = ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter","https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+let map, layer;
+
+function setStatus(html, err=false){ statusEl.innerHTML = html; statusEl.className = err ? "err" : ""; }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function busy(b){ $("#btnSearch").disabled = b; $("#btnGeo").disabled = b; }
+
+/* ---------- Géocodage ---------- */
+async function geocode(q){
+  const isCP = /^\d{5}$/.test(q.trim());
+  const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&type=municipality&limit=6`;
+  try{
+    const r = await fetch(url); const j = await r.json();
+    let feats = j.features || [];
+    if (isCP) feats = feats.filter(f => f.properties.postcode === q.trim()).concat(feats.filter(f => f.properties.postcode !== q.trim()));
+    if (feats.length) return feats.map(f => ({ label:`${f.properties.city || f.properties.name} (${f.properties.postcode})`, lat:f.geometry.coordinates[1], lon:f.geometry.coordinates[0] }));
+  }catch(e){}
+  // Repli hors France : Nominatim
+  const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=fr&q=${encodeURIComponent(q)}`);
+  const j = await r.json();
+  return j.map(x => ({ label:x.display_name.split(",").slice(0,3).join(","), lat:+x.lat, lon:+x.lon }));
+}
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("#q").value.trim(); if (!q) return;
+  suggestEl.hidden = true; busy(true);
+  setStatus(`<span class="spinner"></span>Recherche de « ${esc(q)} »…`);
+  try{
+    const res = await geocode(q);
+    if (!res.length){ setStatus("Aucune ville trouvée pour cette recherche.", true); busy(false); return; }
+    if (res.length > 1 && !/^\d{5}$/.test(q) && res[0].label.toLowerCase().indexOf(q.toLowerCase()) !== 0){
+      showSuggestions(res); busy(false); setStatus("Plusieurs villes correspondent, choisissez :"); return;
+    }
+    // Plusieurs communes partagent un code postal : on propose le choix mais on lance la 1re
+    if (res.length > 1) showSuggestions(res);
+    await run(res[0].lat, res[0].lon, res[0].label);
+  }catch(err){ setStatus("Erreur de géocodage : " + esc(err.message), true); }
+  busy(false);
+});
+
+function showSuggestions(list){
+  suggestEl.innerHTML = list.map((r,i)=>`<li data-i="${i}">${esc(r.label)}</li>`).join("");
+  suggestEl.hidden = false;
+  suggestEl.querySelectorAll("li").forEach(li => li.onclick = async () => {
+    const r = list[+li.dataset.i]; suggestEl.hidden = true; $("#q").value = r.label;
+    busy(true); await run(r.lat, r.lon, r.label); busy(false);
+  });
+}
+
+$("#btnGeo").addEventListener("click", () => {
+  if (!navigator.geolocation){ setStatus("La géolocalisation n'est pas disponible dans ce navigateur.", true); return; }
+  busy(true); setStatus(`<span class="spinner"></span>Localisation en cours…`);
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const {latitude:lat, longitude:lon} = pos.coords;
+    let label = "votre position";
+    try{
+      const r = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}&type=municipality`);
+      const j = await r.json(); if (j.features?.[0]) { label = `${j.features[0].properties.city} (votre position)`; $("#q").value = j.features[0].properties.city; }
+    }catch(e){}
+    await run(lat, lon, label); busy(false);
+  }, err => {
+    busy(false);
+    setStatus("Géolocalisation refusée ou impossible (" + esc(err.message) + "). Utilisez la recherche par ville.", true);
+  }, {enableHighAccuracy:true, timeout:15000});
+});
+
+/* ---------- Overpass ---------- */
+async function overpass(query){
+  let lastErr;
+  for (const ep of OVERPASS){
+    try{
+      const r = await fetch(ep, {method:"POST", body:"data="+encodeURIComponent(query), headers:{"Content-Type":"application/x-www-form-urlencoded"}});
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return (await r.json()).elements || [];
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error("Overpass indisponible");
+}
+
+function haversine(a,b,c,d){
+  const R=6371, toR=x=>x*Math.PI/180, dLat=toR(c-a), dLon=toR(d-b);
+  const h=Math.sin(dLat/2)**2+Math.cos(toR(a))*Math.cos(toR(c))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+
+const EXCLUDE = /camping|hôtel|hotel|résidence|residence|privée|privee|thalasso|spa\b|kinésithérapie|balnéo|copropriété|lycée|collège|école|village vacances/i;
+
+async function findPools(lat, lon){
+  for (const R of [12000, 25000, 50000]){
+    setStatus(`<span class="spinner"></span>Recherche des piscines dans un rayon de ${R/1000} km…`);
+    const q = `[out:json][timeout:40];
+(
+  nwr["leisure"="sports_centre"]["sport"~"swimming|diving|water_polo"](around:${R},${lat},${lon});
+  nwr["leisure"="water_park"](around:${R},${lat},${lon});
+  nwr["leisure"="swimming_pool"]["name"]["access"!~"^(private|no|customers|permit)$"](around:${R},${lat},${lon});
+  nwr["amenity"="public_bath"]["bath:type"!="hot_spring"](around:${R},${lat},${lon});
+);
+out center tags;`;
+    const els = await overpass(q);
+    let items = els.map(e => {
+      const la = e.lat ?? e.center?.lat, lo = e.lon ?? e.center?.lon;
+      return { id:`${e.type}/${e.id}`, osmType:e.type, osmId:e.id, lat:la, lon:lo, tags:e.tags||{}, d:haversine(lat,lon,la,lo) };
+    }).filter(p => p.lat != null && !p.tags.tourism && !EXCLUDE.test(p.tags.name || "") && p.tags.access !== "private");
+    items = dedupe(items).filter(p => p.tags.name);
+    items.sort((a,b)=>a.d-b.d);
+    if (items.length >= 10 || R === 50000) return items.slice(0,10);
+  }
+}
+
+// Fusionne les bassins d'un même centre aquatique (même lieu à < 200 m)
+function dedupe(items){
+  const rank = p => (p.tags.leisure==="sports_centre"||p.tags.leisure==="water_park"?3:0) + (p.tags.name?2:0) + Object.keys(p.tags).length/100;
+  items.sort((a,b)=>rank(b)-rank(a));
+  const out = [];
+  for (const p of items){
+    const host = out.find(o => haversine(o.lat,o.lon,p.lat,p.lon) < 0.2);
+    if (host){ for (const [k,v] of Object.entries(p.tags)) if (!(k in host.tags)) host.tags[k]=v; host.indoorOutdoor = (host.indoorOutdoor||new Set()).add(p.tags.location||p.tags.covered||""); }
+    else out.push(p);
+  }
+  return out;
+}
+
+/* ---------- Horaires ---------- */
+function weekStart(){ const d=new Date(); d.setHours(0,0,0,0); const wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return d; }
+const hhmm = d => d.toTimeString().slice(0,5).replace(":","h");
+
+function hoursWithLib(value, p){
+  if (typeof opening_hours === "undefined") return null;
+  try{
+    const oh = new opening_hours(value, {lat:p.lat, lon:p.lon, address:{country_code:"fr", state:""}}, {mode:0});
+    const start = weekStart(), week = [];
+    for (let i=0;i<7;i++){
+      const a = new Date(start); a.setDate(a.getDate()+i);
+      const b = new Date(a); b.setDate(b.getDate()+1);
+      const iv = oh.getOpenIntervals(a,b).map(([f,t]) => `${hhmm(f)} – ${(t-b===0)?"24h00":hhmm(t)}`);
+      week.push(iv);
+    }
+    let open = null; try{ open = oh.getState(new Date()); }catch(e){}
+    return {week, open};
+  }catch(e){ return null; }
+}
+
+// Analyseur simple de secours (formats courants : "Mo-Fr 12:00-14:00,18:00-20:00; Sa 10:00-18:00; Su off")
+function hoursSimple(value){
+  const v = value.trim();
+  if (v === "24/7") return {week:Array(7).fill(["24h/24"]), open:true};
+  const week = Array.from({length:7},()=>null);
+  for (let rule of v.split(";")){
+    rule = rule.trim(); if (!rule) continue;
+    if (/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|week|SH)\b/.test(rule)) continue;
+    const m = rule.match(/^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su|PH)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?(?:\[[^\]]*\])?\s*,?\s*)+)?\s*(.*)$/);
+    if (!m) continue;
+    let days = [];
+    if (m[1]){
+      for (const part of m[1].split(",")){
+        const t = part.trim().replace(/\[.*\]/,""); if (!t || t==="PH") continue;
+        const [s,e] = t.split("-"); const si=OSM_DAYS.indexOf(s), ei=e?OSM_DAYS.indexOf(e):si;
+        if (si<0||ei<0) continue;
+        for (let i=si;;i=(i+1)%7){ days.push(i); if (i===ei) break; }
+      }
+    } else days=[0,1,2,3,4,5,6];
+    const times = m[2].trim();
+    let iv;
+    if (/^(off|closed)$/i.test(times)) iv=[];
+    else {
+      iv = [...times.matchAll(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g)].map(x=>`${x[1].padStart(2,"0")}h${x[2]} – ${x[3].padStart(2,"0")}h${x[4]}`);
+      if (!iv.length) continue;
+    }
+    days.forEach(d => week[d] = iv);
+  }
+  if (week.every(x=>x===null)) return null;
+  return {week: week.map(x=>x||[]), open:null};
+}
+
+function renderHours(p){
+  const v = p.tags.opening_hours;
+  if (!v) return `<div class="nohours">🕑 Horaires non renseignés dans OpenStreetMap.${p.tags.website?` Consultez <a href="${esc(p.tags.website)}" target="_blank" rel="noopener">le site officiel</a>.`:""}</div>`;
+  const h = hoursWithLib(v,p) || hoursSimple(v);
+  if (!h) return `<div class="nohours">🕑 ${esc(v)}</div>`;
+  const today = (new Date().getDay()+6)%7;
+  const rows = h.week.map((iv,i)=>`<tr class="${i===today?"today":""}"><td>${DAYS_FR[i]}${i===today?" ★":""}</td><td>${iv.length?iv.map(esc).join("<br>"):"Fermé"}</td></tr>`).join("");
+  return `<table class="hours">${rows}</table><div class="raw">Source OSM : ${esc(v)}</div>`;
+}
+function openBadge(p){
+  const v = p.tags.opening_hours; if (!v) return `<span class="badge b-unk">Horaires inconnus</span>`;
+  const h = hoursWithLib(v,p);
+  if (h && h.open !== null) return h.open ? `<span class="badge b-open">● Ouvert maintenant</span>` : `<span class="badge b-closed">● Fermé actuellement</span>`;
+  // repli : calcul à partir du tableau simple
+  const s = hoursSimple(v); if (!s) return `<span class="badge b-unk">Voir horaires</span>`;
+  const now=new Date(), today=(now.getDay()+6)%7, mins=now.getHours()*60+now.getMinutes();
+  const isOpen = s.week[today].some(t => { const m=t.match(/(\d+)h(\d+) – (\d+)h(\d+)/); return m && mins>=m[1]*60+ +m[2] && mins<m[3]*60+ +m[4]; });
+  return isOpen ? `<span class="badge b-open">● Ouvert maintenant</span>` : `<span class="badge b-closed">● Fermé actuellement</span>`;
+}
+
+/* ---------- Prix ---------- */
+function renderPrice(p){
+  const t = p.tags, parts = [];
+  for (const [k,v] of Object.entries(t)){
+    if (k === "charge") parts.push(v);
+    else if (k.startsWith("charge:")) parts.push(`${k.slice(7).replace(/_/g," ")} : ${v}`);
+    else if (k === "fee:conditional" || k === "price") parts.push(v);
+  }
+  const search = `https://www.google.com/search?q=${encodeURIComponent("tarif " + t.name + " " + (t["addr:city"]||""))}`;
+  if (parts.length) return parts.map(esc).join(" · ");
+  if (t.fee === "no") return "Gratuit";
+  return `Non renseigné · <a href="${search}" target="_blank" rel="noopener">voir les tarifs</a>`;
+}
+
+/* ---------- Adresse ---------- */
+function addrFromTags(t){
+  const l1 = [t["addr:housenumber"], t["addr:street"]].filter(Boolean).join(" ");
+  const l2 = [t["addr:postcode"], t["addr:city"]].filter(Boolean).join(" ");
+  return [l1,l2].filter(Boolean).join(", ");
+}
+async function fillAddress(p, el){
+  let a = addrFromTags(p.tags);
+  if (!a){
+    try{
+      const r = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${p.lon}&lat=${p.lat}`);
+      const j = await r.json(); if (j.features?.[0]) a = j.features[0].properties.label + " (approx.)";
+    }catch(e){}
+  }
+  el.textContent = a || `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
+}
+
+/* ---------- Photos (Wikimedia Commons) ---------- */
+const COMMONS = "https://commons.wikimedia.org/w/api.php";
+const INT_RE = /int[ée]rieur|interior|inside|indoor|bassin|hall|plongeoir|pool\b.*(lane|swim)|nageur|natation|toboggan|innen/i;
+const EXT_RE = /ext[ée]rieur|exterior|outside|outdoor|fa[çc]ade|entr[ée]e|entrance|b[âa]timent|building|vue g[ée]n[ée]rale|aussen/i;
+const POOL_RE = /piscine|pool|swim|nautique|aquati|bassin|natation|baignade|plongeoir|nautic|centre aqua|aqua/i;
+
+async function commonsInfo(titles){
+  if (!titles.length) return [];
+  const url = `${COMMONS}?action=query&format=json&origin=*&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640&titles=${encodeURIComponent(titles.slice(0,20).join("|"))}`;
+  const j = await (await fetch(url)).json();
+  return Object.values(j.query?.pages||{}).filter(x=>x.imageinfo).map(x=>({
+    title:x.title, src:x.imageinfo[0].thumburl||x.imageinfo[0].url, page:x.imageinfo[0].descriptionurl,
+    desc:(x.imageinfo[0].extmetadata?.ImageDescription?.value||"").replace(/<[^>]+>/g,"")
+  })).filter(x=>/\.(jpe?g|png|webp)$/i.test(x.title));
+}
+
+async function getPhotos(p){
+  const t = p.tags; let titles = [];
+  try{
+    if (t.wikimedia_commons){
+      if (t.wikimedia_commons.startsWith("File:")) titles.push(t.wikimedia_commons);
+      else if (t.wikimedia_commons.startsWith("Category:")){
+        const j = await (await fetch(`${COMMONS}?action=query&format=json&origin=*&list=categorymembers&cmtype=file&cmlimit=15&cmtitle=${encodeURIComponent(t.wikimedia_commons)}`)).json();
+        titles.push(...(j.query?.categorymembers||[]).map(m=>m.title));
+      }
+    }
+    if (t.image && /commons\.wikimedia\.org\/wiki\/(File:[^?#]+)/.test(t.image)) titles.push(decodeURIComponent(t.image.match(/(File:[^?#]+)/)[1]));
+    if (t.wikidata){
+      const j = await (await fetch(`https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&origin=*&property=P18&entity=${t.wikidata}`)).json();
+      (j.claims?.P18||[]).forEach(c=>titles.push("File:"+c.mainsnak.datavalue.value));
+    }
+  }catch(e){}
+  let photos = [];
+  try{ photos = await commonsInfo([...new Set(titles)]); }catch(e){}
+  // Image externe directe (jpg/png)
+  if (t.image && /^https?:.*\.(jpe?g|png|webp)(\?.*)?$/i.test(t.image) && !/commons\.wikimedia/.test(t.image)) photos.unshift({title:t.image, src:t.image, page:t.image, desc:""});
+  // Recherche géographique autour de la piscine
+  if (photos.length < 2){
+    try{
+      const url = `${COMMONS}?action=query&format=json&origin=*&generator=geosearch&ggscoord=${p.lat}|${p.lon}&ggsradius=300&ggsnamespace=6&ggslimit=30&prop=imageinfo&iiprop=url&iiurlwidth=640`;
+      const j = await (await fetch(url)).json();
+      const nameWords = (t.name||"").toLowerCase().split(/[\s\-']+/).filter(w=>w.length>4 && !/piscine|centre|municipale|aquatique/.test(w));
+      const near = Object.values(j.query?.pages||{}).filter(x=>x.imageinfo && /\.(jpe?g|png|webp)$/i.test(x.title))
+        .filter(x=> POOL_RE.test(x.title) || nameWords.some(w=>x.title.toLowerCase().includes(w)))
+        .map(x=>({title:x.title, src:x.imageinfo[0].thumburl, page:x.imageinfo[0].descriptionurl, desc:""}));
+      for (const n of near) if (!photos.some(ph=>ph.title===n.title)) photos.push(n);
+    }catch(e){}
+  }
+  // Classement intérieur / extérieur
+  const txt = ph => (ph.title+" "+ph.desc);
+  let inside = photos.find(ph=>INT_RE.test(txt(ph)) && !EXT_RE.test(txt(ph)));
+  let outside = photos.find(ph=>EXT_RE.test(txt(ph)) && ph!==inside);
+  const rest = photos.filter(ph=>ph!==inside && ph!==outside);
+  const slots = [
+    inside ? {...inside, label:"Intérieur"} : null,
+    outside ? {...outside, label:"Extérieur"} : null
+  ];
+  if (!slots[0] && rest.length) slots[0] = {...rest.shift(), label:"Photo"};
+  if (!slots[1] && rest.length) slots[1] = {...rest.shift(), label:"Photo"};
+  return slots;
+}
+
+function photoSlot(ph, fallbackLabel, p){
+  const g = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(p.tags.name+" "+(p.tags["addr:city"]||"")+" "+fallbackLabel.toLowerCase())}`;
+  if (!ph) return `<div class="none">Pas de photo ${fallbackLabel.toLowerCase()} libre<br><a href="${g}" target="_blank" rel="noopener">Voir sur Google Images →</a></div>`;
+  return `<img src="${esc(ph.src)}" alt="${esc(p.tags.name)} – ${esc(ph.label)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=none>Image indisponible<br><a href=&quot;${g}&quot; target=_blank>Google Images →</a></div>'">
+    <span class="tag">${esc(ph.label)}</span><a class="credit" href="${esc(ph.page)}" target="_blank" rel="noopener">© Commons</a>`;
+}
+
+/* ---------- Rendu ---------- */
+function typeLabel(t){
+  const bits=[];
+  if (t.leisure==="water_park") bits.push("Parc aquatique");
+  const cov = t.covered || t.indoor; const loc=t.location;
+  if (loc==="indoor"||cov==="yes") bits.push("Couverte");
+  if (loc==="outdoor"||cov==="no") bits.push("Découverte");
+  if (t.operator) bits.push(t.operator);
+  return bits.join(" · ");
+}
+
+function initMap(lat,lon,pools){
+  const m = $("#map"); m.style.display="block";
+  if (typeof L === "undefined") { m.style.display="none"; return; }
+  if (!map){ map = L.map("map"); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19, attribution:"© OpenStreetMap"}).addTo(map); }
+  if (layer) layer.remove();
+  layer = L.layerGroup().addTo(map);
+  L.circleMarker([lat,lon],{radius:8,color:"#fff",weight:3,fillColor:"#ffb703",fillOpacity:1}).addTo(layer).bindPopup("Point de recherche");
+  const pts=[[lat,lon]];
+  pools.forEach((p,i)=>{
+    L.marker([p.lat,p.lon],{icon:L.divIcon({className:"numicon",html:String(i+1),iconSize:[26,26]})})
+      .addTo(layer).bindPopup(`<b>${esc(p.tags.name)}</b><br>${p.d.toFixed(1)} km`)
+      .on("click",()=>document.getElementById("card-"+i)?.scrollIntoView({behavior:"smooth",block:"center"}));
+    pts.push([p.lat,p.lon]);
+  });
+  map.fitBounds(pts,{padding:[30,30]});
+  setTimeout(()=>map.invalidateSize(),100);
+}
+
+async function run(lat, lon, label){
+  resultsEl.innerHTML = ""; $("#legend").hidden = true;
+  try{
+    const pools = await findPools(lat, lon);
+    if (!pools.length){ setStatus(`Aucune piscine trouvée autour de ${esc(label)}.`, true); return; }
+    setStatus(`<b>${pools.length} piscines</b> les plus proches de <b>${esc(label)}</b> — aujourd'hui : <b>${DAYS_FR[(new Date().getDay()+6)%7]}</b>`);
+    $("#legend").hidden = false;
+    initMap(lat,lon,pools);
+    pools.forEach((p,i)=>{
+      const t = p.tags;
+      const card = document.createElement("article");
+      card.className="card"; card.id="card-"+i;
+      const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}`;
+      const osm = `https://www.openstreetmap.org/${p.osmType}/${p.osmId}`;
+      const phone = t.phone || t["contact:phone"], web = t.website || t["contact:website"];
+      card.innerHTML = `
+        <div class="photos">
+          <div class="ph" data-slot="0"><span class="spinner"></span></div>
+          <div class="ph" data-slot="1"><span class="spinner"></span></div>
+        </div>
+        <div class="body">
+          <div class="top"><div class="num">${i+1}</div><h2 class="name">${esc(t.name)}</h2><div class="dist">${p.d.toFixed(1)} km</div></div>
+          <div>${openBadge(p)} ${typeLabel(t)?`<span class="badge b-unk">${esc(typeLabel(t))}</span>`:""}</div>
+          <div class="row"><span class="ic">📍</span><span class="addr">…</span></div>
+          <div class="row"><span class="ic">💶</span><span>${renderPrice(p)}</span></div>
+          ${phone?`<div class="row"><span class="ic">📞</span><span>${esc(phone)}</span></div>`:""}
+          ${renderHours(p)}
+          <div class="links">
+            <a href="${gmaps}" target="_blank" rel="noopener">🧭 Itinéraire</a>
+            ${web?`<a href="${esc(web)}" target="_blank" rel="noopener">🌐 Site officiel</a>`:""}
+            <a href="${osm}" target="_blank" rel="noopener">🗺️ Fiche OSM</a>
+          </div>
+        </div>`;
+      resultsEl.appendChild(card);
+      fillAddress(p, card.querySelector(".addr"));
+      getPhotos(p).then(slots=>{
+        card.querySelector('[data-slot="0"]').innerHTML = photoSlot(slots[0],"Intérieur",p);
+        card.querySelector('[data-slot="1"]').innerHTML = photoSlot(slots[1],"Extérieur",p);
+      }).catch(()=>{
+        card.querySelector('[data-slot="0"]').innerHTML = photoSlot(null,"Intérieur",p);
+        card.querySelector('[data-slot="1"]').innerHTML = photoSlot(null,"Extérieur",p);
+      });
+    });
+  }catch(err){
+    setStatus("Impossible de récupérer les piscines (serveur OpenStreetMap surchargé ?). Réessayez dans un instant. Détail : " + esc(err.message), true);
+  }
+}
+</script>
+</body>
+</html>
