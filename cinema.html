@@ -1,1 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séances de cinéma autour de moi</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0e13; --panel:#1a1820; --panel2:#232029; --line:#34303d;
+    --txt:#ece8f2; --mute:#9b95a8; --accent:#e8b04a; --accent2:#f4d28c;
+    --red:#d9534f; --ok:#5fb38a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 Inter,system-ui,sans-serif}
+  a{color:var(--accent2)}
+  header{padding:28px 20px 10px;max-width:1200px;margin:auto}
+  h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(28px,5vw,44px);margin:0;letter-spacing:-.5px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--mute);margin:4px 0 0}
+  main{max-width:1200px;margin:auto;padding:10px 20px 60px}
+  .search{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;position:relative}
+  button,select,input{font:inherit;color:inherit}
+  .btn{background:var(--accent);color:#1b1407;border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .or{color:var(--mute);font-size:13px}
+  .field{position:relative;flex:1 1 260px}
+  .field input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .field input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  select{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+  .sugg{position:absolute;top:100%;left:0;right:0;z-index:1000;background:var(--panel2);border:1px solid var(--line);border-radius:10px;margin-top:4px;overflow:hidden;display:none}
+  .sugg div{padding:9px 12px;cursor:pointer}
+  .sugg div:hover,.sugg div.act{background:var(--line)}
+  .sugg small{color:var(--mute)}
+  details.cfg{margin-top:10px;color:var(--mute);font-size:13px}
+  details.cfg input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:300px;max-width:100%}
+  .status{margin:14px 2px;color:var(--mute);min-height:22px}
+  .status.err{color:#ff8c87}
+  .banner{background:#2a2316;border:1px solid #5a4620;color:var(--accent2);border-radius:10px;padding:10px 14px;font-size:13px;margin:12px 0;display:none}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin:6px 0 14px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+  #map{height:340px;border-radius:14px;border:1px solid var(--line);display:none;margin-bottom:18px}
+  .cine{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:16px;overflow:hidden}
+  .cine-h{padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-start;justify-content:space-between;cursor:pointer}
+  .cine-h h2{font-family:Fraunces,serif;font-size:21px;margin:0}
+  .meta{color:var(--mute);font-size:13px}
+  .dist{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:2px 10px;font-size:13px;white-space:nowrap}
+  .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .links a{font-size:13px;text-decoration:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;color:var(--txt)}
+  .links a:hover{border-color:var(--accent)}
+  .prices{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .price{font-size:12.5px;background:#1f2a24;border:1px solid #2f4a3c;color:#bfe7d0;border-radius:6px;padding:2px 8px}
+  .cine-b{border-top:1px solid var(--line);padding:6px 16px 14px}
+  .cine.closed .cine-b{display:none}
+  .film{display:grid;grid-template-columns:70px 1fr;gap:14px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .film:last-child{border-bottom:0}
+  .poster{width:70px;height:100px;border-radius:8px;background:var(--panel2);object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--mute)}
+  .film h3{margin:0;font-size:16.5px}
+  .film .fm{color:var(--mute);font-size:13px;margin:2px 0 6px}
+  .trailer{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#fff;background:var(--red);border-radius:7px;padding:3px 10px;text-decoration:none;margin-bottom:8px}
+  .days{display:flex;flex-direction:column;gap:5px}
+  .day{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .day .dl{width:92px;flex:none;font-size:12.5px;color:var(--mute);text-transform:capitalize}
+  .slot{font-size:13px;font-variant-numeric:tabular-nums;border-radius:6px;padding:2px 8px;background:var(--panel2);border:1px solid var(--line)}
+  .slot .v{font-size:10.5px;color:var(--mute);margin-left:4px}
+  .day.today .dl{color:var(--accent);font-weight:600}
+  .day.today .slot{background:var(--accent);color:#1b1407;border-color:var(--accent);font-weight:600}
+  .day.today .slot .v{color:#5a4310}
+  .day.today .slot.past{background:transparent;color:var(--mute);border-color:var(--line);text-decoration:line-through;font-weight:400}
+  .empty{color:var(--mute);padding:30px;text-align:center}
+  .spin{width:16px;height:16px;border:2px solid var(--mute);border-top-color:transparent;border-radius:50%;display:inline-block;animation:r .8s linear infinite;vertical-align:-3px;margin-right:6px}
+  @keyframes r{to{transform:rotate(360deg)}}
+  .leaflet-popup-content{font:13px Inter,sans-serif}
+  footer{color:var(--mute);font-size:12px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Séances <span>autour de moi</span></h1>
+  <p class="sub">Trouvez les cinémas proches, leurs horaires, tarifs et bandes-annonces.</p>
+</header>
+
+<main>
+  <form class="search" id="form" autocomplete="off">
+    <button type="button" class="btn" id="geo">📍 Me géolocaliser</button>
+    <span class="or">ou</span>
+    <div class="field">
+      <input id="q" placeholder="Ville ou code postal (ex : Lyon, 33000)" aria-label="Ville ou code postal">
+      <div class="sugg" id="sugg"></div>
+    </div>
+    <select id="radius" aria-label="Rayon">
+      <option value="5000">5 km</option>
+      <option value="10000" selected>10 km</option>
+      <option value="20000">20 km</option>
+      <option value="35000">35 km</option>
+    </select>
+    <button class="btn ghost" type="submit">Rechercher</button>
+    <details class="cfg" style="flex-basis:100%">
+      <summary>⚙️ Options : vrais films à l'affiche (clé TMDB gratuite)</summary>
+      <p>Avec une clé API <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">TMDB</a> (gratuite), la page affiche les films réellement à l'affiche en France, avec affiches et bandes-annonces officielles.</p>
+      <input id="tmdb" placeholder="Clé API TMDB (v3)"> <button type="button" class="btn ghost" id="saveKey" style="padding:6px 12px">Enregistrer</button>
+    </details>
+  </form>
+
+  <div class="status" id="status"></div>
+  <div class="banner" id="banner">⚠️ <b>Horaires et tarifs de démonstration.</b> Les cinémas et leur localisation sont réels (OpenStreetMap), mais il n'existe pas d'API publique gratuite des séances en France : les horaires et prix affichés sont simulés. Vérifiez sur le site du cinéma ou via le lien Allociné de chaque salle. Pour brancher une vraie source, remplacez la fonction <code>fetchShowtimes()</code> dans le code.</div>
+  <div class="legend" id="legend" style="display:none">
+    <span><i style="background:var(--accent)"></i>Aujourd'hui</span>
+    <span><i style="background:var(--panel2);border:1px solid var(--line)"></i>Jours suivants</span>
+    <span><s>12:00</s> Séance passée</span>
+  </div>
+  <div id="map"></div>
+  <div id="results"></div>
+</main>
+<footer>Données lieux © contributeurs OpenStreetMap · Communes : geo.api.gouv.fr · Films : TMDB (si clé fournie)</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ================= Config ================= */
+const DAYS_SHOWN = 5;
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+};
+$('#tmdb').value = store.get('tmdbKey') || '';
+$('#saveKey').onclick = () => { store.set('tmdbKey', $('#tmdb').value.trim()); filmsCache = null; setStatus('Clé enregistrée. Relancez une recherche.'); };
+
+function setStatus(msg, err=false, loading=false){
+  const el = $('#status'); el.className = 'status' + (err?' err':'');
+  el.innerHTML = (loading?'<span class="spin"></span>':'') + msg;
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================= Géolocalisation ================= */
+$('#geo').onclick = () => {
+  if(!navigator.geolocation){ setStatus("Votre navigateur ne gère pas la géolocalisation.", true); return; }
+  setStatus('Localisation en cours…', false, true);
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const {latitude:lat, longitude:lon} = pos.coords;
+    let label = 'votre position';
+    try{
+      const r = await fetch(`https://geo.api.gouv.fr/communes?lat=${lat}&lon=${lon}&fields=nom,codesPostaux&format=json`);
+      const j = await r.json();
+      if(j[0]){ label = `${j[0].nom} (${j[0].codesPostaux?.[0]||''})`; $('#q').value = j[0].nom; }
+    }catch(e){}
+    search(lat, lon, label);
+  }, err => {
+    setStatus(err.code===1 ? "Géolocalisation refusée. Saisissez une ville ou un code postal." : "Impossible d'obtenir votre position.", true);
+  }, {enableHighAccuracy:false, timeout:10000, maximumAge:300000});
+};
+
+/* ================= Recherche ville / CP ================= */
+let suggestions = [], suggIdx = -1, debounce;
+async function findCommunes(text){
+  text = text.trim();
+  if(text.length < 2) return [];
+  const f = 'fields=nom,codesPostaux,centre,population&format=json';
+  const url = /^\d{2,5}$/.test(text)
+    ? (text.length===5 ? `https://geo.api.gouv.fr/communes?codePostal=${text}&${f}` : `https://geo.api.gouv.fr/communes?codeDepartement=${text.slice(0,2)}&${f}`)
+    : `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(text)}&${f}&boost=population&limit=7`;
+  const r = await fetch(url); if(!r.ok) return [];
+  let list = (await r.json()).filter(c => c.centre);
+  list.sort((a,b)=>(b.population||0)-(a.population||0));
+  return list.slice(0,7);
+}
+function showSugg(){
+  const box = $('#sugg');
+  if(!suggestions.length){ box.style.display='none'; return; }
+  box.innerHTML = suggestions.map((c,i)=>`<div data-i="${i}" class="${i===suggIdx?'act':''}">${esc(c.nom)} <small>${esc((c.codesPostaux||[]).slice(0,3).join(', '))}</small></div>`).join('');
+  box.style.display='block';
+}
+$('#q').addEventListener('input', e => {
+  clearTimeout(debounce);
+  debounce = setTimeout(async()=>{ try{ suggestions = await findCommunes(e.target.value); }catch(_){ suggestions=[] } suggIdx=-1; showSugg(); }, 250);
+});
+$('#q').addEventListener('keydown', e => {
+  if(!suggestions.length) return;
+  if(e.key==='ArrowDown'){ suggIdx=(suggIdx+1)%suggestions.length; showSugg(); e.preventDefault(); }
+  if(e.key==='ArrowUp'){ suggIdx=(suggIdx-1+suggestions.length)%suggestions.length; showSugg(); e.preventDefault(); }
+});
+$('#sugg').addEventListener('mousedown', e => {
+  const d = e.target.closest('[data-i]'); if(!d) return;
+  pickCommune(suggestions[+d.dataset.i]);
+});
+document.addEventListener('click', e => { if(!e.target.closest('.field')) $('#sugg').style.display='none'; });
+function pickCommune(c){
+  $('#q').value = c.nom; $('#sugg').style.display='none'; suggestions=[];
+  const [lon,lat] = c.centre.coordinates;
+  search(lat, lon, `${c.nom} (${c.codesPostaux?.[0]||''})`);
+}
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if(suggIdx>=0 && suggestions[suggIdx]) return pickCommune(suggestions[suggIdx]);
+  const q = $('#q').value; if(!q.trim()) return;
+  setStatus('Recherche de la commune…', false, true);
+  try{
+    const list = await findCommunes(q);
+    if(!list.length) return setStatus('Aucune commune trouvée pour « '+esc(q)+' ».', true);
+    pickCommune(list[0]);
+  }catch(err){ setStatus('Erreur réseau lors de la recherche de la commune.', true); }
+});
+$('#radius').onchange = () => { if(lastSearch) search(...lastSearch); };
+
+/* ================= Cinémas (OpenStreetMap / Overpass) ================= */
+async function fetchCinemas(lat, lon, radius){
+  const q = `[out:json][timeout:25];(nwr["amenity"="cinema"](around:${radius},${lat},${lon}););out center tags;`;
+  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  let lastErr;
+  for(const ep of endpoints){
+    try{
+      const r = await fetch(ep, {method:'POST', body:'data='+encodeURIComponent(q), headers:{'Content-Type':'application/x-www-form-urlencoded'}});
+      if(!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      return j.elements.map(el => {
+        const t = el.tags || {};
+        const la = el.lat ?? el.center?.lat, lo = el.lon ?? el.center?.lon;
+        const addr = [ [t['addr:housenumber'], t['addr:street']].filter(Boolean).join(' '), [t['addr:postcode'], t['addr:city']].filter(Boolean).join(' ') ].filter(Boolean).join(', ');
+        return { id: el.type+el.id, name: t.name || 'Cinéma sans nom', lat: la, lon: lo, addr,
+                 website: t.website || t['contact:website'], phone: t.phone || t['contact:phone'],
+                 screens: t.screen || t.screens, charge: t.charge || t.fee_amount,
+                 dist: haversine(lat, lon, la, lo) };
+      }).filter(c => c.lat && (c.name !== 'Cinéma sans nom' || c.addr)).sort((a,b)=>a.dist-b.dist);
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr;
+}
+function haversine(a,b,c,d){
+  const R=6371, r=x=>x*Math.PI/180, dl=r(c-a), dn=r(d-b);
+  const h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+
+/* ================= Films ================= */
+// Mode démo : films existants (les liens bande-annonce mènent à de vraies vidéos)
+const DEMO_FILMS = [
+  {title:"Le Fabuleux Destin d'Amélie Poulain", year:2001, genre:"Comédie romantique", dur:122},
+  {title:"Intouchables", year:2011, genre:"Comédie dramatique", dur:112},
+  {title:"Dune : Deuxième partie", year:2024, genre:"Science-fiction", dur:166},
+  {title:"Le Comte de Monte-Cristo", year:2024, genre:"Aventure", dur:178},
+  {title:"Interstellar", year:2014, genre:"Science-fiction", dur:169},
+  {title:"Le Grand Bleu", year:1988, genre:"Drame", dur:168},
+  {title:"Vice-Versa 2", year:2024, genre:"Animation", dur:96},
+  {title:"Anatomie d'une chute", year:2023, genre:"Thriller judiciaire", dur:151},
+  {title:"La Haine", year:1995, genre:"Drame", dur:98},
+  {title:"Le Voyage de Chihiro", year:2001, genre:"Animation", dur:125},
+  {title:"Oppenheimer", year:2023, genre:"Biopic", dur:180},
+  {title:"Le Dîner de cons", year:1998, genre:"Comédie", dur:80}
+].map((f,i)=>({...f, id:'d'+i}));
+
+let filmsCache = null;
+async function getFilms(){
+  if(filmsCache) return filmsCache;
+  const key = store.get('tmdbKey');
+  if(key){
+    try{
+      const r = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${encodeURIComponent(key)}&language=fr-FR&region=FR&page=1`);
+      if(!r.ok) throw new Error('TMDB '+r.status);
+      const j = await r.json();
+      const films = j.results.slice(0,16).map(m => ({ id:'t'+m.id, tmdbId:m.id, title:m.title, year:(m.release_date||'').slice(0,4),
+        genre:'', dur:null, poster: m.poster_path ? 'https://image.tmdb.org/t/p/w185'+m.poster_path : null }));
+      await Promise.all(films.map(async f => {
+        try{
+          for(const lang of ['fr-FR','en-US']){
+            const v = await (await fetch(`https://api.themoviedb.org/3/movie/${f.tmdbId}/videos?api_key=${encodeURIComponent(key)}&language=${lang}`)).json();
+            const yt = (v.results||[]).find(x=>x.site==='YouTube' && x.type==='Trailer') || (v.results||[]).find(x=>x.site==='YouTube');
+            if(yt){ f.trailer = 'https://www.youtube.com/watch?v='+yt.key; break; }
+          }
+        }catch(e){}
+      }));
+      filmsCache = {films, real:true};
+      return filmsCache;
+    }catch(e){ setStatus('Clé TMDB invalide ou TMDB indisponible : films de démonstration utilisés.', true); }
+  }
+  filmsCache = {films: DEMO_FILMS, real:false};
+  return filmsCache;
+}
+const trailerUrl = f => f.trailer || 'https://www.youtube.com/results?search_query=' + encodeURIComponent(`${f.title} ${f.year||''} bande annonce VF`);
+
+/* ================= Séances =================
+   Il n'existe pas d'API publique gratuite des séances en France.
+   Pour brancher une vraie source (votre backend, une API partenaire…),
+   remplacez cette fonction : elle doit renvoyer
+   { prices:[{label,amount}], movies:[{film, shows:[{date:Date, version:'VF'|'VOST'}]}], demo:boolean }
+*/
+async function fetchShowtimes(cinema, films){
+  const rnd = seeded(hash(cinema.id));
+  const nb = Math.min(films.length, 3 + Math.floor(rnd()*5));
+  const picked = shuffle([...films], rnd).slice(0, nb);
+  const slotsPool = ['10:45','11:15','13:30','14:00','14:15','15:45','16:30','17:00','18:10','19:00','19:45','20:15','21:00','21:30','22:10'];
+  const today = startOfDay(new Date());
+  const movies = picked.map(film => {
+    const base = shuffle([...slotsPool], rnd).slice(0, 2 + Math.floor(rnd()*3)).sort();
+    const vost = rnd() < .3;
+    const shows = [];
+    for(let d=0; d<DAYS_SHOWN; d++){
+      const day = new Date(today); day.setDate(day.getDate()+d);
+      const weekend = [0,6].includes(day.getDay()) || day.getDay()===3;
+      const list = weekend ? base.concat(rnd()<.5?['11:00']:[]) : base.filter(()=>rnd()>.2);
+      [...new Set(list)].sort().forEach(t => {
+        const [h,m] = t.split(':').map(Number);
+        const dt = new Date(day); dt.setHours(h,m,0,0);
+        shows.push({date:dt, version: vost && rnd()<.5 ? 'VOST' : 'VF'});
+      });
+    }
+    return {film, shows};
+  });
+  let prices;
+  if(cinema.charge){ prices = [{label:'Tarif (OSM)', amount: cinema.charge}]; }
+  else{
+    const full = 9 + Math.round(rnd()*8)/2 + (cinema.screens>6 ? 1.5 : 0);
+    prices = [
+      {label:'Plein', amount: eur(full)},
+      {label:'Réduit', amount: eur(full-2.5)},
+      {label:'-14 ans', amount: eur(5.5)},
+      {label:'Matin (avant 12h)', amount: eur(Math.max(6, full-4))}
+    ];
+  }
+  return {prices, movies, demo:true};
+}
+const eur = n => n.toFixed(2).replace('.',',')+' €';
+function hash(s){ let h=2166136261; for(const c of s){ h^=c.charCodeAt(0); h=Math.imul(h,16777619);} return h>>>0; }
+function seeded(a){ return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function shuffle(arr, rnd){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+
+/* ================= Carte ================= */
+let map, layer;
+function drawMap(lat, lon, cinemas, radius){
+  const el = $('#map'); el.style.display='block';
+  if(!window.L){ el.style.display='none'; return; }
+  if(!map){
+    map = L.map('map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'© OpenStreetMap'}).addTo(map);
+  }
+  if(layer) layer.remove();
+  layer = L.layerGroup().addTo(map);
+  L.circle([lat,lon],{radius, color:'#e8b04a', weight:1, fillOpacity:.05}).addTo(layer);
+  L.circleMarker([lat,lon],{radius:7, color:'#fff', fillColor:'#e8b04a', fillOpacity:1}).addTo(layer).bindPopup('Point de recherche');
+  cinemas.forEach((c,i) => {
+    L.marker([c.lat,c.lon]).addTo(layer)
+      .bindPopup(`<b>${esc(c.name)}</b><br>${esc(c.addr||'')}<br>${c.dist.toFixed(1)} km<br><a href="#cine-${i}">Voir les séances</a>`);
+  });
+  map.fitBounds(L.circle([lat,lon],{radius}).addTo(layer).getBounds());
+  setTimeout(()=>map.invalidateSize(), 50);
+}
+
+/* ================= Rendu ================= */
+let lastSearch = null;
+async function search(lat, lon, label){
+  lastSearch = [lat, lon, label];
+  const radius = +$('#radius').value;
+  $('#results').innerHTML = '';
+  setStatus(`Recherche des cinémas autour de <b>${esc(label)}</b>…`, false, true);
+  let cinemas;
+  try{ cinemas = await fetchCinemas(lat, lon, radius); }
+  catch(e){ return setStatus("Le service OpenStreetMap ne répond pas. Réessayez dans un instant.", true); }
+  drawMap(lat, lon, cinemas, radius);
+  if(!cinemas.length){
+    $('#legend').style.display='none'; $('#banner').style.display='none';
+    $('#results').innerHTML = `<div class="empty">Aucun cinéma trouvé dans un rayon de ${radius/1000} km. Essayez un rayon plus grand.</div>`;
+    return setStatus(`0 cinéma autour de <b>${esc(label)}</b>.`);
+  }
+  const {films} = await getFilms();
+  const now = new Date(), today = startOfDay(now);
+  const html = [];
+  for(const [i,c] of cinemas.entries()){
+    const st = await fetchShowtimes(c, films);
+    if(st.demo) $('#banner').style.display='block';
+    const maps = `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lon}`;
+    const osm = `https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=17/${c.lat}/${c.lon}`;
+    const allo = `https://www.allocine.fr/rechercher/?q=${encodeURIComponent(c.name)}`;
+    const moviesHtml = st.movies.map(({film, shows}) => {
+      const byDay = {};
+      shows.forEach(s => { const k = startOfDay(s.date).getTime(); (byDay[k] ||= []).push(s); });
+      const days = Object.keys(byDay).sort().map(k => {
+        const d = new Date(+k), isToday = +k === today.getTime();
+        const lbl = isToday ? "Aujourd'hui" : d.toLocaleDateString('fr-FR',{weekday:'short', day:'numeric', month:'short'});
+        const slots = byDay[k].map(s => {
+          const past = isToday && s.date < now;
+          return `<span class="slot${past?' past':''}" title="${past?'Séance passée':''}">${s.date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}<span class="v">${s.version}</span></span>`;
+        }).join('');
+        return `<div class="day${isToday?' today':''}"><span class="dl">${lbl}</span>${slots}</div>`;
+      }).join('');
+      const poster = film.poster ? `<img class="poster" src="${film.poster}" alt="" loading="lazy">` : `<div class="poster">🎬</div>`;
+      const fm = [film.genre, film.year, film.dur ? `${Math.floor(film.dur/60)}h${String(film.dur%60).padStart(2,'0')}` : ''].filter(Boolean).join(' · ');
+      return `<div class="film">${poster}<div>
+        <h3>${esc(film.title)}</h3><div class="fm">${esc(fm)}</div>
+        <a class="trailer" href="${trailerUrl(film)}" target="_blank" rel="noopener">▶ Bande-annonce</a>
+        <div class="days">${days}</div></div></div>`;
+    }).join('');
+    html.push(`<section class="cine${i>2?' closed':''}" id="cine-${i}">
+      <div class="cine-h" data-toggle>
+        <div>
+          <h2>${esc(c.name)}</h2>
+          <div class="meta">${esc(c.addr || 'Adresse non renseignée')}${c.screens?` · ${esc(c.screens)} salle(s)`:''}${c.phone?` · ${esc(c.phone)}`:''}</div>
+          <div class="prices">${st.prices.map(p=>`<span class="price">${esc(p.label)} : ${esc(p.amount)}</span>`).join('')}</div>
+          <div class="links">
+            <a href="${maps}" target="_blank" rel="noopener">🧭 Itinéraire</a>
+            <a href="${osm}" target="_blank" rel="noopener">🗺️ Carte</a>
+            ${c.website?`<a href="${esc(c.website)}" target="_blank" rel="noopener">🌐 Site du cinéma</a>`:''}
+            <a href="${allo}" target="_blank" rel="noopener">🎟️ Séances réelles (Allociné)</a>
+          </div>
+        </div>
+        <span class="dist">${c.dist.toFixed(1)} km</span>
+      </div>
+      <div class="cine-b">${moviesHtml}</div>
+    </section>`);
+  }
+  $('#results').innerHTML = html.join('');
+  $('#legend').style.display='flex';
+  setStatus(`<b>${cinemas.length}</b> cinéma(s) dans un rayon de ${radius/1000} km autour de <b>${esc(label)}</b>. Cliquez sur un cinéma pour afficher / masquer ses séances.`);
+}
+$('#results').addEventListener('click', e => {
+  const h = e.target.closest('[data-toggle]');
+  if(h && !e.target.closest('a')) h.parentElement.classList.toggle('closed');
+});
+</script>
+</body>
+</html>
 
