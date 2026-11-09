@@ -1,44 +1,75 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Formulaire</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Formulaire</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1d2330;--muted:#5d6678;--border:#d5d9e2;--blue:#1d4ed8;--green:#15803d;--accent:#1d4ed8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1e222b;--text:#eceff5;--muted:#a3abbb;--border:#363c49;--blue:#6ea0ff;--green:#4ade80;--accent:#6ea0ff}}
+:root[data-theme="dark"]{--bg:#14171d;--card:#1e222b;--text:#eceff5;--muted:#a3abbb;--border:#363c49;--blue:#6ea0ff;--green:#4ade80;--accent:#6ea0ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;padding:24px 16px}
+main{max-width:560px;margin:0 auto}
+form,#result{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+h1{font-size:1.4rem;margin:0 0 16px}
+label{display:block;font-weight:600;margin-bottom:12px}
+input{display:block;width:100%;margin-top:4px;padding:10px;font-size:1rem;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
+button{margin-top:4px;padding:10px 18px;font-size:1rem;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer}
+#result[hidden]{display:none}
+.hello{font-size:1.3rem;font-weight:700}
+.blue{color:var(--blue)}.green{color:var(--green)}
+.muted{color:var(--muted)}
+p{margin:10px 0;overflow-wrap:anywhere}
+</style>
 </head>
 <body>
-    <h1>Formulaire</h1>
+<main>
+<form id="f">
+  <h1>Formulaire</h1>
+  <label>Prénom <input id="prenom" required></label>
+  <label>Nom <input id="nom" required></label>
+  <label>Âge <input id="age" type="number" min="1" max="130" required></label>
+  <button type="submit">Valider</button>
+</form>
 
-    <form id="monFormulaire">
-        <p>
-            <label for="prenom">Prénom :</label>
-            <input type="text" id="prenom" required>
-        </p>
-        <p>
-            <label for="nom">Nom :</label>
-            <input type="text" id="nom" required>
-        </p>
-        <p>
-            <label for="age">Âge :</label>
-            <input type="number" id="age" min="1" max="120" required>
-        </p>
-        <p>
-            <button type="submit">Valider</button>
-        </p>
-    </form>
+<section id="result" hidden>
+  <p class="hello"><span class="blue" id="hello"></span> <span class="green" id="nomMaj"></span></p>
+  <p><span class="muted">Prénom inversé :</span> <strong id="inverse"></strong></p>
+  <p><span class="muted">Nombres premiers de 1 à l’âge :</span><br><span id="primes"></span></p>
+  <p><span class="muted">Quantité :</span> <strong id="count"></strong></p>
+</section>
+</main>
 
-    <p id="resultat"><strong></strong></p>
+<script>
+function estPremier(n){
+  if(n<2) return false;
+  for(let i=2;i*i<=n;i++) if(n%i===0) return false;
+  return true;
+}
+document.getElementById("f").addEventListener("submit",function(e){
+  e.preventDefault();
+  const prenom=document.getElementById("prenom").value.trim();
+  const nom=document.getElementById("nom").value.trim();
+  const age=parseInt(document.getElementById("age").value,10);
+  if(!prenom||!nom||!(age>=1)) return;
 
-    <script>
-        document.getElementById("monFormulaire").addEventListener("submit", function (e) {
-            e.preventDefault();
+  const prenomCap=prenom.charAt(0).toUpperCase()+prenom.slice(1).toLowerCase();
+  document.getElementById("hello").textContent="Bonjour "+prenomCap;
+  document.getElementById("nomMaj").textContent=nom.toUpperCase();
+  document.getElementById("inverse").textContent=Array.from(prenom).reverse().join("");
 
-            let prenom = document.getElementById("prenom").value.trim().toLowerCase();
-            prenom = prenom.charAt(0).toUpperCase() + prenom.slice(1);
-            const nom = document.getElementById("nom").value.trim().toUpperCase();
-            const age = document.getElementById("age").value;
+  const premiers=[];
+  for(let n=1;n<=age;n++) if(estPremier(n)) premiers.push(n);
+  document.getElementById("primes").textContent=premiers.length?premiers.join(", "):"Aucun";
 
-            document.querySelector("#resultat strong").textContent =
-                "Bonjour " + prenom + " " + nom + ", vous avez " + age + " ans";
-        });
-    </script>
+  const pct=(premiers.length/age*100).toFixed(2).replace(".",",");
+  document.getElementById("count").textContent=
+    premiers.length+" nombre"+(premiers.length>1?"s":"")+" premier"+(premiers.length>1?"s":"")+
+    " sur "+age+" ("+pct+" %)";
+
+  document.getElementById("result").hidden=false;
+});
+</script>
 </body>
 </html>
