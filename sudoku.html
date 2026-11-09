@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sudoku</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --ink: #1d232b; --muted: #6b7280; --line: #1d232b; --thin: #c9c3b8;
+    --cell: #ffffff; --given: #1d232b; --user: #2456c9; --sel: #dbe6ff; --peer: #eef1f6;
+    --same: #c7d6fb; --err: #d62828; --errbg: #fde3e3; --ok: #2a7d4f; --btn: #1d232b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex; justify-content: center; padding: 24px 12px; }
+  .app { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+  h1 { margin: 0; font-size: 28px; letter-spacing: .5px; text-align: center; }
+  .levels { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .levels button, .actions button {
+    border: 2px solid var(--btn); background: transparent; color: var(--btn);
+    padding: 8px 14px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .levels button.active { background: var(--btn); color: #fff; }
+  .pad { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+  .pad button { aspect-ratio: 1; border: 1px solid var(--thin); background: #fff; border-radius: 8px;
+    font-size: clamp(16px, 4.5vw, 22px); font-weight: 600; color: var(--user); cursor: pointer; padding: 0; }
+  .pad button:hover { background: var(--sel); }
+  .pad button.erase { color: var(--muted); font-size: clamp(14px, 4vw, 18px); }
+  .pad button.done { opacity: .35; }
+  .grid { display: grid; grid-template-columns: repeat(9, 1fr); border: 3px solid var(--line);
+    background: var(--line); gap: 0; user-select: none; }
+  .cell { aspect-ratio: 1; background: var(--cell); display: flex; align-items: center; justify-content: center;
+    font-size: clamp(18px, 5.5vw, 28px); border-right: 1px solid var(--thin); border-bottom: 1px solid var(--thin);
+    cursor: pointer; color: var(--user); font-weight: 500; }
+  .cell.c2, .cell.c5 { border-right: 3px solid var(--line); }
+  .cell.c8 { border-right: none; }
+  .cell.r2, .cell.r5 { border-bottom: 3px solid var(--line); }
+  .cell.r8 { border-bottom: none; }
+  .cell.given { color: var(--given); font-weight: 700; cursor: default; }
+  .cell.peer { background: var(--peer); }
+  .cell.same { background: var(--same); }
+  .cell.sel { background: var(--sel); outline: 2px solid var(--user); outline-offset: -2px; }
+  .cell.conflict { color: var(--err); }
+  .cell.wrong { color: var(--err); background: var(--errbg); }
+  .cell.solved { color: var(--ok); }
+  .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .actions button.primary { background: var(--btn); color: #fff; }
+  .msg { min-height: 24px; text-align: center; font-weight: 600; font-size: 16px; }
+  .msg.err { color: var(--err); } .msg.ok { color: var(--ok); }
+  .hint { text-align: center; color: var(--muted); font-size: 13px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Sudoku</h1>
+
+  <div class="levels" id="levels">
+    <button data-level="facile" class="active">Facile</button>
+    <button data-level="moyen">Moyen</button>
+    <button data-level="difficile">Difficile</button>
+  </div>
+
+  <div class="pad" id="pad"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="actions">
+    <button class="primary" id="btnCheck">Vérification</button>
+    <button id="btnSolution">Solution</button>
+    <button id="btnNew">Nouvelle grille</button>
+  </div>
+  <div class="msg" id="msg"></div>
+  <p class="hint">Cliquez sur une case vide puis sur un chiffre (ou tapez 1–9 au clavier, Suppr pour effacer).</p>
+</div>
+
+<script>
+// Proportion de chiffres effacés : facile 1/3, moyen 2/5, difficile 1/2
+const RATIO = { facile: 1/3, moyen: 2/5, difficile: 1/2 };
+
+let solution = [];   // grille complète (81 valeurs)
+let given = [];      // true si case donnée au départ
+let values = [];     // valeurs actuelles (0 = vide)
+let selected = -1;
+let level = 'facile';
+let revealed = false;
+const wrongSet = new Set();
+
+const gridEl = document.getElementById('grid');
+const padEl = document.getElementById('pad');
+const msgEl = document.getElementById('msg');
+
+const row = i => Math.floor(i / 9);
+const col = i => i % 9;
+const box = i => Math.floor(row(i) / 3) * 3 + Math.floor(col(i) / 3);
+const peers = i => {
+  const out = [];
+  for (let j = 0; j < 81; j++)
+    if (j !== i && (row(j) === row(i) || col(j) === col(i) || box(j) === box(i))) out.push(j);
+  return out;
+};
+const PEERS = Array.from({ length: 81 }, (_, i) => peers(i));
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Génère une grille complète valide par retour arrière avec ordre aléatoire
+function generateFull() {
+  const g = new Array(81).fill(0);
+  function fill(pos) {
+    if (pos === 81) return true;
+    for (const n of shuffle([1,2,3,4,5,6,7,8,9])) {
+      if (PEERS[pos].every(p => g[p] !== n)) {
+        g[pos] = n;
+        if (fill(pos + 1)) return true;
+      }
+    }
+    g[pos] = 0;
+    return false;
+  }
+  fill(0);
+  return g;
+}
+
+function newGame() {
+  solution = generateFull();
+  const toRemove = Math.round(81 * RATIO[level]);
+  const cells = shuffle([...Array(81).keys()]).slice(0, toRemove);
+  values = solution.slice();
+  given = new Array(81).fill(true);
+  for (const c of cells) { values[c] = 0; given[c] = false; }
+  selected = -1;
+  revealed = false;
+  wrongSet.clear();
+  setMsg('');
+  render();
+}
+
+function buildGrid() {
+  gridEl.innerHTML = '';
+  for (let i = 0; i < 81; i++) {
+    const d = document.createElement('div');
+    d.className = `cell r${row(i)} c${col(i)}`;
+    d.addEventListener('click', () => {
+      selected = i;
+      render();
+    });
+    gridEl.appendChild(d);
+  }
+  padEl.innerHTML = '';
+  for (let n = 1; n <= 9; n++) {
+    const b = document.createElement('button');
+    b.textContent = n;
+    b.addEventListener('click', () => place(n));
+    padEl.appendChild(b);
+  }
+  const e = document.createElement('button');
+  e.textContent = '⌫';
+  e.title = 'Effacer';
+  e.className = 'erase';
+  e.addEventListener('click', () => place(0));
+  padEl.appendChild(e);
+}
+
+function place(n) {
+  if (selected < 0 || given[selected] || revealed) return;
+  values[selected] = n;
+  wrongSet.delete(selected);
+  setMsg('');
+  render();
+  if (values.every((v, i) => v === solution[i])) setMsg('Bravo, grille résolue !', 'ok');
+}
+
+// Une valeur est en conflit si elle apparaît déjà dans sa ligne, sa colonne ou son bloc
+function isConflict(i) {
+  const v = values[i];
+  return v !== 0 && PEERS[i].some(p => values[p] === v);
+}
+
+function render() {
+  const cells = gridEl.children;
+  const selVal = selected >= 0 ? values[selected] : 0;
+  const selPeers = selected >= 0 ? new Set(PEERS[selected]) : new Set();
+  for (let i = 0; i < 81; i++) {
+    const c = cells[i];
+    c.textContent = values[i] || '';
+    c.className = `cell r${row(i)} c${col(i)}`;
+    if (given[i]) c.classList.add('given');
+    if (selPeers.has(i)) c.classList.add('peer');
+    if (selVal && values[i] === selVal && i !== selected) c.classList.add('same');
+    if (i === selected) c.classList.add('sel');
+    if (!given[i] && isConflict(i)) c.classList.add('conflict');
+    if (wrongSet.has(i)) c.classList.add('wrong');
+    if (revealed && !given[i]) c.classList.add('solved');
+  }
+  // Grise un chiffre du pavé quand ses 9 exemplaires sont placés
+  const counts = new Array(10).fill(0);
+  values.forEach(v => counts[v]++);
+  [...padEl.children].forEach((b, k) => b.classList.toggle('done', k < 9 && counts[k + 1] >= 9));
+}
+
+function setMsg(text, kind) {
+  msgEl.textContent = text;
+  msgEl.className = 'msg' + (kind ? ' ' + kind : '');
+}
+
+function check() {
+  if (revealed) return;
+  wrongSet.clear();
+  let empty = 0;
+  for (let i = 0; i < 81; i++) {
+    if (given[i]) continue;
+    if (values[i] === 0) empty++;
+    else if (values[i] !== solution[i] || isConflict(i)) wrongSet.add(i);
+  }
+  render();
+  const n = wrongSet.size;
+  if (n === 0 && empty === 0) setMsg('Aucune erreur, grille résolue !', 'ok');
+  else if (n === 0) setMsg(`Aucune erreur — encore ${empty} case${empty > 1 ? 's' : ''} à remplir.`, 'ok');
+  else setMsg(`${n} erreur${n > 1 ? 's' : ''}` + (empty ? ` — ${empty} case${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}` : ''), 'err');
+}
+
+function showSolution() {
+  values = solution.slice();
+  revealed = true;
+  wrongSet.clear();
+  render();
+  setMsg('Voici la solution.');
+}
+
+document.getElementById('btnCheck').addEventListener('click', check);
+document.getElementById('btnSolution').addEventListener('click', showSolution);
+document.getElementById('btnNew').addEventListener('click', newGame);
+document.querySelectorAll('#levels button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#levels button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  level = b.dataset.level;
+  newGame();
+}));
+
+document.addEventListener('keydown', e => {
+  if (e.key >= '1' && e.key <= '9') place(+e.key);
+  else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') place(0);
+  else if (selected >= 0 && e.key.startsWith('Arrow')) {
+    const r = row(selected), c = col(selected);
+    if (e.key === 'ArrowUp') selected = ((r + 8) % 9) * 9 + c;
+    if (e.key === 'ArrowDown') selected = ((r + 1) % 9) * 9 + c;
+    if (e.key === 'ArrowLeft') selected = r * 9 + (c + 8) % 9;
+    if (e.key === 'ArrowRight') selected = r * 9 + (c + 1) % 9;
+    e.preventDefault();
+    render();
+  }
+});
+
+buildGrid();
+newGame();
+</script>
+</body>
+</html>
 
