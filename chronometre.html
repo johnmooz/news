@@ -1,1 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronomètre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --line: #262a33;
+    --text: #e8eaee;
+    --muted: #8a909c;
+    --green: #2fbf71;
+    --red: #e5484d;
+    --blue: #3b82f6;
+    --grey: #4b5260;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .wrap { width: 100%; max-width: 520px; }
+  h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 18px;
+  }
+  .display {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 34px 16px 28px;
+    text-align: center;
+  }
+  .time {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: clamp(48px, 15vw, 84px);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+  .time .cs { color: var(--muted); }
+  .labels {
+    display: flex;
+    justify-content: center;
+    gap: clamp(28px, 9vw, 58px);
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .status {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    height: 18px;
+  }
+  .status.running { color: var(--green); }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 18px 0 24px;
+  }
+  button {
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 6px;
+    color: #fff;
+    cursor: pointer;
+    transition: filter .15s, opacity .15s, transform .05s;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.12); }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  #reset { background: var(--grey); }
+  #start { background: var(--green); }
+  #lap   { background: var(--blue); }
+  #stop  { background: var(--red); }
+
+  .laps {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .laps-head, .lap {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 12px 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  .laps-head {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  .laps-head span:not(:first-child), .lap span:not(:first-child) { text-align: right; }
+  .lap { border-bottom: 1px solid var(--line); font-size: 15px; }
+  .lap:last-child { border-bottom: none; }
+  .lap .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .lap .split { color: var(--muted); }
+  .empty { padding: 22px; text-align: center; color: var(--muted); font-size: 14px; }
+  .lap.new { animation: flash .6s ease-out; }
+  @keyframes flash { from { background: rgba(59,130,246,.18); } to { background: transparent; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Chronomètre</h1>
+
+  <div class="display">
+    <div class="time" id="time">00:00<span class="cs">.00</span></div>
+    <div class="labels"><span>min</span><span>sec</span><span>centièmes</span></div>
+    <div class="status" id="status">Prêt</div>
+  </div>
+
+  <div class="buttons">
+    <button id="reset">Remise à zéro</button>
+    <button id="start">Départ</button>
+    <button id="lap" disabled>Tour</button>
+    <button id="stop" disabled>Fin</button>
+  </div>
+
+  <div class="laps">
+    <div class="laps-head"><span>Tour</span><span>Temps du tour</span><span>Temps total</span></div>
+    <div id="lapList"><div class="empty">Aucun tour enregistré</div></div>
+  </div>
+</div>
+
+<script>
+  const timeEl = document.getElementById('time');
+  const statusEl = document.getElementById('status');
+  const lapList = document.getElementById('lapList');
+  const btnReset = document.getElementById('reset');
+  const btnStart = document.getElementById('start');
+  const btnLap = document.getElementById('lap');
+  const btnStop = document.getElementById('stop');
+
+  let running = false;
+  let startTime = 0;   // instant du dernier départ
+  let elapsed = 0;     // temps accumulé avant le dernier départ (ms)
+  let lastLapTotal = 0;
+  let laps = [];
+  let rafId = null;
+
+  function format(ms) {
+    const totalCs = Math.floor(ms / 10);
+    const cs = totalCs % 100;
+    const s = Math.floor(totalCs / 100) % 60;
+    const m = Math.floor(totalCs / 6000);
+    return {
+      main: String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'),
+      cs: '.' + String(cs).padStart(2, '0'),
+      text: String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + String(cs).padStart(2, '0')
+    };
+  }
+
+  function current() {
+    return running ? elapsed + (performance.now() - startTime) : elapsed;
+  }
+
+  function render() {
+    const f = format(current());
+    timeEl.innerHTML = f.main + '<span class="cs">' + f.cs + '</span>';
+  }
+
+  function tick() {
+    render();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function updateButtons() {
+    btnStart.disabled = running;
+    btnLap.disabled = !running;
+    btnStop.disabled = !running;
+    statusEl.textContent = running ? 'En marche' : (elapsed > 0 ? 'Arrêté' : 'Prêt');
+    statusEl.className = 'status' + (running ? ' running' : '');
+  }
+
+  function renderLaps(highlightFirst) {
+    if (laps.length === 0) {
+      lapList.innerHTML = '<div class="empty">Aucun tour enregistré</div>';
+      return;
+    }
+    lapList.innerHTML = laps.slice().reverse().map((l, i) =>
+      '<div class="lap' + (highlightFirst && i === 0 ? ' new' : '') + '">' +
+        '<span>Tour n°' + l.n + '</span>' +
+        '<span class="mono split">' + format(l.split).text + '</span>' +
+        '<span class="mono">' + format(l.total).text + '</span>' +
+      '</div>'
+    ).join('');
+  }
+
+  btnStart.addEventListener('click', () => {
+    if (running) return;
+    running = true;
+    startTime = performance.now();
+    tick();
+    updateButtons();
+  });
+
+  btnStop.addEventListener('click', () => {
+    if (!running) return;
+    elapsed += performance.now() - startTime;
+    running = false;
+    cancelAnimationFrame(rafId);
+    render();
+    updateButtons();
+  });
+
+  btnLap.addEventListener('click', () => {
+    if (!running) return;
+    const total = current();
+    laps.push({ n: laps.length + 1, total, split: total - lastLapTotal });
+    lastLapTotal = total;
+    renderLaps(true);
+  });
+
+  btnReset.addEventListener('click', () => {
+    running = false;
+    cancelAnimationFrame(rafId);
+    elapsed = 0;
+    lastLapTotal = 0;
+    laps = [];
+    render();
+    renderLaps(false);
+    updateButtons();
+  });
+
+  render();
+  updateButtons();
+</script>
+</body>
+</html>
 
