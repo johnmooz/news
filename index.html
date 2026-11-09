@@ -36,15 +36,15 @@
                 Sélectionnez une Page
             </h1>
             <p class="text-slate-400 text-sm sm:text-base max-w-lg mt-1">
-                Accédez rapidement à vos jeux de dés, jeux de cartes et outils de recherche préférés.
+                Accédez rapidement à vos jeux de dés, cartes, activités et outils préférés (15 modules disponibles).
             </p>
         </div>
     </header>
 
     <!-- Contenu Principal / Main Content -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-10 sm:py-14">
-        <!-- Grille responsive -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <!-- Grille responsive 1 à 4 colonnes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
 
             <!-- 1. Qwixxx -->
             <a href="qwixxx.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 overflow-hidden">
@@ -234,6 +234,54 @@
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Ouvrir la calculatrice</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+
+            <!-- 13. Jeux de fléchettes -->
+            <a href="flechettes.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-red-600/50 hover:shadow-xl hover:shadow-red-600/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-600/10 rounded-full blur-xl group-hover:bg-red-600/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-red-600/10 border border-red-600/20 text-red-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-500 transition-colors">Jeux de fléchettes</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Compteur de points (501, Cricket) et jeux de précision au cibleur.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer aux fléchettes</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+
+            <!-- 14. Les œufs sont faits -->
+            <a href="oeufs.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-yellow-500/50 hover:shadow-xl hover:shadow-yellow-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-yellow-500/10 rounded-full blur-xl group-hover:bg-yellow-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-egg"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-yellow-400 transition-colors">Les œufs sont faits</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Minuteur de cuisson d'œufs parfait (coque, mollet, dur) et recettes gourmandes.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer le minuteur</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+
+            <!-- 15. Jeux de noix -->
+            <a href="noix.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-700/50 hover:shadow-xl hover:shadow-amber-700/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-700/10 rounded-full blur-xl group-hover:bg-amber-700/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-700/10 border border-amber-700/20 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-500 transition-colors">Jeux de noix</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Casse-tête, compétences et mini-jeux de collecte amusants.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Explorer le jeu</span>
                     <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
