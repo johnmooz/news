@@ -21,6 +21,9 @@ button{margin-top:4px;padding:10px 18px;font-size:1rem;border:0;border-radius:8p
 .blue{color:var(--blue)}.green{color:var(--green)}
 .muted{color:var(--muted)}
 p{margin:10px 0;overflow-wrap:anywhere}
+.animal{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);text-align:center}
+#photo{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
+#emoji{font-size:5rem;line-height:1.2}
 </style>
 </head>
 <body>
@@ -38,15 +41,44 @@ p{margin:10px 0;overflow-wrap:anywhere}
   <p><span class="muted">Prénom inversé :</span> <strong id="inverse"></strong></p>
   <p><span class="muted">Nombres premiers de 1 à l’âge :</span><br><span id="primes"></span></p>
   <p><span class="muted">Quantité :</span> <strong id="count"></strong></p>
+
+  <div class="animal">
+    <p>Voici l’animal que tu représentes : <strong id="animalNom"></strong></p>
+    <img id="photo" alt="" hidden>
+    <div id="emoji" hidden></div>
+  </div>
 </section>
 </main>
 
 <script>
+const animaux=[
+  {fr:"Lion",en:"lion",emoji:"🦁"},
+  {fr:"Tigre",en:"tiger",emoji:"🐯"},
+  {fr:"Loup",en:"wolf",emoji:"🐺"},
+  {fr:"Renard",en:"fox",emoji:"🦊"},
+  {fr:"Ours",en:"bear",emoji:"🐻"},
+  {fr:"Aigle",en:"eagle",emoji:"🦅"},
+  {fr:"Dauphin",en:"dolphin",emoji:"🐬"},
+  {fr:"Panda",en:"panda",emoji:"🐼"},
+  {fr:"Hibou",en:"owl",emoji:"🦉"},
+  {fr:"Éléphant",en:"elephant",emoji:"🐘"},
+  {fr:"Girafe",en:"giraffe",emoji:"🦒"},
+  {fr:"Pingouin",en:"penguin",emoji:"🐧"}
+];
+
 function estPremier(n){
   if(n<2) return false;
   for(let i=2;i*i<=n;i++) if(n%i===0) return false;
   return true;
 }
+
+// Même prénom = même animal : somme des codes des lettres, modulo le nombre d'animaux
+function animalPour(prenom){
+  let somme=0;
+  for(const c of prenom.toLowerCase()) somme+=c.codePointAt(0);
+  return animaux[somme%animaux.length];
+}
+
 document.getElementById("f").addEventListener("submit",function(e){
   e.preventDefault();
   const prenom=document.getElementById("prenom").value.trim();
@@ -67,6 +99,19 @@ document.getElementById("f").addEventListener("submit",function(e){
   document.getElementById("count").textContent=
     premiers.length+" nombre"+(premiers.length>1?"s":"")+" premier"+(premiers.length>1?"s":"")+
     " sur "+age+" ("+pct+" %)";
+
+  // Animal + photo
+  const a=animalPour(prenom);
+  const photo=document.getElementById("photo");
+  const emoji=document.getElementById("emoji");
+  document.getElementById("animalNom").textContent=a.fr;
+  photo.hidden=true;
+  emoji.hidden=true;
+  emoji.textContent=a.emoji;
+  photo.onload=function(){photo.hidden=false;emoji.hidden=true;};
+  photo.onerror=function(){photo.hidden=true;emoji.hidden=false;};
+  photo.alt="Photo : "+a.fr;
+  photo.src="https://loremflickr.com/480/320/"+a.en+"?lock="+animaux.indexOf(a);
 
   document.getElementById("result").hidden=false;
 });
