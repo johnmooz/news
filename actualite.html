@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes Actualités</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f3ee; --paper:#fffdf9; --ink:#1d1b18; --muted:#6b655c; --line:#e4ddd2;
+    --accent:#c2410c; --accent-soft:#fdeee5; --ok:#15803d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#16140f; --paper:#1f1c17; --ink:#f2ede4; --muted:#a59d90; --line:#36312a; --accent:#fb923c; --accent-soft:#3a2416; --ok:#4ade80; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.5}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 20px 64px}
+  header{border-bottom:3px double var(--ink);padding-bottom:14px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+  h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);margin:0;letter-spacing:-.02em}
+  .date{color:var(--muted);font-size:.95rem;text-transform:capitalize}
+  h2{font-family:Fraunces,serif;font-weight:600;font-size:1.35rem;margin:0 0 14px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .chk{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;cursor:pointer;user-select:none;transition:.15s}
+  .chk:hover{border-color:var(--accent)}
+  .chk input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+  .chk:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+  .chk .ico{font-size:1.15rem}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+  button{font:inherit;font-weight:600;border-radius:10px;padding:11px 20px;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+  button:hover{border-color:var(--ink)}
+  .primary{background:var(--accent);color:#fff;border-color:var(--accent);padding:12px 28px;font-size:1.05rem}
+  .primary:hover{filter:brightness(1.08);border-color:var(--accent)}
+  .link-btn{background:none;border:none;color:var(--muted);padding:6px 4px;font-weight:500;text-decoration:underline}
+  label.field{display:block;font-weight:500;margin-bottom:6px}
+  input[type=email],input[type=text]{font:inherit;width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.row{grid-template-columns:1fr}}
+  .msg{margin-top:10px;font-size:.92rem;color:var(--muted);min-height:1.2em}
+  .msg.err{color:var(--accent)} .msg.ok{color:var(--ok)}
+  #results{display:none}
+  .domain{border-top:1px solid var(--line);padding:16px 0}
+  .domain:first-of-type{border-top:none;padding-top:0}
+  .domain h3{margin:0 0 10px;font-size:1.05rem;display:flex;gap:8px;align-items:center}
+  .links{display:flex;flex-wrap:wrap;gap:8px}
+  .links a{display:inline-block;padding:8px 13px;border-radius:999px;background:var(--accent-soft);color:var(--ink);text-decoration:none;font-size:.93rem;border:1px solid transparent}
+  .links a:hover{border-color:var(--accent)}
+  .links a.intl{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+  .links a.intl:hover{border-color:var(--accent);color:var(--ink)}
+  .send{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .send a{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:10px;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:600}
+  .send a:hover{opacity:.88}
+  .note{font-size:.85rem;color:var(--muted);margin-top:12px}
+  pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:.85rem;max-height:220px;overflow:auto;margin:12px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mes Actualités</h1>
+    <div class="date" id="today"></div>
+  </header>
+
+  <form id="form" class="card">
+    <h2>1. Choisissez vos domaines</h2>
+    <div class="grid" id="grid"></div>
+    <div class="tools">
+      <button type="button" class="link-btn" id="all">Tout cocher</button>
+      <button type="button" class="link-btn" id="none">Tout décocher</button>
+    </div>
+
+    <h2 style="margin-top:26px">2. Recevoir par e-mail (facultatif)</h2>
+    <div class="row">
+      <div>
+        <label class="field" for="email">Votre adresse e-mail</label>
+        <input type="email" id="email" placeholder="prenom.nom@exemple.fr" autocomplete="email">
+      </div>
+      <div>
+        <label class="field" for="extra">Mot-clé personnel (facultatif)</label>
+        <input type="text" id="extra" placeholder="ex. : Lyon, Nintendo, Bourse…">
+      </div>
+    </div>
+
+    <div class="tools">
+      <button type="submit" class="primary">Valider</button>
+    </div>
+    <div class="msg" id="formMsg" role="status"></div>
+  </form>
+
+  <section id="results" class="card" aria-live="polite">
+    <h2>Vos actualités du jour</h2>
+    <div id="list"></div>
+    <p class="note">Les liens ouvrent une recherche en direct sur Google Actualités en français (articles des 7 derniers jours). Les liens en pointillés 🌐 ouvrent une source internationale traduite automatiquement en français.</p>
+
+    <div id="sendBox" style="display:none;border-top:1px solid var(--line);margin-top:18px;padding-top:18px">
+      <h2>Envoyer à <span id="emailShow"></span></h2>
+      <div class="send">
+        <a id="gmail" href="#" target="_blank" rel="noopener">✉️ Envoyer avec Gmail</a>
+        <a id="outlook" href="#" target="_blank" rel="noopener">✉️ Envoyer avec Outlook</a>
+        <a id="mailto" href="#">✉️ Application de messagerie</a>
+        <button type="button" id="copy">📋 Copier le texte</button>
+      </div>
+      <div class="msg" id="sendMsg" role="status"></div>
+      <p class="note">Le message s'ouvre prérempli dans votre messagerie : il vous reste à cliquer sur « Envoyer ».</p>
+      <pre id="preview"></pre>
+    </div>
+  </section>
+</div>
+
+<script>
+const DOMAINS = [
+  {id:"tech", name:"Technologie", ico:"📱",
+   kw:[["smartphone","innovation","lancement"],["Apple","Samsung","nouveautés"],["start-up","French Tech","levée"],["objets connectés","maison","domotique"],["voiture électrique","batterie","autonomie"],["espace","satellite","fusée"]],
+   intl:{label:"The Verge", url:"https://www-theverge-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"cine", name:"Cinéma", ico:"🎬",
+   kw:[["sorties","cinéma","semaine"],["box-office","France","entrées"],["festival","film","palmarès"],["bande-annonce","film","attendu"],["séries","streaming","Netflix"],["César","Oscars","nominations"]],
+   intl:{label:"Variety", url:"https://variety-com.translate.goog/v/film/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"info", name:"Informatique", ico:"💻",
+   kw:[["cybersécurité","faille","piratage"],["Windows","mise à jour","Microsoft"],["Linux","logiciel libre","open source"],["processeur","Intel","AMD"],["cloud","données","serveurs"],["développeur","programmation","langage"]],
+   intl:{label:"Ars Technica", url:"https://arstechnica-com.translate.goog/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"ia", name:"Intelligence artificielle", ico:"🤖",
+   kw:[["intelligence artificielle","modèle","nouveau"],["IA générative","entreprises","usage"],["IA","régulation","Europe"],["Mistral","OpenAI","Anthropic"],["IA","emploi","travail"],["robotique","IA","recherche"]],
+   intl:{label:"MIT Technology Review", url:"https://www-technologyreview-com.translate.goog/topic/artificial-intelligence/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"eco", name:"Économie et finance", ico:"💶",
+   kw:[["Bourse","CAC 40","marchés"],["inflation","prix","consommation"],["BCE","taux","crédit"],["emploi","chômage","France"],["pouvoir d'achat","salaires","budget"],["entreprises","résultats","bénéfices"]],
+   intl:{label:"Reuters Business", url:"https://www-reuters-com.translate.goog/business/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"jds", name:"Jeux de société", ico:"🎲",
+   kw:[["jeux de société","nouveautés","sortie"],["jeu de société","famille","coopératif"],["As d'Or","récompense","jeu"],["jeu de plateau","financement","Kickstarter"],["jeux de rôle","cartes","stratégie"],["festival","jeux","Cannes"]],
+   intl:{label:"BoardGameGeek", url:"https://boardgamegeek-com.translate.goog/blog/1/boardgamegeek-news?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"jv", name:"Jeux vidéo", ico:"🎮",
+   kw:[["jeux vidéo","sorties","mois"],["PlayStation","Xbox","Nintendo"],["test","jeu vidéo","critique"],["esport","tournoi","compétition"],["Switch","Nintendo","annonce"],["jeu PC","Steam","promotions"]],
+   intl:{label:"IGN", url:"https://www-ign-com.translate.goog/news?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"pol", name:"Politique", ico:"🏛️",
+   kw:[["gouvernement","Assemblée nationale","vote"],["politique","France","réforme"],["Union européenne","Bruxelles","décision"],["élections","sondage","campagne"],["Sénat","loi","débat"],["international","diplomatie","sommet"]],
+   intl:{label:"Politico Europe", url:"https://www-politico-eu.translate.goog/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"rs", name:"Réseaux sociaux", ico:"💬",
+   kw:[["réseaux sociaux","tendance","viral"],["TikTok","Instagram","nouveauté"],["X","Twitter","Musk"],["Meta","Facebook","WhatsApp"],["influenceurs","réglementation","France"],["réseaux sociaux","jeunes","protection"]],
+   intl:{label:"TechCrunch Social", url:"https://techcrunch-com.translate.goog/category/social/?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"sport", name:"Sport", ico:"⚽",
+   kw:[["football","Ligue 1","résultats"],["rugby","XV de France","match"],["tennis","tournoi","classement"],["Ligue des champions","football","soirée"],["cyclisme","course","étape"],["basket","NBA","Wembanyama"]],
+   intl:{label:"BBC Sport", url:"https://www-bbc-com.translate.goog/sport?_x_tr_sl=en&_x_tr_tl=fr&_x_tr_hl=fr"}},
+  {id:"meteo", name:"Météo", ico:"🌦️",
+   kw:[["météo","prévisions","week-end"],["vigilance","Météo-France","alerte"],["températures","froid","semaine"],["pluie","orages","régions"],["climat","réchauffement","record"],["neige","montagne","stations"]],
+   intl:{label:"Météo-France (prévisions)", url:"https://meteofrance.com/", fr:true}}
+];
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+$("#today").textContent = new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+// Construire les cases à cocher
+const saved = store.get("news_domains") || [];
+$("#grid").innerHTML = DOMAINS.map(d => `
+  <label class="chk"><input type="checkbox" value="${d.id}" ${saved.includes(d.id)?"checked":""}>
+  <span class="ico" aria-hidden="true">${d.ico}</span><span>${d.name}</span></label>`).join("");
+const savedEmail = store.get("news_email"); if(savedEmail) $("#email").value = savedEmail;
+
+$("#all").onclick = () => document.querySelectorAll("#grid input").forEach(c=>c.checked=true);
+$("#none").onclick = () => document.querySelectorAll("#grid input").forEach(c=>c.checked=false);
+
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function newsUrl(words){
+  const q = words.map(w => w.includes(" ") ? `"${w}"` : w).join(" ") + " when:7d";
+  return "https://news.google.com/search?q=" + encodeURIComponent(q) + "&hl=fr&gl=FR&ceid=FR:fr";
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let lastText = "";
+
+$("#form").addEventListener("submit", e => {
+  e.preventDefault();
+  const checked = [...document.querySelectorAll("#grid input:checked")].map(c=>c.value);
+  const email = $("#email").value.trim();
+  const extra = $("#extra").value.trim();
+  const msg = $("#formMsg");
+
+  if(!checked.length){ msg.className="msg err"; msg.textContent="Cochez au moins un domaine."; return; }
+  if(email && !$("#email").checkValidity()){ msg.className="msg err"; msg.textContent="L'adresse e-mail ne semble pas valide."; return; }
+  msg.className="msg"; msg.textContent="";
+  store.set("news_domains", checked);
+  if(email) store.set("news_email", email);
+
+  const chosen = DOMAINS.filter(d => checked.includes(d.id));
+  const dateTxt = $("#today").textContent;
+  let html = "", text = `Mes actualités – ${dateTxt}\n`;
+
+  chosen.forEach(d => {
+    let sets = shuffle(d.kw).slice(0,3);
+    if(extra){ sets[2] = [extra, sets[2][0], sets[2][1]]; }
+    const links = sets.map(w => ({label: w.join(" · "), url: newsUrl(w)}));
+    html += `<div class="domain"><h3><span aria-hidden="true">${d.ico}</span>${d.name}</h3><div class="links">` +
+      links.map(l => `<a href="${l.url}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("") +
+      `<a class="intl" href="${d.intl.url}" target="_blank" rel="noopener">${d.intl.fr?"🇫🇷":"🌐"} ${esc(d.intl.label)}${d.intl.fr?"":" (traduit)"}</a>` +
+      `</div></div>`;
+    text += `\n${d.name.toUpperCase()}\n` + links.map(l => `- ${l.label}: ${l.url}`).join("\n") + "\n";
+  });
+
+  $("#list").innerHTML = html;
+  $("#results").style.display = "block";
+  lastText = text;
+
+  if(email){
+    const subject = `Mes actualités – ${dateTxt}`;
+    $("#emailShow").textContent = email;
+    $("#gmail").href = "https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(email)+"&su="+encodeURIComponent(subject)+"&body="+encodeURIComponent(text);
+    $("#outlook").href = "https://outlook.live.com/mail/0/deeplink/compose?to="+encodeURIComponent(email)+"&subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(text);
+    $("#mailto").href = "mailto:"+encodeURIComponent(email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(text);
+    $("#preview").textContent = text;
+    $("#sendMsg").textContent = "";
+    $("#sendBox").style.display = "block";
+  } else {
+    $("#sendBox").style.display = "none";
+  }
+  $("#results").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+$("#copy").onclick = async () => {
+  const m = $("#sendMsg");
+  try{ await navigator.clipboard.writeText(lastText); m.className="msg ok"; m.textContent="Texte copié : collez-le dans un e-mail."; }
+  catch(e){ m.className="msg err"; m.textContent="Copie impossible : sélectionnez le texte ci-dessous et copiez-le."; }
+};
+</script>
+</body>
+</html>
 
