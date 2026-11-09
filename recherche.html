@@ -1,1 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recherche</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1d1b; --muted: #6b6a65;
+    --line: #e3e1da; --accent: #2f5d50; --accent-soft: #e4eeea; --err: #a33a2b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 820px; margin: 0 auto; padding: 48px 20px 80px; }
+  h1 { font-size: 28px; margin: 0 0 24px; letter-spacing: -0.02em; }
+  form.search { display: flex; gap: 10px; }
+  form.search input {
+    flex: 1; padding: 14px 16px; font-size: 17px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--card); outline: none;
+  }
+  form.search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  button {
+    padding: 0 22px; font-size: 16px; font-weight: 600; border: 0; border-radius: 10px;
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button:disabled { opacity: .6; cursor: default; }
+  details.settings { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+  details.settings summary { cursor: pointer; }
+  .settings-body {
+    margin-top: 10px; padding: 14px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; display: grid; gap: 10px;
+  }
+  .settings-body label { display: grid; gap: 4px; color: var(--ink); }
+  .settings-body input, .settings-body select {
+    padding: 8px 10px; font-size: 14px; border: 1px solid var(--line); border-radius: 8px;
+  }
+  .hint { font-size: 13px; color: var(--muted); }
+  .status { margin: 28px 0 12px; color: var(--muted); font-size: 14px; }
+  .status.error { color: var(--err); }
+  ol.results { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; counter-reset: r; }
+  ol.results li {
+    counter-increment: r; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px 14px 52px; position: relative;
+  }
+  ol.results li::before {
+    content: counter(r); position: absolute; left: 16px; top: 15px; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+    font-size: 13px; font-weight: 700; display: grid; place-items: center;
+  }
+  .keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+  .keywords a {
+    text-decoration: none; color: var(--accent); background: var(--accent-soft);
+    padding: 4px 11px; border-radius: 999px; font-size: 15px; font-weight: 600;
+  }
+  .keywords a:hover { background: var(--accent); color: #fff; }
+  .domain { margin-top: 6px; font-size: 13px; color: var(--muted); word-break: break-all; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Recherche</h1>
+
+  <form class="search" id="form">
+    <input id="q" type="search" placeholder="Que cherches-tu ?" autocomplete="off" required>
+    <button id="go" type="submit">Valider</button>
+  </form>
+
+  <details class="settings">
+    <summary>Source de recherche</summary>
+    <div class="settings-body">
+      <label>Moteur
+        <select id="provider">
+          <option value="wikipedia">Wikipédia (sans réglage)</option>
+          <option value="google">Google</option>
+          <option value="bing">Microsoft Bing</option>
+          <option value="yahoo">Yahoo</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="qwant">Qwant</option>
+          <option value="startpage">Startpage</option>
+          <option value="brave">Brave Search</option>
+          <option value="ecosia">Ecosia</option>
+          <option value="lilo">Lilo</option>
+          <option value="baidu">Baidu</option>
+          <option value="yandex">Yandex</option>
+          <option value="searxng">SearXNG (tous moteurs de l'instance)</option>
+        </select>
+      </label>
+      <div id="opt-google" hidden>
+        <label>Clé API Google (facultatif) <input id="gkey" type="text" placeholder="AIza..."></label>
+        <label>ID du moteur (cx) <input id="gcx" type="text"></label>
+        <div class="hint">Avec une clé : API Google Programmable Search. Sans clé : passage par l'instance SearXNG ci-dessous.</div>
+      </div>
+      <div id="opt-searxng" hidden>
+        <label>URL de l'instance SearXNG <input id="surl" type="text" placeholder="https://mon-searxng.exemple.fr"></label>
+        <div class="hint">Relais qui interroge le moteur choisi. L'instance doit avoir le format JSON activé et autoriser les requêtes depuis le navigateur (CORS).</div>
+      </div>
+      <div id="opt-direct" class="hint" hidden>
+        Ce moteur ne propose pas d'accès programmable : la recherche s'ouvrira sur son site, dans un nouvel onglet.
+      </div>
+    </div>
+  </details>
+
+  <div class="status" id="status"></div>
+  <ol class="results" id="results"></ol>
+</main>
+
+<script>
+const N = 15;
+
+/* ---------- Mots vides (FR + EN) ---------- */
+const STOP = new Set((
+  "le la les un une des du de d l au aux et ou où mais donc or ni car ce cet cette ces " +
+  "son sa ses leur leurs mon ma mes ton ta tes notre nos votre vos qui que quoi dont " +
+  "est sont être été était avoir a ont avait il elle ils elles on nous vous je tu se " +
+  "en dans sur sous par pour avec sans entre vers chez plus moins très tout tous toute " +
+  "toutes aussi comme ainsi alors bien peu peut fait faire non oui pas ne y si même " +
+  "après avant depuis pendant encore déjà selon lors autre autres cela ceci ça celui " +
+  "celle ceux celles quel quelle quels quelles chaque leur lui eux page site accueil " +
+  "the a an and or but of to in on at by for with from as is are was were be been " +
+  "this that these those it its their there here which who whom what when where why " +
+  "how all any some more most other into about over than then also can will not no " +
+  "you your our we they he she his her them us my me do does did has have had " +
+  "www com org net fr http https html php htm home official wikipedia"
+).split(/\s+/));
+
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const stripTags = s => (s || "").replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ");
+
+function tokens(text) {
+  return (text.match(/[\p{L}][\p{L}\p{N}'’-]*/gu) || [])
+    .map(w => w.replace(/^[ldjmnstc][’']/i, "").replace(/['’-]+$/, ""))
+    .filter(w => w.length >= 3 && !STOP.has(norm(w)) && !/^\d+$/.test(w));
+}
+
+/* 5 mots clés : titre (poids 3) + extrait (poids 1) + nom de domaine en secours */
+function keywords(r, query) {
+  const qset = new Set(tokens(query).map(norm));
+  const score = new Map(); // clé normalisée -> {word, s, first}
+  let order = 0;
+  const add = (text, w) => tokens(text).forEach(t => {
+    const k = norm(t);
+    const e = score.get(k) || { word: t.toLowerCase(), s: 0, first: order++ };
+    e.s += w + (qset.has(k) ? 0.5 : 0);
+    score.set(k, e);
+  });
+  add(r.title, 3);
+  add(r.snippet, 1);
+  let list = [...score.values()].sort((a, b) => b.s - a.s || a.first - b.first).map(e => e.word);
+  if (list.length < 5) {
+    try {
+      const host = new URL(r.url).hostname.replace(/^www\./, "");
+      host.split(".").slice(0, -1).forEach(p => { if (p.length > 2 && !list.includes(p)) list.push(p); });
+    } catch {}
+  }
+  if (list.length < 5) tokens(query).forEach(t => { if (!list.includes(t.toLowerCase())) list.push(t.toLowerCase()); });
+  return list.slice(0, 5);
+}
+
+/* ---------- Sources ---------- */
+async function getJSON(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+
+const providers = {
+  async wikipedia(q) {
+    const u = "https://fr.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*" +
+              "&srlimit=" + N + "&srsearch=" + encodeURIComponent(q);
+    const d = await getJSON(u);
+    return (d.query?.search || []).map(s => ({
+      title: s.title,
+      snippet: stripTags(s.snippet),
+      url: "https://fr.wikipedia.org/wiki/" + encodeURIComponent(s.title.replace(/ /g, "_"))
+    }));
+  },
+  async google(q, cfg) {
+    if (!cfg.gkey || !cfg.gcx) throw new Error("Renseigne la clé API et l'ID du moteur dans « Source de recherche ».");
+    const base = "https://www.googleapis.com/customsearch/v1?key=" + encodeURIComponent(cfg.gkey) +
+                 "&cx=" + encodeURIComponent(cfg.gcx) + "&q=" + encodeURIComponent(q);
+    // L'API renvoie 10 résultats max par appel : 2 appels pour en avoir 15
+    const [a, b] = await Promise.all([
+      getJSON(base + "&num=10&start=1"),
+      getJSON(base + "&num=5&start=11").catch(() => ({}))
+    ]);
+    return [...(a.items || []), ...(b.items || [])].map(i => ({ title: i.title, snippet: i.snippet, url: i.link }));
+  },
+  async searxng(q, cfg, engine) {
+    if (!cfg.surl) throw new Error("Renseigne l'URL de l'instance SearXNG dans « Source de recherche ».");
+    let u = cfg.surl.replace(/\/+$/, "") + "/search?format=json&q=" + encodeURIComponent(q);
+    if (engine) u += "&engines=" + engine;
+    // Une page SearXNG ≈ 10 résultats : on prend aussi la page 2 pour atteindre 15
+    const [a, b] = await Promise.all([getJSON(u), getJSON(u + "&pageno=2").catch(() => ({}))]);
+    const seen = new Set();
+    return [...(a.results || []), ...(b.results || [])]
+      .filter(r => r.url && !seen.has(r.url) && seen.add(r.url))
+      .map(r => ({ title: r.title, snippet: r.content, url: r.url }));
+  }
+};
+
+/* Moteurs : nom, page de résultats sur leur site, moteur SearXNG correspondant */
+const ENGINES = {
+  google:     { name: "Google",         site: "https://www.google.com/search?q=",       sx: "google" },
+  bing:       { name: "Microsoft Bing", site: "https://www.bing.com/search?q=",         sx: "bing" },
+  yahoo:      { name: "Yahoo",          site: "https://search.yahoo.com/search?p=",     sx: "yahoo" },
+  duckduckgo: { name: "DuckDuckGo",     site: "https://duckduckgo.com/?q=",             sx: "duckduckgo" },
+  qwant:      { name: "Qwant",          site: "https://www.qwant.com/?q=",              sx: "qwant" },
+  startpage:  { name: "Startpage",      site: "https://www.startpage.com/do/search?q=", sx: "startpage" },
+  brave:      { name: "Brave Search",   site: "https://search.brave.com/search?q=",     sx: "brave" },
+  ecosia:     { name: "Ecosia",         site: "https://www.ecosia.org/search?q=",       sx: null },
+  lilo:       { name: "Lilo",           site: "https://search.lilo.org/?q=",            sx: null },
+  baidu:      { name: "Baidu",          site: "https://www.baidu.com/s?wd=",            sx: "baidu" },
+  yandex:     { name: "Yandex",         site: "https://yandex.com/search/?text=",       sx: "yandex" }
+};
+
+async function runSearch(q, c) {
+  const p = c.provider;
+  if (p === "wikipedia") return providers.wikipedia(q);
+  if (p === "searxng") return providers.searxng(q, c);
+  if (p === "google" && c.gkey && c.gcx) return providers.google(q, c);
+  return providers.searxng(q, c, ENGINES[p].sx);
+}
+
+/* ---------- Réglages ---------- */
+const $ = id => document.getElementById(id);
+const fields = ["provider", "gkey", "gcx", "surl"];
+function loadCfg() {
+  try { const c = JSON.parse(localStorage.getItem("recherche-cfg") || "{}"); fields.forEach(f => c[f] && ($(f).value = c[f])); } catch {}
+  showOpts();
+}
+function cfg() {
+  const c = {}; fields.forEach(f => c[f] = $(f).value.trim());
+  try { localStorage.setItem("recherche-cfg", JSON.stringify(c)); } catch {}
+  return c;
+}
+function showOpts() {
+  const p = $("provider").value, e = ENGINES[p];
+  $("opt-google").hidden = p !== "google";
+  $("opt-searxng").hidden = !(p === "searxng" || (e && e.sx));
+  $("opt-direct").hidden = !(e && !e.sx);
+}
+$("provider").addEventListener("change", showOpts);
+
+/* ---------- Recherche ---------- */
+function render(items, q) {
+  const ol = $("results");
+  ol.innerHTML = "";
+  items.forEach(r => {
+    const li = document.createElement("li");
+    const kw = document.createElement("div");
+    kw.className = "keywords";
+    keywords(r, q).forEach(k => {
+      const a = document.createElement("a");
+      a.href = r.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = k; a.title = r.title;
+      kw.appendChild(a);
+    });
+    const dom = document.createElement("div");
+    dom.className = "domain";
+    try { dom.textContent = new URL(r.url).hostname.replace(/^www\./, ""); } catch { dom.textContent = r.url; }
+    li.append(kw, dom);
+    ol.appendChild(li);
+  });
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("q").value.trim();
+  if (!q) return;
+  const c = cfg();
+  const st = $("status");
+  const eng = ENGINES[c.provider];
+  const siteUrl = eng ? eng.site + encodeURIComponent(q) : null;
+  const siteLink = () => {
+    if (!siteUrl) return;
+    const a = document.createElement("a");
+    a.href = siteUrl; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.textContent = " Voir sur " + eng.name + " ↗";
+    a.style.color = "var(--accent)";
+    st.appendChild(a);
+  };
+  $("results").innerHTML = "";
+
+  // Moteurs sans accès programmable : ouverture directe sur leur site
+  if (eng && !eng.sx) {
+    st.className = "status";
+    st.textContent = eng.name + " ne permet pas d'afficher ses résultats ici.";
+    siteLink();
+    window.open(siteUrl, "_blank", "noopener");
+    return;
+  }
+
+  st.className = "status"; st.textContent = "Recherche en cours…";
+  $("go").disabled = true;
+  try {
+    const items = (await runSearch(q, c)).slice(0, N);
+    st.textContent = items.length ? items.length + " résultats pour « " + q + " »" + (eng ? " (" + eng.name + ")" : "") + "." : "Aucun résultat.";
+    siteLink();
+    render(items, q);
+  } catch (err) {
+    st.className = "status error";
+    st.textContent = "Erreur : " + (err.message === "Failed to fetch"
+      ? "impossible de joindre le moteur (connexion ou CORS)." : err.message);
+    siteLink();
+  } finally {
+    $("go").disabled = false;
+  }
+});
+
+loadCfg();
+$("q").focus();
+</script>
+</body>
+</html>
 
