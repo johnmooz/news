@@ -1,1 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les œufs sont faits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbf3e4; --card:#fffaf1; --ink:#3b2a1e; --muted:#8a7461; --line:#ead9bf;
+    --orange:#f08a24; --red:#d9362b; --blue:#2f6fd6; --green:#5e9e2f;
+    --accent:#e2702a; --shadow:0 6px 0 #e3cfae;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Fredoka',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+    background-image:radial-gradient(#f1e2c7 1.2px,transparent 1.2px);background-size:22px 22px}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+  h1{font-size:clamp(28px,5vw,44px);margin:0;letter-spacing:.5px;font-weight:700}
+  h1 span{color:var(--accent)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .btn{font:inherit;font-weight:600;border:none;border-radius:14px;padding:12px 20px;cursor:pointer;
+    background:var(--accent);color:#fff;box-shadow:0 4px 0 #b4531a;transition:transform .08s, box-shadow .08s}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b4531a}
+  .btn:disabled{background:#cdbba3;box-shadow:0 4px 0 #a99780;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--line);padding:8px 14px}
+  .card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+  .card h2{font-size:15px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin:0 0 10px;font-weight:600}
+
+  /* sequence */
+  .seq{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-bottom:18px}
+  .step{border-radius:14px;border:2px solid var(--line);background:var(--card);padding:6px 2px 8px;text-align:center;position:relative}
+  .step svg{width:30px;height:30px;display:block;margin:0 auto}
+  .step b{display:block;font-size:22px;line-height:1}
+  .step small{font-size:11px;color:var(--muted)}
+  .step.done{opacity:.45}
+  .step.done::after{content:"✓";position:absolute;top:2px;right:6px;color:var(--green);font-weight:700}
+  .step.cur{border-color:var(--red);background:#fff0ec;transform:translateY(-3px);box-shadow:0 4px 0 #f2b8ad}
+
+  .grid{display:grid;grid-template-columns:240px 1fr;gap:18px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+  /* players */
+  .player{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;margin-bottom:6px;font-weight:500}
+  .player.active{background:#fde6cf;outline:2px solid var(--accent)}
+  .player .pts{font-weight:700;font-size:20px}
+
+  /* dice */
+  .turn{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+  .turn .who{font-size:22px;font-weight:600}
+  .pips{display:flex;gap:6px}
+  .pip{width:14px;height:14px;border-radius:50%;background:var(--accent)}
+  .pip.used{background:var(--line)}
+  .dice{display:grid;grid-template-columns:repeat(9,1fr);gap:10px;margin:8px 0 16px}
+  @media(max-width:640px){.dice{grid-template-columns:repeat(5,1fr)}}
+  .die{aspect-ratio:1;border-radius:18%;background:#fff;border:3px solid #e8dac4;box-shadow:0 5px 0 #d9c6a6;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:transform .12s;padding:6%}
+  .die svg{width:100%;height:100%}
+  .die.empty{background:#f5ead7;cursor:default;box-shadow:0 5px 0 #e3d2b4}
+  .die.empty::before{content:"?";font-size:28px;color:#cdb898;font-weight:700}
+  .die.held{border-color:var(--ink);transform:translateY(-4px);box-shadow:0 9px 0 #a88c66}
+  .die.rotten{background:#eef6e4;border-color:var(--green);cursor:not-allowed}
+  .die .tag{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;
+    background:var(--ink);color:#fff;border-radius:8px;padding:1px 6px;white-space:nowrap}
+  .die.rotten .tag{background:var(--green)}
+  .die.rolling{animation:shake .45s ease}
+  @keyframes shake{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-14deg) scale(.9)}50%{transform:rotate(12deg) scale(1.05)}75%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 12px}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .combos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:16px}
+  .combo{font:inherit;text-align:left;border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px;cursor:pointer;display:flex;gap:10px;align-items:center}
+  .combo svg{width:38px;height:38px;flex:none}
+  .combo .t{font-weight:600}
+  .combo .d{font-size:13px;color:var(--muted)}
+  .combo .p{margin-left:auto;font-weight:700;font-size:22px}
+  .combo:not(:disabled):hover{border-color:var(--accent);transform:translateY(-2px)}
+  .combo:disabled{opacity:.45;cursor:not-allowed}
+  .die.removed{opacity:.35;filter:grayscale(1)}
+  .die.removed::after{content:"✕";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--red);font-weight:700}
+  .die.rerolled:not(.rotten){border-color:var(--accent)}
+  .result{grid-column:1/-1;border:2px solid var(--line);background:#fff;border-radius:14px;padding:14px}
+  .result h3{margin:0 0 6px}
+  .result p{margin:0 0 6px}
+  .result ul{margin:0 0 6px;padding-left:20px;line-height:1.6}
+  .result .row{align-items:center}
+  .result .tot{font-size:20px;font-weight:700}
+  .manual{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:8px 0 16px}
+  .mrow{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 10px}
+  .mrow svg{width:36px;height:36px;flex:none}
+  .ml{flex:1;font-size:14px}
+  .mb{font:inherit;font-weight:700;width:34px;height:34px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-size:18px}
+  .mb:disabled{opacity:.35;cursor:not-allowed}
+  .mv{min-width:20px;text-align:center;font-size:20px}
+  .mtot{grid-column:1/-1;color:var(--muted);font-size:14px}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .mode{font:inherit;text-align:left;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:14px;padding:10px;cursor:pointer}
+  .mode b{display:block}
+  .mode span{font-size:12px;color:var(--muted)}
+  .mode.sel{border-color:#3f8f3a;background:#eef8ea}
+  .combo .chk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+  .combo.sel{border-color:#3f8f3a;background:#eef8ea}
+  .combo.sel .chk{background:#3f8f3a;border-color:#3f8f3a}
+  .combo.orange .p{color:var(--orange)} .combo.blue .p{color:var(--blue)} .combo.red .p{color:var(--red)}
+
+  /* history */
+  .hist{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  @media(max-width:820px){.hist{grid-template-columns:1fr}}
+  .hrow h3{margin:0 0 6px;font-size:14px;font-weight:600}
+  .mini{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;min-height:28px}
+  .mini div{aspect-ratio:1;background:#fff;border:1.5px solid #e8dac4;border-radius:5px;padding:1px}
+  .mini div.kept{border-color:var(--ink);background:#f6efe3}
+  .mini div.r{border-color:var(--green)}
+  .mini svg{width:100%;height:100%;display:block}
+  .mini .none{grid-column:1/-1;color:#cdb898;font-size:13px;aspect-ratio:auto;border:1.5px dashed var(--line);background:none;text-align:center;padding:5px}
+
+  .log{font-size:14px;color:var(--muted);margin-top:14px;min-height:20px}
+  .log b{color:var(--ink)}
+
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+  .legend div{display:flex;align-items:center;gap:8px;font-size:14px}
+  .legend svg{width:30px;height:30px}
+  details{margin-top:18px}
+  summary{cursor:pointer;font-weight:600}
+  details ul{line-height:1.6;padding-left:20px}
+
+  /* setup / end */
+  .overlay{position:fixed;inset:0;background:rgba(59,42,30,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+  .modal{background:var(--card);border-radius:22px;padding:24px;max-width:440px;width:100%;box-shadow:0 10px 0 #c9b08b}
+  .modal h2{margin:0 0 6px;font-size:26px}
+  .modal p{color:var(--muted);margin:0 0 14px}
+  .names input{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff;color:#1a1a1a;-webkit-text-fill-color:#1a1a1a;caret-color:#1a1a1a;color-scheme:light}
+  .names input:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:8px;justify-content:space-between;margin-top:8px;flex-wrap:wrap}
+  .rank li{font-size:18px;margin:4px 0}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Les œufs <span>sont faits</span></h1>
+    <button class="btn ghost" id="newGame">Nouvelle partie</button>
+  </header>
+
+  <div class="seq" id="seq"></div>
+
+  <div class="grid">
+    <aside class="card">
+      <h2>Joueurs</h2>
+      <div id="players"></div>
+      <div class="legend" id="legend"></div>
+    </aside>
+
+    <main class="card">
+      <div class="turn">
+        <div class="who" id="who"></div>
+        <div id="pipsWrap" style="display:flex;align-items:center;gap:8px"><span class="hint" style="margin:0">Lancers</span><div class="pips" id="pips"></div></div>
+      </div>
+      <p class="hint" id="hint"></p>
+      <div class="dice" id="dice"></div>
+      <div class="manual" id="manual"></div>
+      <div class="actions">
+        <button class="btn" id="rollBtn">Lancer les dés</button>
+        <button class="btn" id="valBtn" style="background:#3f8f3a;box-shadow:0 4px 0 #2b6a27">Valider</button>
+        <button class="btn ghost" id="passBtn">Passer (0 point)</button>
+      </div>
+      <div class="combos" id="combos"></div>
+      <div class="hist" id="hist"></div>
+      <div class="log" id="log"></div>
+    </main>
+  </div>
+
+  <details class="card">
+    <summary>Règles</summary>
+    <ul>
+      <li><b>Mode manuel</b> : lancez vos propres dés, saisissez le nombre de chaque face obtenue après vos 3 lancers, cochez les combinaisons et validez ; indiquez ensuite combien d'œufs pourris relancés sont retombés sur un œuf pourri.</li>
+      <li>Chaque joueur dispose de <b>3 lancers</b> de 9 dés. Les 3 lancers du tour restent affichés.</li>
+      <li>Les <b>œufs pourris</b> (verts) sont bloqués d'office : ils ne peuvent plus être relancés.</li>
+      <li>Cliquez sur un dé pour le <b>bloquer</b> (ou le débloquer) : il ne sera pas relancé.</li>
+      <li>À tout moment après un lancer, cochez <b>une ou plusieurs</b> combinaisons puis cliquez sur <b>Valider</b> :
+        <ul>
+          <li><b>Poêle</b> : 1 poêle orange + 1 œuf cassé orange = l'œuf au plat, <b>5 points</b> par paire.</li>
+          <li><b>Marmite</b> : au moins 1 marmite bleue + des œufs entiers bleus (œufs durs) = <b>3 points × nombre de dés bleus</b>.</li>
+          <li><b>Poulets</b> : il faut exactement le nombre de poulets rouges de l'étape en cours (1, 2, 3, 4, 5, 4, 3, 2, 1) = <b>5 points par poulet</b>. L'étape passe ensuite à la suivante.</li>
+        </ul></li>
+      <li>En cliquant sur <b>Valider</b>, les œufs pourris sont relancés. Chaque œuf de nouveau pourri <b>retire un dé</b> des combinaisons validées, en commençant par celle qui vaut le plus de points (une paire de poêle perd 5 points, un dé bleu 3 points ; une combinaison de poulets incomplète ne compte plus et ne fait pas avancer la série).</li>
+      <li>La partie se termine quand la 9ᵉ combinaison de poulets est validée. Le plus grand score gagne.</li>
+    </ul>
+  </details>
+</div>
+
+<div class="overlay" id="setup">
+  <div class="modal">
+    <h2>Nouvelle partie</h2>
+    <p>Choisissez le mode de jeu :</p>
+    <div class="modes" id="modes">
+      <button class="mode sel" data-m="auto"><b>🎲 Automatique</b><span>Les dés sont lancés à l'écran</span></button>
+      <button class="mode" data-m="manuel"><b>✍️ Manuel</b><span>Vous lancez de vrais dés et notez les scores</span></button>
+    </div>
+    <p>Entrez le nom des joueurs (1 à 6).</p>
+    <div class="names" id="names"></div>
+    <div class="row">
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="addP">+ Joueur</button>
+        <button class="btn ghost" id="remP">− Joueur</button>
+      </div>
+      <button class="btn" id="start">C'est parti !</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="modal">
+    <h2>Les œufs sont faits !</h2>
+    <p id="winner"></p>
+    <ol class="rank" id="rank"></ol>
+    <div class="row"><span></span><button class="btn" id="again">Rejouer</button></div>
+  </div>
+</div>
+
+<script>
+const C = {orange:'#f08a24', red:'#d9362b', blue:'#2f6fd6', green:'#5e9e2f'};
+const EGG = "M50 10 C30 10 17 44 17 62 C17 81 32 93 50 93 C68 93 83 81 83 62 C83 44 70 10 50 10Z";
+const ICON = {
+  poele: `<svg viewBox="0 0 100 100"><rect x="66" y="47" width="32" height="10" rx="5" fill="#8a4a12" transform="rotate(-22 66 52)"/>
+    <circle cx="42" cy="56" r="34" fill="${C.orange}"/><circle cx="42" cy="56" r="27" fill="#c9681a"/>
+    <path d="M24 52 C22 38 40 34 48 40 C60 36 66 50 60 60 C62 72 44 78 36 70 C24 72 18 62 24 52Z" fill="#fff"/>
+    <circle cx="43" cy="55" r="9" fill="${C.orange}"/><circle cx="40" cy="52" r="3" fill="#ffd9a8"/></svg>`,
+  casse: `<svg viewBox="0 0 100 100"><path d="M20 58 L30 50 L38 58 L48 48 L58 58 L68 50 L80 58 C82 80 68 92 50 92 C32 92 18 80 20 58Z" fill="${C.orange}"/>
+    <path d="M28 40 C30 18 44 8 56 10 C66 12 74 24 76 36 L68 30 L60 38 L50 30 L42 38 Z" fill="${C.orange}" transform="rotate(-18 50 30)"/>
+    <path d="M46 50 C46 60 54 60 54 50 C56 56 56 66 50 70 C44 66 44 56 46 50Z" fill="#ffd34d"/></svg>`,
+  poulet: `<svg viewBox="0 0 100 100"><circle cx="36" cy="22" r="10" fill="${C.red}"/><circle cx="50" cy="16" r="11" fill="${C.red}"/><circle cx="64" cy="22" r="10" fill="${C.red}"/>
+    <circle cx="50" cy="54" r="30" fill="#ef6a5c"/><path d="M76 52 L95 58 L76 66Z" fill="#f5b52a"/>
+    <path d="M70 68 C76 72 76 86 68 88 C62 86 62 74 70 68Z" fill="${C.red}"/>
+    <circle cx="60" cy="46" r="7" fill="#fff"/><circle cx="62" cy="46" r="3.5" fill="#3b2a1e"/></svg>`,
+  oeuf: `<svg viewBox="0 0 100 100"><path d="${EGG}" fill="${C.blue}"/><ellipse cx="38" cy="40" rx="7" ry="12" fill="#8fb4f2" transform="rotate(20 38 40)"/></svg>`,
+  marmite: `<svg viewBox="0 0 100 100"><path d="M36 22 C32 16 40 12 36 6 M50 22 C46 16 54 12 50 6 M64 22 C60 16 68 12 64 6" stroke="#9fb8de" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <rect x="16" y="32" width="68" height="8" rx="4" fill="#1f4f9f"/><rect x="44" y="25" width="12" height="8" rx="3" fill="#1f4f9f"/>
+    <path d="M20 42 H80 V76 C80 86 72 92 62 92 H38 C28 92 20 86 20 76Z" fill="${C.blue}"/>
+    <rect x="6" y="48" width="16" height="8" rx="4" fill="#1f4f9f"/><rect x="78" y="48" width="16" height="8" rx="4" fill="#1f4f9f"/></svg>`,
+  pourri: `<svg viewBox="0 0 100 100"><path d="M24 22 C20 14 30 10 26 2 M76 22 C72 14 82 10 78 2" stroke="#8fbf5f" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="${EGG}" fill="${C.green}"/><circle cx="38" cy="50" r="7" fill="#3f6e1c"/><circle cx="62" cy="64" r="9" fill="#3f6e1c"/><circle cx="46" cy="76" r="5" fill="#3f6e1c"/><circle cx="60" cy="38" r="4" fill="#3f6e1c"/></svg>`
+};
+const LABEL = {poele:'Poêle (œuf au plat)', casse:'Œuf cassé', poulet:'Tête de poulet', oeuf:'Œuf entier', marmite:'Marmite', pourri:'Œuf pourri'};
+const FACES = Object.keys(ICON);
+const TARGETS = [1,2,3,4,5,4,3,2,1];
+const N = 9, MAX_ROLLS = 3;
+
+let S = null;
+const $ = id => document.getElementById(id);
+
+function newState(names){
+  return {players:names.map(n=>({name:n,score:0})), cur:0, step:0, over:false, log:'', mode:gameMode};
+}
+function resetTurn(){
+  S.dice = Array.from({length:N},()=>({face:null, held:false}));
+  S.rolls = 0; S.history = []; S.sel = new Set(); S.resolved = null; S.removedIdx = new Set(); S.rerolled = []; S.pending = null;
+  S.manual = Object.fromEntries(FACES.map(f=>[f,0]));
+}
+function counts(){
+  if(S.mode==='manuel') return {...S.manual};
+  const c = Object.fromEntries(FACES.map(f=>[f,0]));
+  S.dice.forEach(d=>{ if(d.face) c[d.face]++; });
+  return c;
+}
+function combos(){
+  const c = counts(), t = TARGETS[S.step];
+  const pairs = Math.min(c.poele, c.casse);
+  const blue = c.marmite + c.oeuf;
+  return [
+    {id:'poele', cls:'orange', icon:'poele', t:'Poêle', d:`${pairs} paire(s) poêle + œuf cassé`, pts:pairs*5, ok:pairs>0},
+    {id:'marmite', cls:'blue', icon:'marmite', t:'Marmite', d:`${c.marmite} marmite(s) + ${c.oeuf} œuf(s) dur(s) → 3 × ${blue}`, pts:blue*3, ok:c.marmite>0 && c.oeuf>0},
+    {id:'poulet', cls:'red', icon:'poulet', t:`Poulets (étape ${S.step+1})`, d:`Il en faut ${t}, vous en avez ${c.poulet}`, pts:c.poulet*5, ok:c.poulet===t}
+  ];
+}
+
+function roll(){
+  if(S.rolls>=MAX_ROLLS || S.over) return;
+  const rolled = [];
+  S.dice.forEach((d,i)=>{
+    if(S.rolls===0 || (!d.held && d.face!=='pourri')){
+      d.face = FACES[Math.floor(Math.random()*6)]; rolled.push(i);
+    }
+    if(d.face==='pourri') d.held = false;
+  });
+  S.history.push(S.dice.map((d,i)=>({face:d.face, kept:!rolled.includes(i)})));
+  S.rolls++;
+  render(rolled);
+}
+
+function bump(f,delta){
+  if(S.resolved || S.pending || S.over) return;
+  const tot = Object.values(S.manual).reduce((a,b)=>a+b,0);
+  if(delta>0 && tot>=N) return;
+  S.manual[f] = Math.max(0, S.manual[f]+delta);
+  render();
+}
+function toggle(i){
+  const d = S.dice[i];
+  if(S.resolved || !d.face || d.face==='pourri' || S.rolls>=MAX_ROLLS) return;
+  d.held = !d.held; render();
+}
+
+function toggleCombo(id){
+  const cb = combos().find(x=>x.id===id);
+  if(!cb || !cb.ok || S.over) return;
+  S.sel.has(id) ? S.sel.delete(id) : S.sel.add(id);
+  render();
+}
+function validate(){
+  if(S.resolved || S.pending) return;
+  const cnt = counts();
+  const chosen = combos().filter(c=>c.ok && S.sel.has(c.id));
+  if(!chosen.length) return;
+  if(S.mode==='manuel'){
+    if(cnt.pourri===0){ resolve(cnt, chosen, 0, 0); return; }
+    S.pending = {cnt, chosen, rot:cnt.pourri};
+    render(); return;
+  }
+  const rot = S.dice.map((d,i)=>d.face==='pourri'?i:-1).filter(i=>i>=0);
+  rot.forEach(i=>{ S.dice[i].face = FACES[Math.floor(Math.random()*6)]; });
+  const again = rot.filter(i=>S.dice[i].face==='pourri');
+  resolve(cnt, chosen, rot.length, again.length, rot);
+}
+function manualAgain(k){
+  const P = S.pending; if(!P) return;
+  S.pending = null;
+  resolve(P.cnt, P.chosen, P.rot, k);
+}
+function resolve(cnt, chosen, rotN, againN, rotIdx=[]){
+  const p = S.players[S.cur];
+  const st = {}, title = {};
+  chosen.forEach(c=>{
+    title[c.id] = c.t;
+    if(c.id==='poele') st.poele = {pairs:Math.min(cnt.poele,cnt.casse)};
+    if(c.id==='marmite') st.marmite = {m:cnt.marmite, e:cnt.oeuf};
+    if(c.id==='poulet') st.poulet = {n:cnt.poulet, ok:true};
+  });
+  const val = id => id==='poele' ? st.poele.pairs*5
+    : id==='marmite' ? (st.marmite.m>0 && st.marmite.e>0 ? 3*(st.marmite.m+st.marmite.e) : 0)
+    : (st.poulet.ok ? st.poulet.n*5 : 0);
+  const before = Object.fromEntries(Object.keys(st).map(k=>[k,val(k)]));
+  // un dé retiré par nouvel œuf pourri, dans la combinaison qui vaut le plus
+  const removedFaces = [];
+  for(let k=0;k<againN;k++){
+    const ids = Object.keys(st).filter(id=>val(id)>0).sort((a,b)=>val(b)-val(a));
+    if(!ids.length) break;
+    const id = ids[0];
+    if(id==='poele'){ st.poele.pairs--; removedFaces.push(cnt.poele<=cnt.casse?'poele':'casse'); }
+    else if(id==='marmite'){
+      const m = st.marmite;
+      if(m.e>1){ m.e--; removedFaces.push('oeuf'); }
+      else if(m.m>1){ m.m--; removedFaces.push('marmite'); }
+      else { m.e--; removedFaces.push('oeuf'); }
+    } else { st.poulet.n--; st.poulet.ok = false; removedFaces.push('poulet'); }
+  }
+  if(S.mode!=='manuel') removedFaces.forEach(f=>{
+    const i = S.dice.findIndex((d,j)=>d.face===f && !rotIdx.includes(j) && !S.removedIdx.has(j));
+    if(i>=0) S.removedIdx.add(i);
+  });
+  const after = Object.fromEntries(Object.keys(st).map(k=>[k,val(k)]));
+  const total = Object.values(after).reduce((a,b)=>a+b,0);
+  p.score += total;
+  const advance = !!(st.poulet && st.poulet.ok);
+  if(advance) S.step++;
+  S.log = `<b>${esc(p.name)}</b> marque <b>${total} points</b>${advance?' et fait avancer les poulets':''}.`;
+  if(!rotN){ finishTurn(); return; }
+  S.rerolled = rotIdx;
+  S.resolved = {rot:rotN, again:againN, removed:removedFaces.length, title, before, after, total, advance};
+  render(rotIdx);
+}
+function finishTurn(){
+  if(S.step>=TARGETS.length){ S.over = true; S.resolved = null; render(); showEnd(); return; }
+  nextPlayer();
+}
+function pass(){
+  if(S.mode!=='manuel' && S.rolls===0) return;
+  S.log = `<b>${esc(S.players[S.cur].name)}</b> passe son tour (0 point).`;
+  nextPlayer();
+}
+function nextPlayer(){
+  S.cur = (S.cur+1) % S.players.length;
+  resetTurn(); render();
+}
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function render(rolled=[]){
+  // sequence
+  $('seq').innerHTML = TARGETS.map((t,i)=>`<div class="step ${i<S.step?'done':''} ${i===S.step&&!S.over?'cur':''}">
+     ${ICON.poulet}<b>${t}</b><small>étape ${i+1}</small></div>`).join('');
+  // players
+  $('players').innerHTML = S.players.map((p,i)=>`<div class="player ${i===S.cur&&!S.over?'active':''}"><span>${esc(p.name)}</span><span class="pts">${p.score}</span></div>`).join('');
+  $('who').textContent = `Au tour de ${S.players[S.cur].name}`;
+  $('pips').innerHTML = Array.from({length:MAX_ROLLS},(_,i)=>`<div class="pip ${i<S.rolls?'used':''}"></div>`).join('');
+  const man = S.mode==='manuel';
+  ['pipsWrap','dice','rollBtn','hist'].forEach(id=>$(id).style.display = man?'none':'');
+  $('manual').style.display = man?'':'none';
+  if(man){
+    const tot = Object.values(S.manual).reduce((a,b)=>a+b,0), lock = !!(S.resolved||S.pending||S.over);
+    $('manual').innerHTML = FACES.map(f=>`<div class="mrow">${ICON[f]}<span class="ml">${LABEL[f]}</span>
+        <button class="mb" data-f="${f}" data-d="-1" ${lock||!S.manual[f]?'disabled':''}>−</button>
+        <b class="mv">${S.manual[f]}</b>
+        <button class="mb" data-f="${f}" data-d="1" ${lock||tot>=N?'disabled':''}>+</button></div>`).join('')
+      + `<div class="mtot">${tot} / ${N} dés saisis</div>`;
+    document.querySelectorAll('.mb').forEach(el=>el.onclick=()=>bump(el.dataset.f,+el.dataset.d));
+  }
+  $('hint').textContent = man ? 'Lancez vos vrais dés, puis saisissez le résultat final de vos lancers ci-dessous et cochez vos combinaisons.' : S.rolls===0 ? 'Lancez les 9 dés pour commencer votre tour.'
+    : S.rolls<MAX_ROLLS ? 'Cliquez sur les dés à garder puis relancez, ou cochez une ou plusieurs combinaisons et validez.'
+    : 'Plus de lancer : cochez vos combinaisons puis validez, ou passez.';
+  // dice
+  $('dice').innerHTML = S.dice.map((d,i)=>{
+    if(!d.face) return `<div class="die empty"></div>`;
+    const rot = d.face==='pourri', rem = S.removedIdx.has(i), rr = S.rerolled.includes(i);
+    const cls = ['die', rot?'rotten':'', d.held&&!S.resolved?'held':'', rem?'removed':'', rr?'rerolled':'', rolled.includes(i)?'rolling':''].join(' ');
+    const tag = rem ? '<span class="tag">retiré</span>' : rr ? `<span class="tag">${rot?'pourri !':'relancé'}</span>` : rot ? '<span class="tag">pourri</span>' : d.held&&!S.resolved ? '<span class="tag">bloqué</span>' : '';
+    return `<div class="${cls}" data-i="${i}" title="${LABEL[d.face]}">${ICON[d.face]}${tag}</div>`;
+  }).join('');
+  document.querySelectorAll('.die[data-i]').forEach(el=>el.onclick=()=>toggle(+el.dataset.i));
+  // buttons
+  const rb = $('rollBtn');
+  const movable = S.dice.some(d=>d.face && !d.held && d.face!=='pourri');
+  rb.disabled = S.over || !!S.resolved || S.rolls>=MAX_ROLLS || (S.rolls>0 && !movable);
+  rb.textContent = S.rolls===0 ? 'Lancer les dés' : S.rolls<MAX_ROLLS ? `Relancer (${S.rolls+1}/${MAX_ROLLS})` : 'Lancers terminés';
+  $('passBtn').disabled = (!man && S.rolls===0) || S.over || !!S.resolved || !!S.pending;
+  const cs = combos();
+  cs.forEach(c=>{ if(!c.ok) S.sel.delete(c.id); });
+  const selPts = cs.filter(c=>S.sel.has(c.id)).reduce((a,c)=>a+c.pts,0);
+  const vb = $('valBtn');
+  vb.disabled = S.over || !!S.resolved || !!S.pending || S.sel.size===0;
+  vb.textContent = S.sel.size ? `Valider (+${selPts} pts)` : 'Valider';
+  // combos
+  $('combos').innerHTML = S.pending ? pendingHTML() : S.resolved ? resultHTML() : (!man && S.rolls===0) ? '' : cs.map(c=>`<button class="combo ${c.cls} ${S.sel.has(c.id)?'sel':''}" data-c="${c.id}" ${c.ok&&!S.over?'':'disabled'}>
+      <span class="chk">${S.sel.has(c.id)?'✓':''}</span>${ICON[c.icon]}<div><div class="t">${c.t}</div><div class="d">${c.d}</div></div><div class="p">${c.ok?c.pts:'–'}</div></button>`).join('');
+  document.querySelectorAll('.combo').forEach(el=>el.onclick=()=>toggleCombo(el.dataset.c));
+  if($('nextBtn')) $('nextBtn').onclick = finishTurn;
+  document.querySelectorAll('[data-again]').forEach(el=>el.onclick=()=>manualAgain(+el.dataset.again));
+  // history
+  $('hist').innerHTML = [0,1,2].map(k=>{
+    const h = S.history[k];
+    const body = h ? h.map(x=>`<div class="${x.kept?'kept':''} ${x.face==='pourri'?'r':''}">${ICON[x.face]}</div>`).join('')
+                   : '<div class="none">pas encore lancé</div>';
+    return `<div class="hrow"><h3>Lancer ${k+1}</h3><div class="mini">${body}</div></div>`;
+  }).join('');
+  $('log').innerHTML = S.log;
+}
+
+function pendingHTML(){
+  const n = S.pending.rot;
+  return `<div class="result"><h3>Relancez vos ${n} œuf(s) pourri(s)</h3><p>Combien sont de nouveau des œufs pourris ?</p>
+    <div class="actions">${Array.from({length:n+1},(_,k)=>`<button class="btn ghost" data-again="${k}">${k}</button>`).join('')}</div></div>`;
+}
+function resultHTML(){
+  const R = S.resolved;
+  const lines = Object.keys(R.after).map(id=>{
+    const lost = R.before[id]!==R.after[id];
+    return `<li>${R.title[id]} : ${lost?`<s>${R.before[id]}</s> → `:''}<b>${R.after[id]}</b> pts${id==='poulet'&&lost?' (combinaison cassée, les poulets n\'avancent pas)':''}</li>`;
+  }).join('');
+  const msg = R.again
+    ? `${R.again} œuf(s) à nouveau pourri(s) : <b>${R.removed} dé(s) retiré(s)</b> dans les combinaisons qui valent le plus.`
+    : `Aucun œuf à nouveau pourri, les combinaisons sont sauvées !`;
+  const last = S.step>=TARGETS.length;
+  return `<div class="result"><h3>${S.mode==='manuel'?'Résultat':'Relance'} de ${R.rot} œuf(s) pourri(s)</h3><p>${msg}</p><ul>${lines}</ul>
+    <div class="row"><span class="tot">Total : ${R.total} points</span><button class="btn" id="nextBtn">${last?'Voir le résultat':'Joueur suivant'}</button></div></div>`;
+}
+function showEnd(){
+  const ranked = [...S.players].sort((a,b)=>b.score-a.score);
+  const top = ranked[0].score, winners = ranked.filter(p=>p.score===top).map(p=>esc(p.name));
+  $('winner').innerHTML = winners.length>1 ? `Égalité entre ${winners.join(' et ')} avec ${top} points !` : `${winners[0]} gagne avec ${top} points !`;
+  $('rank').innerHTML = ranked.map(p=>`<li>${esc(p.name)} — <b>${p.score}</b> pts</li>`).join('');
+  $('end').classList.remove('hidden');
+}
+
+// setup
+let nPlayers = 2;
+let gameMode = 'auto';
+document.querySelectorAll('.mode').forEach(el=>el.onclick=()=>{
+  gameMode = el.dataset.m;
+  document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('sel', b===el));
+});
+function renderNames(){
+  const old = [...document.querySelectorAll('#names input')].map(i=>i.value);
+  $('names').innerHTML = Array.from({length:nPlayers},(_,i)=>`<input value="${esc(old[i] ?? 'Joueur '+(i+1))}" maxlength="18">`).join('');
+}
+$('addP').onclick = ()=>{ if(nPlayers<6){nPlayers++;renderNames();} };
+$('remP').onclick = ()=>{ if(nPlayers>1){nPlayers--;renderNames();} };
+$('start').onclick = ()=>{
+  const names = [...document.querySelectorAll('#names input')].map((i,k)=>i.value.trim()||('Joueur '+(k+1)));
+  S = newState(names); resetTurn();
+  $('setup').classList.add('hidden'); render();
+};
+$('newGame').onclick = ()=>{ $('setup').classList.remove('hidden'); };
+$('again').onclick = ()=>{ $('end').classList.add('hidden'); $('setup').classList.remove('hidden'); };
+$('rollBtn').onclick = roll;
+$('passBtn').onclick = pass;
+$('valBtn').onclick = validate;
+$('legend').innerHTML = FACES.map(f=>`<div>${ICON[f]}<span>${LABEL[f]}</span></div>`).join('');
+
+renderNames();
+S = newState(['Joueur 1','Joueur 2']); resetTurn(); render();
+</script>
+</body>
+</html>
 
