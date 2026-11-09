@@ -1,11 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Ma page</title>
+    <meta charset="UTF-8">
+    <title>Formulaire</title>
 </head>
 <body>
-  <h1>Bonjour !</h1>
-  <p>Ma première page sur GitHub Pages.</p>
+    <h1>Formulaire</h1>
+
+    <form id="monFormulaire">
+        <p>
+            <label for="prenom">Prénom :</label>
+            <input type="text" id="prenom" required>
+        </p>
+        <p>
+            <label for="nom">Nom :</label>
+            <input type="text" id="nom" required>
+        </p>
+        <p>
+            <label for="age">Âge :</label>
+            <input type="number" id="age" min="1" max="120" required>
+        </p>
+        <p>
+            <button type="submit">Valider</button>
+        </p>
+    </form>
+
+    <p id="resultat"><strong></strong></p>
+
+    <script>
+        document.getElementById("monFormulaire").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let prenom = document.getElementById("prenom").value.trim().toLowerCase();
+            prenom = prenom.charAt(0).toUpperCase() + prenom.slice(1);
+            const nom = document.getElementById("nom").value.trim().toUpperCase();
+            const age = document.getElementById("age").value;
+
+            document.querySelector("#resultat strong").textContent =
+                "Bonjour " + prenom + " " + nom + ", vous avez " + age + " ans";
+        });
+    </script>
 </body>
 </html>
