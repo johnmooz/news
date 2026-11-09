@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Combien de points – Feuille de score</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1d3a2f;--muted:#6b6b6b;--red:#d93a35;--yellow:#e8a92a;--green:#2e9b4f;--blue:#2f55b8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14201b;--card:#1d2d26;--ink:#e8f1ec;--muted:#9bb0a6}}
+:root[data-theme="dark"]{--bg:#14201b;--card:#1d2d26;--ink:#e8f1ec;--muted:#9bb0a6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:12px}
+.sheet{max-width:760px;margin:0 auto;background:var(--card);border-radius:14px;padding:14px;box-shadow:0 2px 10px #0002}
+h1{font-size:1.2rem;margin:0 0 12px}
+.row{display:flex;gap:4px;padding:8px;border-radius:10px;margin-bottom:8px;align-items:center}
+.row.red{background:var(--red)}.row.yellow{background:var(--yellow)}.row.green{background:var(--green)}.row.blue{background:var(--blue)}
+.cell{flex:1;aspect-ratio:1/1.05;min-width:0;border:0;border-radius:7px;background:#fffffff0;color:#222;font-weight:800;font-size:clamp(.8rem,3.6vw,1.3rem);cursor:pointer;position:relative}
+.red .cell{color:var(--red)}.yellow .cell{color:#b97d00}.green .cell{color:var(--green)}.blue .cell{color:var(--blue)}
+.cell.on{background:#ffffff55;color:#fff!important;text-decoration:none}
+.cell.on::after{content:"✕";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(1.1rem,5vw,1.9rem);color:#fff}
+.cell.lock{flex:.9;border-radius:50%;aspect-ratio:1;background:#fff;font-size:1.1rem}
+.cell.lock.off{opacity:.55}
+.cell.lock{cursor:default}
+.cell.blocked{opacity:.45;cursor:not-allowed}
+.table{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:12px 0 6px;font-size:.7rem;text-align:center}
+.table div{border:1px solid var(--muted);border-radius:4px;padding:2px 0}
+.table b{display:block;border-bottom:1px solid var(--muted)}
+.miss{display:flex;align-items:center;gap:8px;margin:10px 0;color:var(--red);font-weight:600;font-size:.9rem;flex-wrap:wrap}
+.miss button{width:30px;height:30px;border:2px solid var(--red);border-radius:6px;background:transparent;color:var(--red);font-size:1.1rem;cursor:pointer}
+.total{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px;font-weight:800}
+.box{min-width:54px;flex:1;text-align:center;padding:10px 4px;border:3px solid;border-radius:8px;font-size:1.2rem;background:var(--card)}
+.box.r{border-color:var(--red)}.box.y{border-color:var(--yellow)}.box.g{border-color:var(--green)}.box.b{border-color:var(--blue)}
+.box.m{border-color:var(--red);color:var(--red)}.box.t{border-color:var(--ink);flex:1.6}
+.note{font-size:.78rem;color:var(--muted);margin:6px 0}
+.reset{margin-top:12px;padding:8px 14px;border-radius:8px;border:1px solid var(--muted);background:transparent;color:var(--ink);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>Combien de points – Feuille de score</h1>
+  <div id="rows"></div>
+  <div class="table" id="tbl"></div>
+  <p class="note">Rouge et jaune de 2 à 12, vert et bleu de 12 à 2. La dernière case (12 ou 2) ne se coche qu’après 5 croix dans la rangée ; le cadenas se coche alors automatiquement et compte comme une croix en plus.</p>
+  <div class="miss">−5 par lancer manqué <span id="miss"></span></div>
+  <div class="total">
+    <span>Total</span>
+    <div class="box r" id="t0">0</div>+
+    <div class="box y" id="t1">0</div>+
+    <div class="box g" id="t2">0</div>+
+    <div class="box b" id="t3">0</div>−
+    <div class="box m" id="t4">0</div>=
+    <div class="box t" id="t5">0</div>
+  </div>
+  <button class="reset" id="reset">Remettre à zéro</button>
+</div>
+<script>
+var PTS=[0,1,3,6,10,15,21,28,36,45,55,66,78];
+var COLORS=["red","yellow","green","blue"];
+var asc=[2,3,4,5,6,7,8,9,10,11,12],desc=asc.slice().reverse();
+var nums=[asc,asc,desc,desc];
+var state,miss;
+function init(){state=COLORS.map(function(){return {c:{},lock:false}});miss=[false,false,false,false];}
+function count(i){var n=Object.keys(state[i].c).filter(function(k){return state[i].c[k]}).length;return n;}
+function lastOn(i){return !!state[i].c[nums[i][10]];}
+function others(i){return count(i)-(lastOn(i)?1:0);}
+function fix(i){if(lastOn(i)&&others(i)<5)state[i].c[nums[i][10]]=false;state[i].lock=lastOn(i);}
+function render(){
+  var rows=document.getElementById("rows");rows.innerHTML="";
+  COLORS.forEach(function(col,i){
+    var r=document.createElement("div");r.className="row "+col;
+    nums[i].forEach(function(n){
+      var b=document.createElement("button");b.className="cell"+(state[i].c[n]?" on":(n===nums[i][10]&&others(i)<5?" blocked":""));b.textContent=n;
+      b.setAttribute("aria-pressed",!!state[i].c[n]);
+      b.onclick=function(){if(n===nums[i][10]&&!state[i].c[n]&&others(i)<5)return;state[i].c[n]=!state[i].c[n];fix(i);render();};
+      r.appendChild(b);
+    });
+    var l=document.createElement("button");
+    l.className="cell lock"+(state[i].lock?"":" off");l.disabled=true;
+    l.textContent=state[i].lock?"🔒":"🔓";l.title="Se coche automatiquement avec la case "+nums[i][10];
+    r.appendChild(l);rows.appendChild(r);
+  });
+  var scores=COLORS.map(function(c,i){return PTS[count(i)+(state[i].lock?1:0)]});
+  var m=miss.filter(Boolean).length*5;
+  var sum=scores.reduce(function(a,b){return a+b},0);
+  for(var i=0;i<4;i++)document.getElementById("t"+i).textContent=scores[i];
+  document.getElementById("t4").textContent=m;
+  document.getElementById("t5").textContent=sum-m;
+  var ms=document.getElementById("miss");ms.innerHTML="";
+  miss.forEach(function(v,i){var b=document.createElement("button");b.textContent=v?"✕":"";b.onclick=function(){miss[i]=!miss[i];render();};ms.appendChild(b);});
+}
+var t=document.getElementById("tbl");
+PTS.slice(1).forEach(function(p,i){var d=document.createElement("div");d.innerHTML="<b>"+(i+1)+"×</b>"+p;t.appendChild(d);});
+document.getElementById("reset").onclick=function(){init();render();};
+init();render();
+</script>
+</body>
+</html>
