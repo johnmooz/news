@@ -1,1 +1,284 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binero</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --ink:#1f2328; --muted:#6b6f76; --line:#d6d2c8;
+    --given:#1f2328; --user:#1d5fd1; --sol:#1f8a4c; --err:#d12f2f;
+    --b0:#e8f0fe; --b0ink:#1d5fd1; --b1:#fdf0e1; --b1ink:#c46a0b;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);}
+  main{max-width:980px;margin:0 auto;padding:24px 16px 48px}
+  h1{font-size:28px;margin:0 0 4px;letter-spacing:.5px}
+  .rules{color:var(--muted);font-size:14px;margin:0 0 20px;line-height:1.5}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-bottom:16px}
+  label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+  input,select{font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:110px}
+  button.action{font:inherit;font-size:15px;padding:9px 16px;border-radius:8px;border:1px solid transparent;cursor:pointer;font-weight:600}
+  .primary{background:var(--ink);color:#fff}
+  .secondary{background:#fff;border-color:var(--line)!important;color:var(--ink)}
+  .verify{background:#fff3e0;color:#8a4b00;border-color:#f0c894!important}
+  .solve{background:#e6f4ea;color:#1f6b3c;border-color:#a9d8b8!important}
+  button.action:hover{filter:brightness(.95)}
+  .status{min-height:24px;font-size:15px;margin:4px 0 14px;font-weight:600}
+  .status.ok{color:var(--sol)} .status.bad{color:var(--err)} .status.info{color:var(--muted)}
+  .wrap{overflow:auto;padding-bottom:6px}
+  .grid{display:grid;gap:3px;background:var(--line);padding:3px;border-radius:10px;width:max-content}
+  .cell{width:var(--sz);height:var(--sz);background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:calc(var(--sz)*.5);border-radius:4px;user-select:none;position:relative}
+  .cell.given{color:var(--given);background:#efece5}
+  .cell.user{color:var(--user);cursor:pointer}
+  .cell.sol{color:var(--sol);font-style:italic}
+  .cell.err{color:var(--err)!important;background:#fde8e8!important}
+  .pick{display:flex;gap:2px;width:100%;height:100%;padding:3px}
+  .pick button{flex:1;border:none;border-radius:4px;cursor:pointer;font:inherit;font-weight:700;font-size:calc(var(--sz)*.3);padding:0}
+  .pick .p0{background:var(--b0);color:var(--b0ink)}
+  .pick .p1{background:var(--b1);color:var(--b1ink)}
+  .pick button:hover{filter:brightness(.92)}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--muted);margin-top:14px}
+  .legend span b{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Binero</h1>
+  <p class="rules">
+    Remplis la grille avec des 0 et des 1.<br>
+    • Jamais trois chiffres identiques à la suite : après deux chiffres identiques, le suivant est forcément l'autre (en ligne et en colonne).<br>
+    • Chaque ligne et chaque colonne contient autant de 0 que de 1.<br>
+    Clique sur <b style="color:var(--b0ink)">0</b> ou <b style="color:var(--b1ink)">1</b> dans une case vide ; clique sur un chiffre posé pour le retirer.
+  </p>
+
+  <div class="panel">
+    <label>Largeur (pair)<input id="w" type="number" min="2" max="20" step="2" value="8"></label>
+    <label>Hauteur (pair)<input id="h" type="number" min="2" max="20" step="2" value="8"></label>
+    <label>Difficulté
+      <select id="d">
+        <option value="3">Facile</option>
+        <option value="5">Moyen</option>
+        <option value="7">Difficile</option>
+      </select>
+    </label>
+    <button class="action primary" id="gen">Nouvelle grille</button>
+    <button class="action verify" id="check">Vérification</button>
+    <button class="action solve" id="solve">Solution</button>
+    <button class="action secondary" id="reset">Effacer mes réponses</button>
+  </div>
+
+  <div class="status info" id="status"></div>
+  <div class="wrap"><div class="grid" id="grid"></div></div>
+
+  <div class="legend">
+    <span><b style="background:#efece5;border:1px solid var(--line)"></b>Chiffre donné</span>
+    <span><b style="background:var(--user)"></b>Ta réponse</span>
+    <span><b style="background:var(--sol)"></b>Solution</span>
+    <span><b style="background:var(--err)"></b>Erreur</span>
+  </div>
+</main>
+
+<script>
+(function(){
+  // Part des chiffres effacés selon la difficulté : 1 sur 3, 1 sur 5, 1 sur 7
+  let W=8,H=8, solution=[], given=[], player=[], shown=[], errors=new Set();
+  const $=id=>document.getElementById(id);
+  const statusEl=$('status'), gridEl=$('grid');
+
+  function setStatus(msg,cls){statusEl.textContent=msg;statusEl.className='status '+(cls||'info');}
+
+  function evenClamp(v){v=parseInt(v,10);if(isNaN(v))v=8;v=Math.max(2,Math.min(20,v));if(v%2)v+=1;return Math.min(v,20);}
+
+  // Génération d'une grille complète valide par retour arrière aléatoire
+  function generate(w,h){
+    for(let attempt=0;attempt<50;attempt++){
+      const g=Array.from({length:h},()=>Array(w).fill(-1));
+      const rc=Array.from({length:h},()=>[0,0]);
+      const cc=Array.from({length:w},()=>[0,0]);
+      let steps=0; const LIMIT=200000;
+      const ok=(r,c,v)=>{
+        if(rc[r][v]>=w/2||cc[c][v]>=h/2) return false;
+        if(c>=2&&g[r][c-1]===v&&g[r][c-2]===v) return false;
+        if(r>=2&&g[r-1][c]===v&&g[r-2][c]===v) return false;
+        return true;
+      };
+      const rec=i=>{
+        if(i===w*h) return true;
+        if(++steps>LIMIT) return false;
+        const r=Math.floor(i/w),c=i%w;
+        const order=Math.random()<.5?[0,1]:[1,0];
+        for(const v of order){
+          if(!ok(r,c,v)) continue;
+          g[r][c]=v;rc[r][v]++;cc[c][v]++;
+          if(rec(i+1)) return true;
+          g[r][c]=-1;rc[r][v]--;cc[c][v]--;
+          if(steps>LIMIT) return false;
+        }
+        return false;
+      };
+      if(rec(0)) return g;
+    }
+    return null;
+  }
+
+  // Solveur : la grille (cases vides = -1) a-t-elle au moins une solution
+  // où la case i vaut la valeur déjà placée dedans ?
+  function hasSolution(flat,i){
+    const w=W,h=H,hw=w/2,hh=h/2;
+    const g=Int8Array.from(flat);
+    const can=(g,p,v)=>{
+      const r=(p/w)|0,c=p%w;
+      let n=0;for(let x=0;x<w;x++)if(g[r*w+x]===v)n++; if(n>=hw)return false;
+      n=0;for(let y=0;y<h;y++)if(g[y*w+c]===v)n++; if(n>=hh)return false;
+      const at=(y,x)=>(y<0||y>=h||x<0||x>=w)?-2:g[y*w+x];
+      if(at(r,c-1)===v&&at(r,c-2)===v)return false;
+      if(at(r,c+1)===v&&at(r,c+2)===v)return false;
+      if(at(r,c-1)===v&&at(r,c+1)===v)return false;
+      if(at(r-1,c)===v&&at(r-2,c)===v)return false;
+      if(at(r+1,c)===v&&at(r+2,c)===v)return false;
+      if(at(r-1,c)===v&&at(r+1,c)===v)return false;
+      return true;
+    };
+    const v=g[i]; g[i]=-1;
+    if(!can(g,i,v)) return false;
+    g[i]=v;
+    const solve=g=>{
+      // propagation : une case qui n'accepte qu'un chiffre le reçoit
+      let changed=true;
+      while(changed){
+        changed=false; let empty=-1;
+        for(let p=0;p<w*h;p++){
+          if(g[p]!==-1) continue;
+          const a=can(g,p,0),b=can(g,p,1);
+          if(!a&&!b) return false;
+          if(a!==b){g[p]=a?0:1;changed=true;}
+          else if(empty<0) empty=p;
+        }
+        if(!changed){
+          if(empty<0) return true;
+          for(const t of [0,1]){
+            const g2=Int8Array.from(g); g2[empty]=t;
+            if(solve(g2)) return true;
+          }
+          return false;
+        }
+      }
+      return !g.includes(-1)||solve(g);
+    };
+    return solve(g);
+  }
+
+  function newGame(){
+    W=evenClamp($('w').value); H=evenClamp($('h').value);
+    $('w').value=W; $('h').value=H;
+    const k=parseInt($('d').value,10);
+    const g=generate(W,H);
+    if(!g){setStatus("Impossible de générer la grille, réessaie.","bad");return;}
+    solution=g;
+    const total=W*H, target=Math.max(1,Math.round(total/k));
+    const idx=[...Array(total).keys()];
+    for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+    // On efface case par case, seulement si la grille garde une solution unique
+    const flat=new Int8Array(total);
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++)flat[r*W+c]=g[r][c];
+    const erased=new Set();
+    for(const i of idx){
+      if(erased.size>=target) break;
+      const v=flat[i];
+      flat[i]=1-v;                       // on force l'autre chiffre…
+      const other=hasSolution(flat,i);   // …existe-t-il une autre solution ?
+      if(other){flat[i]=v;}              // oui : on garde la case visible
+      else{flat[i]=-1;erased.add(i);}    // non : on peut l'effacer
+    }
+    const toErase=erased.size;
+    given=[];player=[];shown=[];
+    for(let r=0;r<H;r++){given.push([]);player.push([]);shown.push([]);
+      for(let c=0;c<W;c++){
+        given[r].push(!erased.has(r*W+c));
+        player[r].push(-1);shown[r].push(false);
+      }}
+    errors=new Set();
+    setStatus(`Grille ${W}×${H} — ${toErase} case${toErase>1?'s':''} à remplir, une seule solution possible.`
+      +(toErase<target?` (${target} cases visées, mais au-delà la solution ne serait plus unique)`:''),'info');
+    render();
+  }
+
+  function cellSize(){
+    const avail=Math.min(window.innerWidth-40,940);
+    return Math.max(28,Math.min(52,Math.floor((avail-6)/W)-3));
+  }
+
+  function render(){
+    const sz=cellSize();
+    gridEl.style.setProperty('--sz',sz+'px');
+    gridEl.style.gridTemplateColumns=`repeat(${W},${sz}px)`;
+    gridEl.innerHTML='';
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      const d=document.createElement('div');
+      d.className='cell';
+      const key=r*W+c;
+      if(given[r][c]){
+        d.classList.add('given');d.textContent=solution[r][c];
+      }else if(shown[r][c]){
+        d.classList.add('sol');d.textContent=solution[r][c];
+      }else if(player[r][c]!==-1){
+        d.classList.add('user');d.textContent=player[r][c];
+        d.title='Cliquer pour effacer';
+        d.onclick=()=>{player[r][c]=-1;errors.delete(key);render();};
+      }else{
+        const p=document.createElement('div');p.className='pick';
+        [0,1].forEach(v=>{
+          const b=document.createElement('button');
+          b.className='p'+v;b.textContent=v;b.setAttribute('aria-label','Mettre '+v);
+          b.onclick=e=>{e.stopPropagation();player[r][c]=v;errors.delete(key);render();};
+          p.appendChild(b);
+        });
+        d.appendChild(p);
+      }
+      if(errors.has(key)) d.classList.add('err');
+      gridEl.appendChild(d);
+    }
+  }
+
+  function check(){
+    errors=new Set(); let empty=0, filled=0;
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      if(given[r][c]||shown[r][c]) continue;
+      if(player[r][c]===-1){empty++;continue;}
+      filled++;
+      if(player[r][c]!==solution[r][c]) errors.add(r*W+c);
+    }
+    render();
+    const n=errors.size;
+    if(n===0&&empty===0) setStatus('Bravo ! Grille complète, 0 erreur. 🎉','ok');
+    else if(n===0) setStatus(`0 erreur pour l'instant — encore ${empty} case${empty>1?'s':''} vide${empty>1?'s':''}.`,'ok');
+    else setStatus(`${n} erreur${n>1?'s':''} sur ${filled} case${filled>1?'s':''} remplie${filled>1?'s':''}`+(empty?` — ${empty} case${empty>1?'s':''} encore vide${empty>1?'s':''}.`:'.'),'bad');
+  }
+
+  function solve(){
+    // Les erreurs restent affichées en rouge, les cases vides reçoivent la solution
+    errors=new Set(); let n=0;
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      if(given[r][c]) continue;
+      if(player[r][c]!==-1&&player[r][c]!==solution[r][c]){errors.add(r*W+c);n++;}
+      if(player[r][c]!==solution[r][c]) shown[r][c]=true;
+    }
+    render();
+    setStatus(`Solution affichée`+(n?` — ${n} de tes réponses étaient fausses (en rouge).`:'.'),n?'bad':'ok');
+  }
+
+  function reset(){
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){player[r][c]=-1;shown[r][c]=false;}
+    errors=new Set();render();setStatus('Réponses effacées.','info');
+  }
+
+  $('gen').onclick=newGame; $('check').onclick=check; $('solve').onclick=solve; $('reset').onclick=reset;
+  window.addEventListener('resize',()=>{if(solution.length)render();});
+  newGame();
+})();
+</script>
+</body>
+</html>
