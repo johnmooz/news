@@ -1,235 +1,193 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Formulaire</title>
-<style>
-:root{--bg:#f6f7f9;--card:#fff;--text:#1d2330;--muted:#5d6678;--border:#d5d9e2;--blue:#1d4ed8;--green:#15803d;--accent:#1d4ed8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1e222b;--text:#eceff5;--muted:#a3abbb;--border:#363c49;--blue:#6ea0ff;--green:#4ade80;--accent:#6ea0ff}}
-:root[data-theme="dark"]{--bg:#14171d;--card:#1e222b;--text:#eceff5;--muted:#a3abbb;--border:#363c49;--blue:#6ea0ff;--green:#4ade80;--accent:#6ea0ff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;padding:24px 16px}
-main{max-width:640px;margin:0 auto}
-form,#result{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
-h1{font-size:1.4rem;margin:0 0 16px}
-h2{font-size:1.1rem;margin:0 0 10px}
-label{display:block;font-weight:600;margin-bottom:12px}
-input{display:block;width:100%;margin-top:4px;padding:10px;font-size:1rem;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
-button,.btn{display:inline-block;margin-top:4px;padding:10px 18px;font-size:1rem;border:0;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none}
-#result[hidden]{display:none}
-.hello{font-size:1.3rem;font-weight:700}
-.blue{color:var(--blue)}.green{color:var(--green)}
-.muted{color:var(--muted)}
-p{margin:10px 0;overflow-wrap:anywhere}
-.section{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
-.animal{text-align:center}
-#photo{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
-#emoji{font-size:5rem;line-height:1.2}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.grid img{width:100%;height:130px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block}
-ol{padding-left:22px;margin:0}
-li{margin-bottom:6px;overflow-wrap:anywhere}
-a{color:var(--blue)}
-.btns{display:flex;flex-wrap:wrap;gap:8px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail de Jeux & Applications</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style personnalisé pour les cartes */
+        .game-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .game-card:hover {
+            transform: translateY(-6px);
+        }
+    </style>
 </head>
-<body>
-<main>
-<form id="f">
-  <h1>Formulaire</h1>
-  <label>Prénom <input id="prenom" required></label>
-  <label>Nom <input id="nom" required></label>
-  <label>Âge <input id="age" type="number" min="1" max="130" required></label>
-  <button type="submit">Valider</button>
-</form>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-<section id="result" hidden>
-  <p class="hello"><span class="blue" id="hello"></span> <span class="green" id="nomMaj"></span></p>
-  <p><span class="muted">Prénom inversé :</span> <strong id="inverse"></strong></p>
-  <p><span class="muted">Nombres premiers de 1 à l’âge :</span><br><span id="primes"></span></p>
-  <p><span class="muted">Quantité :</span> <strong id="count"></strong></p>
+    <!-- En-tête / Header -->
+    <header class="w-full py-8 px-4 text-center border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col items-center justify-center gap-2">
+            <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-1">
+                <i class="fa-solid fa-gamepad"></i>
+                <span>Espace de Jeux & Outils</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+                Sélectionnez une Page
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base max-w-lg mt-1">
+                Accédez rapidement à vos jeux de dés, jeux de cartes et outils de recherche préférés.
+            </p>
+        </div>
+    </header>
 
-  <div class="section animal">
-    <p>Voici l’animal que tu représentes : <strong id="animalNom"></strong></p>
-    <img id="photo" alt="" hidden>
-    <div id="emoji" hidden></div>
-  </div>
+    <!-- Contenu Principal / Main Content -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-10 sm:py-14">
+        <!-- Grille responsive -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
 
-  <div class="section">
-    <h2>Photos</h2>
-    <div class="grid" id="photos"></div>
-    <p class="muted" id="photosMsg"></p>
-  </div>
+            <!-- 1. Qwixxx -->
+            <a href="qwixxx.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-xl group-hover:bg-red-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-dice-d6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-400 transition-colors">Qwixxx</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de dés rapide et stratégique. Remplissez les lignes de couleurs.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-  <div class="section">
-    <h2>Liens</h2>
-    <ol id="liens"></ol>
-    <p class="muted" id="liensMsg"></p>
-  </div>
+            <!-- 2. Qwinto -->
+            <a href="qwinto.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-dice"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-400 transition-colors">Qwinto</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Complétez les rangées avec des chiffres croissants sans doublons.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-  <div class="section btns">
-    <a class="btn" id="googleWeb" target="_blank" rel="noopener">Chercher sur Google</a>
-    <a class="btn" id="googleImg" target="_blank" rel="noopener">Images Google</a>
-  </div>
-</section>
-</main>
+            <!-- 3. Personne -->
+            <a href="personne.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Personne</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Profil, gestion des utilisateurs ou feuille d'information personnelle.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Accéder</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-<script>
-const animaux=[
-  {fr:"Lion",en:"lion",emoji:"🦁"},
-  {fr:"Tigre",en:"tiger",emoji:"🐯"},
-  {fr:"Loup",en:"wolf",emoji:"🐺"},
-  {fr:"Renard",en:"fox",emoji:"🦊"},
-  {fr:"Ours",en:"bear",emoji:"🐻"},
-  {fr:"Aigle",en:"eagle",emoji:"🦅"},
-  {fr:"Dauphin",en:"dolphin",emoji:"🐬"},
-  {fr:"Panda",en:"panda",emoji:"🐼"},
-  {fr:"Hibou",en:"owl",emoji:"🦉"},
-  {fr:"Éléphant",en:"elephant",emoji:"🐘"},
-  {fr:"Girafe",en:"giraffe",emoji:"🦒"},
-  {fr:"Pingouin",en:"penguin",emoji:"🐧"}
-];
+            <!-- 4. Recherche -->
+            <a href="recherche.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">Recherche</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Module d'exploration, filtre et recherche globale dans l'application.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Rechercher</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-const MOTS_VIDES=new Set(["dans","avec","pour","plus","sont","cette","comme","entre","aussi","leur","leurs","être","elle","nous","vous","mais","tout","tous","fait","dont","ainsi","après","avant","depuis","sous","lors","puis","très","elles","ils","selon","autre","autres","également","notamment","ainsi","donc","alors","encore","sans","chez","vers"]);
+            <!-- 5. 5000 -->
+            <a href="5000.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">5000</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le grand classique du jeu de 5 000. Accumulez les points avec stratégie.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-function estPremier(n){
-  if(n<2) return false;
-  for(let i=2;i*i<=n;i++) if(n%i===0) return false;
-  return true;
-}
+            <!-- 6. Yams -->
+            <a href="yams.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-pink-500/50 hover:shadow-xl hover:shadow-pink-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-pink-400 transition-colors">Yams</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Faites des combinaisons (Brelan, Carré, Yahtzee) et marquez le maximum de points.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-function animalPour(prenom){
-  let somme=0;
-  for(const c of prenom.toLowerCase()) somme+=c.codePointAt(0);
-  return animaux[somme%animaux.length];
-}
+            <!-- 7. Coinche -->
+            <a href="coinche.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-spade"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-blue-400 transition-colors">Coinche</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de belote coinchée. Enchères, annonces et tactiques entre partenaires.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer à la coinche</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-function texteBrut(html){
-  return new DOMParser().parseFromString(html,"text/html").body.textContent||"";
-}
+            <!-- 8. Tarot -->
+            <a href="tarot.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-indigo-400 transition-colors">Tarot</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le jeu de cartes traditionnel français à 78 cartes. Excuse, bouts et contrats.</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer au tarot</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
 
-// Renomme un lien par 2-3 mots-clés (mots les plus fréquents du titre + extrait)
-function motsCles(texte,exclus,nb){
-  const compte={};
-  texte.toLowerCase().split(/[^a-zà-öø-ÿœ]+/).forEach(function(m){
-    if(m.length>4 && !MOTS_VIDES.has(m) && !exclus.has(m)) compte[m]=(compte[m]||0)+1;
-  });
-  return Object.keys(compte)
-    .sort(function(a,b){return compte[b]-compte[a];})
-    .slice(0,nb)
-    .map(function(m){return m.charAt(0).toUpperCase()+m.slice(1);});
-}
+        </div>
+    </main>
 
-let numeroRecherche=0;
+    <!-- Pied de page / Footer -->
+    <footer class="w-full py-6 border-t border-slate-900 text-center text-slate-500 text-xs">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>&copy; 2026 Portail Web. Tous droits réservés.</p>
+            <div class="flex gap-4">
+                <span class="hover:text-slate-400 transition-colors cursor-pointer">Accueil</span>
+                <span class="hover:text-slate-400 transition-colors cursor-pointer">Aide</span>
+                <span class="hover:text-slate-400 transition-colors cursor-pointer">Contact</span>
+            </div>
+        </div>
+    </footer>
 
-async function chargerPhotos(requete,token){
-  const grille=document.getElementById("photos");
-  const msg=document.getElementById("photosMsg");
-  grille.replaceChildren();
-  msg.textContent="Chargement…";
-  try{
-    const url="https://commons.wikimedia.org/w/api.php?action=query&generator=search"+
-      "&gsrsearch="+encodeURIComponent(requete)+"&gsrnamespace=6&gsrlimit=15"+
-      "&prop=imageinfo&iiprop=url|mime&iiurlwidth=320&format=json&origin=*";
-    const data=await (await fetch(url)).json();
-    if(token!==numeroRecherche) return;
-    const pages=Object.values((data.query&&data.query.pages)||{})
-      .sort(function(a,b){return a.index-b.index;})
-      .filter(function(p){
-        const i=p.imageinfo&&p.imageinfo[0];
-        return i && i.mime && i.mime.indexOf("image/")===0 && i.thumburl;
-      })
-      .slice(0,5);
-    if(!pages.length){msg.textContent="Aucune photo trouvée.";return;}
-    msg.textContent="";
-    pages.forEach(function(p){
-      const i=p.imageinfo[0];
-      const a=document.createElement("a");
-      a.href=i.descriptionurl;a.target="_blank";a.rel="noopener";
-      const img=document.createElement("img");
-      img.src=i.thumburl;img.alt=p.title.replace(/^Fichier:|^File:/,"");img.loading="lazy";
-      a.appendChild(img);grille.appendChild(a);
-    });
-  }catch(e){
-    if(token===numeroRecherche) msg.textContent="Impossible de charger les photos.";
-  }
-}
-
-async function chargerLiens(requete,exclus,token){
-  const liste=document.getElementById("liens");
-  const msg=document.getElementById("liensMsg");
-  liste.replaceChildren();
-  msg.textContent="Chargement…";
-  try{
-    const url="https://fr.wikipedia.org/w/api.php?action=query&list=search"+
-      "&srsearch="+encodeURIComponent(requete)+"&srlimit=10&format=json&origin=*";
-    const data=await (await fetch(url)).json();
-    if(token!==numeroRecherche) return;
-    const resultats=(data.query&&data.query.search)||[];
-    if(!resultats.length){msg.textContent="Aucun lien trouvé.";return;}
-    msg.textContent="";
-    resultats.forEach(function(r){
-      const extrait=texteBrut(r.snippet);
-      const mots=motsCles(r.title+" "+extrait,exclus,3);
-      const li=document.createElement("li");
-      const a=document.createElement("a");
-      a.href="https://fr.wikipedia.org/?curid="+r.pageid;
-      a.target="_blank";a.rel="noopener";
-      a.textContent=mots.length?mots.join(" · "):r.title;
-      li.appendChild(a);
-      liste.appendChild(li);
-    });
-  }catch(e){
-    if(token===numeroRecherche) msg.textContent="Impossible de charger les liens.";
-  }
-}
-
-document.getElementById("f").addEventListener("submit",function(e){
-  e.preventDefault();
-  const prenom=document.getElementById("prenom").value.trim();
-  const nom=document.getElementById("nom").value.trim();
-  const age=parseInt(document.getElementById("age").value,10);
-  if(!prenom||!nom||!(age>=1)) return;
-
-  const prenomCap=prenom.charAt(0).toUpperCase()+prenom.slice(1).toLowerCase();
-  document.getElementById("hello").textContent="Bonjour "+prenomCap;
-  document.getElementById("nomMaj").textContent=nom.toUpperCase();
-  document.getElementById("inverse").textContent=Array.from(prenom).reverse().join("");
-
-  const premiers=[];
-  for(let n=1;n<=age;n++) if(estPremier(n)) premiers.push(n);
-  document.getElementById("primes").textContent=premiers.length?premiers.join(", "):"Aucun";
-
-  const pct=(premiers.length/age*100).toFixed(2).replace(".",",");
-  document.getElementById("count").textContent=
-    premiers.length+" nombre"+(premiers.length>1?"s":"")+" premier"+(premiers.length>1?"s":"")+
-    " sur "+age+" ("+pct+" %)";
-
-  // Animal + photo
-  const a=animalPour(prenom);
-  const photo=document.getElementById("photo");
-  const emoji=document.getElementById("emoji");
-  document.getElementById("animalNom").textContent=a.fr;
-  photo.hidden=true;
-  emoji.hidden=true;
-  emoji.textContent=a.emoji;
-  photo.onload=function(){photo.hidden=false;emoji.hidden=true;};
-  photo.onerror=function(){photo.hidden=true;emoji.hidden=false;};
-  photo.alt="Photo : "+a.fr;
-  photo.src="https://loremflickr.com/480/320/"+a.en+"?lock="+animaux.indexOf(a);
-
-  // Recherche prénom + nom
-  const requete=prenom+" "+nom;
-  const exclus=new Set(requete.toLowerCase().split(/\s+/));
-  document.getElementById("googleWeb").href="https://www.google.com/search?q="+encodeURIComponent(requete);
-  document.getElementById("googleImg").href="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(requete);
-  const token=++numeroRecherche;
-  chargerPhotos(requete,token);
-  chargerLiens(requete,exclus,token);
-
-  document.getElementById("result").hidden=false;
-});
-</script>
 </body>
 </html>
