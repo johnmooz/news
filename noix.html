@@ -1,1 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cache tes noisettes</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6efe2; --bois:#8a5a35; --bois-fonce:#5b3a21; --orange:#e8781e; --orange-f:#b85a10;
+    --vert:#3f6b33; --encre:#2b1d12; --carte:#fffaf1; --rouge:#b8372b; --noisette:#9a5b2a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; font-family:"Fredoka",system-ui,sans-serif; color:var(--encre);
+    background:radial-gradient(circle at 15% 10%,#fbe3c2 0,transparent 40%),radial-gradient(circle at 85% 90%,#e7d6b8 0,transparent 45%),var(--bg);
+    display:flex; flex-direction:column; align-items:center; padding:24px 14px 40px;
+  }
+  h1{margin:0 0 18px; font-size:clamp(34px,7vw,56px); color:var(--bois-fonce); letter-spacing:1px; display:flex; align-items:center; gap:10px}
+  h1 svg{width:1em; height:1em}
+  .carte{background:var(--carte); border-radius:18px; padding:20px; box-shadow:0 6px 18px rgba(60,35,15,.12); width:min(760px,100%)}
+  .carte h2{margin:0 0 12px; font-size:20px; color:var(--bois-fonce)}
+  button{font-family:inherit; font-size:17px; font-weight:600; border:none; border-radius:14px; padding:12px 22px; cursor:pointer; transition:transform .1s}
+  button:active{transform:translateY(2px)}
+  button:disabled{opacity:.4; cursor:not-allowed}
+  .b-orange{background:var(--orange); color:#fff; box-shadow:0 4px 0 var(--orange-f)}
+  .b-creme{background:var(--carte); color:var(--bois-fonce); box-shadow:0 4px 0 #cdb894}
+  .b-noisette{background:var(--noisette); color:#fff; box-shadow:0 4px 0 #6a3c17}
+  .b-lien{background:none; color:var(--bois-fonce); text-decoration:underline; font-size:14px; padding:6px}
+
+  /* Écran de configuration */
+  #config label{font-weight:600}
+  .nb{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 18px}
+  .nb button{width:48px; padding:10px 0}
+  .nb button.actif{background:var(--orange); color:#fff; box-shadow:0 4px 0 var(--orange-f)}
+  .noms{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin:8px 0 20px}
+  .noms input{font-family:inherit; font-size:16px; padding:10px 12px; border-radius:10px; border:2px solid #e2d2b5; background:#fff; color:#000; width:100%}
+  .noms input::placeholder{color:#7a6a58}
+  .noms input:focus{outline:none; border-color:var(--orange)}
+  .regles{font-size:14px; line-height:1.5; margin-top:14px; padding-top:12px; border-top:1px dashed #d9c6a4}
+  .regles ul{margin:6px 0 0; padding-left:20px}
+
+  /* Jeu */
+  #jeu{display:none; width:min(760px,100%); flex-direction:column; align-items:center; gap:18px}
+  .scores{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%}
+  .joueur{background:var(--carte); border-radius:14px; padding:10px 16px; min-width:120px; text-align:center; border:3px solid transparent; box-shadow:0 4px 10px rgba(60,35,15,.1)}
+  .joueur.actif{border-color:var(--orange); transform:translateY(-3px)}
+  .joueur .nom{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px}
+  .joueur .pts{font-size:26px; font-weight:700; color:var(--noisette)}
+  .plateau{background:linear-gradient(#3f6b33,#335a29); border:10px solid var(--bois); border-radius:24px; box-shadow:0 12px 30px rgba(60,35,15,.3),inset 0 0 40px rgba(0,0,0,.25); padding:22px 18px; width:100%}
+  .tour{color:#f3e7d2; text-align:center; font-size:18px; margin-bottom:16px}
+  .tour b{color:#ffd29a}
+  .des{display:flex; flex-wrap:wrap; justify-content:center; gap:16px; min-height:120px}
+  .de{width:104px; height:104px; border-radius:20px; background:var(--carte); border:3px solid #e6d7bd; box-shadow:0 6px 0 #cdb894,0 10px 16px rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center; position:relative; transition:transform .15s,box-shadow .15s,border-color .15s; user-select:none; -webkit-tap-highlight-color:transparent}
+  .de svg{width:80%; height:80%}
+  .de.cliquable{cursor:pointer}
+  .de.cliquable:hover{transform:translateY(-3px)}
+  .de.vide svg{opacity:.15}
+  .de.bloque{background:#d9d2c6; border-color:#9c948a; box-shadow:0 6px 0 #857d72; opacity:.85}
+  .de .badge{position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); font-size:12px; font-weight:600; padding:2px 10px; border-radius:10px; white-space:nowrap; color:#fff}
+  .de.bloque .badge{background:#555}
+  .de.relance{border-color:var(--orange); box-shadow:0 6px 0 var(--orange-f),0 0 0 5px rgba(232,120,30,.45),0 10px 16px rgba(0,0,0,.25); transform:translateY(-6px)}
+  .de.relance .badge{background:var(--orange)}
+  .de.garde .badge{background:var(--noisette)}
+  .de.roule{animation:roule .5s ease-out}
+  @keyframes roule{0%{transform:rotate(0) scale(1)}30%{transform:rotate(-25deg) scale(.85)}60%{transform:rotate(20deg) scale(1.08)}100%{transform:rotate(0) scale(1)}}
+  .collecte{display:flex; justify-content:center; align-items:center; gap:8px; color:#f3e7d2; font-size:17px; margin-top:22px}
+  .collecte b{font-size:26px; color:#ffd29a}
+  .boutons{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:16px}
+  .info{text-align:center; margin-top:14px; min-height:24px; font-size:15px; color:#f3e7d2}
+  .info.alerte{background:rgba(184,55,43,.9); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600}
+  .info.succes{background:rgba(154,91,42,.95); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600}
+  .journal{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; max-height:260px; overflow:auto; font-size:15px}
+  .journal li{padding:8px 10px; border-radius:10px; background:#f3e9d6}
+  .journal .zero{color:var(--rouge)}
+</style>
+</head>
+<body>
+  <h1><span id="logo"></span>Cache tes noisettes</h1>
+
+  <!-- CONFIGURATION -->
+  <div class="carte" id="config">
+    <h2>Nouvelle partie</h2>
+    <label>Nombre de joueurs</label>
+    <div class="nb" id="choixNb"></div>
+    <label>Noms des joueurs</label>
+    <div class="noms" id="noms"></div>
+    <button class="b-orange" id="btnCommencer">Commencer la partie</button>
+    <div class="regles">
+      <b>Règles</b>
+      <ul>
+        <li>Chaque dé a 6 faces : 3 écureuils, 2 noisettes, 1 corbeau.</li>
+        <li>Les corbeaux sont bloqués : ils ne peuvent plus être relancés ce tour-ci.</li>
+        <li>Après chaque lancer : <b>cacher ses noisettes</b> (chaque noisette visible vaut 1 point, fin du tour) ou <b>continuer sa collecte</b> (relancer les écureuils et/ou noisettes sélectionnés).</li>
+        <li>Si un lancer ne donne que des corbeaux : fin du tour, 0 point.</li>
+        <li>Si un lancer ne donne que des écureuils : le joueur perd tous les points de ce tour, fin du tour.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- JEU -->
+  <div id="jeu">
+    <div class="scores" id="scores"></div>
+    <div class="plateau">
+      <div class="tour" id="tour"></div>
+      <div class="des" id="des"></div>
+      <div class="collecte">Noisettes de ce tour : <b id="collecte">0</b></div>
+      <div class="boutons">
+        <button class="b-orange" id="btnLancer">🎲 Lancer les dés</button>
+        <button class="b-orange" id="btnContinuer">🐿️ Continuer sa collecte</button>
+        <button class="b-noisette" id="btnCacher">🌰 Cacher ses noisettes</button>
+        <button class="b-creme" id="btnSuivant">Joueur suivant ➜</button>
+      </div>
+      <div class="info" id="info"></div>
+    </div>
+    <div class="carte">
+      <h2>Journal</h2>
+      <ul class="journal" id="journal"></ul>
+    </div>
+    <button class="b-lien" id="btnNouvelle">Nouvelle partie</button>
+  </div>
+
+<script>
+  const SVG = {
+    ecureuil:`<svg viewBox="0 0 100 100" aria-label="Écureuil">
+      <path d="M22 40 L18 10 L40 28 Z" fill="#e8781e" stroke="#7a3b0c" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M78 40 L82 10 L60 28 Z" fill="#e8781e" stroke="#7a3b0c" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M24 34 L22 18 L34 28 Z" fill="#f6b36b"/><path d="M76 34 L78 18 L66 28 Z" fill="#f6b36b"/>
+      <ellipse cx="50" cy="56" rx="34" ry="31" fill="#e8781e" stroke="#7a3b0c" stroke-width="3"/>
+      <ellipse cx="50" cy="70" rx="20" ry="14" fill="#fde7c8"/>
+      <circle cx="37" cy="50" r="5.5" fill="#2b1d12"/><circle cx="63" cy="50" r="5.5" fill="#2b1d12"/>
+      <circle cx="38.8" cy="48.2" r="1.8" fill="#fff"/><circle cx="64.8" cy="48.2" r="1.8" fill="#fff"/>
+      <ellipse cx="50" cy="63" rx="5" ry="3.6" fill="#2b1d12"/>
+      <path d="M50 66 Q50 72 44 73 M50 66 Q50 72 56 73" fill="none" stroke="#2b1d12" stroke-width="2" stroke-linecap="round"/>
+      <rect x="46.5" y="73" width="7" height="6" rx="1.5" fill="#fff" stroke="#2b1d12" stroke-width="1.5"/>
+      <circle cx="26" cy="64" r="5" fill="#f29a52" opacity=".8"/><circle cx="74" cy="64" r="5" fill="#f29a52" opacity=".8"/>
+    </svg>`,
+    noisette:`<svg viewBox="0 0 100 100" aria-label="Noisette">
+      <path d="M50 30 C 72 30, 84 50, 82 66 C 80 82, 66 92, 50 92 C 34 92, 20 82, 18 66 C 16 50, 28 30, 50 30 Z"
+            fill="none" stroke="#8a4f1f" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M18 40 C 22 22, 38 12, 50 12 C 62 12, 78 22, 82 40 C 74 34, 66 38, 60 34 C 56 40, 44 40, 40 34 C 34 38, 26 34, 18 40 Z"
+            fill="none" stroke="#8a4f1f" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M50 12 L52 4" stroke="#8a4f1f" stroke-width="6" stroke-linecap="round"/>
+      <path d="M34 58 C 32 66, 34 74, 40 80" fill="none" stroke="#8a4f1f" stroke-width="4" stroke-linecap="round"/>
+    </svg>`,
+    corbeau:`<svg viewBox="0 0 100 100" aria-label="Corbeau">
+      <path d="M30 86 L22 96 M38 88 L36 98" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <path d="M58 88 L56 98 M64 86 L70 96" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+      <path d="M22 60 C 20 40, 36 28, 52 30 C 70 32, 80 48, 78 66 C 76 80, 62 90, 46 88 C 32 86, 23 76, 22 60 Z" fill="#141414"/>
+      <path d="M20 66 C 8 70, 4 80, 10 86 C 18 80, 26 76, 32 72 Z" fill="#141414"/>
+      <path d="M40 54 C 52 52, 66 60, 70 74 C 60 78, 48 74, 40 54 Z" fill="#2e2e3a"/>
+      <circle cx="58" cy="28" r="17" fill="#141414"/>
+      <path d="M72 24 L94 32 L72 36 Z" fill="#3a3a3a" stroke="#111" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="63" cy="24" r="4.5" fill="#fff"/><circle cx="64" cy="24" r="2.4" fill="#111"/>
+    </svg>`
+  };
+  const FACES = ["ecureuil","ecureuil","ecureuil","noisette","noisette","corbeau"];
+  const NB_DES = 5;
+  const $ = id => document.getElementById(id);
+  $("logo").innerHTML = SVG.noisette;
+
+  /* ---------- Configuration ---------- */
+  let nbJoueurs = 2;
+  let nomsSaisis = [];
+  function afficherConfig(){
+    $("choixNb").innerHTML = "";
+    for(let n=1;n<=6;n++){
+      const b = document.createElement("button");
+      b.className = "b-creme" + (n===nbJoueurs ? " actif" : "");
+      b.textContent = n;
+      b.onclick = () => { memoriserNoms(); nbJoueurs = n; afficherConfig(); };
+      $("choixNb").appendChild(b);
+    }
+    $("noms").innerHTML = "";
+    for(let i=0;i<nbJoueurs;i++){
+      const inp = document.createElement("input");
+      inp.placeholder = `Joueur ${i+1}`;
+      inp.value = nomsSaisis[i] || "";
+      inp.maxLength = 20;
+      $("noms").appendChild(inp);
+    }
+  }
+  function memoriserNoms(){
+    [...$("noms").querySelectorAll("input")].forEach((inp,i)=> nomsSaisis[i] = inp.value);
+  }
+
+  /* ---------- État du jeu ---------- */
+  let joueurs = [];      // {nom, score}
+  let actif = 0;
+  let des = [];          // {face, bloque, relance}
+  let etat = "debut";    // debut | choix | fin
+  let numLancer = 0;
+
+  function commencer(){
+    memoriserNoms();
+    joueurs = Array.from({length:nbJoueurs},(_,i)=>({nom:(nomsSaisis[i]||"").trim() || `Joueur ${i+1}`, score:0}));
+    actif = 0;
+    $("journal").innerHTML = "";
+    $("config").style.display = "none";
+    $("jeu").style.display = "flex";
+    debutTour();
+  }
+
+  function debutTour(){
+    des = Array.from({length:NB_DES},()=>({face:null, bloque:false, relance:false}));
+    etat = "debut"; numLancer = 0;
+    message(`À ${joueurs[actif].nom} de jouer : lance les 5 dés !`);
+    rendu();
+  }
+
+  const noisettes = () => des.filter(d=>d.face==="noisette").length;
+
+  function lancer(indices){
+    indices.forEach(i => { des[i].face = FACES[Math.floor(Math.random()*6)]; des[i].relance = false; });
+    numLancer++;
+    const tires = indices.map(i=>des[i].face);
+    // Les corbeaux sont bloqués
+    indices.forEach(i => { if(des[i].face==="corbeau") des[i].bloque = true; });
+
+    if(tires.every(f=>f==="corbeau")){
+      finTour(0, `Que des corbeaux ! ${joueurs[actif].nom} termine son tour avec 0 point.`, "alerte");
+    } else if(tires.every(f=>f==="ecureuil")){
+      finTour(0, `Que des écureuils ! ${joueurs[actif].nom} perd toutes les noisettes de ce tour.`, "alerte");
+    } else {
+      etat = "choix";
+      // Par défaut, les écureuils sont présélectionnés pour être relancés
+      des.forEach(d => { if(!d.bloque && d.face==="ecureuil") d.relance = true; });
+      message(`${noisettes()} noisette${noisettes()>1?"s":""} en vue. Cache-les, ou sélectionne les dés à relancer et continue ta collecte.`);
+    }
+    rendu(indices);
+  }
+
+  function finTour(points, texte, style){
+    joueurs[actif].score += points;
+    etat = "fin";
+    des.forEach(d=>d.relance=false);
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${echapper(joueurs[actif].nom)}</b> : ${points ? `+${points} point${points>1?"s":""}` : `<span class="zero">0 point</span>`} (${numLancer} lancer${numLancer>1?"s":""})`;
+    $("journal").prepend(li);
+    message(texte, style);
+  }
+
+  function basculer(i){
+    const d = des[i];
+    if(etat!=="choix" || d.bloque) return;
+    d.relance = !d.relance;
+    const n = des.filter(x=>x.relance).length;
+    message(n ? `${n} dé${n>1?"s":""} sélectionné${n>1?"s":""} pour la relance.` : "Aucun dé sélectionné : choisis au moins un dé pour continuer ta collecte.");
+    rendu();
+  }
+
+  /* ---------- Affichage ---------- */
+  function message(t, style=""){ const el=$("info"); el.textContent=t; el.className="info "+style; }
+  function echapper(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  function rendu(animer=[]){
+    $("scores").innerHTML = joueurs.map((j,i)=>`<div class="joueur ${i===actif?"actif":""}"><div class="nom">${echapper(j.nom)}</div><div class="pts">${j.score}</div></div>`).join("");
+    $("tour").innerHTML = `Tour de <b>${echapper(joueurs[actif].nom)}</b>${numLancer?` — lancer n°${numLancer}`:""}`;
+
+    $("des").innerHTML = "";
+    des.forEach((d,i)=>{
+      const el = document.createElement("div");
+      let cls = "de";
+      let badge = "";
+      if(!d.face) cls += " vide";
+      else if(d.bloque){ cls += " bloque"; badge = "bloqué"; }
+      else if(etat==="choix"){
+        cls += " cliquable";
+        if(d.relance){ cls += " relance"; badge = "à relancer"; }
+        else if(d.face==="noisette"){ cls += " garde"; badge = "gardée"; }
+      }
+      if(animer.includes(i)) cls += " roule";
+      el.className = cls;
+      el.innerHTML = SVG[d.face || "ecureuil"] + (badge?`<span class="badge">${badge}</span>`:"");
+      if(etat==="choix" && !d.bloque){
+        el.setAttribute("role","button"); el.tabIndex = 0;
+        el.onclick = () => basculer(i);
+        el.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); basculer(i); } };
+      }
+      $("des").appendChild(el);
+    });
+
+    $("collecte").textContent = etat==="fin" ? 0 : noisettes();
+    $("btnLancer").style.display    = etat==="debut" ? "" : "none";
+    $("btnContinuer").style.display = etat==="choix" ? "" : "none";
+    $("btnCacher").style.display    = etat==="choix" ? "" : "none";
+    $("btnSuivant").style.display   = etat==="fin"   ? "" : "none";
+    $("btnContinuer").disabled = !des.some(d=>d.relance);
+    $("btnCacher").disabled = noisettes()===0;
+  }
+
+  /* ---------- Boutons ---------- */
+  $("btnCommencer").onclick = commencer;
+  $("btnLancer").onclick = () => lancer(des.map((_,i)=>i));
+  $("btnContinuer").onclick = () => lancer(des.map((d,i)=>d.relance?i:-1).filter(i=>i>=0));
+  $("btnCacher").onclick = () => {
+    const p = noisettes();
+    finTour(p, `${joueurs[actif].nom} cache ${p} noisette${p>1?"s":""} : +${p} point${p>1?"s":""} !`, "succes");
+    rendu();
+  };
+  $("btnSuivant").onclick = () => { actif = (actif+1) % joueurs.length; debutTour(); };
+  $("btnNouvelle").onclick = () => { $("jeu").style.display="none"; $("config").style.display=""; afficherConfig(); };
+
+  afficherConfig();
+</script>
+</body>
+</html>
 
