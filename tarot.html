@@ -1,1 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score de Tarot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt:#14382b; --felt2:#1b4a39; --felt3:#235c47;
+    --card:#fbf7ee; --ink:#1d1a16; --muted:#6f675b;
+    --gold:#d9a73c; --red:#b3362f; --green:#2f8a55; --line:#e6dccb;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Inter,system-ui,sans-serif; color:var(--ink);
+    background:radial-gradient(ellipse at top,var(--felt3),var(--felt) 60%) fixed;
+    min-height:100vh; padding:24px 16px 60px;
+  }
+  .wrap{max-width:1100px;margin:0 auto}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--card);margin-bottom:20px}
+  h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(28px,5vw,42px);margin:0;letter-spacing:-.5px}
+  h1 span{color:var(--gold)}
+  header p{margin:0;opacity:.75;font-size:14px}
+  .grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--card);border-radius:var(--radius);padding:18px 18px 20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .panel + .panel{margin-top:20px}
+  h2{font-family:Fraunces,serif;font-size:20px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  label.field{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px}
 
+  /* Joueurs */
+  .player{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;transition:background .15s}
+  .player.on{background:#efe6d3}
+  .player input[type=checkbox]{width:20px;height:20px;accent-color:var(--felt3);cursor:pointer;flex:none}
+  .player input[type=text]{flex:1;min-width:0;border:1px solid transparent;background:transparent;font:inherit;font-weight:600;padding:6px 8px;border-radius:8px;color:var(--ink)}
+  .player input[type=text]:hover{border-color:var(--line)}
+  .player input[type=text]:focus{outline:none;border-color:var(--felt3);background:#fff}
+  .player:not(.on) input[type=text]{color:var(--muted);font-weight:500}
+  .count{margin-top:12px;font-size:13px;font-weight:600;padding:8px 10px;border-radius:8px;background:#e3efe7;color:var(--green)}
+  .count.bad{background:#f6e1df;color:var(--red)}
+
+  /* Boutons sélection */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:600;font-size:14px;
+    padding:9px 14px;border-radius:999px;cursor:pointer;transition:all .12s;
+  }
+  .chip:hover{border-color:var(--felt3)}
+  .chip.sel{background:var(--felt2);border-color:var(--felt2);color:#fff}
+  .chip small{opacity:.7;font-weight:500;margin-left:4px}
+  .seg{display:grid;gap:6px}
+  .seg.c4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:520px){.seg.c4{grid-template-columns:repeat(2,1fr)}}
+  .seg .chip{border-radius:10px;padding:10px 6px;text-align:center}
+
+  /* Bouts */
+  .bouts{display:flex;gap:12px}
+  .bout{
+    width:84px;height:118px;border-radius:10px;border:2px solid var(--line);background:#fff;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:inherit;color:var(--ink);
+    transition:transform .12s, box-shadow .12s, border-color .12s; position:relative;
+  }
+  .bout:hover{transform:translateY(-2px)}
+  .bout .n{font-family:Fraunces,serif;font-size:34px;font-weight:800;line-height:1}
+  .bout .l{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .bout.sel{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,167,60,.35);background:#fff8e6;transform:translateY(-4px)}
+  .bout.sel::after{content:"✓";position:absolute;top:6px;right:8px;color:var(--gold);font-weight:800}
+
+  /* Points */
+  .points{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pbox{border-radius:12px;padding:12px;text-align:center}
+  .pbox.att{background:var(--felt2);color:#fff}
+  .pbox.def{background:#efe6d3}
+  .pbox .t{font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.8;font-weight:600}
+  .pbox .v{font-family:Fraunces,serif;font-size:36px;font-weight:800}
+  .slider{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .slider input[type=range]{flex:1;accent-color:var(--felt3);height:28px}
+  .step{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:18px;font-weight:700;cursor:pointer}
+  .step:hover{border-color:var(--felt3)}
+  .slider input[type=number]{width:64px;font:inherit;font-weight:700;text-align:center;padding:7px;border:1.5px solid var(--line);border-radius:8px}
+  .need{font-size:13px;color:var(--muted);margin-top:8px}
+
+  .check{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;user-select:none;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;width:max-content}
+  .check input{width:20px;height:20px;accent-color:var(--felt3)}
+
+  /* Résultat */
+  .result{margin-top:22px;border-radius:12px;background:#f3ecdc;padding:14px 16px}
+  .calc{font-size:14px;line-height:1.9;font-variant-numeric:tabular-nums}
+  .calc div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line)}
+  .calc div:last-child{border:none}
+  .calc span:last-child{font-weight:700}
+  .final{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;flex-wrap:wrap}
+  .final .big{font-family:Fraunces,serif;font-size:34px;font-weight:800}
+  .badge{font-size:13px;font-weight:700;padding:6px 10px;border-radius:999px}
+  .badge.win{background:#d7ecdf;color:var(--green)}
+  .badge.lose{background:#f6e1df;color:var(--red)}
+  .split{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .split span{font-size:13px;background:#fff;border-radius:8px;padding:5px 9px;font-weight:600}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  .primary{
+    margin-top:16px;width:100%;border:none;background:var(--gold);color:#2a1f08;font:inherit;font-weight:800;font-size:16px;
+    padding:14px;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 #a97f22;transition:transform .08s
+  }
+  .primary:active{transform:translateY(2px);box-shadow:0 2px 0 #a97f22}
+  .primary:disabled{opacity:.45;cursor:not-allowed}
+  .warn{color:var(--red);font-size:13px;font-weight:600;margin-top:8px;min-height:1em}
+
+  /* Tableau */
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  tfoot td{font-weight:800;font-size:16px;border-top:2px solid var(--ink);border-bottom:none}
+  td.desc{color:var(--muted);font-size:12px;text-align:left;white-space:normal;min-width:150px}
+  td.taker{background:#fff4d6}
+  .lead{color:var(--gold)}
+  .empty{color:var(--muted);text-align:center;padding:24px;font-size:14px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .ghost{border:1.5px solid var(--line);background:#fff;font:inherit;font-weight:600;font-size:13px;padding:8px 12px;border-radius:10px;cursor:pointer}
+  .ghost:hover{border-color:var(--red);color:var(--red)}
+  .confirm{display:none;align-items:center;gap:8px;font-size:13px;font-weight:600;background:#f6e1df;padding:6px 10px;border-radius:10px}
+  .confirm.show{display:flex}
+  .confirm button{border:none;border-radius:8px;padding:6px 10px;font:inherit;font-weight:700;cursor:pointer}
+  .confirm .yes{background:var(--red);color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Score de <span>Tarot</span></h1>
+    <p>De 3 à 8 joueurs · calcul automatique des donnes</p>
+  </header>
+
+  <div class="grid">
+    <aside>
+      <section class="panel">
+        <h2>Joueurs</h2>
+        <p class="sub">Cochez les joueurs actifs · cliquez sur un nom pour le renommer</p>
+        <div id="players"></div>
+        <div id="count" class="count"></div>
+      </section>
+    </aside>
+
+    <main>
+      <section class="panel">
+        <h2>Nouvelle donne</h2>
+
+        <label class="field">Preneur</label>
+        <div id="takers" class="chips"></div>
+
+        <div id="partnerBlock" style="display:none">
+          <label class="field">Partenaire appelé (5 joueurs et plus)</label>
+          <div id="partners" class="chips"></div>
+        </div>
+
+        <label class="field">Contrat</label>
+        <div id="contracts" class="seg c4"></div>
+
+        <label class="field">Bouts du preneur</label>
+        <div id="bouts" class="bouts"></div>
+
+        <label class="field">Points du preneur</label>
+        <div class="points">
+          <div class="pbox att"><div class="t">Preneur</div><div class="v" id="ptsAtt">0</div></div>
+          <div class="pbox def"><div class="t">Défense</div><div class="v" id="ptsDef">91</div></div>
+        </div>
+        <div class="slider">
+          <button class="step" id="minus" aria-label="Moins un point">−</button>
+          <input type="range" id="range" min="0" max="91" step="1" value="41">
+          <button class="step" id="plus" aria-label="Plus un point">+</button>
+          <input type="number" id="num" min="0" max="91" value="41">
+        </div>
+        <div class="need" id="need"></div>
+
+        <label class="field">Petit au bout</label>
+        <label class="check"><input type="checkbox" id="petitBout"> Petit au bout (+10)</label>
+
+        <label class="field">Poignée</label>
+        <div id="poignees" class="seg c4"></div>
+
+        <label class="field">Chelem</label>
+        <div id="chelems" class="seg c4"></div>
+
+        <div class="result">
+          <div class="calc" id="calc"></div>
+          <div class="final">
+            <div><span class="big" id="finalScore">0</span> <span style="color:var(--muted);font-size:13px">points (score du contrat)</span></div>
+            <span class="badge" id="badge"></span>
+          </div>
+          <div class="split" id="split"></div>
+        </div>
+
+        <button class="primary" id="save">Enregistrer la donne</button>
+        <div class="warn" id="warn"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Feuille de marque</h2>
+        <p class="sub" id="nbDonnes">Aucune donne enregistrée</p>
+        <div class="tablewrap"><table id="table"></table></div>
+        <div class="actions">
+          <button class="ghost" id="undo">Annuler la dernière donne</button>
+          <button class="ghost" id="reset">Nouvelle partie</button>
+          <div class="confirm" id="confirm">Effacer toutes les donnes ?
+            <button class="yes" id="yes">Oui</button><button id="no">Non</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const CONTRATS = [
+  {k:'petite', label:'Petite', mult:1},
+  {k:'garde', label:'Garde', mult:2},
+  {k:'gardesans', label:'Garde sans', mult:4},
+  {k:'gardecontre', label:'Garde contre', mult:6},
+];
+const POIGNEES = [
+  {k:'aucune', label:'Aucune', pts:0},
+  {k:'simple', label:'Simple', pts:20},
+  {k:'double', label:'Double', pts:30},
+  {k:'triple', label:'Triple', pts:40},
+];
+const CHELEMS = [
+  {k:'aucun', label:'Aucun', pts:0},
+  {k:'realise', label:'Réalisé', sub:'non annoncé', pts:200},
+  {k:'annoncePerdu', label:'Annoncé et perdu', pts:-200},
+  {k:'annonceReussi', label:'Annoncé et réussi', pts:400},
+];
+const BOUTS = [
+  {k:'petit', n:'1', l:'Le Petit'},
+  {k:'vingtun', n:'21', l:'Le 21'},
+  {k:'excuse', n:'★', l:"L'Excuse"},
+];
+const SEUILS = [56, 51, 41, 36];
+
+const DEFAULT_NAMES = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6','Joueur 7','Joueur 8'];
+
+let state = {
+  players: DEFAULT_NAMES.map((n,i)=>({name:n, active:i<4})),
+  rounds: []
+};
+let hand = freshHand();
+
+function freshHand(){
+  return {taker:null, partner:null, contrat:'petite', bouts:{petit:false,vingtun:false,excuse:false},
+          points:41, petitBout:false, poignee:'aucune', chelem:'aucun'};
+}
+
+try{
+  const saved = JSON.parse(localStorage.getItem('tarot-score-v1'));
+  if(saved && Array.isArray(saved.players) && saved.players.length===8) state = saved;
+}catch(e){}
+function persist(){ try{ localStorage.setItem('tarot-score-v1', JSON.stringify(state)); }catch(e){} }
+
+const $ = id => document.getElementById(id);
+const activeIdx = () => state.players.map((p,i)=>p.active?i:-1).filter(i=>i>=0);
+const nameOf = i => state.players[i].name.trim() || `Joueur ${i+1}`;
+const fmt = n => (n>0?'+':'') + n;
+const esc = s => s.replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Calcul ---------- */
+function compute(h){
+  const nb = Object.values(h.bouts).filter(Boolean).length;
+  const seuil = SEUILS[nb];
+  const inter = h.points - seuil;
+  const lines = [[`${h.points} pts − ${seuil} (${nb} bout${nb>1?'s':''})`, inter]];
+  let s = inter < 0 ? inter - 25 : inter + 25;
+  lines.push([inter < 0 ? '− 25 (contrat chuté)' : '+ 25 (contrat réussi)', s]);
+  if(h.petitBout){ s += 10; lines.push(['+ 10 petit au bout', s]); }
+  const c = CONTRATS.find(x=>x.k===h.contrat);
+  s = s * c.mult; lines.push([`× ${c.mult} (${c.label})`, s]);
+  const p = POIGNEES.find(x=>x.k===h.poignee);
+  s += p.pts; lines.push([`+ ${p.pts} poignée ${p.label.toLowerCase()}`, s]);
+  const ch = CHELEMS.find(x=>x.k===h.chelem);
+  s += ch.pts; lines.push([`${ch.pts<0?'−':'+'} ${Math.abs(ch.pts)} chelem (${ch.label.toLowerCase()})`, s]);
+  return {score:s, inter, seuil, nb, lines, contrat:c, poignee:p, chelem:ch};
+}
+
+function distribute(h, score){
+  const act = activeIdx();
+  const deltas = {};
+  const hasPartner = h.partner!==null && h.partner!==h.taker && act.length>=5;
+  const defenders = act.filter(i=>i!==h.taker && !(hasPartner && i===h.partner));
+  defenders.forEach(i=>deltas[i] = -score);
+  if(hasPartner){ deltas[h.partner] = score; deltas[h.taker] = score*(defenders.length-1); }
+  else deltas[h.taker] = score*defenders.length;
+  return deltas;
+}
+
+/* ---------- Rendu ---------- */
+function renderPlayers(){
+  const box = $('players'); box.innerHTML='';
+  state.players.forEach((p,i)=>{
+    const row = document.createElement('div');
+    row.className = 'player' + (p.active?' on':'');
+    row.innerHTML = `<input type="checkbox" ${p.active?'checked':''} aria-label="Actif"><input type="text" value="${esc(p.name)}" maxlength="20">`;
+    const [cb, tx] = row.querySelectorAll('input');
+    cb.onchange = ()=>{
+      const n = activeIdx().length;
+      if(!cb.checked && n<=3){ cb.checked=true; flash('Il faut au moins 3 joueurs actifs.'); return; }
+      p.active = cb.checked; persist(); cleanHand(); renderAll();
+    };
+    tx.oninput = ()=>{ p.name = tx.value; persist(); renderHand(); renderTable(); };
+    box.appendChild(row);
+  });
+  const n = activeIdx().length;
+  const c = $('count');
+  c.textContent = `${n} joueur${n>1?'s':''} actif${n>1?'s':''}`;
+  c.classList.toggle('bad', n<3||n>8);
+}
+
+function cleanHand(){
+  const act = activeIdx();
+  if(!act.includes(hand.taker)) hand.taker = null;
+  if(!act.includes(hand.partner) || hand.partner===hand.taker || act.length<5) hand.partner = null;
+}
+
+function chip(label, sel, onClick, sub){
+  const b = document.createElement('button');
+  b.className = 'chip' + (sel?' sel':'');
+  b.innerHTML = esc(label) + (sub?`<small>${esc(sub)}</small>`:'');
+  b.onclick = onClick; return b;
+}
+
+function renderHand(){
+  const act = activeIdx();
+  const t = $('takers'); t.innerHTML='';
+  act.forEach(i=>t.appendChild(chip(nameOf(i), hand.taker===i, ()=>{
+    hand.taker=i; if(hand.partner===i) hand.partner=null; renderHand();
+  })));
+
+  const pb = $('partnerBlock');
+  pb.style.display = act.length>=5 ? '' : 'none';
+  const pt = $('partners'); pt.innerHTML='';
+  pt.appendChild(chip('Seul / aucun', hand.partner===null, ()=>{hand.partner=null; renderHand();}));
+  act.filter(i=>i!==hand.taker).forEach(i=>pt.appendChild(chip(nameOf(i), hand.partner===i, ()=>{hand.partner=i; renderHand();})));
+
+  const ct = $('contracts'); ct.innerHTML='';
+  CONTRATS.forEach(c=>ct.appendChild(chip(c.label, hand.contrat===c.k, ()=>{hand.contrat=c.k; renderHand();}, '×'+c.mult)));
+
+  const bt = $('bouts'); bt.innerHTML='';
+  BOUTS.forEach(b=>{
+    const el = document.createElement('button');
+    el.className = 'bout' + (hand.bouts[b.k]?' sel':'');
+    el.innerHTML = `<span class="n">${b.n}</span><span class="l">${b.l}</span>`;
+    el.onclick = ()=>{ hand.bouts[b.k] = !hand.bouts[b.k]; renderHand(); };
+    bt.appendChild(el);
+  });
+
+  $('range').value = hand.points; $('num').value = hand.points;
+  $('ptsAtt').textContent = hand.points; $('ptsDef').textContent = 91 - hand.points;
+  $('petitBout').checked = hand.petitBout;
+
+  const po = $('poignees'); po.innerHTML='';
+  POIGNEES.forEach(p=>po.appendChild(chip(p.label, hand.poignee===p.k, ()=>{hand.poignee=p.k; renderHand();}, p.pts?'+'+p.pts:'')));
+  const ch = $('chelems'); ch.innerHTML='';
+  CHELEMS.forEach(c=>ch.appendChild(chip(c.label, hand.chelem===c.k, ()=>{hand.chelem=c.k; renderHand();}, c.sub)));
+
+  const r = compute(hand);
+  $('need').textContent = `Avec ${r.nb} bout${r.nb>1?'s':''}, le preneur doit faire ${r.seuil} points.`;
+  $('calc').innerHTML = r.lines.map(([l,v])=>`<div><span>${l}</span><span>${v}</span></div>`).join('');
+  $('finalScore').textContent = r.score;
+  const b = $('badge');
+  b.textContent = r.inter>=0 ? `Contrat réussi de ${r.inter}` : `Chuté de ${-r.inter}`;
+  b.className = 'badge ' + (r.inter>=0?'win':'lose');
+
+  const sp = $('split');
+  if(hand.taker===null){ sp.innerHTML = '<span style="color:var(--muted)">Choisissez le preneur pour voir la répartition</span>'; }
+  else{
+    const d = distribute(hand, r.score);
+    sp.innerHTML = act.map(i=>`<span>${esc(nameOf(i))} <b class="${d[i]>0?'pos':d[i]<0?'neg':''}">${fmt(d[i]||0)}</b></span>`).join('');
+  }
+  $('save').disabled = hand.taker===null;
+}
+
+function renderTable(){
+  const tb = $('table');
+  const rounds = state.rounds;
+  $('nbDonnes').textContent = rounds.length ? `${rounds.length} donne${rounds.length>1?'s':''} enregistrée${rounds.length>1?'s':''}` : 'Aucune donne enregistrée';
+  // joueurs à afficher : actifs + ceux ayant joué
+  const show = new Set(activeIdx());
+  rounds.forEach(r=>Object.keys(r.deltas).forEach(k=>show.add(+k)));
+  const cols = [...show].sort((a,b)=>a-b);
+  if(!rounds.length){
+    tb.innerHTML = `<tr><td class="empty" colspan="${cols.length+2}">Les donnes apparaîtront ici.</td></tr>`;
+    return;
+  }
+  const totals = {}; cols.forEach(i=>totals[i]=0);
+  rounds.forEach(r=>cols.forEach(i=>totals[i]+= (r.deltas[i]||0)));
+  const best = Math.max(...cols.map(i=>totals[i]));
+  let html = `<thead><tr><th>#</th><th style="text-align:left">Donne</th>${cols.map(i=>`<th>${esc(nameOf(i))}</th>`).join('')}</tr></thead><tbody>`;
+  rounds.forEach((r,n)=>{
+    const desc = `${esc(nameOf(r.taker))}${r.partner!==null?' + '+esc(nameOf(r.partner)):''} · ${r.contratLabel} · ${r.points} pts · ${r.nb} bout${r.nb>1?'s':''}${r.extras?' · '+r.extras:''}`;
+    html += `<tr><td>${n+1}</td><td class="desc">${desc}</td>${cols.map(i=>{
+      const v = r.deltas[i];
+      return `<td class="${i===r.taker?'taker ':''}${v>0?'pos':v<0?'neg':''}">${v===undefined?'—':fmt(v)}</td>`;
+    }).join('')}</tr>`;
+  });
+  html += `</tbody><tfoot><tr><td></td><td style="text-align:left">Total</td>${cols.map(i=>`<td class="${totals[i]===best?'lead':''}">${totals[i]}</td>`).join('')}</tr></tfoot>`;
+  tb.innerHTML = html;
+}
+
+function renderAll(){ renderPlayers(); renderHand(); renderTable(); }
+
+/* ---------- Événements ---------- */
+function setPoints(v){ v = Math.max(0, Math.min(91, Math.round(+v||0))); hand.points = v; renderHand(); }
+$('range').oninput = e=>setPoints(e.target.value);
+$('num').oninput = e=>{ if(e.target.value!=='') setPoints(e.target.value); };
+$('minus').onclick = ()=>setPoints(hand.points-1);
+$('plus').onclick = ()=>setPoints(hand.points+1);
+$('petitBout').onchange = e=>{ hand.petitBout = e.target.checked; renderHand(); };
+
+let flashT;
+function flash(msg){ $('warn').textContent = msg; clearTimeout(flashT); flashT = setTimeout(()=>$('warn').textContent='', 3000); }
+
+$('save').onclick = ()=>{
+  if(hand.taker===null){ flash('Choisissez un preneur.'); return; }
+  const r = compute(hand);
+  const extras = [];
+  if(hand.petitBout) extras.push('petit au bout');
+  if(hand.poignee!=='aucune') extras.push('poignée '+r.poignee.label.toLowerCase());
+  if(hand.chelem!=='aucun') extras.push('chelem '+r.chelem.label.toLowerCase());
+  state.rounds.push({
+    taker:hand.taker, partner: (activeIdx().length>=5?hand.partner:null),
+    contratLabel:r.contrat.label, points:hand.points, nb:r.nb, score:r.score,
+    extras:extras.join(', '), deltas:distribute(hand, r.score)
+  });
+  persist();
+  const keepTaker = null;
+  hand = freshHand(); hand.taker = keepTaker;
+  renderHand(); renderTable();
+  flash('');
+};
+$('undo').onclick = ()=>{ state.rounds.pop(); persist(); renderTable(); };
+$('reset').onclick = ()=>$('confirm').classList.add('show');
+$('no').onclick = ()=>$('confirm').classList.remove('show');
+$('yes').onclick = ()=>{ state.rounds = []; persist(); $('confirm').classList.remove('show'); hand = freshHand(); renderAll(); };
+
+renderAll();
+</script>
+</body>
+</html>
