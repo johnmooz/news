@@ -10,6 +10,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14201b;--card:#1d2d26;--ink:#e8f1ec;--muted:#9bb0a6}}
 :root[data-theme="dark"]{--bg:#14201b;--card:#1d2d26;--ink:#e8f1ec;--muted:#9bb0a6}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:12px}
 .sheet{max-width:760px;margin:0 auto;background:var(--card);border-radius:14px;padding:14px;box-shadow:0 2px 10px #0002}
 h1{font-size:1.2rem;margin:0 0 12px}
@@ -23,6 +24,9 @@ h1{font-size:1.2rem;margin:0 0 12px}
 .cell.lock.off{opacity:.55}
 .cell.lock{cursor:default}
 .cell.blocked{opacity:.45;cursor:not-allowed}
+.cell:disabled{cursor:default}
+.cell.hint{outline:3px solid #fff;box-shadow:0 0 0 6px #000b;animation:pulse 1s infinite alternate}
+@keyframes pulse{to{transform:scale(1.08)}}
 .table{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:12px 0 6px;font-size:.7rem;text-align:center}
 .table div{border:1px solid var(--muted);border-radius:4px;padding:2px 0}
 .table b{display:block;border-bottom:1px solid var(--muted)}
@@ -38,75 +42,114 @@ h1{font-size:1.2rem;margin:0 0 12px}
 .players select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--muted);background:var(--card);color:var(--ink)}
 #tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab{padding:6px 10px;border-radius:8px;border:2px solid var(--muted);background:transparent;color:var(--ink);cursor:pointer;font:inherit;font-size:.85rem}
+.tab:disabled{opacity:1;cursor:default;color:var(--ink)}
 .tab.sel{border-color:var(--ink);background:var(--ink);color:var(--card)}
+.tab.sel:disabled{color:var(--card)}
 .tab b{margin-left:4px}
 .reset+.reset{margin-left:8px}
+.mode{display:block;width:100%;text-align:left;margin:0 0 10px;padding:16px;border-radius:12px;border:2px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-size:1.1rem;font-weight:700;cursor:pointer}
+.mode small{display:block;margin-top:4px;font-weight:400;font-size:.85rem;color:var(--muted)}
+.mode:hover{background:#0000000d}
+.back{margin-left:auto;padding:6px 10px;border-radius:8px;border:1px solid var(--muted);background:transparent;color:var(--ink);font:inherit;font-size:.8rem;cursor:pointer}
+#dicebox{margin-bottom:12px;padding:12px;border-radius:10px;border:1px dashed var(--muted)}
+#dice{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.die{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:800;border:2px solid #0004}
+.die.w{background:#fff;color:#222}.die.r{background:var(--red);color:#fff}.die.y{background:var(--yellow);color:#222}.die.g{background:var(--green);color:#fff}.die.b{background:var(--blue);color:#fff}
+.die.gap{margin-right:14px}
+.pips{display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);width:100%;height:100%;padding:7px;gap:1px}
+.pips i{display:block}
+.pips i.p{background:currentColor;border-radius:50%;width:85%;height:85%;margin:auto}
+#msg{margin:0 0 10px;font-size:.95rem;font-weight:600}
+#acts button{padding:10px 16px;border-radius:8px;border:2px solid var(--ink);background:var(--ink);color:var(--card);font:inherit;font-weight:700;cursor:pointer;margin-right:8px}
+#acts #pass{background:transparent;color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="sheet">
   <h1>Combien de points – Feuille de score</h1>
-  <div class="players"><label>Joueurs <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
-  <div id="rows"></div>
-  <div class="table" id="tbl"></div>
-  <p class="note">Rouge et jaune de 2 à 12, vert et bleu de 12 à 2. La dernière case (12 ou 2) ne se coche qu’après 5 croix dans la rangée ; le cadenas se coche alors automatiquement et compte comme une croix en plus.</p>
-  <div class="miss">−5 par lancer manqué <span id="miss"></span></div>
-  <div class="total">
-    <span>Total</span>
-    <div class="box r" id="t0">0</div>+
-    <div class="box y" id="t1">0</div>+
-    <div class="box g" id="t2">0</div>+
-    <div class="box b" id="t3">0</div>−
-    <div class="box m" id="t4">0</div>=
-    <div class="box t" id="t5">0</div>
+
+  <div id="menu">
+    <p>Choisis un mode de jeu :</p>
+    <button class="mode" data-m="sheet">📝 Feuille de score<small>Tu lances tes propres dés et tu coches toi-même. Les points se calculent tout seuls.</small></button>
+    <button class="mode" data-m="auto">🎲 Jeu automatique<small>6 dés (2 blancs, rouge, jaune, vert, bleu) : l’appli lance les dés et te propose les cases possibles.</small></button>
   </div>
-  <button class="reset" id="reset">Remettre ce joueur à zéro</button><button class="reset" id="all">Nouvelle partie</button>
+
+  <div id="app" hidden>
+    <div class="players"><label>Joueurs <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div><button class="back" id="back">Changer de mode</button></div>
+
+    <div id="dicebox" hidden>
+      <div id="dice"></div>
+      <p id="msg"></p>
+      <div id="acts"><button id="roll">Lancer les dés</button><button id="pass">Passer</button></div>
+    </div>
+
+    <div id="rows"></div>
+    <div class="table" id="tbl"></div>
+    <p class="note">Rouge et jaune de 2 à 12, vert et bleu de 12 à 2. La dernière case (12 ou 2) ne se coche qu’après 5 croix dans la rangée ; le cadenas se coche alors automatiquement et compte comme une croix en plus.</p>
+    <div class="miss">−5 par lancer manqué <span id="miss"></span></div>
+    <div class="total">
+      <span>Total</span>
+      <div class="box r" id="t0">0</div>+
+      <div class="box y" id="t1">0</div>+
+      <div class="box g" id="t2">0</div>+
+      <div class="box b" id="t3">0</div>−
+      <div class="box m" id="t4">0</div>=
+      <div class="box t" id="t5">0</div>
+    </div>
+    <button class="reset" id="reset">Remettre ce joueur à zéro</button><button class="reset" id="all">Nouvelle partie</button>
+  </div>
 </div>
 <script>
 var PTS=[0,1,3,6,10,15,21,28,36,45,55,66,78];
 var COLORS=["red","yellow","green","blue"];
 var asc=[2,3,4,5,6,7,8,9,10,11,12],desc=asc.slice().reverse();
 var nums=[asc,asc,desc,desc];
-var state,miss,players,cur=0,np=1;
+var state,miss,players,cur=0,np=1,mode="sheet",g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[]},TT=[];
+function $(id){return document.getElementById(id);}
 function fresh(){return {state:COLORS.map(function(){return {c:{},lock:false}}),miss:[false,false,false,false]};}
 function pick(k){cur=k;state=players[k].state;miss=players[k].miss;}
 function init(){players=[fresh(),fresh(),fresh(),fresh()];pick(0);}
 function pts(p){var tot=0;COLORS.forEach(function(c,i){var n=Object.keys(p.state[i].c).filter(function(k){return p.state[i].c[k]}).length;tot+=PTS[n+(p.state[i].lock?1:0)];});return tot-p.miss.filter(Boolean).length*5;}
-function renderTabs(){var tb=document.getElementById("tabs");tb.innerHTML="";for(var k=0;k<np;k++)(function(k){var b=document.createElement("button");b.className="tab"+(k===cur?" sel":"");b.innerHTML="Joueur "+(k+1)+" <b>"+pts(players[k])+"</b>";b.onclick=function(){pick(k);render();};tb.appendChild(b);})(k);}
-function count(i){var n=Object.keys(state[i].c).filter(function(k){return state[i].c[k]}).length;return n;}
+function count(i){return Object.keys(state[i].c).filter(function(k){return state[i].c[k]}).length;}
 function lastOn(i){return !!state[i].c[nums[i][10]];}
 function others(i){return count(i)-(lastOn(i)?1:0);}
 function fix(i){if(lastOn(i)&&others(i)<5)state[i].c[nums[i][10]]=false;state[i].lock=lastOn(i);}
-function render(){
-  var rows=document.getElementById("rows");rows.innerHTML="";renderTabs();
-  COLORS.forEach(function(col,i){
-    var r=document.createElement("div");r.className="row "+col;
-    nums[i].forEach(function(n){
-      var b=document.createElement("button");b.className="cell"+(state[i].c[n]?" on":(n===nums[i][10]&&others(i)<5?" blocked":""));b.textContent=n;
-      b.setAttribute("aria-pressed",!!state[i].c[n]);
-      b.onclick=function(){if(n===nums[i][10]&&!state[i].c[n]&&others(i)<5)return;state[i].c[n]=!state[i].c[n];fix(i);render();};
-      r.appendChild(b);
-    });
-    var l=document.createElement("button");
-    l.className="cell lock"+(state[i].lock?"":" off");l.disabled=true;
-    l.textContent=state[i].lock?"🔒":"🔓";l.title="Se coche automatiquement avec la case "+nums[i][10];
-    r.appendChild(l);rows.appendChild(r);
-  });
-  var scores=COLORS.map(function(c,i){return PTS[count(i)+(state[i].lock?1:0)]});
-  var m=miss.filter(Boolean).length*5;
-  var sum=scores.reduce(function(a,b){return a+b},0);
-  for(var i=0;i<4;i++)document.getElementById("t"+i).textContent=scores[i];
-  document.getElementById("t4").textContent=m;
-  document.getElementById("t5").textContent=sum-m;
-  var ms=document.getElementById("miss");ms.innerHTML="";
-  miss.forEach(function(v,i){var b=document.createElement("button");b.textContent=v?"✕":"";b.onclick=function(){miss[i]=!miss[i];render();};ms.appendChild(b);});
+function nm(k){return "Joueur "+(k+1);}
+
+/* ---------- jeu automatique ---------- */
+function maxIdx(i){var m=-1;nums[i].forEach(function(n,k){if(state[i].c[n])m=k;});return m;}
+function canMark(i,v){var k=nums[i].indexOf(v);if(k<0||state[i].c[v]||k<=maxIdx(i))return false;if(k===10&&others(i)<5)return false;return true;}
+function targets(){
+  var t=[],d=g.dice,ph=g.phase;if(!d)return t;
+  if(ph==="white"||ph==="others"){var s=d[0]+d[1];for(var i=0;i<4;i++)if(canMark(i,s))t.push([i,s]);}
+  else if(ph==="color"){for(var j=0;j<4;j++){[d[0]+d[2+j],d[1]+d[2+j]].forEach(function(v){if(canMark(j,v)&&!t.some(function(x){return x[0]===j&&x[1]===v}))t.push([j,v]);});}}
+  return t;
 }
-var t=document.getElementById("tbl");
-PTS.slice(1).forEach(function(p,i){var d=document.createElement("div");d.innerHTML="<b>"+(i+1)+"×</b>"+p;t.appendChild(d);});
-document.getElementById("np").onchange=function(){np=+this.value;if(cur>=np)pick(np-1);render();};
-document.getElementById("reset").onclick=function(){players[cur]=fresh();pick(cur);render();};
-document.getElementById("all").onclick=function(){init();render();};
-init();render();
-</script>
-</body>
-</html>
+function isOver(){var L={},m=false;for(var k=0;k<np;k++){players[k].state.forEach(function(s,i){if(s.lock)L[i]=1;});if(players[k].miss.every(Boolean))m=true;}return m||Object.keys(L).length>=2;}
+function newGame(){init();g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[]};pick(0);}
+function rd(){return 1+Math.floor(Math.random()*6);}
+function roll(){
+  g.phase="rolling";render();
+  var n=0,iv=setInterval(function(){
+    g.dice=[0,0,0,0,0,0].map(rd);
+    if(++n>=8){clearInterval(iv);g.phase="white";g.who=g.act;g.marked=false;pick(g.act);}
+    render();
+  },70);
+}
+function endTurn(){
+  if(isOver()){g.phase="over";pick(g.act);}
+  else{g.act=(g.act+1)%np;g.phase="roll";pick(g.act);}
+  g.who=g.act;
+}
+function nextOther(){if(g.others.length){g.who=g.others.shift();pick(g.who);}else endTurn();}
+function advance(){
+  if(g.phase==="white"){g.phase="color";}
+  else if(g.phase==="color"){
+    if(!g.marked){var a=players[g.act].miss;for(var j=0;j<4;j++)if(!a[j]){a[j]=true;break;}}
+    g.others=[];for(var k=1;k<np;k++)g.others.push((g.act+k)%np);
+    if(g.others.length){g.phase="others";nextOther();}else endTurn();
+  }
+  else if(g.phase==="others"){nextOther();}
+  render();
+}
+function markCell(i,v){state[i].c[v]=true;fix(i);if(g.phase!=="others")g.ma
