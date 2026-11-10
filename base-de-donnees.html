@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestion des personnes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #fff; --ink: #1d2433; --muted: #6b7385;
+    --line: #e3e6ec; --accent: #2f5bea; --accent-ink: #fff; --ok: #1f8a4c; --err: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #14171d; --card: #1d2129; --ink: #e8ebf1; --muted: #9aa2b3; --line: #2d323d; --accent: #5b7ff5; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--ink);
+         min-height: 100vh; display: flex; justify-content: center; padding: 40px 16px; }
+  .app { width: 100%; max-width: 460px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+  .choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--card);
+            border: 1px solid var(--line); border-radius: 12px; padding: 6px; margin-bottom: 20px; }
+  .choice button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600;
+                   padding: 12px; border-radius: 8px; cursor: pointer; }
+  .choice button.active { background: var(--accent); color: var(--accent-ink); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  .hidden { display: none !important; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+  input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+          background: var(--bg); color: var(--ink); margin-bottom: 16px; }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  .primary { width: 100%; border: 0; background: var(--accent); color: var(--accent-ink); font: inherit;
+             font-weight: 600; padding: 12px; border-radius: 8px; cursor: pointer; }
+  .primary:disabled { opacity: .5; cursor: default; }
+  .msg { font-size: 14px; margin-top: 14px; min-height: 20px; }
+  .msg.ok { color: var(--ok); } .msg.err { color: var(--err); }
+  .viewer { display: flex; align-items: center; gap: 12px; }
+  .arrow { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line);
+           background: var(--bg); color: var(--ink); font-size: 22px; cursor: pointer; }
+  .arrow:disabled { opacity: .3; cursor: default; }
+  .record { flex: 1; text-align: center; }
+  .linenum { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent);
+             background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 4px 10px;
+             border-radius: 999px; margin-bottom: 14px; }
+  .field { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .field:last-child { border-bottom: 0; }
+  .field span:first-child { color: var(--muted); font-size: 14px; }
+  .field span:last-child { font-weight: 600; }
+  .empty { text-align: center; color: var(--muted); padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Gestion des personnes</h1>
+  <p class="sub">Que voulez-vous faire ?</p>
+
+  <div class="choice">
+    <button id="btnLecture" type="button">Lecture des données</button>
+    <button id="btnEcriture" type="button">Écriture d'une donnée</button>
+  </div>
+
+  <!-- Écriture -->
+  <form id="formEcriture" class="card hidden" autocomplete="off">
+    <label for="prenom">Prénom</label>
+    <input id="prenom" required maxlength="80">
+    <label for="nom">Nom</label>
+    <input id="nom" required maxlength="80">
+    <label for="age">Âge</label>
+    <input id="age" type="number" min="0" max="150" required>
+    <button class="primary" id="btnSave" type="submit">Enregistrer</button>
+    <div class="msg" id="msgEcriture"></div>
+  </form>
+
+  <!-- Lecture -->
+  <div id="zoneLecture" class="card hidden">
+    <div class="viewer">
+      <button class="arrow" id="prev" type="button" aria-label="Ligne précédente">&#8592;</button>
+      <div class="record" id="record"><div class="empty">Chargement…</div></div>
+      <button class="arrow" id="next" type="button" aria-label="Ligne suivante">&#8594;</button>
+    </div>
+  </div>
+
+  <p class="msg err" id="msgGlobal"></p>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let db = null, lignes = [], index = 0, abonne = false, timer = null;
+
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  function afficherMode(mode) {
+    $("btnLecture").classList.toggle("active", mode === "lecture");
+    $("btnEcriture").classList.toggle("active", mode === "ecriture");
+    $("zoneLecture").classList.toggle("hidden", mode !== "lecture");
+    $("formEcriture").classList.toggle("hidden", mode !== "ecriture");
+    if (mode === "lecture") abonner();
+    if (mode === "ecriture") { $("msgEcriture").textContent = ""; $("prenom").focus(); }
+  }
+
+  function rendre() {
+    const zone = $("record");
+    if (!lignes.length) {
+      zone.innerHTML = '<div class="empty">Aucune donnée enregistrée pour le moment.</div>';
+      $("prev").disabled = $("next").disabled = true;
+      return;
+    }
+    if (index > lignes.length - 1) index = lignes.length - 1;
+    const d = lignes[index];
+    zone.innerHTML =
+      '<div class="linenum">Ligne ' + (index + 1) + ' / ' + lignes.length + '</div>' +
+      '<div class="field"><span>Prénom</span><span>' + esc(d.prenom) + '</span></div>' +
+      '<div class="field"><span>Nom</span><span>' + esc(d.nom) + '</span></div>' +
+      '<div class="field"><span>Âge</span><span>' + esc(d.age) + '</span></div>';
+    $("prev").disabled = index === 0;
+    $("next").disabled = index === lignes.length - 1;
+  }
+
+  function abonner() {
+    if (abonne || !db) return;
+    abonne = true;
+    timer = setTimeout(() => {
+      $("record").innerHTML = '<div class="empty">Impossible de joindre la base de données pour l\'instant.</div>';
+    }, 10000);
+    db.collection("personnes").orderBy("createdAt", "asc").onSnapshot(snap => {
+      if (!snap.metadata.fromCache && timer) { clearTimeout(timer); timer = null; }
+      lignes = snap.docs.map(doc => doc.data());
+      rendre();
+    }, err => {
+      if (timer) { clearTimeout(timer); timer = null; }
+      $("record").innerHTML = '<div class="empty">Erreur de lecture (' + esc(err.code) + ').</div>';
+    });
+  }
+
+  $("btnLecture").onclick = () => afficherMode("lecture");
+  $("btnEcriture").onclick = () => afficherMode("ecriture");
+  $("prev").onclick = () => { if (index > 0) { index--; rendre(); } };
+  $("next").onclick = () => { if (index < lignes.length - 1) { index++; rendre(); } };
+  document.addEventListener("keydown", e => {
+    if ($("zoneLecture").classList.contains("hidden")) return;
+    if (e.key === "ArrowLeft") $("prev").click();
+    if (e.key === "ArrowRight") $("next").click();
+  });
+
+  $("formEcriture").addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = $("msgEcriture");
+    if (!db) { msg.className = "msg err"; msg.textContent = "Base de données indisponible."; return; }
+    const prenom = $("prenom").value.trim(), nom = $("nom").value.trim(), age = Number($("age").value);
+    if (!prenom || !nom || !Number.isFinite(age)) { msg.className = "msg err"; msg.textContent = "Merci de remplir tous les champs."; return; }
+    $("btnSave").disabled = true;
+    try {
+      await db.collection("personnes").add({ prenom, nom, age, createdAt: Date.now() });
+      msg.className = "msg ok"; msg.textContent = "Enregistré : " + prenom + " " + nom + ", " + age + " ans.";
+      $("formEcriture").reset(); $("prenom").focus();
+    } catch (err) {
+      msg.className = "msg err";
+      msg.textContent = err && err.code === "invalid_argument"
+        ? "Vous n'avez pas le droit d'écrire dans cette base."
+        : "Échec de l'enregistrement (" + (err && err.code || "erreur") + ").";
+    } finally { $("btnSave").disabled = false; }
+  });
+
+  (async () => {
+    try { db = window.claude ? await window.claude.use("db") : null; } catch (_) { db = null; }
+    if (!db) {
+      $("msgGlobal").textContent = "La base de données n'est pas disponible dans cette vue (connectez-vous à claude.ai).";
+      $("record").innerHTML = '<div class="empty">Base de données indisponible.</div>';
+      return;
+    }
+    if (!$("zoneLecture").classList.contains("hidden")) abonner();
+  })();
+})();
+</script>
+</body>
+</html>
 
