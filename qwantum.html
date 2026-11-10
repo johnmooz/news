@@ -133,4 +133,474 @@
   .cdot{width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer;padding:0}
   .dlabel{font-size:12px;color:#888;height:22px;line-height:22px}
   .sumr{display:flex;align-items:center;gap:8px}
-  .ins{font-family:inherit;font-size:13px;font-weight:600;border:non
+  .ins{font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;padding:4px 9px;background:#fff;color:#333;cursor:pointer}
+  .ins:hover{background:#fffbe0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Qwantum</h1>
+  <button class="btn light" id="menuBtn">Menu</button>
+</header>
+<main id="app"></main>
+
+<script>
+const COLORS = [
+  {id:'violet', name:'Violet', hex:'#5b2a86'},
+  {id:'bleu',   name:'Bleu',   hex:'#2fa4dc'},
+  {id:'rouge',  name:'Rouge',  hex:'#d8262c'},
+  {id:'jaune',  name:'Jaune',  hex:'#f3b600'}
+];
+// Faces réelles des 6 dés colorés : [chiffre, couleur]. R rouge, V violet, B bleu, J jaune.
+// Chaque couleur apparaît sur 9 faces sur 36 : même chance pour les 4 couleurs.
+const CI = {V:0, B:1, R:2, J:3};
+const DICE_FACES = [
+  '1R 2J 3R 3V 4B 4J',
+  '1J 2V 3B 5J 6V 6R',
+  '2B 2V 3R 4J 5V 6B',
+  '1V 2B 3V 4B 5R 6J',
+  '1R 1B 4R 5J 5B 6V',
+  '1J 2R 3J 4V 5B 6R'
+].map(line => line.split(' ').map(f => ({v:+f[0], c:CI[f[1]]})));
+const face = (die, f) => ({f, v:DICE_FACES[die][f].v, c:DICE_FACES[die][f].c});
+const MIN_SUM = 2;  // 1 + 1 au minimum
+const MAX_SUM = 6 + DICE_FACES.reduce((a,d)=>a+Math.max(...d.map(x=>x.v)),0); // 6 + plus grande face de chaque dé
+
+let S = null;          // partie en cours
+let screen = 'menu';   // 'menu' | 'setup' | 'game'
+let setupMode = 'auto';
+let editRow = null;    // mode feuille : ligne en cours de saisie
+let renaming = null;   // joueur en cours de renommage
+const cleanName = (x, i) => (x || '').replace(/[<>&"]/g, '').trim().slice(0, 20) || `Joueur ${i+1}`;
+let sheetErr = '';
+let lastRaw = '';
+const $ = s => document.querySelector(s);
+const app = $('#app');
+
+function save(){ try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem('qwantum')); }catch(e){ return null; } }
+
+/* ---------- Menu ---------- */
+function renderMenu(){
+  const canResume = S && !S.over;
+  app.innerHTML = `
+  <div class="menu">
+    <h2>Comment veux-tu jouer ?</h2>
+    <p class="sub">Choisis un mode pour commencer une partie.</p>
+    <div class="cards">
+      <button class="card" data-mode="auto">
+        <div class="ico">🎲</div>
+        <h3>Jeu automatique</h3>
+        <p>La page lance les 7 dés au hasard, calcule les sommes par couleur et propose les cases possibles à chaque joueur.</p>
+      </button>
+      <button class="card" data-mode="sheet">
+        <div class="ico">📝</div>
+        <h3>Feuille de score</h3>
+        <p>Tu joues avec tes vrais dés et tu écris les chiffres que tu veux dans les cases. La feuille vérifie les règles et calcule le score.</p>
+      </button>
+    </div>
+    ${canResume ? `<div class="resume"><button class="btn light" id="resume">Reprendre la partie en cours (${S.mode==='sheet'?'feuille de score':'jeu automatique'})</button></div>` : ''}
+  </div>`;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ setupMode=b.dataset.mode; screen='setup'; render(); });
+  const r = $('#resume'); if (r) r.onclick = ()=>{ screen='game'; render(); };
+}
+
+/* ---------- Mise en place ---------- */
+function renderSetup(){
+  app.innerHTML = `
+  <div class="setup">
+    <h2>${setupMode==='sheet'?'📝 Feuille de score':'🎲 Jeu automatique'}</h2>
+    <label>Nombre de joueurs</label>
+    <select id="np">${[1,2,3,4,5].map(n=>`<option ${n==2?'selected':''}>${n}</option>`).join('')}</select>
+    <div id="names"></div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn light" id="back">◀ Retour</button>
+      <button class="btn" id="start">Commencer</button>
+    </div>
+  </div>`;
+  const drawNames = () => {
+    const n = +$('#np').value;
+    $('#names').innerHTML = Array.from({length:n},(_,i)=>
+      `<label>Joueur ${i+1}</label><input value="Joueur ${i+1}" data-i="${i}">`).join('');
+  };
+  $('#np').onchange = drawNames; drawNames();
+  $('#back').onclick = ()=>{ screen='menu'; render(); };
+  $('#start').onclick = () => {
+    const names = [...document.querySelectorAll('#names input')].map((x,i)=>cleanName(x.value, i));
+    S = { mode:setupMode,
+          players: names.map(name=>({name, rows:[0,1,2,3].map(()=>Array(6).fill(null)), pen:0})),
+          cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], history:[], over:false, msg:'' };
+    editRow = null; sheetErr = '';
+    screen = 'game'; save(); render();
+  };
+}
+
+/* ---------- Calculs communs ---------- */
+function columnValue(p, j){
+  const col = p.rows.map(r=>r[j]);
+  if (col.some(v=>v===null)) return null;
+  return [...col].sort((a,b)=>b-a)[2]; // 3e plus grand
+}
+const penaltyTotal = n => n*(n+1)/2; // -1 -2 -3 -4 -5
+function score(p){
+  let s = 0;
+  for (let j=0;j<6;j++){ const v=columnValue(p,j); if(v!==null) s+=v; }
+  return s - penaltyTotal(p.pen);
+}
+// Règle d'ordre : cases 1 à 4 croissantes, cases 5 et 6 décroissantes
+function fitsOrder(row, k, s){
+  if (k === 0) return true;
+  const prev = row[k-1];
+  return k <= 3 ? s > prev : s < prev;
+}
+function ruleText(row, k){
+  if (k === 0) return `de ${MIN_SUM} à ${MAX_SUM}`;
+  return k <= 3 ? `plus grand que ${row[k-1]}` : `plus petit que ${row[k-1]}`;
+}
+function isFinished(){
+  return S.players.some(q => q.pen>=5 || [0,1,2,3,4,5].every(j=>columnValue(q,j)!==null));
+}
+
+/* ---------- Mode automatique ---------- */
+function colorSum(c){
+  if (!S.dice) return null;
+  const ds = S.dice.colored.filter(d=>d.c===c);
+  if (!ds.length) return null;
+  return { total: S.dice.white + ds.reduce((a,d)=>a+d.v,0), parts:[S.dice.white, ...ds.map(d=>d.v)] };
+}
+function candidate(pi, r){
+  if (!S.dice || S.over) return null;
+  if (pi === S.cur){ if (S.phase !== 'active') return null; }
+  else if (S.phase !== 'others' || S.wrote.includes(pi) || r === S.usedColor) return null;
+  const p = S.players[pi];
+  const sum = colorSum(r); if (!sum) return null;
+  const row = p.rows[r];
+  const k = row.indexOf(null); if (k === -1) return null;
+  if (!fitsOrder(row, k, sum.total)) return null;
+  return {k, s:sum.total};
+}
+function randomDice(){
+  return { white: 1+Math.floor(Math.random()*6),
+    colored: Array.from({length:6},(_,d)=>face(d, Math.floor(Math.random()*6))) };
+}
+function roll(){
+  if (S.phase !== 'roll' || S.over) return;
+  const final = randomDice();
+  let t = 0;
+  const tick = setInterval(()=>{
+    S.dice = randomDice(); renderDice(true);
+    if (++t > 6){ clearInterval(tick); S.dice = final; S.phase='active'; S.usedColor=null; S.wrote=[]; S.msg=''; save(); render(); }
+  }, 70);
+}
+function write(pi, r){
+  const p = S.players[pi];
+  const c = candidate(pi, r); if (!c) return;
+  p.rows[r][c.k] = c.s; S.wrote.push(pi);
+  S.msg = `${p.name} inscrit ${c.s} dans la ligne ${COLORS[r].name.toLowerCase()}.`;
+  if (pi === S.cur){ S.usedColor = r; goOthers(); return; }
+  save(); render();
+}
+function passActive(){
+  if (S.phase !== 'active') return;
+  const p = S.players[S.cur];
+  p.pen = Math.min(5, p.pen+1); S.usedColor = null;
+  S.msg = `${p.name} n'inscrit rien et prend une pénalité (−${p.pen}).`;
+  goOthers();
+}
+function goOthers(){
+  if (S.players.length === 1){ endTurn(); return; }
+  S.phase = 'others';
+  S.view = (S.cur+1) % S.players.length;
+  save(); render();
+}
+function endTurn(){
+  if (!S.dice) return;
+  if (isFinished()){ S.over = true; save(); render(); return; }
+  S.cur = (S.cur+1) % S.players.length; S.view = S.cur;
+  S.dice = null; S.phase = 'roll'; S.usedColor = null; S.wrote = []; S.msg = '';
+  save(); render();
+}
+
+/* ---------- Mode feuille de score ---------- */
+function sheetCommit(raw){
+  if (raw === '' ) { editRow = null; sheetErr=''; render(); return; }
+  lastRaw = raw;
+  sheetWrite(editRow, Number(raw));
+}
+// Inscrit s dans la prochaine case de la ligne r du joueur affiché, si les règles le permettent
+function sheetWrite(r, s){
+  const p = S.players[S.view], row = p.rows[r];
+  const k = row.indexOf(null);
+  if (k === -1){ sheetErr = `La ligne ${COLORS[r].name.toLowerCase()} est déjà complète.`; render(); return; }
+  if (!Number.isInteger(s) || s < MIN_SUM || s > MAX_SUM){
+    sheetErr = `Le nombre doit être un entier de ${MIN_SUM} à ${MAX_SUM}.`; render(); return;
+  }
+  if (!fitsOrder(row, k, s)){
+    sheetErr = `Impossible d'écrire ${s} en ${COLORS[r].name.toLowerCase()} : le nombre doit être ${ruleText(row,k)} (${k<=3?'croissant jusqu’à la 4ᵉ case':'décroissant après la barre'}).`;
+    render(); return;
+  }
+  row[k] = s; S.history.push({pi:S.view, r, k});
+  editRow = null; sheetErr = '';
+  S.msg = `${p.name} : ${s} inscrit en ${COLORS[r].name.toLowerCase()}.`;
+  if (isFinished()) S.over = true;
+  save(); render();
+}
+// Dés réglables à la main : clic = face suivante du dé
+function defaultSheetDice(){ return { white:1, colored:Array.from({length:6},(_,d)=>face(d,0)) }; }
+function cycleDie(i){
+  const D = S.sheetDice;
+  if (i < 0) D.white = D.white % 6 + 1;
+  else D.colored[i] = face(i, (D.colored[i].f + 1) % 6);
+  sheetErr=''; save(); render();
+}
+function sheetSum(c){
+  const D = S.sheetDice, ds = D.colored.filter(d=>d.c===c);
+  if (!ds.length) return null;
+  return { total: D.white + ds.reduce((a,d)=>a+d.v,0), parts:[D.white, ...ds.map(d=>d.v)] };
+}
+function sheetUndo(){
+  const h = S.history.pop(); if (!h) return;
+  const p = S.players[h.pi];
+  if (h.type === 'pen') p.pen = h.prev; else p.rows[h.r][h.k] = null;
+  S.view = h.pi; S.over = false; S.dismissed = false; editRow = null; sheetErr = '';
+  S.msg = 'Dernière action annulée.';
+  save(); render();
+}
+function sheetPenalty(n){
+  const p = S.players[S.view];
+  const prev = p.pen;
+  p.pen = p.pen >= n ? n-1 : n;
+  S.history.push({type:'pen', pi:S.view, prev});
+  S.msg = `${p.name} : ${p.pen} pénalité${p.pen>1?'s':''} (−${penaltyTotal(p.pen)}).`;
+  if (isFinished()) S.over = true;
+  save(); render();
+}
+
+/* ---------- Rendu ---------- */
+function dieHTML(v, colorHex, white, rolling){
+  return `<div class="die ${white?'white':''} ${rolling?'rolling':''}">
+    <div class="pip" style="${white?'':`background:${colorHex}`}">${v}${v===6&&white?'.':''}</div></div>`;
+}
+function renderDice(rolling){
+  const el = $('#dice'); if (!el) return;
+  if (!S.dice){ el.innerHTML = `<span class="placeholder">Lance les dés pour commencer le tour.</span>`; return; }
+  el.innerHTML = dieHTML(S.dice.white,null,true,rolling) +
+    S.dice.colored.map(d=>dieHTML(d.v, COLORS[d.c].hex, false, rolling)).join('');
+}
+
+function sheetHTML(view, cellFn, readonly, extraCls){
+  const rowsHTML = view.rows.map((row,r)=>
+    `<div class="row" style="background:${COLORS[r].hex}">${row.map((v,k)=>cellFn(row,r,v,k)).join('')}</div>`).join('');
+  const penHTML = [1,2,3,4,5].map(n=>
+    `<div class="pbox">−${n} <span class="b" data-pen="${n}">${view.pen>=n?'✕':''}</span></div>`).join('');
+  const bottomHTML = [0,1,2,3,4,5].map(j=>{
+    const v = columnValue(view,j);
+    return `<div class="bcell">${v!==null?v:''}</div>`;
+  }).join('') + `<div class="eq">=</div><div class="total">${score(view)}</div>`;
+  return `<div class="sheet ${readonly?'readonly':''} ${extraCls||''}">
+      <div class="sheet-top">
+        <div>${rowsHTML}</div>
+        <div class="pen"><div class="skull">✕</div>${penHTML}<div class="brand">Qwantum</div></div>
+      </div>
+      <div class="bottom">${bottomHTML}</div>
+    </div>`;
+}
+function tabsHTML(markCur){
+  return `<div class="tabs">${S.players.map((p,i)=> renaming===i
+    ? `<input class="tab rename" id="renameInput" maxlength="20" aria-label="Nouveau nom">`
+    : `<button class="tab ${i===S.view?'active':''} ${markCur&&i===S.cur?'cur':''}" data-view="${i}" title="Double-clic pour renommer">${p.name}${S.mode==='auto'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}
+    ${renaming===null?`<button class="tab pencil" id="renameBtn" title="Renommer ${S.players[S.view].name}">✎ Renommer</button>`:''}</div>`;
+}
+function scoresHTML(){
+  return `<div class="scores" style="margin-top:14px"><h3>Scores</h3>
+    <table>${S.players.map(p=>`<tr><td>${p.name}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
+}
+function rulesHTML(){
+  const common = `
+    <li>Dans chaque ligne, les cases se remplissent de gauche à droite. Cases 1 à 4 : nombres <b>croissants</b>. Après la barre (cases 5 et 6) : nombres <b>décroissants</b>.</li>
+    <li>Quand une colonne a ses 4 nombres, la case blanche du bas reçoit le <b>3ᵉ nombre</b> de la colonne, classée du plus grand au plus petit.</li>
+    <li>Pénalités : −1, −2, −3, −4, −5, elles s'additionnent.</li>
+    <li>La partie se termine quand un joueur a rempli ses 6 cases du bas ou coché sa 5ᵉ pénalité. Score = somme des cases du bas − pénalités.</li>`;
+  const auto = `
+    <li>7 dés : un dé blanc (1 à 6) et six dés de couleur, chacun avec ses 6 faces réelles (chiffre + couleur).</li>
+    <li>Le joueur en cours inscrit dans la ligne d'une couleur : <b>dé blanc + tous les dés de cette couleur</b>. S'il n'inscrit rien, il prend une pénalité.</li>
+    <li>Ensuite, chaque autre joueur peut inscrire <b>une</b> des combinaisons restantes (plusieurs joueurs peuvent prendre la même), sans pénalité s'il n'inscrit rien.</li>`;
+  const sheet = `
+    <li>Règle les 7 dés comme tes vrais dés : clic sur un dé = face suivante (blanc de 1 à 6 ; dés de couleur : leurs 6 vraies faces, chiffre et couleur). Les sommes « dé blanc + dés de la couleur » se calculent toutes seules.</li>
+    <li>Clique sur « Inscrire » à côté d'une somme, ou sur la case en pointillés d'une ligne pour taper le nombre que tu veux. La feuille refuse un nombre qui ne respecte pas l'ordre.</li>
+    <li>Clique sur une case de pénalité pour la cocher, ou de nouveau pour la décocher.</li>`;
+  return `<details class="rules"><summary>Rappel des règles</summary><ul>${S.mode==='sheet'?sheet:auto}${common}</ul></details>`;
+}
+
+function renderAuto(){
+  const cur = S.players[S.cur], view = S.players[S.view];
+  const canPlayView = (S.view === S.cur && S.phase === 'active') ||
+                      (S.view !== S.cur && S.phase === 'others' && !S.wrote.includes(S.view));
+
+  const sums = COLORS.map((c,i)=>{
+    const s = colorSum(i);
+    const taken = S.phase === 'others' && S.usedColor === i;
+    return `<div class="sum ${s && !taken?'':'off'}" style="background:${c.hex}">
+      <span>${c.name}${s?` : ${s.parts.join(' + ')}`:''}${taken?` — prise par ${cur.name}`:''}</span><b>${s?s.total:'–'}</b></div>`;
+  }).join('');
+
+  const cands = [0,1,2,3].map(r=>candidate(S.view, r));
+  const cellFn = (row,r,v,k)=>{
+    const cand = cands[r]; const isC = cand && cand.k===k;
+    return `<div class="cell ${isC?'cand':''}" ${isC?`data-write="${r}"`:''}>
+      <div class="circle">${v!==null?v:(isC?cand.s:'')}</div></div>`;
+  };
+
+  const anyCand = cands.some(Boolean);
+  let endLabel = 'Tour suivant ▶', endCls = '', endDisabled = S.phase !== 'others' || S.over;
+  if (S.phase === 'active'){ endLabel = `Ne rien inscrire (pénalité −${Math.min(5,cur.pen+1)})`; endCls='danger'; endDisabled = S.over; }
+
+  let hint = S.msg ? S.msg + ' ' : '';
+  if (S.phase === 'active'){
+    hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
+          : anyCand ? 'Clique sur une case en pointillés pour inscrire la somme.'
+          : 'Aucune case possible : tu dois prendre une pénalité.';
+  } else if (S.phase === 'others'){
+    const waiting = S.players.filter((p,i)=>i!==S.cur && !S.wrote.includes(i));
+    hint += `Les autres joueurs peuvent inscrire une combinaison restante (sans pénalité s'ils ne le font pas). `;
+    if (S.view === S.cur) hint += 'Choisis un autre joueur dans les onglets.';
+    else if (S.wrote.includes(S.view)) hint += `${view.name} a déjà inscrit ce tour-ci.`;
+    else if (!anyCand) hint += `Aucune case possible pour ${view.name}.`;
+    else hint += `${view.name} : clique sur une case en pointillés.`;
+    if (!waiting.length) hint += ' Tout le monde a joué : passe au tour suivant.';
+  }
+
+  app.innerHTML = `
+  <div class="game">
+    <section>${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
+    <aside class="panel">
+      <h3>Tour de ${cur.name}</h3>
+      <div class="dice" id="dice"></div>
+      <div class="sums">${sums}</div>
+      <div class="turnbox">
+        <button class="btn" id="rollBtn" ${S.phase!=='roll'||S.over?'disabled':''}>🎲 Lancer les dés</button>
+        <button class="btn ${endCls}" id="endBtn" ${endDisabled?'disabled':''}>${endLabel}</button>
+        <div class="msg">${hint}</div>
+      </div>
+      ${scoresHTML()}
+    </aside>
+  </div>
+  ${S.over && !S.dismissed ? endModal() : ''}`;
+
+  renderDice(false);
+  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>write(S.view, +el.dataset.write));
+  $('#rollBtn').onclick = roll;
+  $('#endBtn').onclick = () => S.phase === 'active' ? passActive() : endTurn();
+}
+
+function renderSheet(){
+  const view = S.players[S.view];
+  const cellFn = (row,r,v,k)=>{
+    if (v !== null) return `<div class="cell"><div class="circle">${v}</div></div>`;
+    const next = row.indexOf(null) === k;
+    if (!next || S.over) return `<div class="cell"><div class="circle"></div></div>`;
+    if (editRow === r) return `<div class="cell typing"><div class="circle">
+        <input type="number" inputmode="numeric" min="${MIN_SUM}" max="${MAX_SUM}" id="cellInput" aria-label="Nombre ${COLORS[r].name}"></div></div>`;
+    const prev = k===0 ? '' : (k<=3 ? `&gt; ${row[k-1]}` : `&lt; ${row[k-1]}`);
+    return `<div class="cell edit" data-edit="${r}"><div class="circle">${prev}</div></div>`;
+  };
+  const msg = sheetErr ? `<div class="msg err">${sheetErr}</div>` : `<div class="msg">${S.msg||''}</div>`;
+  const row = editRow!==null ? view.rows[editRow] : null;
+  const help = editRow!==null
+    ? `Ligne ${COLORS[editRow].name.toLowerCase()} : tape un nombre ${ruleText(row, row.indexOf(null))}, puis Entrée (Échap pour annuler).`
+    : `Clique sur une case en pointillés pour écrire un nombre, ou sur « Inscrire » à côté d'une somme.`;
+
+  if (!S.sheetDice || S.sheetDice.colored.some(d=>d.f===undefined)) S.sheetDice = defaultSheetDice();
+  const D = S.sheetDice;
+  const diceHTML = `<div class="dice setdice">
+      <div class="dslot"><button class="dbtn" data-die="-1" title="Chiffre suivant">${dieHTML(D.white,null,true,false)}</button><span class="dlabel">blanc</span></div>
+      ${D.colored.map((d,i)=>`<div class="dslot">
+        <button class="dbtn" data-die="${i}" title="Face suivante">${dieHTML(d.v, COLORS[d.c].hex, false, false)}</button><span class="dlabel">dé ${i+1}</span></div>`).join('')}
+    </div>`;
+  const sumsHTML = COLORS.map((c,i)=>{
+    const s = sheetSum(i);
+    return `<div class="sum ${s?'':'off'}" style="background:${c.hex}">
+      <span>${c.name}${s?` : ${s.parts.join(' + ')}`:''}</span>
+      <span class="sumr"><b>${s?s.total:'–'}</b>${s&&!S.over?`<button class="ins" data-ins="${i}">Inscrire</button>`:''}</span></div>`;
+  }).join('');
+
+  app.innerHTML = `
+  <div class="game">
+    <section>${tabsHTML(false)}${sheetHTML(view, cellFn, false, 'sheetmode')}${rulesHTML()}</section>
+    <aside class="panel">
+      <h3>🎲 Tes dés</h3>
+      <div class="msg">Clique sur un dé pour passer à sa face suivante (chiffre et couleur des vrais dés).</div>
+      ${diceHTML}
+      <div class="sums">${sumsHTML}</div>
+      <h3>📝 Feuille de ${view.name}</h3>
+      <div class="stack">
+        <div class="msg">${help}</div>
+        ${msg}
+        <button class="btn light" id="undoBtn" ${S.history.length?'':'disabled'}>↶ Annuler la dernière action</button>
+        <button class="btn" id="finishBtn" ${S.over?'disabled':''}>🏁 Terminer la partie</button>
+      </div>
+      ${scoresHTML()}
+    </aside>
+  </div>
+  ${S.over && !S.dismissed ? endModal() : ''}`;
+
+  document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>{ editRow=+el.dataset.edit; sheetErr=''; render(); });
+  document.querySelectorAll('[data-pen]').forEach(el=>el.onclick=()=>{ if(!S.over) sheetPenalty(+el.dataset.pen); });
+  document.querySelectorAll('[data-die]').forEach(el=>el.onclick=()=>cycleDie(+el.dataset.die));
+  document.querySelectorAll('[data-ins]').forEach(el=>el.onclick=()=>{ editRow=null; const r=+el.dataset.ins; sheetWrite(r, sheetSum(r).total); });
+  const inp = $('#cellInput');
+  if (inp){
+    inp.value = sheetErr ? lastRaw : ''; inp.focus();
+    inp.onkeydown = e=>{
+      if (e.key === 'Enter'){ e.preventDefault(); sheetCommit(inp.value.trim()); }
+      else if (e.key === 'Escape'){ editRow=null; sheetErr=''; render(); }
+    };
+    inp.onblur = ()=>{ setTimeout(()=>{ if ($('#cellInput')===inp) sheetCommit(inp.value.trim()); }, 120); };
+  }
+  $('#undoBtn').onclick = sheetUndo;
+  $('#finishBtn').onclick = ()=>{ S.over = true; save(); render(); };
+}
+
+function render(){
+  if (screen === 'menu' || !S && screen === 'game'){ screen='menu'; renderMenu(); return; }
+  if (screen === 'setup'){ renderSetup(); return; }
+  if (S.mode === 'sheet') renderSheet(); else renderAuto();
+  document.querySelectorAll('[data-view]').forEach(el=>{
+    el.onclick=()=>{ S.view=+el.dataset.view; S.msg=''; editRow=null; sheetErr=''; render(); };
+    el.ondblclick=()=>{ S.view=+el.dataset.view; startRename(); };
+  });
+  const rb = $('#renameBtn'); if (rb) rb.onclick = startRename;
+  const ri = $('#renameInput');
+  if (ri){
+    const i = renaming; ri.value = S.players[i].name; ri.focus(); ri.select();
+    const done = ok => { if (renaming!==i) return; if (ok) S.players[i].name = cleanName(ri.value, i); renaming=null; save(); render(); };
+    ri.onkeydown = e=>{ if (e.key==='Enter'){ e.preventDefault(); done(true); } else if (e.key==='Escape') done(false); };
+    ri.onblur = ()=>done(true);
+  }
+  const again = $('#again'); if (again) again.onclick = ()=>{ setupMode=S.mode; S=null; save(); screen='setup'; render(); };
+  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ S=null; save(); screen='menu'; render(); };
+  const look = $('#look'); if (look) look.onclick = ()=>{ S.dismissed = true; save(); render(); };
+}
+function startRename(){ editRow=null; sheetErr=''; renaming=S.view; render(); }
+function endModal(){
+  const ranked = [...S.players].sort((a,b)=>score(b)-score(a));
+  return `<div class="overlay"><div class="modal">
+    <h2>🏆 Fin de partie</h2>
+    <ol>${ranked.map(p=>`<li><b>${p.name}</b> — ${score(p)} points</li>`).join('')}</ol>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn light" id="look">Voir les feuilles</button>
+      <button class="btn light" id="toMenu">Menu</button>
+      <button class="btn" id="again">Rejouer</button>
+    </div>
+  </div></div>`;
+}
+
+$('#menuBtn').onclick = ()=>{ editRow=null; sheetErr=''; screen='menu'; render(); };
+S = load();
+if (S && (!S.phase || !S.mode)){ S = null; } // ancienne sauvegarde incompatible
+if (S && !S.history) S.history = [];
+screen = 'menu';
+render();
+</script>
+</body>
+</html>
