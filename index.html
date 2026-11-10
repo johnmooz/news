@@ -1,208 +1,296 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full bg-slate-950 text-slate-100">
+<html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portail d'Applications & Jeux</title>
+    <title>Portail de Jeux & Applications</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'glow': 'glow 3s infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { opacity: '0.4' },
+                            '100%': { opacity: '0.8' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b1120;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* Glassmorphism Card Style */
+        .game-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(99, 102, 241, 0.4);
-            box-shadow: 0 12px 24px -10px rgba(99, 102, 241, 0.3);
+
+        .game-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            background: rgba(30, 41, 59, 0.85);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1120;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
         }
     </style>
 </head>
-<body class="min-h-full flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen text-slate-100 flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Header Section -->
-    <header class="w-full py-8 px-4 sm:px-6 lg:px-8 border-b border-slate-800 bg-slate-900/60 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <!-- En-tête principal -->
+    <header class="w-full pt-10 pb-6 px-4 sm:px-6 lg:px-8 border-b border-slate-800/60 sticky top-0 bg-slate-950/80 backdrop-blur-md z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                     Portail d'Applications
                 </h1>
-                <p class="text-xs text-slate-400 mt-1" id="count-label">28 modules disponibles</p>
+                <p class="text-xs text-slate-400 mt-1" id="count-label">30 modules disponibles</p>
             </div>
-            
-            <!-- Search Bar -->
+                <p class="text-slate-400 text-sm sm:text-base mt-2">
+                    Accédez rapidement à vos univers favoris (<span id="module-count" class="font-bold text-indigo-400">27</span> modules disponibles).
+                </p>
+            </div>
+
+            <!-- Barre de recherche -->
             <div class="relative w-full md:w-80">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    placeholder="Rechercher une application..." 
-                    class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-                    oninput="filterCards()"
-                >
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <input type="text" id="search-input" placeholder="Rechercher une carte..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-900/90 border border-slate-700/70 rounded-xl text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-inner text-sm">
+                <button id="clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content / Cards Grid -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    <!-- Zone principale : Grille des 27 cartes -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+
+        <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
             <!-- 1. 5000 -->
-            <a href="5000.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-dice-five text-xl"></i>
+            <a href="5000.html" data-title="5000" data-desc="jeu de des et de comptage de points" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-dice"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#01</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-400 transition-colors">5000</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Jeu de dés et de comptage de points</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">5000</h2>
-                    <p class="text-xs text-slate-400 mt-1">Jeu de dés</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 2. Actualité -->
-            <a href="actualite.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-newspaper text-xl"></i>
+            <a href="actualite.html" data-title="actualité actualite" data-desc="fil d'informations et actualites en direct" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:bg-blue-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-newspaper"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#02</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-blue-400 transition-colors">Actualité</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Fil d'informations et actualités en direct</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">Actualité</h2>
-                    <p class="text-xs text-slate-400 mt-1">Informations et flux de presse</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Consulter</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 3. Belote coinchée -->
-            <a href="belotte-coinchee.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-spade text-xl"></i>
+            <a href="belotte-coinchee.html" data-title="belote coinchee belotte" data-desc="jeu de cartes traditionnel" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-xl group-hover:bg-red-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-heart"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#03</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-400 transition-colors">Belote coinchée</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Jeu de cartes traditionnel</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Belote coinchée</h2>
-                    <p class="text-xs text-slate-400 mt-1">Jeu de cartes traditionnel</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 4. Binero -->
-            <a href="binero.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-binary text-xl"></i>
+            <a href="binero.html" data-title="binero" data-desc="casse-tete logique binaire 0 et 1" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-hashtag"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#04</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Binero</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Casse-tête logique binaire (0 et 1)</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-teal-300 transition">Binero</h2>
-                    <p class="text-xs text-slate-400 mt-1">Casse-tête logique binaire</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Résoudre</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 5. Calculatrice -->
-            <a href="calculatrice.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-calculator text-xl"></i>
+            <a href="calculatrice.html" data-title="calculatrice" data-desc="outil de calcul rapide et avance" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-calculator"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#05</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-indigo-400 transition-colors">Calculatrice</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Outil de calcul rapide et avancé</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Calculatrice</h2>
-                    <p class="text-xs text-slate-400 mt-1">Outil de calcul rapide</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Ouvrir</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 6. Chronomètre -->
-            <a href="chronometre.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-stopwatch text-xl"></i>
+            <a href="chronometre.html" data-title="chronometre chronomètre" data-desc="mesurez vos temps et tours" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-stopwatch"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#06</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">Chronomètre</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Mesurez vos temps et tours</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Chronomètre</h2>
-                    <p class="text-xs text-slate-400 mt-1">Mesure du temps précis</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Mesurer</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 7. Cinéma -->
-            <a href="cinema.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-film text-xl"></i>
+            <a href="cinema.html" data-title="cinema cinéma" data-desc="films seances et sorties cinema" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-rose-500/50 hover:shadow-xl hover:shadow-rose-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/10 rounded-full blur-xl group-hover:bg-rose-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-film"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#07</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-rose-400 transition-colors">Cinéma</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Films, séances et sorties cinéma</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-rose-300 transition">Cinéma</h2>
-                    <p class="text-xs text-slate-400 mt-1">Films et séances</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Découvrir</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 8. Date -->
-            <a href="date.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-calendar-days text-xl"></i>
+            <a href="date.html" data-title="date" data-desc="gestion de dates et calendrier" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-500/10 rounded-full blur-xl group-hover:bg-teal-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-calendar-days"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#08</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-teal-400 transition-colors">Date</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Gestion de dates et calendrier</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">Date</h2>
-                    <p class="text-xs text-slate-400 mt-1">Calendrier et repères</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Ouvrir</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
-            <!-- 9. Jeu de fléchettes -->
-            <a href="flechettes.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-bullseye text-xl"></i>
+            <!-- 9. Jeu de fléchette -->
+            <a href="flechette.html" data-title="jeu de flechette flechettes" data-desc="compteur de points pour flechettes" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-xl group-hover:bg-orange-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-bullseye"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#09</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-orange-400 transition-colors">Jeu de fléchette</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Compteur de points pour fléchettes</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Jeu de fléchettes</h2>
-                    <p class="text-xs text-slate-400 mt-1">Comptage de points</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la partie</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 10. Jeu de plateforme -->
-            <a href="plateforme.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-gamepad text-xl"></i>
+            <a href="plateforme.html" data-title="jeu de plateforme" data-desc="mini-jeu d'aventure et de saut" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:bg-cyan-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gamepad"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#10</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">Jeu de plateforme</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Mini-jeu d'aventure et de saut</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Jeu de plateforme</h2>
-                    <p class="text-xs text-slate-400 mt-1">Aventure 2D d'action</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
             <!-- 11. Jeu Zelba -->
-            <a href="zelba.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
-                <div class="flex items-start justify-between">
-                    <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 group-hover:bg-green-500 group-hover:text-white transition duration-300">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
+            <a href="zelba.html" data-title="jeu zelba" data-desc="jeu d'aventure et strategie" 
+               class="game-card group relative flex flex-col justify-between p-6 rounded-2xl hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-dragon"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-green-400 transition">#11</span>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Jeu Zelba</h2>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Jeu d'aventure et stratégie</p>
                 </div>
-                <div class="mt-6">
-                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-green-300 transition">Jeu Zelba</h2>
-                    <p class="text-xs text-slate-400 mt-1">Aventure et quêtes</p>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Lancer la quête</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
 
@@ -234,13 +322,27 @@
                 </div>
             </a>
 
-            <!-- 14. Les œufs sont faits -->
+            <!-- 14. Lecture base de données -->
+            <a href="base-de-donnees.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-database text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#14</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Lecture base de données</h2>
+                    <p class="text-xs text-slate-400 mt-1">Consultation et gestion de données</p>
+                </div>
+            </a>
+
+            <!-- 15. Les œufs sont faits -->
             <a href="oeufs.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:bg-yellow-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-egg text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#14</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#15</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-yellow-300 transition">Les œufs sont faits</h2>
@@ -248,13 +350,13 @@
                 </div>
             </a>
 
-            <!-- 15. Minuteur -->
+            <!-- 16. Minuteur -->
             <a href="minuteur.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-hourglass-half text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#15</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#16</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Minuteur</h2>
@@ -262,13 +364,13 @@
                 </div>
             </a>
 
-            <!-- 16. Monopoly -->
+            <!-- 17. Monopoly -->
             <a href="monopoly.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-house-flag text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#16</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#17</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Monopoly</h2>
@@ -276,13 +378,13 @@
                 </div>
             </a>
 
-            <!-- 17. Musique -->
+            <!-- 18. Musique -->
             <a href="musique.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-music text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#17</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#18</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-pink-300 transition">Musique</h2>
@@ -290,13 +392,13 @@
                 </div>
             </a>
 
-            <!-- 18. Personne -->
+            <!-- 19. Personne -->
             <a href="personne.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-user text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#18</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#19</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Personne</h2>
@@ -304,13 +406,13 @@
                 </div>
             </a>
 
-            <!-- 19. Photo -->
+            <!-- 20. Photo -->
             <a href="photo.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-camera text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#19</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#20</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-violet-300 transition">Photo</h2>
@@ -318,13 +420,13 @@
                 </div>
             </a>
 
-            <!-- 20. Piano -->
+            <!-- 21. Piano -->
             <a href="piano.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-keyboard text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#20</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#21</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Piano</h2>
@@ -332,13 +434,13 @@
                 </div>
             </a>
 
-            <!-- 21. Piscine -->
+            <!-- 22. Piscine -->
             <a href="piscine.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-person-swimming text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#21</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#22</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">Piscine</h2>
@@ -346,13 +448,13 @@
                 </div>
             </a>
 
-            <!-- 22. Qwantum -->
+            <!-- 23. Qwantum -->
             <a href="qwantum.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-three text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#22</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#23</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Qwantum</h2>
@@ -360,13 +462,13 @@
                 </div>
             </a>
 
-            <!-- 23. Qwinto -->
+            <!-- 24. Qwinto -->
             <a href="qwinto.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#23</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#24</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Qwinto</h2>
@@ -374,13 +476,13 @@
                 </div>
             </a>
 
-            <!-- 24. Qwixxx -->
+            <!-- 25. Qwixxx -->
             <a href="qwixxx.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-d6 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#24</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#25</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Qwixxx</h2>
@@ -388,13 +490,27 @@
                 </div>
             </a>
 
-            <!-- 25. Recherche -->
+            <!-- 26. Recette de cuisine -->
+            <a href="recettes.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-utensils text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#26</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-rose-300 transition">Recette de cuisine</h2>
+                    <p class="text-xs text-slate-400 mt-1">Recettes et préparations</p>
+                </div>
+            </a>
+
+            <!-- 27. Recherche -->
             <a href="recherche.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-magnifying-glass text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#25</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#27</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Recherche</h2>
@@ -402,13 +518,13 @@
                 </div>
             </a>
 
-            <!-- 26. Sudoku -->
+            <!-- 28. Sudoku -->
             <a href="sudoku.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-grid-2 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#26</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#28</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Sudoku</h2>
@@ -416,13 +532,13 @@
                 </div>
             </a>
 
-            <!-- 27. Tarot -->
+            <!-- 29. Tarot -->
             <a href="tarot.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-hat-wizard text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#27</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#29</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Tarot</h2>
@@ -430,13 +546,13 @@
                 </div>
             </a>
 
-            <!-- 28. Yams -->
+            <!-- 30. Yams -->
             <a href="yams.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-d20 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#28</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#30</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-pink-300 transition">Yams</h2>
@@ -454,35 +570,57 @@
     </main>
 
     <footer class="py-6 border-t border-slate-800 text-center text-xs text-slate-500">
-        Portail de navigation • 28 modules répertoriés
+        Portail de navigation • 30 modules répertoriés
     </footer>
 
+    <!-- Script de recherche dynamique et compteur -->
     <script>
-        function filterCards() {
-            const query = document.getElementById('search-input').value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.card-item');
-            let visibleCount = 0;
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            const cards = document.querySelectorAll('.game-card');
+            const moduleCountEl = document.getElementById('module-count');
+            const noResultsEl = document.getElementById('no-results');
 
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').textContent.toLowerCase();
-                const desc = card.querySelector('p').textContent.toLowerCase();
-                if (title.includes(query) || desc.includes(query)) {
-                    card.classList.remove('hidden');
-                    visibleCount++;
+            function filterCards() {
+                const query = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                cards.forEach(card => {
+                    const title = card.getAttribute('data-title') || '';
+                    const desc = card.getAttribute('data-desc') || '';
+                    
+                    if (title.includes(query) || desc.includes(query)) {
+                        card.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                moduleCountEl.textContent = visibleCount;
+
+                if (query.length > 0) {
+                    clearSearchBtn.classList.remove('hidden');
                 } else {
-                    card.classList.add('hidden');
+                    clearSearchBtn.classList.add('hidden');
                 }
-            });
 
-            const emptyState = document.getElementById('empty-state');
-            if (visibleCount === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
+                if (visibleCount === 0) {
+                    noResultsEl.classList.remove('hidden');
+                } else {
+                    noResultsEl.classList.add('hidden');
+                }
             }
 
-            document.getElementById('count-label').textContent = `${visibleCount} module${visibleCount > 1 ? 's' : ''} disponible${visibleCount > 1 ? 's' : ''}`;
-        }
+            searchInput.addEventListener('input', filterCards);
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterCards();
+                searchInput.focus();
+            });
+        });
     </script>
 </body>
 </html>
