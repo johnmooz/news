@@ -1,1 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écart entre deux dates</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #ffffff; --ink: #1f2328; --muted: #6b6f76;
+    --accent: #2f5d50; --accent-soft: #e3ece8; --line: #e2ded5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16181b; --card: #1f2226; --ink: #ecebe7; --muted: #9a9ea5;
+            --accent: #7fb8a4; --accent-soft: #24332e; --line: #30343a; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center; align-items: flex-start; padding: 40px 16px;
+  }
+  main { width: 100%; max-width: 560px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  label.title { display: block; font-weight: 600; margin-bottom: 8px; }
+  input[type="date"] {
+    width: 100%; font: inherit; font-size: 1rem; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink);
+  }
+  input[type="date"]:disabled { opacity: .6; }
+  .day { margin-top: 10px; font-size: 1.05rem; color: var(--accent); font-weight: 600; min-height: 1.4em; }
+  .today-opt { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); cursor: pointer; }
+  .today-opt input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .result {
+    background: var(--accent-soft); border-color: transparent; text-align: center; padding: 28px 20px;
+  }
+  .big { font-size: 3rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .unit { font-size: 1.1rem; margin-top: 6px; }
+  .detail { color: var(--muted); margin-top: 10px; font-size: .95rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Écart entre deux dates</h1>
+  <p class="sub">Choisissez deux dates pour voir le jour de la semaine et le nombre de jours qui les séparent.</p>
+
+  <div class="card">
+    <label class="title" for="d1">Première date</label>
+    <input type="date" id="d1">
+    <div class="day" id="day1"></div>
+  </div>
+
+  <div class="card">
+    <label class="title" for="d2">Seconde date</label>
+    <input type="date" id="d2">
+    <div class="day" id="day2"></div>
+    <label class="today-opt">
+      <input type="checkbox" id="useToday">
+      Utiliser la date d'aujourd'hui
+    </label>
+  </div>
+
+  <div class="card result">
+    <div class="big" id="diff">–</div>
+    <div class="unit" id="unit">Choisissez deux dates</div>
+    <div class="detail" id="detail"></div>
+  </div>
+</main>
+
+<script>
+  const d1 = document.getElementById('d1');
+  const d2 = document.getElementById('d2');
+  const useToday = document.getElementById('useToday');
+  const fmtLong = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Parse "AAAA-MM-JJ" en date UTC pour éviter les décalages d'heure d'été
+  function parse(v) {
+    if (!v) return null;
+    const [y, m, d] = v.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d));
+  }
+  function todayISO() {
+    const t = new Date();
+    return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+  }
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function showDay(date, el) {
+    el.textContent = date ? capitalize(fmtLong.format(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))) : '';
+  }
+
+  function update() {
+    if (useToday.checked) d2.value = todayISO();
+    d2.disabled = useToday.checked;
+
+    const a = parse(d1.value), b = parse(d2.value);
+    showDay(a, document.getElementById('day1'));
+    showDay(b, document.getElementById('day2'));
+
+    const diffEl = document.getElementById('diff');
+    const unitEl = document.getElementById('unit');
+    const detailEl = document.getElementById('detail');
+
+    if (!a || !b) {
+      diffEl.textContent = '–'; unitEl.textContent = 'Choisissez deux dates'; detailEl.textContent = '';
+      return;
+    }
+    const days = Math.round((b - a) / 86400000);
+    const abs = Math.abs(days);
+    diffEl.textContent = abs.toLocaleString('fr-FR');
+    unitEl.textContent = abs <= 1 ? 'jour' : 'jours';
+
+    if (days === 0) detailEl.textContent = 'Les deux dates sont identiques.';
+    else {
+      const w = Math.floor(abs / 7), r = abs % 7;
+      let txt = (days > 0 ? 'La seconde date est après la première' : 'La seconde date est avant la première');
+      if (w > 0) txt += ' · soit ' + w + ' semaine' + (w > 1 ? 's' : '') + (r ? ' et ' + r + ' jour' + (r > 1 ? 's' : '') : '');
+      detailEl.textContent = txt + '.';
+    }
+  }
+
+  [d1, d2].forEach(el => el.addEventListener('input', update));
+  useToday.addEventListener('change', update);
+  update();
+</script>
+</body>
+</html>
 
