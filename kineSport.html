@@ -1,1 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Séance jambes – groupe</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f2ee; --card:#fff; --ink:#1d2321; --muted:#6b726f; --line:#e2dfd8;
+  --accent:#e4572e; --accent-soft:#fde5dc; --ok:#2f8f5b; --ok-soft:#dcf1e4;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+h1,h2,h3{font-family:"Barlow Condensed",sans-serif;letter-spacing:.02em;margin:0}
+h1{font-size:2.4rem;text-transform:uppercase}
+h2{font-size:1.6rem;text-transform:uppercase;margin-bottom:.8rem}
+h3{font-size:1.25rem}
+header{padding:28px 20px 10px;max-width:1150px;margin:auto}
+header p{color:var(--muted);margin:.3rem 0 0}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .in{max-width:1150px;margin:auto;display:flex;gap:6px;padding:10px 20px;flex-wrap:wrap}
+nav button{border:0;background:transparent;padding:8px 14px;border-radius:999px;font:600 14px Inter;color:var(--muted);cursor:pointer}
+nav button.on{background:var(--ink);color:#fff}
+main{max-width:1150px;margin:auto;padding:20px}
+section{display:none} section.on{display:block}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.count{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.count button{width:46px;height:46px;border-radius:12px;border:2px solid var(--line);background:#fff;font:700 1.3rem "Barlow Condensed";cursor:pointer}
+.count button.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.names label{display:flex;align-items:center;gap:10px;background:#faf9f6;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.badge{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 .95rem "Barlow Condensed"}
+input[type=text],input[type=number]{font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;color:#000;-webkit-text-fill-color:#000;caret-color:#000;width:100%}
+:root{color-scheme:light}
+input[type=number]{width:70px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:opacity .2s}
+.ex.off{opacity:.45}
+.ex .pic{background:#f7f5f1;border-bottom:1px solid var(--line);display:flex;justify-content:center;padding:6px 0}
+.ex .pic svg{width:190px;height:150px}
+.ex .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.ex .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ex .num{color:var(--accent);font:700 1rem "Barlow Condensed"}
+.ex p.d{margin:0;color:var(--muted);font-size:.88rem}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.row > span.l{min-width:118px;font-size:.85rem;font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:#fff;padding:6px 10px;font:500 .82rem Inter;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff}
+.sw{position:relative;width:42px;height:24px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw i{position:absolute;inset:0;background:#cfccc4;border-radius:999px;cursor:pointer;transition:.2s}
+.sw i:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked + i{background:var(--accent)}
+.sw input:checked + i:before{transform:translateX(18px)}
+.unit{font-size:.82rem;color:var(--muted)}
+.sum{margin-top:auto;background:var(--accent-soft);color:#8a2f13;border-radius:8px;padding:7px 10px;font-size:.84rem;font-weight:600}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;font:600 .88rem Inter;cursor:pointer}
+.btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.athletes{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.ath{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.ath .hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar{height:8px;background:#eceae4;border-radius:99px;overflow:hidden;margin-bottom:12px}
+.bar b{display:block;height:100%;background:var(--ok);transition:width .25s}
+.item{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.item svg{width:54px;height:43px;flex:none;background:#f7f5f1;border-radius:7px}
+.item .tx{flex:1;min-width:0}
+.item .tx b{font-size:.9rem}
+.item .tx small{display:block;color:var(--muted);font-size:.78rem}
+.item.done .tx b{color:var(--ok)}
+.dots{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:120px}
+.dots button{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:#fff;cursor:pointer;font:600 .7rem Inter;color:var(--muted);padding:0}
+.dots button.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.kg{display:flex;align-items:center;gap:3px;margin-top:3px}
+.kg input{width:56px;padding:2px 4px;font-size:.78rem}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.25s;pointer-events:none}
+.toast.on{opacity:1}
+textarea{width:100%;min-height:180px;font:13px/1.4 ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;display:none}
+.empty{color:var(--muted);padding:30px;text-align:center}
+/* figures */
+.fig{stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.head{fill:var(--ink)}
+.eq{fill:var(--accent);opacity:.85}
+.eqs{stroke:var(--accent);stroke-width:4;fill:none;stroke-linecap:round}
+.gr{stroke:#b9b4aa;stroke-width:2}
+.arr{stroke:var(--accent);stroke-width:2.5;fill:none;stroke-dasharray:4 4;stroke-linecap:round}
+.ah{fill:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Séance jambes · groupe</h1>
+  <p>Choisissez les sportifs, réglez le programme, puis suivez les séries de chacun.</p>
+</header>
+<nav><div class="in">
+  <button data-tab="s1" class="on">1 · Sportifs</button>
+  <button data-tab="s2">2 · Programme</button>
+  <button data-tab="s3">3 · Séance</button>
+</div></nav>
+<main>
+  <section id="s1" class="on">
+    <div class="box">
+      <h2>Nombre de sportifs</h2>
+      <div class="count" id="count"></div>
+      <h3 style="margin-bottom:10px">Noms</h3>
+      <div class="names" id="names"></div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <div class="toolbar">
+      <button class="btn" id="allOn">Tout activer</button>
+      <button class="btn" id="allOff">Tout désactiver</button>
+      <button class="btn dark" id="goSession">Passer à la séance →</button>
+    </div>
+    <div class="grid" id="exGrid"></div>
+  </section>
+
+  <section id="s3">
+    <div class="toolbar">
+      <button class="btn" id="resetDone">Remettre les séries à zéro</button>
+      <button class="btn" id="copyProg">Copier le programme (texte)</button>
+    </div>
+    <textarea id="progText" readonly></textarea>
+    <div class="athletes" id="athletes"></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- Illustrations (SVG) ---------- */
+const G='<line class="gr" x1="5" y1="92" x2="155" y2="92"/>';
+const arrowH=(x1,y,x2)=>`<line class="arr" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/><polygon class="ah" points="${x2},${y-5} ${x2+(x2>x1?8:-8)},${y} ${x2},${y+5}"/>`;
+const arrowV=(x,y1,y2)=>`<line class="arr" x1="${x}" y1="${y1}" x2="${x}" y2="${y2}"/><polygon class="ah" points="${x-5},${y2} ${x},${y2+(y2>y1?8:-8)} ${x+5},${y2}"/>`;
+const svg=(inner)=>`<svg viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg">${G}${inner}</svg>`;
+const lunge=(dir)=>svg(`
+  <circle class="head" cx="78" cy="20" r="8"/>
+  <polyline class="fig" points="78,30 78,56"/>
+  <polyline class="fig" points="78,34 74,46 76,58"/>
+  <rect class="eq" x="70" y="56" width="12" height="7" rx="2"/>
+  <polyline class="fig" points="78,56 98,58 98,90"/>
+  <polyline class="fig" points="78,56 64,82 46,88"/>
+  ${dir<0?arrowH(60,12,30):arrowH(100,12,130)}`);
+const ILLU={
+ squat:svg(`
+  <circle class="head" cx="80" cy="24" r="8"/>
+  <polyline class="fig" points="80,33 77,58"/>
+  <polyline class="fig" points="79,38 104,44"/>
+  <polyline class="fig" points="77,58 56,62 48,90"/>
+  <polyline class="fig" points="77,58 100,62 110,90"/>
+  ${arrowV(132,80,30)}<text x="126" y="98" font-size="10" fill="#e4572e" font-family="Inter">saut</text>`),
+ nordic:svg(`
+  <rect class="eq" x="20" y="88" width="120" height="6" rx="2"/>
+  <rect class="eq" x="112" y="72" width="14" height="14" rx="3"/>
+  <polyline class="fig" points="118,84 80,84"/>
+  <polyline class="fig" points="80,84 52,48"/>
+  <circle class="head" cx="45" cy="40" r="8"/>
+  <polyline class="fig" points="56,54 40,64 30,76"/>
+  ${arrowH(70,22,40)}<text x="74" y="26" font-size="10" fill="#e4572e" font-family="Inter">lent</text>`),
+ stepup:svg(`
+  <rect class="eq" x="96" y="62" width="44" height="30" rx="3"/>
+  <circle class="head" cx="66" cy="14" r="8"/>
+  <polyline class="fig" points="66,24 68,48"/>
+  <polyline class="fig" points="66,28 50,40"/>
+  <polyline class="fig" points="66,28 84,22"/>
+  <polyline class="fig" points="68,48 60,64 64,80"/>
+  <polyline class="fig" points="68,48 88,60 104,60"/>
+  ${arrowV(48,88,66)}`),
+ lungeBack:lunge(-1),
+ lungeFront:lunge(1),
+ bulgare:svg(`
+  <rect class="eq" x="14" y="64" width="38" height="28" rx="3"/>
+  <circle class="head" cx="82" cy="20" r="8"/>
+  <polyline class="fig" points="82,30 82,56"/>
+  <polyline class="fig" points="82,34 78,46 80,58"/>
+  <polyline class="fig" points="82,56 104,60 104,90"/>
+  <polyline class="fig" points="82,56 64,80 42,62"/>`),
+ curlSit:svg(`
+  <rect class="eq" x="44" y="58" width="42" height="7" rx="2"/>
+  <rect class="eq" x="40" y="26" width="7" height="36" rx="2"/>
+  <line class="gr" x1="60" y1="65" x2="60" y2="92"/>
+  <circle class="head" cx="56" cy="20" r="8"/>
+  <polyline class="fig" points="56,30 56,55"/>
+  <polyline class="fig" points="56,36 74,48"/>
+  <polyline class="fig" points="56,55 92,55 82,80"/>
+  <circle class="eq" cx="86" cy="76" r="6"/>
+  <path class="arr" d="M104,58 Q108,78 92,90"/>`),
+ curlLie:svg(`
+  <rect class="eq" x="18" y="62" width="100" height="7" rx="2"/>
+  <line class="gr" x1="40" y1="69" x2="40" y2="92"/><line class="gr" x1="100" y1="69" x2="100" y2="92"/>
+  <circle class="head" cx="22" cy="50" r="8"/>
+  <polyline class="fig" points="32,56 80,56"/>
+  <polyline class="fig" points="80,56 112,56 104,24"/>
+  <circle class="eq" cx="106" cy="30" r="6"/>
+  <path class="arr" d="M132,52 Q134,28 116,16"/>`),
+ ball:svg(`
+  <rect class="eq" x="8" y="89" width="120" height="5" rx="2"/>
+  <circle cx="118" cy="74" r="16" fill="#e4572e" opacity=".3" stroke="#e4572e" stroke-width="3"/>
+  <circle class="head" cx="20" cy="80" r="8"/>
+  <polyline class="fig" points="30,84 62,68"/>
+  <polyline class="fig" points="36,84 56,88"/>
+  <polyline class="fig" points="62,68 84,52 106,68"/>
+  ${arrowH(140,48,116)}`),
+ crab:svg(`
+  <circle class="head" cx="80" cy="18" r="8"/>
+  <polyline class="fig" points="80,28 80,54"/>
+  <polyline class="fig" points="80,34 70,48"/><polyline class="fig" points="80,34 90,48"/>
+  <polyline class="fig" points="80,54 62,68 56,88"/>
+  <polyline class="fig" points="80,54 98,68 104,88"/>
+  <line class="eqs" x1="57" y1="84" x2="103" y2="84"/>
+  ${arrowH(40,70,16)}${arrowH(120,70,144)}`),
+ knees:svg(`
+  <circle class="head" cx="80" cy="18" r="8"/>
+  <polyline class="fig" points="80,28 80,54"/>
+  <polyline class="fig" points="80,34 70,48"/><polyline class="fig" points="80,34 90,48"/>
+  <polyline class="fig" points="80,54 62,68 56,88"/>
+  <polyline class="fig" points="80,54 98,68 104,88"/>
+  <line class="eqs" x1="64" y1="62" x2="96" y2="62"/>
+  ${arrowH(40,70,16)}${arrowH(120,70,144)}`)
+};
+
+/* ---------- Exercices ---------- */
+const L2=['2','D','G','DG'], L1=['D','G','DG'];
+const LEGS={'2':'Les 2 jambes',D:'Jambe droite',G:'Jambe gauche',DG:'Droite puis gauche'};
+const EX=[
+ {id:'squat',name:'Squat jambes écartées',illu:'squat',
+  desc:'Pieds plus larges que les épaules. Descente contrôlée, maintien éventuel en bas, remontée, puis saut si activé.',
+  f:{sets:3,reps:10,weight:[false,10],hold:[false,3,'Maintien en bas'],jump:false}},
+ {id:'nordic',name:'Nordic curl',illu:'nordic',
+  desc:'À genoux sur la planche au sol, pieds maintenus. Descendre le buste vers l’avant le plus lentement possible.',
+  f:{sets:3,reps:5,hold:[true,5,'Descente en']}},
+ {id:'stepup',name:'Step-up sauté unilatéral',illu:'stepup',
+  desc:'Pied arrière posé sur une boîte, saut sur la jambe avant. Jambe droite, gauche, ou droite puis gauche.',
+  f:{sets:3,reps:8,legs:['D',L1]}},
+ {id:'lungeBack',name:'Fente arrière (reverse lunge)',illu:'lungeBack',
+  desc:'Pas vers l’arrière, descendre le genou arrière vers le sol sans le toucher, puis pousser sur la jambe avant pour revenir.',
+  f:{sets:3,reps:10,legs:['DG',L1],weight:[false,8]}},
+ {id:'lungeFront',name:'Fente avant',illu:'lungeFront',
+  desc:'Pas vers l’avant, fléchir les deux genoux à environ 90°, puis repousser fermement le sol pour revenir à la position de départ.',
+  f:{sets:3,reps:10,legs:['DG',L1],weight:[false,8]}},
+ {id:'bulgare',name:'Fente bulgare',illu:'bulgare',
+  desc:'Pied arrière sur une caisse ou un banc, flexion sur la jambe avant.',
+  f:{sets:3,reps:8,legs:['DG',L1],weight:[false,8]}},
+ {id:'curlSit',name:'Leg curl assis',illu:'curlSit',
+  desc:'Assis sur la machine, ramener les talons sous le siège en contrôlant le retour.',
+  f:{sets:3,reps:12,legs:['2',L2],weight:[true,20]}},
+ {id:'curlLie',name:'Leg curl allongé (sur le ventre)',illu:'curlLie',
+  desc:'Allongé sur le ventre, ramener les talons vers les fessiers, retour lent.',
+  f:{sets:3,reps:12,legs:['2',L2],weight:[true,20]}},
+ {id:'ball',name:'Leg curl au ballon (sur tapis)',illu:'ball',
+  desc:'Allongé sur le dos sur le tapis, talons sur la grosse boule, bassin levé : ramener la boule vers soi puis la repousser.',
+  f:{sets:3,reps:10}},
+ {id:'crab',name:'Crab walk – élastique aux chevilles',illu:'crab',
+  desc:'Élastique entre les chevilles, demi-squat, pas chassés latéraux sans relâcher la tension.',
+  f:{sets:2,reps:4,repsLabel:'Allers-retours'}},
+ {id:'knees',name:'Marche latérale – élastique au-dessus des genoux',illu:'knees',
+  desc:'Élastique juste au-dessus des genoux, genoux poussés vers l’extérieur, déplacements latéraux.',
+  f:{sets:2,reps:4,repsLabel:'Allers-retours'}}
+];
+
+/* ---------- État ---------- */
+const KEY='seance-jambes-v1';
+let S={n:4,names:[],cfg:{},done:{},kg:{}};
+function defaults(){
+  EX.forEach(e=>{const f=e.f,c={on:true,sets:f.sets,reps:f.reps};
+    if(f.legs)c.legs=f.legs[0];
+    if(f.weight){c.wOn=f.weight[0];c.kg=f.weight[1];}
+    if(f.hold){c.hOn=f.hold[0];c.hold=f.hold[1];}
+    if('jump' in f)c.jump=f.jump;
+    if(!S.cfg[e.id])S.cfg[e.id]=c; else S.cfg[e.id]={...c,...S.cfg[e.id]};
+  });
+  for(let i=0;i<8;i++){if(!S.names[i])S.names[i]='Sportif '+(i+1);}
+}
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)S={...S,...s};}catch(e){}
+defaults();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1800);}
+
+/* ---------- Résumé ---------- */
+function summary(e,kgOverride){
+  const c=S.cfg[e.id],f=e.f,p=[];
+  p.push(`${c.sets} série${c.sets>1?'s':''} × ${c.reps} ${f.repsLabel?'allers-retours':'rép.'}`);
+  if(f.legs)p.push(LEGS[c.legs].toLowerCase());
+  if(f.weight)p.push(c.wOn?`${kgOverride??c.kg} kg`:'sans poids');
+  if(f.hold&&c.hOn)p.push(`${f.hold[2].toLowerCase()} ${c.hold} s`);
+  if('jump' in f)p.push(c.jump?'avec saut':'sans saut');
+  return p.join(' · ');
+}
+
+/* ---------- 1. Sportifs ---------- */
+function renderPeople(){
+  $('count').innerHTML=[1,2,3,4,5,6,7,8].map(n=>`<button data-n="${n}" class="${n===S.n?'on':''}">${n}</button>`).join('');
+  $('names').innerHTML=Array.from({length:S.n},(_,i)=>`<label><span class="badge">${i+1}</span><input type="text" data-i="${i}" value="${esc(S.names[i])}" maxlength="30"></label>`).join('');
+}
+$('count').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.n=+b.dataset.n;save();renderPeople();renderSession();};
+$('names').oninput=e=>{const i=e.target.dataset.i;if(i==null)return;S.names[i]=e.target.value;save();renderSession();};
+
+/* ---------- 2. Programme ---------- */
+function seg(id,key,opts,cur){return `<div class="seg">${opts.map(o=>`<button data-id="${id}" data-k="${key}" data-v="${o}" class="${o===cur?'on':''}">${LEGS[o]}</button>`).join('')}</div>`;}
+function sw(id,key,on){return `<label class="sw"><input type="checkbox" data-id="${id}" data-k="${key}" ${on?'checked':''}><i></i></label>`;}
+function num(id,key,v,min,max,step=1){return `<input type="number" data-id="${id}" data-k="${key}" value="${v}" min="${min}" max="${max}" step="${step}">`;}
+function renderProgram(){
+  $('exGrid').innerHTML=EX.map((e,i)=>{const c=S.cfg[e.id],f=e.f;let r='';
+    r+=`<div class="row"><span class="l">Séries</span>${num(e.id,'sets',c.sets,1,10)}</div>`;
+    r+=`<div class="row"><span class="l">${f.repsLabel||'Répétitions'}</span>${num(e.id,'reps',c.reps,1,100)}</div>`;
+    if(f.legs)r+=`<div class="row"><span class="l">Jambes</span>${seg(e.id,'legs',f.legs[1],c.legs)}</div>`;
+    if(f.weight)r+=`<div class="row"><span class="l">Poids</span>${sw(e.id,'wOn',c.wOn)}${c.wOn?num(e.id,'kg',c.kg,0,300,0.5)+'<span class="unit">kg</span>':'<span class="unit">sans</span>'}</div>`;
+    if(f.hold)r+=`<div class="row"><span class="l">${f.hold[2]}</span>${sw(e.id,'hOn',c.hOn)}${c.hOn?num(e.id,'hold',c.hold,1,60)+'<span class="unit">secondes</span>':'<span class="unit">non</span>'}</div>`;
+    if('jump' in f)r+=`<div class="row"><span class="l">Saut à la remontée</span>${sw(e.id,'jump',c.jump)}<span class="unit">${c.jump?'oui':'non'}</span></div>`;
+    return `<div class="ex ${c.on?'':'off'}" id="ex-${e.id}">
+      <div class="pic">${ILLU[e.illu]}</div>
+      <div class="body">
+        <div class="top"><div><div class="num">EXERCICE ${i+1}</div><h3>${e.name}</h3></div>${sw(e.id,'on',c.on)}</div>
+        <p class="d">${e.desc}</p>${r}
+        <div class="sum">${summary(e)}</div>
+      </div></div>`;}).join('');
+}
+$('exGrid').addEventListener('click',e=>{const b=e.target.closest('.seg button');if(!b)return;S.cfg[b.dataset.id][b.dataset.k]=b.dataset.v;save();renderProgram();renderSession();});
+$('exGrid').addEventListener('change',e=>{const t=e.target,id=t.dataset.id,k=t.dataset.k;if(!id)return;
+  if(t.type==='checkbox')S.cfg[id][k]=t.checked;
+  else{let v=parseFloat(t.value);if(isNaN(v)||v<+t.min)v=+t.min;if(v>+t.max)v=+t.max;S.cfg[id][k]=v;}
+  save();renderProgram();renderSession();});
+$('allOn').onclick=()=>{EX.forEach(e=>S.cfg[e.id].on=true);save();renderProgram();renderSession();};
+$('allOff').onclick=()=>{EX.forEach(e=>S.cfg[e.id].on=false);save();renderProgram();renderSession();};
+
+/* ---------- 3. Séance ---------- */
+function renderSession(){
+  const list=EX.filter(e=>S.cfg[e.id].on);
+  if(!list.length){$('athletes').innerHTML='<div class="empty box">Aucun exercice activé dans le programme.</div>';return;}
+  $('athletes').innerHTML=Array.from({length:S.n},(_,a)=>{
+    let tot=0,dn=0;
+    const items=list.map(e=>{const c=S.cfg[e.id],d=Math.min(S.done[a+'|'+e.id]||0,c.sets);tot+=c.sets;dn+=d;
+      const ov=S.kg[a+'|'+e.id];
+      const kg=e.f.weight&&c.wOn?`<span class="kg"><input type="number" data-a="${a}" data-e="${e.id}" class="kgi" value="${ov??c.kg}" min="0" max="300" step="0.5"><small style="display:inline">kg pour ${esc(S.names[a])}</small></span>`:'';
+      return `<div class="item ${d>=c.sets?'done':''}">${ILLU[e.illu]}
+        <div class="tx"><b>${e.name}</b><small>${summary(e,ov)}</small>${kg}</div>
+        <div class="dots">${Array.from({length:c.sets},(_,s)=>`<button data-a="${a}" data-e="${e.id}" data-s="${s}" class="${s<d?'on':''}" title="Série ${s+1}">${s+1}</button>`).join('')}</div></div>`;}).join('');
+    const pct=tot?Math.round(dn/tot*100):0;
+    return `<div class="ath"><div class="hd"><span class="badge">${a+1}</span><h3 style="flex:1">${esc(S.names[a])}</h3><span class="unit">${dn}/${tot} séries · ${pct}%</span></div>
+      <div class="bar"><b style="width:${pct}%"></b></div>${items}</div>`;}).join('');
+}
+$('athletes').addEventListener('click',e=>{const b=e.target.closest('.dots button');if(!b)return;
+  const k=b.dataset.a+'|'+b.dataset.e,s=+b.dataset.s,cur=S.done[k]||0;
+  S.done[k]=(s+1===cur)?s:s+1;save();renderSession();});
+$('athletes').addEventListener('change',e=>{const t=e.target;if(!t.classList.contains('kgi'))return;
+  const v=parseFloat(t.value);const k=t.dataset.a+'|'+t.dataset.e;
+  if(isNaN(v))delete S.kg[k];else S.kg[k]=v;save();renderSession();});
+$('resetDone').onclick=()=>{S.done={};save();renderSession();toast('Séries remises à zéro');};
+$('copyProg').onclick=async()=>{
+  const list=EX.filter(e=>S.cfg[e.id].on);
+  let t='SÉANCE JAMBES\nSportifs : '+S.names.slice(0,S.n).join(', ')+'\n\n';
+  list.forEach((e,i)=>{t+=`${i+1}. ${e.name} — ${summary(e)}\n`;
+    if(e.f.weight&&S.cfg[e.id].wOn){const ov=[];for(let a=0;a<S.n;a++){const v=S.kg[a+'|'+e.id];if(v!=null&&v!==S.cfg[e.id].kg)ov.push(`${S.names[a]} ${v} kg`);}if(ov.length)t+=`   (charges : ${ov.join(', ')})\n`;}});
+  const ta=$('progText');ta.value=t;
+  try{await navigator.clipboard.writeText(t);toast('Programme copié');ta.style.display='none';}
+  catch(err){ta.style.display='block';ta.select();toast('Copie auto impossible : sélectionnez le texte');}
+};
+
+/* ---------- Onglets ---------- */
+function tab(id){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));window.scrollTo(0,0);}
+document.querySelector('nav').onclick=e=>{const b=e.target.closest('button');if(b)tab(b.dataset.tab);};
+$('goSession').onclick=()=>tab('s3');
+
+renderPeople();renderProgram();renderSession();
+</script>
+</body>
+</html>
 
