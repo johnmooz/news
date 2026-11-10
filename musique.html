@@ -1,1 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recherche Musique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0d12; --panel:#18151d; --line:#2a2531; --text:#f3eef6; --muted:#a59cad;
+    --accent:#ff4d5e; --accent2:#ffb347; --chip:#231f29;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#3a1622 0%,transparent 60%),var(--bg);
+       color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 20px 80px}
+  header h1{font-family:Fraunces,serif;font-weight:800;font-size:clamp(2.2rem,6vw,3.6rem);line-height:1;margin:0 0 10px;letter-spacing:-.02em}
+  header h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--muted);margin:0 0 28px;font-size:1.02rem}
+  form{display:flex;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px}
+  input{flex:1;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:1.1rem;padding:12px 14px}
+  input::placeholder{color:#6f6777}
+  button{background:var(--accent);color:#fff;border:0;border-radius:11px;padding:0 22px;font:inherit;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.5;cursor:wait}
+  .hint{color:var(--muted);font-size:.85rem;margin:10px 4px 0}
+  section{margin-top:36px}
+  h2{font-family:Fraunces,serif;font-weight:600;font-size:1.35rem;margin:0 0 14px}
+  .main-card{display:flex;align-items:center;gap:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .yt{flex:none;width:52px;height:52px;border-radius:14px;background:var(--accent);display:grid;place-items:center}
+  .main-card .t{font-weight:600;font-size:1.1rem}
+  .main-card .s{color:var(--muted);font-size:.92rem;margin-top:3px}
+  .main-card a{color:var(--accent2);word-break:break-all;font-size:.9rem;display:inline-block;margin-top:6px}
+  .info{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .info span{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.85rem;color:var(--muted)}
+  .info b{color:var(--text);font-weight:500}
+  ol{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:n}
+  li{counter-increment:n;display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  li::before{content:counter(n,decimal-leading-zero);font-family:Fraunces,serif;font-weight:800;color:var(--accent);font-size:1.15rem;min-width:28px}
+  li .title{font-weight:600}
+  li .meta{color:var(--muted);font-size:.85rem;margin:2px 0 8px}
+  li a.kw{display:inline-flex;flex-wrap:wrap;gap:6px;text-decoration:none}
+  li a.kw span{background:var(--chip);border:1px solid var(--line);color:var(--accent2);border-radius:8px;padding:3px 9px;font-size:.85rem}
+  li a.kw:hover span{border-color:var(--accent2)}
+  .status{color:var(--muted);font-size:.95rem;padding:14px 0}
+  .err{color:#ff8a8a}
+  .hidden{display:none}
+  footer{margin-top:48px;color:#6f6777;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Trouvez votre <span>musique</span></h1>
+    <p>Tapez un titre, un artiste ou un compositeur : obtenez le lien YouTube et 10 morceaux liés.</p>
+  </header>
+
+  <form id="f" autocomplete="off">
+    <input id="q" type="search" placeholder="Ex. : Bohemian Rhapsody, Édith Piaf, Hans Zimmer…" required>
+    <button id="go" type="submit">Rechercher</button>
+  </form>
+  <p class="hint">Chaque lien ouvre une recherche YouTube dans un nouvel onglet.</p>
+
+  <section id="res" class="hidden">
+    <h2>Votre recherche</h2>
+    <div class="main-card">
+      <div class="yt"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+      <div>
+        <div class="t" id="mainTitle"></div>
+        <div class="s" id="mainSub"></div>
+        <a id="mainLink" href="#" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+    <div class="info" id="info"></div>
+  </section>
+
+  <section id="rel" class="hidden">
+    <h2>10 recherches liées</h2>
+    <div class="status" id="status"></div>
+    <ol id="list"></ol>
+  </section>
+
+  <footer>Les liens mènent à des recherches YouTube : la première vidéo est généralement le morceau recherché.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const yt = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+let samplePromise = window.claude && claude.use ? claude.use("sample") : Promise.resolve(null);
+let ctrl = null;
+
+function esc(s){return String(s ?? "").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function renderMain(query, data){
+  const title = data?.titre ? data.titre + (data.artiste ? " — " + data.artiste : "") : query;
+  const linkQuery = data?.titre ? `${data.titre} ${data.artiste||""}`.trim() : query;
+  $("mainTitle").textContent = title;
+  $("mainSub").textContent = "Lien YouTube de cette musique";
+  $("mainLink").href = yt(linkQuery);
+  $("mainLink").textContent = yt(linkQuery);
+  const info = [];
+  if (data?.artiste) info.push(["Interprète", data.artiste]);
+  if (data?.compositeur) info.push(["Compositeur", data.compositeur]);
+  if (data?.annee) info.push(["Année", data.annee]);
+  if (data?.genre) info.push(["Genre", data.genre]);
+  $("info").innerHTML = info.map(([k,v])=>`<span>${k} : <b>${esc(v)}</b></span>`).join("");
+  $("res").classList.remove("hidden");
+}
+
+function renderList(items){
+  $("list").innerHTML = items.slice(0,10).map(it=>{
+    const kws = (it.motsClefs||[]).slice(0,5);
+    return `<li><div>
+      <div class="title">${esc(it.titre)}</div>
+      <div class="meta">${esc(it.artiste||"")}${it.lien ? " · " + esc(it.lien) : ""}</div>
+      <a class="kw" href="${yt(kws.join(" "))}" target="_blank" rel="noopener" title="Ouvrir sur YouTube">
+        ${kws.map(k=>`<span>${esc(k)}</span>`).join("")}
+      </a></div></li>`;
+  }).join("");
+}
+
+function fallbackList(q){
+  const v = [
+    ["Meilleures chansons", ["meilleures","chansons",q,"best","of"]],
+    ["Version live", [q,"live","concert","officiel","HD"]],
+    ["Clip officiel", [q,"clip","officiel","vidéo","musique"]],
+    ["Paroles", [q,"paroles","lyrics","chanson","texte"]],
+    ["Version acoustique", [q,"acoustique","unplugged","version","session"]],
+    ["Reprises", [q,"reprise","cover","version","interprétation"]],
+    ["Compositeur", [q,"compositeur","auteur","musique","biographie"]],
+    ["Album complet", [q,"album","complet","full","écoute"]],
+    ["Instrumental", [q,"instrumental","karaoké","version","musique"]],
+    ["Morceaux similaires", [q,"similaire","playlist","mix","radio"]],
+  ];
+  return v.map(([t,k])=>({titre:t,artiste:q,motsClefs:k}));
+}
+
+function parseJson(text){
+  const m = text.match(/\{[\s\S]*\}/);
+  return JSON.parse(m ? m[0] : text);
+}
+
+$("f").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const q = $("q").value.trim();
+  if(!q) return;
+  if (ctrl) ctrl.abort();
+  ctrl = new AbortController();
+  renderMain(q, null);
+  $("rel").classList.remove("hidden");
+  $("list").innerHTML = "";
+  $("status").className = "status";
+  $("status").textContent = "Recherche des morceaux liés…";
+  $("go").disabled = true;
+
+  const sample = await samplePromise;
+  if(!sample){
+    $("status").textContent = "Suggestions génériques (l'assistant n'est pas disponible dans cette vue).";
+    renderList(fallbackList(q));
+    $("go").disabled = false;
+    return;
+  }
+
+  const prompt = `Tu es un expert musical. L'utilisateur a recherché : "${q}".
+1. Identifie la musique la plus probable (titre, interprète, compositeur/auteur, année, genre). Si la recherche est un artiste ou un compositeur, choisis son morceau le plus célèbre.
+2. Donne exactement 10 morceaux parmi les plus connus en lien avec cet interprète, cet auteur ou ce compositeur (autres succès de l'artiste, œuvres du même compositeur, collaborations célèbres). N'inclus pas le morceau identifié au point 1.
+3. Pour chacun, donne exactement 5 mots-clés courts qui permettent de le retrouver sur YouTube (mots du titre, nom de l'artiste, année, etc.).
+Réponds UNIQUEMENT en JSON valide, sans texte autour, au format :
+{"titre":"","artiste":"","compositeur":"","annee":"","genre":"","liees":[{"titre":"","artiste":"","lien":"ex. même compositeur","motsClefs":["","","","",""]}]}`;
+
+  try{
+    let data;
+    try { data = await sample.json(prompt, {signal: ctrl.signal}); }
+    catch(err){
+      if (err && (err.code === "not_granted" || err.code === "rate_limited" || err.name === "AbortError")) throw err;
+      const r = await sample(prompt, {signal: ctrl.signal});
+      data = parseJson(r.text);
+    }
+    renderMain(q, data);
+    const items = Array.isArray(data?.liees) ? data.liees : [];
+    if(!items.length) throw new Error("vide");
+    $("status").textContent = "";
+    renderList(items);
+  }catch(err){
+    if (err && err.name === "AbortError") return;
+    $("status").className = "status err";
+    $("status").textContent = err && err.code === "rate_limited"
+      ? "Trop de recherches en peu de temps : réessayez dans un instant. En attendant, voici des recherches génériques."
+      : "Impossible d'obtenir les morceaux liés. Voici des recherches génériques.";
+    renderList(fallbackList(q));
+  }finally{
+    $("go").disabled = false;
+  }
+});
+</script>
+</body>
+</html>
 
