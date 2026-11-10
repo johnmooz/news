@@ -1,1 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier photo — symétries, infos et identification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f4f1ea; --panel:#fffdf8; --ink:#1d1b17; --muted:#6c675d; --line:#e2dccf;
+    --accent:#c4502b; --accent-soft:#f6e2d8; --ok:#2f7d55;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#15140f; --panel:#1f1d18; --ink:#f1ece2; --muted:#a39d90; --line:#34312a; --accent:#e9774f; --accent-soft:#3a2419; --ok:#5fc08c; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 24px 64px}
+  header h1{font-family:Fraunces,Georgia,serif;font-weight:700;font-size:clamp(30px,4.5vw,46px);margin:0 0 6px;letter-spacing:-.01em}
+  header p{margin:0;color:var(--muted);max-width:62ch}
+  .drop{margin-top:28px;border:2px dashed var(--line);border-radius:var(--radius);background:var(--panel);
+    padding:34px 20px;text-align:center;cursor:pointer;transition:.15s border-color,.15s background}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop strong{display:block;font-size:17px;margin-bottom:4px}
+  .drop span{color:var(--muted);font-size:14px}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    padding:9px 15px;border-radius:999px;font:500 14px Inter,sans-serif;cursor:pointer;text-decoration:none}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{filter:brightness(1.07)}
+  .btn:disabled{opacity:.55;cursor:wait}
+  section{margin-top:34px}
+  h2{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:23px;margin:0 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .frame{aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;
+    background:repeating-conic-gradient(var(--line) 0 25%,transparent 0 50%) 0 0/18px 18px}
+  .frame canvas{max-width:100%;max-height:100%;display:block}
+  figcaption{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line)}
+  figcaption b{font-weight:600}
+  figcaption small{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:12px}
+  .two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+  @media (max-width:860px){.two{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
+  table{width:100%;border-collapse:collapse}
+  td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td:first-child{color:var(--muted);width:46%;padding-right:12px}
+  td:last-child{font-family:'JetBrains Mono',monospace;font-size:13.5px;word-break:break-word}
+  .big{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{background:var(--accent-soft);border-radius:10px;padding:12px 14px}
+  .stat .v{font-family:Fraunces,Georgia,serif;font-size:24px;font-weight:700;line-height:1.1}
+  .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .swatches{display:flex;gap:6px;flex-wrap:wrap}
+  .sw{width:30px;height:30px;border-radius:7px;border:1px solid var(--line)}
+  .sub{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px}
+  .hist{width:100%;height:90px;display:block}
+  .result h3{font-family:Fraunces,Georgia,serif;font-size:22px;margin:4px 0 6px}
+  .tag{display:inline-block;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600;margin:0 6px 6px 0}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .err{color:var(--accent)}
+  .hidden{display:none!important}
+  .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Atelier photo</h1>
+    <p>Importez une image : elle est affichée en symétrie horizontale, verticale et en couleurs inversées, avec ses dimensions, son poids, ses couleurs et ses métadonnées. Un clic suffit ensuite pour identifier ce qu'elle représente.</p>
+  </header>
+
+  <label class="drop" id="drop">
+    <input type="file" id="file" accept="image/*" hidden>
+    <strong>Déposez une photo ici ou cliquez pour choisir</strong>
+    <span>JPEG, PNG, WebP, GIF, BMP… — l'image reste dans votre navigateur</span>
+  </label>
+
+  <div id="out" class="hidden">
+    <section>
+      <h2>Transformations</h2>
+      <div class="grid">
+        <figure><div class="frame"><canvas id="c0"></canvas></div><figcaption><b>Originale</b><small>—</small></figcaption></figure>
+        <figure><div class="frame"><canvas id="c1"></canvas></div><figcaption><b>Symétrie horizontale</b><small>miroir ↔</small></figcaption></figure>
+        <figure><div class="frame"><canvas id="c2"></canvas></div><figcaption><b>Symétrie verticale</b><small>miroir ↕</small></figcaption></figure>
+        <figure><div class="frame"><canvas id="c3"></canvas></div><figcaption><b>Couleurs inversées</b><small>255 − valeur</small></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="two">
+      <div class="card">
+        <h2>Informations</h2>
+        <div class="big">
+          <div class="stat"><div class="v" id="sW">—</div><div class="l">Largeur (px)</div></div>
+          <div class="stat"><div class="v" id="sH">—</div><div class="l">Hauteur (px)</div></div>
+          <div class="stat"><div class="v" id="sS">—</div><div class="l">Poids</div></div>
+        </div>
+        <table id="info"></table>
+        <div class="sub" id="exifTitle">Métadonnées EXIF</div>
+        <table id="exif"></table>
+      </div>
+
+      <div class="card">
+        <h2>Couleurs</h2>
+        <div class="sub" style="margin-top:0">Couleur moyenne et palette dominante</div>
+        <div class="swatches" id="pal"></div>
+        <div class="sub">Histogramme RVB</div>
+        <canvas class="hist" id="hist" width="512" height="180"></canvas>
+        <table id="colorInfo" style="margin-top:10px"></table>
+      </div>
+    </section>
+
+    <section class="card result" id="idCard">
+      <h2>Qu'est-ce que c'est ?</h2>
+      <p class="muted" id="idIntro">Claude analyse l'image et propose une identification, puis une recherche Google sur les mots-clés trouvés.</p>
+      <div class="row">
+        <button class="btn primary" id="idBtn">Identifier la photo</button>
+        <a class="btn" href="https://lens.google.com/" target="_blank" rel="noopener">Ouvrir Google Lens ↗</a>
+      </div>
+      <div id="idRes" style="margin-top:18px"></div>
+      <p class="muted" style="font-size:13px;margin-top:14px">Google Lens n'accepte pas d'image envoyée depuis une autre page : sur Lens, glissez-y votre fichier pour une recherche inversée exacte.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let current = null; // {file, img, bitmap canvas}
+
+const drop = $('drop'), input = $('file');
+input.addEventListener('change', e => e.target.files[0] && load(e.target.files[0]));
+['dragenter','dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) load(f); });
+document.addEventListener('paste', e => { const f = [...(e.clipboardData?.files||[])].find(f => f.type.startsWith('image/')); if (f) load(f); });
+
+const fmtBytes = b => b < 1024 ? b + ' o' : b < 1048576 ? (b/1024).toFixed(1).replace('.',',') + ' Ko' : (b/1048576).toFixed(2).replace('.',',') + ' Mo';
+const nf = n => n.toLocaleString('fr-FR');
+const gcd = (a,b) => b ? gcd(b, a % b) : a;
+const hex = (r,g,b) => '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function rows(el, data){ el.innerHTML = data.filter(r => r[1] !== undefined && r[1] !== null && r[1] !== '').map(([k,v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join(''); }
+
+async function load(file){
+  if (!file.type.startsWith('image/')) { alertBox('Ce fichier n’est pas une image.'); return; }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async () => {
+    current = { file, img };
+    $('out').classList.remove('hidden');
+    $('idRes').innerHTML = '';
+    draw(img);
+    const buf = await file.arrayBuffer();
+    showInfo(file, img, buf);
+    showColors();
+    $('out').scrollIntoView({behavior:'smooth', block:'start'});
+  };
+  img.onerror = () => alertBox('Impossible de lire cette image (format non pris en charge par le navigateur ?).');
+  img.src = url;
+}
+function alertBox(msg){ $('drop').querySelector('span').innerHTML = `<span class="err">${esc(msg)}</span>`; }
+
+function draw(img){
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const scale = Math.min(1, 1400 / Math.max(w, h));
+  const dw = Math.round(w*scale), dh = Math.round(h*scale);
+  const ctxs = [0,1,2,3].map(i => { const c = $('c'+i); c.width = dw; c.height = dh; return c.getContext('2d', {willReadFrequently:true}); });
+  ctxs[0].drawImage(img, 0, 0, dw, dh);
+  ctxs[1].save(); ctxs[1].translate(dw,0); ctxs[1].scale(-1,1); ctxs[1].drawImage(img,0,0,dw,dh); ctxs[1].restore();
+  ctxs[2].save(); ctxs[2].translate(0,dh); ctxs[2].scale(1,-1); ctxs[2].drawImage(img,0,0,dw,dh); ctxs[2].restore();
+  ctxs[3].drawImage(img, 0, 0, dw, dh);
+  const d = ctxs[3].getImageData(0,0,dw,dh), p = d.data;
+  for (let i=0;i<p.length;i+=4){ p[i]=255-p[i]; p[i+1]=255-p[i+1]; p[i+2]=255-p[i+2]; }
+  ctxs[3].putImageData(d,0,0);
+  document.querySelector('#c0').closest('figure').querySelector('small').textContent = `${w} × ${h}`;
+  current.ctx = ctxs[0]; current.dw = dw; current.dh = dh;
+}
+
+function showInfo(file, img, buf){
+  const w = img.naturalWidth, h = img.naturalHeight, px = w*h, g = gcd(w,h);
+  $('sW').textContent = nf(w); $('sH').textContent = nf(h); $('sS').textContent = fmtBytes(file.size);
+  const sig = sniff(new Uint8Array(buf, 0, Math.min(16, buf.byteLength)));
+  let ratio = `${w/g}:${h/g}`; if (w/g > 50) ratio = (w/h).toFixed(3).replace('.',',') + ':1';
+  rows($('info'), [
+    ['Nom du fichier', esc(file.name)],
+    ['Type MIME', esc(file.type || 'inconnu')],
+    ['Format détecté (signature)', sig],
+    ['Poids exact', nf(file.size) + ' octets'],
+    ['Nombre total de pixels', nf(px)],
+    ['Mégapixels', (px/1e6).toFixed(2).replace('.',',') + ' Mpx'],
+    ['Rapport largeur/hauteur', ratio],
+    ['Orientation', w > h ? 'Paysage' : w < h ? 'Portrait' : 'Carrée'],
+    ['Octets par pixel (compression)', (file.size/px).toFixed(3).replace('.',',') + ' o/px'],
+    ['Taille non compressée (RVBA)', fmtBytes(px*4)],
+    ['Taux de compression', (px*4/file.size).toFixed(1).replace('.',',') + ' : 1'],
+    ['Impression à 300 ppp', (w/300*2.54).toFixed(1).replace('.',',') + ' × ' + (h/300*2.54).toFixed(1).replace('.',',') + ' cm'],
+    ['Dernière modification', file.lastModified ? new Date(file.lastModified).toLocaleString('fr-FR') : '—'],
+  ]);
+  let exif = {};
+  try { if (sig.startsWith('JPEG')) exif = parseExif(new DataView(buf)); } catch(e) {}
+  const ex = Object.entries(exif);
+  $('exifTitle').classList.toggle('hidden', !ex.length);
+  rows($('exif'), ex.map(([k,v]) => [k, esc(v)]));
+  if (!ex.length) $('exif').innerHTML = '';
+}
+
+function sniff(b){
+  const s = String.fromCharCode(...b);
+  if (b[0]===0xFF && b[1]===0xD8) return 'JPEG';
+  if (b[0]===0x89 && s.slice(1,4)==='PNG') return 'PNG';
+  if (s.startsWith('GIF8')) return 'GIF';
+  if (s.startsWith('RIFF') && s.slice(8,12)==='WEBP') return 'WebP';
+  if (s.startsWith('BM')) return 'BMP';
+  if (s.slice(4,8)==='ftyp') return 'HEIF/AVIF (' + s.slice(8,12).trim() + ')';
+  if (s.startsWith('II*') || s.startsWith('MM\0*')) return 'TIFF';
+  if (s.includes('<svg') || s.startsWith('<?xml')) return 'SVG';
+  return 'Inconnu';
+}
+
+/* Mini-lecteur EXIF pour JPEG */
+function parseExif(dv){
+  let off = 2; const len = dv.byteLength;
+  while (off < len){
+    if (dv.getUint8(off) !== 0xFF) break;
+    const marker = dv.getUint8(off+1), size = dv.getUint16(off+2);
+    if (marker === 0xE1 && dv.getUint32(off+4) === 0x45786966) return readTiff(dv, off+10);
+    off += 2 + size;
+  }
+  return {};
+}
+function readTiff(dv, start){
+  const le = dv.getUint16(start) === 0x4949;
+  const u16 = o => dv.getUint16(o, le), u32 = o => dv.getUint32(o, le), s32 = o => dv.getInt32(o, le);
+  const tags = {0x010F:'Make',0x0110:'Model',0x0112:'Orientation',0x0131:'Software',0x0132:'DateTime',0x8769:'ExifIFD',0x8825:'GPSIFD',
+    0x829A:'ExposureTime',0x829D:'FNumber',0x8827:'ISO',0x9003:'DateTimeOriginal',0x920A:'FocalLength',0xA405:'FocalLength35',0x9209:'Flash',0xA434:'LensModel',
+    0x0001:'GPSLatRef',0x0002:'GPSLat',0x0003:'GPSLonRef',0x0004:'GPSLon',0x0006:'GPSAlt'};
+  const sizes = {1:1,2:1,3:2,4:4,5:8,7:1,9:4,10:8};
+  function readIFD(ifdOff, gps){
+    const out = {}; const n = u16(start+ifdOff);
+    for (let i=0;i<n;i++){
+      const e = start+ifdOff+2+i*12, tag = u16(e), type = u16(e+2), count = u32(e+4);
+      let name = tags[tag]; if (!name) continue;
+      if (gps && tag > 6) continue; if (!gps && tag <= 6) continue;
+      const bytes = (sizes[type]||1)*count, vo = bytes > 4 ? start + u32(e+8) : e+8;
+      let val;
+      if (type===2){ val=''; for (let k=0;k<count-1;k++) val += String.fromCharCode(dv.getUint8(vo+k)); val = val.trim(); }
+      else if (type===3) val = u16(vo);
+      else if (type===4) val = u32(vo);
+      else if (type===5||type===10){ const arr=[]; for (let k=0;k<count;k++){ const a=type===5?u32(vo+k*8):s32(vo+k*8), b=type===5?u32(vo+k*8+4):s32(vo+k*8+4); arr.push(b?a/b:0);} val = count===1?arr[0]:arr; }
+      else val = dv.getUint8(vo);
+      out[name] = val;
+    }
+    return out;
+  }
+  const ifd0 = readIFD(u32(start+4), false);
+  let exif = {}, gps = {};
+  if (ifd0.ExifIFD) exif = readIFD(ifd0.ExifIFD, false);
+  if (ifd0.GPSIFD) gps = readIFD(ifd0.GPSIFD, true);
+  const r = {};
+  const fmtDate = s => s && s.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$3/$2/$1');
+  if (ifd0.Make || ifd0.Model) r['Appareil'] = [ifd0.Make, ifd0.Model].filter(Boolean).join(' ');
+  if (exif.LensModel) r['Objectif'] = exif.LensModel;
+  if (exif.DateTimeOriginal || ifd0.DateTime) r['Date de prise de vue'] = fmtDate(exif.DateTimeOriginal || ifd0.DateTime);
+  if (exif.ExposureTime) r['Temps de pose'] = exif.ExposureTime >= 1 ? exif.ExposureTime + ' s' : '1/' + Math.round(1/exif.ExposureTime) + ' s';
+  if (exif.FNumber) r['Ouverture'] = 'f/' + exif.FNumber.toFixed(1).replace('.',',');
+  if (exif.ISO) r['Sensibilité ISO'] = exif.ISO;
+  if (exif.FocalLength) r['Focale'] = exif.FocalLength.toFixed(1).replace('.',',') + ' mm' + (exif.FocalLength35 ? ` (éq. 24×36 : ${exif.FocalLength35} mm)` : '');
+  if (exif.Flash !== undefined) r['Flash'] = (exif.Flash & 1) ? 'Déclenché' : 'Non déclenché';
+  if (ifd0.Orientation) r['Orientation EXIF'] = ({1:'Normale',3:'Rotation 180°',6:'Rotation 90° horaire',8:'Rotation 90° antihoraire',2:'Miroir H',4:'Miroir V'})[ifd0.Orientation] || ifd0.Orientation;
+  if (ifd0.Software) r['Logiciel'] = ifd0.Software;
+  if (Array.isArray(gps.GPSLat) && Array.isArray(gps.GPSLon)){
+    const dec = a => a[0] + a[1]/60 + a[2]/3600;
+    const lat = dec(gps.GPSLat) * (gps.GPSLatRef === 'S' ? -1 : 1), lon = dec(gps.GPSLon) * (gps.GPSLonRef === 'W' ? -1 : 1);
+    r['Coordonnées GPS'] = lat.toFixed(5) + ', ' + lon.toFixed(5);
+    if (typeof gps.GPSAlt === 'number') r['Altitude'] = Math.round(gps.GPSAlt) + ' m';
+    current.gps = {lat, lon};
+  }
+  return r;
+}
+
+function showColors(){
+  const {ctx, dw, dh} = current;
+  const p = ctx.getImageData(0,0,dw,dh).data;
+  const hR = new Uint32Array(256), hG = new Uint32Array(256), hB = new Uint32Array(256);
+  let sr=0,sg=0,sb=0,n=0,lum=0,transp=0; const buckets = new Map();
+  for (let i=0;i<p.length;i+=4){
+    const r=p[i],g=p[i+1],b=p[i+2],a=p[i+3];
+    hR[r]++; hG[g]++; hB[b]++;
+    if (a < 255) transp++;
+    if (a < 16) continue;
+    sr+=r; sg+=g; sb+=b; n++; lum += 0.2126*r+0.7152*g+0.0722*b;
+    const k = (r>>4)<<8 | (g>>4)<<4 | (b>>4);
+    const bk = buckets.get(k); if (bk){ bk[0]+=r; bk[1]+=g; bk[2]+=b; bk[3]++; } else buckets.set(k,[r,g,b,1]);
+  }
+  const avg = n ? [sr/n,sg/n,sb/n].map(Math.round) : [0,0,0];
+  const top = [...buckets.values()].sort((a,b)=>b[3]-a[3]);
+  const pal = [];
+  for (const [r,g,b,c] of top){
+    const col = [r/c,g/c,b/c].map(Math.round);
+    if (pal.every(q => Math.abs(q[0]-col[0])+Math.abs(q[1]-col[1])+Math.abs(q[2]-col[2]) > 60)) pal.push(col);
+    if (pal.length >= 8) break;
+  }
+  $('pal').innerHTML = `<div class="sw" title="Moyenne ${hex(...avg)}" style="background:${hex(...avg)};outline:2px solid var(--accent);outline-offset:2px;margin-right:8px"></div>` +
+    pal.map(c => `<div class="sw" title="${hex(...c)}" style="background:${hex(...c)}"></div>`).join('');
+  // histogramme
+  const hc = $('hist'), hx = hc.getContext('2d'); hx.clearRect(0,0,hc.width,hc.height);
+  const max = Math.max(...hR, ...hG, ...hB) || 1;
+  hx.globalCompositeOperation = matchMedia('(prefers-color-scheme: dark)').matches ? 'lighter' : 'multiply';
+  [[hR,'rgba(220,50,40,.75)'],[hG,'rgba(40,170,80,.75)'],[hB,'rgba(50,90,220,.75)']].forEach(([h,c]) => {
+    hx.fillStyle = c; hx.beginPath(); hx.moveTo(0,hc.height);
+    for (let i=0;i<256;i++) hx.lineTo(i*2, hc.height - Math.sqrt(h[i]/max)*hc.height);
+    hx.lineTo(512,hc.height); hx.closePath(); hx.fill();
+  });
+  hx.globalCompositeOperation = 'source-over';
+  const L = n ? lum/n : 0;
+  rows($('colorInfo'), [
+    ['Couleur moyenne', `<span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${hex(...avg)};vertical-align:-1px;margin-right:6px"></span>${hex(...avg)} · rgb(${avg.join(', ')})`],
+    ['Luminosité moyenne', Math.round(L/255*100) + ' % ' + (L < 85 ? '(image sombre)' : L > 170 ? '(image claire)' : '(équilibrée)')],
+    ['Couleurs distinctes (approx.)', nf(buckets.size) + ' teintes sur 4 096 niveaux'],
+    ['Pixels transparents', transp ? nf(transp) + ' (' + (transp/(dw*dh)*100).toFixed(1).replace('.',',') + ' %)' : 'Aucun'],
+    ['Palette dominante', pal.map(c => hex(...c)).join(' ')],
+  ]);
+  current.palette = pal.map(c => hex(...c));
+}
+
+/* Identification par Claude + recherche Google */
+let samplePromise = null;
+function getSample(){ if (!samplePromise) samplePromise = (window.claude && claude.use) ? claude.use('sample') : Promise.resolve(null); return samplePromise; }
+getSample().then(s => { if (!s) { $('idBtn').classList.add('hidden'); $('idIntro').textContent = "L'identification automatique n'est pas disponible dans cet affichage. Utilisez Google Lens ci-dessous."; } });
+
+function toBlob(){
+  const {img} = current;
+  const m = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth*m); c.height = Math.round(img.naturalHeight*m);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+  return new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+}
+
+$('idBtn').addEventListener('click', async () => {
+  if (!current) return;
+  const btn = $('idBtn'), res = $('idRes');
+  const sample = await getSample();
+  if (!sample){ res.innerHTML = '<p class="err">Identification indisponible ici.</p>'; return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyse en cours…';
+  res.innerHTML = '<p class="muted">Claude regarde la photo…</p>';
+  try {
+    const blob = await toBlob();
+    const prompt = `Tu es un expert en reconnaissance d'images. Identifie ce que montre la photo jointe (objet, lieu, monument, animal, plante, œuvre, produit, scène…). Sois précis si c'est reconnaissable (ex. nom du monument, espèce, modèle), sinon décris la catégorie. N'identifie jamais une personne réelle par son nom : décris-la seulement de façon générale.
+Réponds UNIQUEMENT avec un objet JSON valide, en français, de la forme :
+{"titre":"nom court de ce que c'est","description":"2 à 4 phrases expliquant ce que l'on voit et les indices","categorie":"un mot ou deux","confiance":"élevée|moyenne|faible","elements":["élément 1","élément 2","élément 3"],"recherche":"requête Google courte et précise pour trouver cette chose"}
+${current.gps ? `Indice : coordonnées GPS de la photo ${current.gps.lat.toFixed(4)}, ${current.gps.lon.toFixed(4)}.` : ''}`;
+    const out = await sample(prompt, { images: [blob], modelTier: 'default' });
+    let data;
+    try { const t = out.text; data = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}')+1)); }
+    catch(e){ data = { titre: 'Résultat', description: out.text, recherche: '' }; }
+    const q = encodeURIComponent(data.recherche || data.titre || '');
+    res.innerHTML = `
+      ${data.categorie ? `<span class="tag">${esc(data.categorie)}</span>` : ''}${data.confiance ? `<span class="tag">Confiance ${esc(data.confiance)}</span>` : ''}
+      <h3>${esc(data.titre || '')}</h3>
+      <p>${esc(data.description || '')}</p>
+      ${Array.isArray(data.elements) && data.elements.length ? `<p class="muted">Éléments repérés : ${data.elements.map(esc).join(' · ')}</p>` : ''}
+      ${q ? `<div class="row">
+        <a class="btn primary" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Recherche Google : « ${esc(data.recherche || data.titre)} » ↗</a>
+        <a class="btn" href="https://www.google.com/search?q=${q}&udm=2" target="_blank" rel="noopener">Google Images ↗</a>
+        <a class="btn" href="https://fr.wikipedia.org/w/index.php?search=${encodeURIComponent(data.titre||'')}" target="_blank" rel="noopener">Wikipédia ↗</a>
+      </div>` : ''}`;
+  } catch (e) {
+    const msg = e && e.code === 'not_granted' ? "Autorisation refusée : l'identification nécessite votre accord."
+      : e && e.code === 'rate_limited' ? 'Trop de demandes, réessayez dans un moment.'
+      : 'L’analyse a échoué : ' + esc(e && e.message || e);
+    res.innerHTML = `<p class="err">${msg}</p>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Identifier à nouveau';
+  }
+});
+</script>
+</body>
+</html>
 
