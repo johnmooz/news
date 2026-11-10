@@ -1,1 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minuteurs de cuisine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6efe4; --card:#fffaf2; --ink:#2b2118; --muted:#7a6a5a;
+    --line:#e6d8c3; --accent:#d9572b; --accent-ink:#fff;
+    --pasta:#e8b64c; --rice:#9bb7a0; --egg:#f2c14e; --fries:#e07a3a; --custom:#6c7fb8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;line-height:1.4}
+  header{max-width:1000px;margin:0 auto;padding:40px 20px 10px}
+  h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(2rem,5vw,3.2rem);margin:0;letter-spacing:-.02em}
+  header p{color:var(--muted);margin:.4em 0 0}
+  main{max-width:1000px;margin:0 auto;padding:20px;display:grid;gap:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;display:grid;grid-template-columns:170px 1fr;gap:24px;align-items:center;position:relative;transition:box-shadow .3s, transform .3s}
+  .card.running{box-shadow:0 0 0 3px var(--c) inset}
+  .card.done{animation:flash .6s ease-in-out infinite alternate}
+  @keyframes flash{from{box-shadow:0 0 0 4px var(--accent) inset;background:#fff1e8}to{box-shadow:0 0 0 4px transparent inset;background:var(--card)}}
+  .art{width:170px;height:170px;border-radius:18px;background:color-mix(in srgb,var(--c) 22%, #fff);display:grid;place-items:center}
+  .art svg{width:140px;height:140px}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:.95rem;margin:0 0 14px}
+  .group{margin-bottom:12px}
+  .group-label{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .btns{display:flex;flex-wrap:wrap;gap:8px}
+  button{font:inherit;cursor:pointer;border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 14px;font-weight:500;transition:all .15s}
+  button:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%, #fff)}
+  button.active{background:var(--c);border-color:var(--c);color:#fff}
+  button .small{display:block;font-size:.72rem;opacity:.75;font-weight:400}
+  .timer{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:14px;border-top:1px dashed var(--line)}
+  .time{font-family:'Fraunces',serif;font-weight:800;font-size:2.6rem;font-variant-numeric:tabular-nums;min-width:4ch;letter-spacing:-.01em}
+  .label{color:var(--muted);font-size:.9rem;flex:1;min-width:120px}
+  .ctrl{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .ctrl:hover{background:#000;border-color:#000;color:#fff}
+  .ctrl.ghost{background:transparent;color:var(--ink)}
+  .ctrl:disabled{opacity:.35;cursor:default}
+  .bar{position:absolute;left:22px;right:22px;bottom:0;height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--c);transition:width .25s linear}
+  .slider-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  input[type=range]{flex:1;min-width:180px;accent-color:var(--custom)}
+  .slider-val{font-family:'Fraunces',serif;font-weight:600;font-size:1.4rem;min-width:5ch}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:20px 20px 40px}
+  @media (max-width:620px){
+    .card{grid-template-columns:1fr;text-align:left}
+    .art{width:100%;height:140px}
+    .art svg{width:120px;height:120px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Minuteurs de cuisine</h1>
+  <p>Choisis un temps : le compte à rebours démarre aussitôt. Une alarme sonne à la fin. Plusieurs minuteurs peuvent tourner en même temps.</p>
+</header>
+
+<main>
+  <!-- FÉCULENTS -->
+  <section class="card" id="feculents" style="--c:var(--pasta)">
+    <div class="art" aria-hidden="true">
+      <svg viewBox="0 0 140 140">
+        <!-- bol -->
+        <path d="M18 70 h104 a52 46 0 0 1 -104 0z" fill="#c9553a"/>
+        <path d="M18 70 h104" stroke="#a6402a" stroke-width="4" stroke-linecap="round"/>
+        <!-- spaghettis -->
+        <g fill="none" stroke="#f3cf6b" stroke-width="5" stroke-linecap="round">
+          <path d="M30 70 q10 -26 24 -6 t26 -4 t28 6"/>
+          <path d="M36 70 q14 -34 30 -10 t30 2"/>
+          <path d="M44 70 q8 -18 20 -4 t22 -10 t20 14"/>
+        </g>
+        <!-- grains de riz -->
+        <g fill="#fff">
+          <ellipse cx="100" cy="40" rx="4" ry="2" transform="rotate(30 100 40)"/>
+          <ellipse cx="110" cy="48" rx="4" ry="2" transform="rotate(-20 110 48)"/>
+          <ellipse cx="96" cy="50" rx="4" ry="2" transform="rotate(60 96 50)"/>
+        </g>
+        <!-- fourchette -->
+        <g fill="#6b5a4a">
+          <rect x="58" y="10" width="3" height="30" rx="1.5"/><rect x="64" y="10" width="3" height="30" rx="1.5"/><rect x="70" y="10" width="3" height="30" rx="1.5"/>
+          <rect x="57" y="36" width="17" height="8" rx="4"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h2>Féculents</h2>
+      <p class="sub">Pâtes et riz, à partir de l'ébullition.</p>
+      <div class="group">
+        <div class="group-label">Pâtes</div>
+        <div class="btns">
+          <button data-min="3" data-name="Pâtes 3 min">3 min</button>
+          <button data-min="6" data-name="Pâtes 6 min">6 min</button>
+          <button data-min="8" data-name="Pâtes 8 min">8 min</button>
+          <button data-min="9" data-name="Pâtes 9 min">9 min</button>
+          <button data-min="10" data-name="Pâtes 10 min">10 min</button>
+          <button data-min="11" data-name="Pâtes 11 min">11 min</button>
+          <button data-min="12" data-name="Pâtes 12 min">12 min</button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="group-label">Riz</div>
+        <div class="btns">
+          <button data-min="11" data-name="Riz 11 min">11 min</button>
+          <button data-min="18" data-name="Riz 18 min">18 min</button>
+        </div>
+      </div>
+      <div class="timer"></div>
+    </div>
+    <div class="bar"><i></i></div>
+  </section>
+
+  <!-- ŒUFS -->
+  <section class="card" id="oeufs" style="--c:var(--egg)">
+    <div class="art" aria-hidden="true">
+      <svg viewBox="0 0 140 140">
+        <!-- coquetier -->
+        <path d="M44 92 h52 l-8 22 h-36z" fill="#5b87a8"/>
+        <rect x="40" y="112" width="60" height="8" rx="4" fill="#466d8a"/>
+        <!-- œuf -->
+        <path d="M70 18 c22 0 34 34 34 54 c0 18 -14 28 -34 28 s-34 -10 -34 -28 c0 -20 12 -54 34 -54z" fill="#fbf3e6" stroke="#e8d7bd" stroke-width="2"/>
+        <!-- haut coupé avec jaune -->
+        <path d="M40 60 l8 -6 l7 6 l8 -6 l7 6 l7 -6 l8 6 l7 -6 l8 6" fill="none" stroke="#e8d7bd" stroke-width="2"/>
+        <ellipse cx="70" cy="62" rx="24" ry="7" fill="#fff"/>
+        <ellipse cx="70" cy="62" rx="13" ry="4.5" fill="#f2a918"/>
+        <!-- mouillette -->
+        <rect x="88" y="20" width="12" height="44" rx="3" fill="#d9a55c" transform="rotate(18 94 42)"/>
+      </svg>
+    </div>
+    <div>
+      <h2>Œufs</h2>
+      <p class="sub">À plonger dans l'eau bouillante.</p>
+      <div class="btns">
+        <button data-min="3" data-name="Œuf à la coque">À la coque<span class="small">3 min</span></button>
+        <button data-min="6" data-name="Œuf mi-mollet">Mi-mollet<span class="small">6 min</span></button>
+        <button data-min="10" data-name="Œuf dur">Dur<span class="small">10 min</span></button>
+      </div>
+      <div class="timer"></div>
+    </div>
+    <div class="bar"><i></i></div>
+  </section>
+
+  <!-- FRITES -->
+  <section class="card" id="frites" style="--c:var(--fries)">
+    <div class="art" aria-hidden="true">
+      <svg viewBox="0 0 140 140">
+        <!-- frites -->
+        <g fill="#f5c84c" stroke="#e0a93a" stroke-width="1.5">
+          <rect x="40" y="22" width="10" height="56" rx="2" transform="rotate(-12 45 50)"/>
+          <rect x="54" y="14" width="10" height="62" rx="2" transform="rotate(-4 59 45)"/>
+          <rect x="66" y="18" width="10" height="60" rx="2" transform="rotate(5 71 48)"/>
+          <rect x="78" y="14" width="10" height="64" rx="2" transform="rotate(10 83 46)"/>
+          <rect x="90" y="26" width="10" height="52" rx="2" transform="rotate(18 95 52)"/>
+        </g>
+        <!-- cornet -->
+        <path d="M32 62 h76 l-10 62 h-56z" fill="#d23a2e"/>
+        <path d="M32 62 h76" stroke="#a82a20" stroke-width="5" stroke-linecap="round"/>
+        <path d="M50 86 h40 M54 100 h32" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+      </svg>
+    </div>
+    <div>
+      <h2>Frites</h2>
+      <p class="sub">Au bain d'huile ou à la friteuse.</p>
+      <div class="btns">
+        <button data-min="5" data-name="Frites 5 min">5 min</button>
+        <button data-min="7" data-name="Frites 7 min">7 min</button>
+        <button data-min="9" data-name="Frites 9 min">9 min</button>
+      </div>
+      <div class="timer"></div>
+    </div>
+    <div class="bar"><i></i></div>
+  </section>
+
+  <!-- PERSONNALISÉ -->
+  <section class="card" id="perso" style="--c:var(--custom)">
+    <div class="art" aria-hidden="true">
+      <svg viewBox="0 0 140 140">
+        <!-- minuteur rétro -->
+        <rect x="62" y="12" width="16" height="10" rx="3" fill="#3d4c7a"/>
+        <circle cx="70" cy="76" r="50" fill="#fff" stroke="#3d4c7a" stroke-width="8"/>
+        <g stroke="#3d4c7a" stroke-width="3" stroke-linecap="round">
+          <line x1="70" y1="34" x2="70" y2="42"/><line x1="112" y1="76" x2="104" y2="76"/>
+          <line x1="70" y1="118" x2="70" y2="110"/><line x1="28" y1="76" x2="36" y2="76"/>
+        </g>
+        <path d="M70 76 L70 34 A42 42 0 0 1 106 97 Z" fill="#6c7fb8" opacity=".35"/>
+        <line x1="70" y1="76" x2="98" y2="58" stroke="#d9572b" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="70" cy="76" r="6" fill="#3d4c7a"/>
+      </svg>
+    </div>
+    <div>
+      <h2>Personnalisé</h2>
+      <p class="sub">Choisis une durée entre 1 et 30 minutes.</p>
+      <div class="slider-row">
+        <input type="range" id="customRange" min="1" max="30" value="15" aria-label="Durée en minutes">
+        <span class="slider-val" id="customVal">15 min</span>
+        <button class="ctrl" id="customStart">Lancer</button>
+      </div>
+      <div class="timer"></div>
+    </div>
+    <div class="bar"><i></i></div>
+  </section>
+</main>
+
+<footer>Garde cet onglet ouvert pendant la cuisson pour entendre l'alarme.</footer>
+
+<script>
+(function(){
+  let audioCtx = null;
+  function ensureAudio(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }catch(e){ audioCtx = null; }
+  }
+  function beepPattern(){
+    if(!audioCtx) return;
+    const now = audioCtx.currentTime;
+    for(let i=0;i<3;i++){
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type='square'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, now+i*0.28);
+      g.gain.exponentialRampToValueAtTime(0.18, now+i*0.28+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+i*0.28+0.2);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(now+i*0.28); o.stop(now+i*0.28+0.22);
+    }
+  }
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
+
+  function makeTimer(card){
+    const box = card.querySelector('.timer');
+    const bar = card.querySelector('.bar i');
+    box.innerHTML = `
+      <span class="time">--:--</span>
+      <span class="label">Aucun minuteur lancé</span>
+      <button class="ctrl pause" disabled>Pause</button>
+      <button class="ctrl ghost reset" disabled>Arrêter</button>`;
+    const timeEl = box.querySelector('.time'), labelEl = box.querySelector('.label');
+    const pauseBtn = box.querySelector('.pause'), resetBtn = box.querySelector('.reset');
+    let total=0, endAt=0, remaining=0, tick=null, alarm=null, paused=false, activeBtn=null;
+
+    function render(){
+      timeEl.textContent = fmt(remaining);
+      bar.style.width = total ? ((1 - remaining/total)*100)+'%' : '0';
+      document.title = anyRunning() ? '⏱ Minuteurs de cuisine' : 'Minuteurs de cuisine';
+    }
+    function loop(){
+      remaining = (endAt - Date.now())/1000;
+      if(remaining <= 0){ remaining = 0; render(); finish(); return; }
+      render();
+    }
+    function finish(){
+      clearInterval(tick); tick=null;
+      card.classList.remove('running'); card.classList.add('done');
+      labelEl.textContent = labelEl.dataset.name + ' — c\'est prêt !';
+      pauseBtn.disabled = true; resetBtn.disabled = false; resetBtn.textContent = 'Couper l\'alarme';
+      beepPattern(); alarm = setInterval(beepPattern, 1500);
+      setTimeout(()=>{ if(alarm){ clearInterval(alarm); alarm=null; } }, 60000);
+    }
+    function stop(){
+      clearInterval(tick); tick=null; clearInterval(alarm); alarm=null;
+      card.classList.remove('running','done');
+      total=0; remaining=0; paused=false;
+      timeEl.textContent='--:--'; bar.style.width='0';
+      labelEl.textContent='Aucun minuteur lancé';
+      pauseBtn.disabled=true; pauseBtn.textContent='Pause';
+      resetBtn.disabled=true; resetBtn.textContent='Arrêter';
+      if(activeBtn){ activeBtn.classList.remove('active'); activeBtn=null; }
+      render();
+    }
+    function start(min, name, btn){
+      ensureAudio();
+      stop();
+      total = min*60; remaining = total; endAt = Date.now() + total*1000;
+      labelEl.textContent = name; labelEl.dataset.name = name;
+      card.classList.add('running');
+      pauseBtn.disabled=false; resetBtn.disabled=false;
+      if(btn){ btn.classList.add('active'); activeBtn = btn; }
+      tick = setInterval(loop, 250); render();
+    }
+    pauseBtn.addEventListener('click', ()=>{
+      ensureAudio();
+      if(!paused){
+        clearInterval(tick); tick=null; remaining=(endAt-Date.now())/1000;
+        paused=true; pauseBtn.textContent='Reprendre'; card.classList.remove('running');
+        labelEl.textContent = labelEl.dataset.name + ' (en pause)';
+      } else {
+        endAt = Date.now() + remaining*1000; paused=false;
+        pauseBtn.textContent='Pause'; card.classList.add('running');
+        labelEl.textContent = labelEl.dataset.name;
+        tick = setInterval(loop, 250);
+      }
+    });
+    resetBtn.addEventListener('click', stop);
+    card._isRunning = () => !!tick;
+    return { start };
+  }
+
+  const cards = [...document.querySelectorAll('.card')];
+  const anyRunning = () => cards.some(c => c._isRunning && c._isRunning());
+  cards.forEach(card => {
+    const t = makeTimer(card);
+    card.querySelectorAll('button[data-min]').forEach(b =>
+      b.addEventListener('click', () => t.start(+b.dataset.min, b.dataset.name, b)));
+    if(card.id === 'perso'){
+      const r = document.getElementById('customRange'), v = document.getElementById('customVal');
+      r.addEventListener('input', () => v.textContent = r.value + ' min');
+      document.getElementById('customStart').addEventListener('click', () =>
+        t.start(+r.value, 'Personnalisé ' + r.value + ' min'));
+    }
+  });
+})();
+</script>
+</body>
+</html>
 
