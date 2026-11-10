@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Combien de points – Feuille de score</title>
+<title>Qwixxx - Feuille de Score</title>
 <style>
 :root{--bg:#f4f1ea;--card:#fff;--ink:#1d3a2f;--muted:#6b6b6b;--red:#d93a35;--yellow:#e8a92a;--green:#2e9b4f;--blue:#2f55b8;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -25,6 +25,7 @@ h1{font-size:1.2rem;margin:0 0 12px}
 .cell.lock{cursor:default}
 .cell.blocked{opacity:.45;cursor:not-allowed}
 .cell:disabled{cursor:default}
+.row.closed{filter:saturate(.35);opacity:.8}
 .cell.hint{outline:3px solid #fff;box-shadow:0 0 0 6px #000b;animation:pulse 1s infinite alternate}
 @keyframes pulse{to{transform:scale(1.08)}}
 .table{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:12px 0 6px;font-size:.7rem;text-align:center}
@@ -66,7 +67,7 @@ h1{font-size:1.2rem;margin:0 0 12px}
 </head>
 <body>
 <div class="sheet">
-  <h1>Combien de points – Feuille de score</h1>
+  <h1>Qwixxx - Feuille de Score</h1>
 
   <div id="menu">
     <p>Choisis un mode de jeu :</p>
@@ -104,7 +105,7 @@ var PTS=[0,1,3,6,10,15,21,28,36,45,55,66,78];
 var COLORS=["red","yellow","green","blue"];
 var asc=[2,3,4,5,6,7,8,9,10,11,12],desc=asc.slice().reverse();
 var nums=[asc,asc,desc,desc];
-var state,miss,players,cur=0,np=1,mode="sheet",g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[]},TT=[];
+var state,miss,players,cur=0,np=1,mode="sheet",g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[],closed:[-1,-1,-1,-1],closedRoll:[0,0,0,0],rollNo:0},TT=[];
 function $(id){return document.getElementById(id);}
 function fresh(){return {state:COLORS.map(function(){return {c:{},lock:false}}),miss:[false,false,false,false]};}
 function pick(k){cur=k;state=players[k].state;miss=players[k].miss;}
@@ -118,18 +119,20 @@ function nm(k){return "Joueur "+(k+1);}
 
 /* ---------- jeu automatique ---------- */
 function maxIdx(i){var m=-1;nums[i].forEach(function(n,k){if(state[i].c[n])m=k;});return m;}
-function canMark(i,v){var k=nums[i].indexOf(v);if(k<0||state[i].c[v]||k<=maxIdx(i))return false;if(k===10&&others(i)<5)return false;return true;}
+function isClosed(i){return g.closed[i]>=0&&g.closed[i]!==cur&&g.closedRoll[i]!==g.rollNo;}
+function canMark(i,v){var k=nums[i].indexOf(v);if(k<0||isClosed(i)||state[i].c[v]||k<=maxIdx(i))return false;if(k===10&&others(i)<5)return false;return true;}
 function targets(){
   var t=[],d=g.dice,ph=g.phase;if(!d)return t;
   if(ph==="white"||ph==="others"){var s=d[0]+d[1];for(var i=0;i<4;i++)if(canMark(i,s))t.push([i,s]);}
   else if(ph==="color"){for(var j=0;j<4;j++){[d[0]+d[2+j],d[1]+d[2+j]].forEach(function(v){if(canMark(j,v)&&!t.some(function(x){return x[0]===j&&x[1]===v}))t.push([j,v]);});}}
   return t;
 }
-function isOver(){var L={},m=false;for(var k=0;k<np;k++){players[k].state.forEach(function(s,i){if(s.lock)L[i]=1;});if(players[k].miss.every(Boolean))m=true;}return m||Object.keys(L).length>=2;}
-function newGame(){init();g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[]};pick(0);}
+function enderOf(){for(var k=0;k<np;k++){var n=players[k].state.filter(function(s){return s.lock}).length;if(n>=2||players[k].miss.every(Boolean))return k;}return -1;}
+function isOver(){return enderOf()>=0;}
+function newGame(){init();g={phase:"roll",act:0,who:0,dice:null,marked:false,others:[],closed:[-1,-1,-1,-1],closedRoll:[0,0,0,0],rollNo:0};pick(0);}
 function rd(){return 1+Math.floor(Math.random()*6);}
 function roll(){
-  g.phase="rolling";render();
+  g.phase="rolling";g.rollNo++;render();
   var n=0,iv=setInterval(function(){
     g.dice=[0,0,0,0,0,0].map(rd);
     if(++n>=8){clearInterval(iv);g.phase="white";g.who=g.act;g.marked=false;pick(g.act);}
@@ -152,4 +155,71 @@ function advance(){
   else if(g.phase==="others"){nextOther();}
   render();
 }
-function markCell(i,v){state[i].c[v]=true;fix(i);if(g.phase!=="others")g.ma
+function markCell(i,v){state[i].c[v]=true;fix(i);if(state[i].lock&&g.closed[i]<0){g.closed[i]=cur;g.closedRoll[i]=g.rollNo;}if(g.phase!=="others")g.marked=true;advance();}
+function renderDice(){
+  var d=g.dice,cl=["w gap","w","r","y","g","b"],box=$("dice");box.innerHTML="";
+  cl.forEach(function(c,k){var e=document.createElement("div");e.className="die "+c;if(d){e.setAttribute("aria-label","dé "+d[k]);var pw=document.createElement("div");pw.className="pips";var P=[[],[5],[1,9],[1,5,9],[1,3,7,9],[1,3,5,7,9],[1,3,4,6,7,9]][d[k]];for(var q=1;q<=9;q++){var s=document.createElement("i");if(P.indexOf(q)>=0)s.className="p";pw.appendChild(s);}e.appendChild(pw);}else e.textContent="?";box.appendChild(e);});
+  var ph=g.phase,msg,T=TT,none="Aucune case possible.",pickMsg="Choisis une case en surbrillance ou passe.";
+  if(ph==="roll")msg=nm(g.act)+" : lance les dés.";
+  else if(ph==="rolling")msg="Les dés roulent…";
+  else if(ph==="white"||ph==="others")msg=nm(g.who)+" : somme des dés blancs = "+(d[0]+d[1])+". "+(T.length?pickMsg:none);
+  else if(ph==="color")msg=nm(g.act)+" : un dé blanc + le dé de la couleur de la rangée. "+(T.length?pickMsg:none)+(g.marked?"":" Sans croix ce tour, un lancer raté sera ajouté.");
+  else{var r=players.slice(0,np).map(function(p,k){return [nm(k),pts(p)];}).sort(function(a,b){return b[1]-a[1];});msg="Partie terminée ! "+r.map(function(x){return x[0]+" : "+x[1];}).join(" · ")+".";}
+  if(ph!=="over"&&enderOf()>=0)msg+=" Fin de partie déclenchée par "+nm(enderOf())+" : on termine ce lancer, puis la partie s’arrête.";
+  $("msg").textContent=msg;
+  $("roll").hidden=ph!=="roll";
+  $("pass").hidden=!(ph==="white"||ph==="color"||ph==="others");
+  $("pass").textContent=T.length?"Passer":"Continuer";
+}
+
+/* ---------- affichage commun ---------- */
+function renderTabs(){var tb=$("tabs");tb.innerHTML="";for(var k=0;k<np;k++)(function(k){var b=document.createElement("button");b.className="tab"+(k===cur?" sel":"");b.innerHTML=(mode==="auto"&&k===g.act&&g.phase!=="over"?"🎲 ":"")+"Joueur "+(k+1)+" <b>"+pts(players[k])+"</b>";if(mode==="auto")b.disabled=true;else b.onclick=function(){pick(k);render();};tb.appendChild(b);})(k);}
+function render(){
+  var auto=mode==="auto";
+  TT=auto?targets():[];
+  function hinted(i,n){return TT.some(function(x){return x[0]===i&&x[1]===n;});}
+  var rows=$("rows");rows.innerHTML="";renderTabs();
+  if(auto)renderDice();
+  $("reset").hidden=auto;
+  COLORS.forEach(function(col,i){
+    var r=document.createElement("div");r.className="row "+col;
+    nums[i].forEach(function(n){
+      var h=auto&&hinted(i,n);
+      var b=document.createElement("button");b.className="cell"+(state[i].c[n]?" on":(n===nums[i][10]&&others(i)<5?" blocked":""))+(h?" hint":"");b.textContent=n;
+      b.setAttribute("aria-pressed",!!state[i].c[n]);
+      if(auto){if(h)b.onclick=function(){markCell(i,n);};else b.disabled=true;}
+      else b.onclick=function(){if(n===nums[i][10]&&!state[i].c[n]&&others(i)<5)return;state[i].c[n]=!state[i].c[n];fix(i);render();};
+      r.appendChild(b);
+    });
+    var l=document.createElement("button");
+    var cb=auto&&g.closed[i]>=0&&g.closed[i]!==cur;l.className="cell lock"+(state[i].lock?"":" off");l.disabled=true;if(cb)r.classList.add("closed");
+    l.textContent=(state[i].lock||cb)?"🔒":"🔓";l.title=cb?"Ligne fermée par "+nm(g.closed[i]):"Se coche automatiquement avec la case "+nums[i][10];
+    r.appendChild(l);rows.appendChild(r);
+  });
+  var scores=COLORS.map(function(c,i){return PTS[count(i)+(state[i].lock?1:0)]});
+  var m=miss.filter(Boolean).length*5;
+  var sum=scores.reduce(function(a,b){return a+b},0);
+  for(var i=0;i<4;i++)$("t"+i).textContent=scores[i];
+  $("t4").textContent=m;
+  $("t5").textContent=sum-m;
+  var ms=$("miss");ms.innerHTML="";
+  miss.forEach(function(v,i){var b=document.createElement("button");b.textContent=v?"✕":"";if(auto)b.disabled=true;else b.onclick=function(){miss[i]=!miss[i];render();};ms.appendChild(b);});
+}
+var t=$("tbl");
+PTS.slice(1).forEach(function(p,i){var d=document.createElement("div");d.innerHTML="<b>"+(i+1)+"×</b>"+p;t.appendChild(d);});
+
+document.querySelectorAll(".mode").forEach(function(b){b.onclick=function(){
+  mode=b.dataset.m;$("menu").hidden=true;$("app").hidden=false;$("dicebox").hidden=mode!=="auto";
+  if(mode==="auto")newGame();else init();
+  render();
+};});
+$("back").onclick=function(){$("app").hidden=true;$("menu").hidden=false;};
+$("np").onchange=function(){np=+this.value;if(mode==="auto")newGame();else if(cur>=np)pick(np-1);render();};
+$("reset").onclick=function(){players[cur]=fresh();pick(cur);render();};
+$("all").onclick=function(){if(mode==="auto")newGame();else init();render();};
+$("roll").onclick=roll;
+$("pass").onclick=advance;
+init();
+</script>
+</body>
+</html>
