@@ -1,1 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>La Quête des 64 Écrans</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;color:#fff;font-family:monospace;overflow:hidden;touch-action:none}
+  #wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#000;display:block}
+  #touch{display:none;width:100%;max-width:520px;justify-content:space-between;align-items:center;padding:10px 18px;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+  .pad{display:grid;grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:4px}
+  .pad div,.btn{background:#222;border:2px solid #555;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#ccc}
+  .pad div.on,.btn.on{background:#555}
+  .pad .e{background:none;border:none}
+  .btns{display:flex;gap:12px}
+  .btn{width:70px;height:70px;border-radius:50%;font-size:14px;font-weight:bold}
+  @media (pointer:coarse){#touch{display:flex}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="touch">
+    <div class="pad">
+      <div class="e"></div><div data-k="up">▲</div><div class="e"></div>
+      <div data-k="left">◀</div><div class="e"></div><div data-k="right">▶</div>
+      <div class="e"></div><div data-k="down">▼</div><div class="e"></div>
+    </div>
+    <div class="btns">
+      <div class="btn" data-k="map">CARTE</div>
+      <div class="btn" data-k="atk" style="background:#702020;border-color:#b04040">ÉPÉE</div>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+const WORLD = {"H1":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrsssssssss","rrrrrrrsssssssss","rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr"],"H2":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrsssssrr","rrsrrrrrrsssssrr","rssrrrrrrssssssr","ssssssssssssssss","ssssssssssssssss","rssssssssssssssr","rrssssssssssssrr","rrssssssssssssrr","rrrrrrrlrrrrrrrr"],"H3":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrssrrrr","rrrrrrrrrrsssrrr","ssssssssssssssss","ssssssssssssssss","rrrlrrrrrrssssss","rrrlrrrrrrssssss","rrrlrrrrrrrsssss","rrrlrrrrrrrrrrrr"],"H4":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rssrrrrrrrrrrrrr","rsssrrrrrrrrrrrr","rssssrrrrrrrrrrr","sssssssssssrrrrr","sssssssssssrrrrr","sssssrrrrrlrrrrr","ssssrrrrrrlrrrrr","sssrrrrrrrlrrrrr","rrrrrrrrrrlrrrrr"],"H5":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrcrrr","rrrrrrrrrrrssssr","rrrrrrrrrrssssss","rrrrrrrrrsssssss","rrssssrrssssssss","rsssssssssssssss","rsssssssssssssss","rsssssssssssssss","rrssssrrsssssssr","rrrrrrrrrrrrrrrr"],"H6":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrsssssssssssrr","sssssssssssssssr","ssssrrssssrrsssr","sssrrrrssrrrrsss","sssrrrrssrrrrsss","sssssssssssssssr","sssssssssssssssr","rrrsssssssssssrr","rrrrrrrrrrrrrrrr"],"H7":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrssrrrrrrr","rrrrssssssrrrrrr","rrrsssssssrrrrrr","ssssssssssssssss","ssssssssssssssss","rrrsssssssrrrrrr","rrrrssssssrrrrrr","rrrrrrrssrrrrrrr","rrrrrrrrrrrrrrrr"],"H8":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrssrrrrrrr","ssssssssssssssss","ssssssssssssssss","rrrrlrrssrrrrrrr","rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr"],"G1":["rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr","rrrsssssssssssss","rrssrsssssssssss","rsssssrsssssrsss","rsssrsssrsssssss","rsssrsrsrsssssss","rsssrsrssssssrss","rrssrsssssssssss","rrrsssssssssssss","rrrrrrrrrrrrrrrr"],"G2":["rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr","ssssssssssssssrr","ssssssssssssrssr","ssssrsssssrssssr","ssssssssrsssrssr","ssssssssrsrsrssr","sssrssssssrsrssr","ssssssssssssrssr","ssssssssssssssrr","rrrrrrrrrrrrrrrr"],"G3":["rrrlrrrrrrrrrrrr","rrrlrrrrrrrrrrrr","rrrlrrrrssssssss","rrrlrrrsssssssss","rrrlrrssssrssrss","rrssssssssssssss","rsssssssssssssss","rssssssssssrssrs","rsssssssssssssss","rrssssssssssssss","rrrrrrrrrrrrrrrr"],"G4":["rrrrrrrrrrlrrrrr","rrrrrrrrrrlrrrrr","sssrrrrrrrlrrrrs","ssssrrrrrrlrrrss","sssssrrrrrlrrsss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","rrrrrrrrrrrrrrrr"],"G5":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","ssssssssssssssrr","sssssssssssssssr","sssrssrssrsssrsr","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","rrrrrrrrrrlrrrrr"],"G6":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrrrrrrrssrrssrr","rrrrrrrrssssssss","rrrrrrrrssssssss","srrssrrsssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","srrssrrsssrrssrr","rrrlrrrrrrrrrlrr"],"G7":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrssrrssrrrrrrrs","ssssssssrrrrrrss","ssssssssrrrrrsss","ssssssssssssssss","ssssssssssssssss","sssssssssssrrsss","sssssssssssrrrss","rrssrrsssssrrrrs","rrrrrrrrrrrrrrrr"],"G8":["rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr","ssrrlrrrrrrrrrrr","sssrlrrrrrrrrrrr","sssrlrwwwwwwwwww","sssssswsssssssss","sssssswsssssssss","sssssswsssssssss","sssssswsssssssss","sssssswsssssssss","rrrrrrwssssrrrrr"],"F1":["hhhhhhhhhhhhhhhh","hhhhhhhhhhhhhhhh","hhhggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggghh","hhgggggggggggghh"],"F2":["hhhhhhhhhhhhhhhh","hhhhhhhhhhhhhhhh","gggggggggggggghh","ggghgghgghgghghh","gggggggggggggghh","gggggggggggggghh","ggghgghgghgghghh","gggggggggggggghh","ggghgghgghgghghh","hhgggggggggggghh","hhgggggggggggghh"],"F3":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrggggggggggggrr","rrgggghhhhggggrr","rrghhhhcchhhhgrr","rrggggggggggggrr","rrghhhgggghhhgrr","rrghhhgggghhhgrr","rrggggggggggggrr","rrggggggggggggrr","rrrrrrrlrrrrrrrr"],"F4":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrsssssrrrrsssss","rsssssssrrssssss","rsssrsssrrssssss","rssrrrssrrssssss","rssrrrssrrssssss","rsssrsssrrssssss","rsssssssrrssssss","rrsssssrrrrsssss","rrrrrrlrrrrrrlrr"],"F5":["rrrrrrrrrrlrrrrr","rrrrrrrrrrlrrrrr","sssrrsssssssssss","ssssssssssssssss","ssrssrssrssrssrs","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","sssrrsssssssssss","rrrrrrrrrrrrrrrr"],"F6":["rrrlrrrrrrrrrlrr","rrrlrrrrrrcrrlrr","ssssssssssssssrr","sssssssssssssssr","ssrssrssrssrsssr","sssssssssssssssr","sssssssssssssssr","sssssssssssssssr","sssssssssssssssr","ssssssssssssssrr","rrrrlrrrrrrrrrrr"],"F7":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrsssrrrrsrrrrrr","rsssssrrssrrrrrr","rsssssssssssssss","rsssssssssssssss","rssssssssswwwwww","rsssssssswwwwwww","rsssssrrswwwwwww","rrsssrrrrwwwwwww","rrssrrrrrwwwwwww"],"F8":["rrrrrrwssssrrrrr","rrrrrrwssssrrrrr","rrrrrrwssssrrrss","rrrrrrwssssrrrss","sssssswsssssssss","sssssswsssssssss","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww"],"E1":["hhgggggggggggghh","hhgggggggggggghh","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggghh","hhgggggggggggghh"],"E2":["hhgggggggggggghh","hhgggggggggggghh","gggggggggggggghh","ggghgghgghgghghh","gggggggggggggggg","gggggggggggggggg","ggghgghgghgghggg","ggggggggggggggss","ggghgghgghgghghh","hhgggggggggggghh","hhgggggggggggghh"],"E3":["rrrrrrrlrrrrrrrr","rrrrrrrlrrrrrrrr","rrrrrrrlrssrrrrr","rrssrrrlrsssrrrr","sssssrrlrssssrrr","ssssssssssssssss","ssssssssssssssss","sssssssssssssrrr","rrsssssssssssrrr","rrrssssssssssrrr","rrrrrrrrrrrrrrrr"],"E4":["rrrrrrlrrrrrrlrr","rrrrrrlrrrrrrlrr","rrggggggggggggrr","rrggggggggggggrr","rrghghghghghggrr","ssggggggggggggrr","ssghghghghghggrr","rrghghghghghgggg","rrggggggggggggrr","rrggggggggggggrr","rrrrrrrrrrrrrrrr"],"E5":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrssssssssssssrr","rsssssssssssssrr","rsrsrsrssssssssr","rssssssssssssssr","rssssssssswwwwww","ssssssssswwwwwww","rsssssssswwwwwww","rrssssssswwwwwww","rrrrrrrrswwwwwww"],"E6":["rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr","rrrrlrrrrrrrrrrr","rrrrssssssssssss","rrrrssssssssssss","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww"],"E7":["rrssrrrrrwwwwwww","rrssrrrrrwwwwwww","rrssrrrrrwwwwwww","rrssrrrrrwwwwwww","ssssssssswwwwwww","ssssssssswwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww"],"E8":["wrrrrrrrrrrrrrrw","wrrrrrrrrrrrrrrw","wrssssssssssssrw","wrsssssrssssssrw","wrssrsscrssrssrw","wrsssssssssssssb","wrsssssssssssssw","wrsssrssssrsssrw","wrssssssssssssrw","wrssssssssssssrw","wrrrrsrrrrrrrrrw"],"D1":["hhgggggggggggghh","hhgggggggggggghh","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhgggggggggggggg","hhghgghgghgghggg","hhgggggggggggggg","hhhhgghgghgghggg","hhhhhhhhhhhhhhgh","hhhhhhhhhhhhhhwh"],"D2":["hhgggggggggggghh","hhgggggggggggghh","gggggggggggggghh","ggghgghgghgghghh","gggggggggggggghh","gggggggggggggghh","ggghgghgghgghghh","gggggggggggggghh","ggghgghgghgghghh","hhhhhhhhhhhhhhhh","hhhhhhhhhhhhhhhh"],"D3":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrssssssssssssrr","rsssswwwwwwssssr","rssrswwwwwwsrssr","rsssswwwwwwssssr","rsssswwwwwwssssr","rssssssssssssssr","rssssssssssssssr","rrssssssssssssrr","rrrrrrrssrrrrrrr"],"D4":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrssssssssssssrr","rsssswwwwwwssssr","rsstswwwwwwstssr","rsssswwwwwwssssr","rsstswwwwwwstssr","rssssssssssssssr","rssssssssssssssr","rrssssssssssssrr","rrrrrrrssrrrrrrr"],"D5":["rrrrrrrrswwwwwww","rrrrcrrrswwwwwww","rrssssssswwwwwww","rsssssssswwwwwww","rsststssswwwwwww","rsssssssswwwwwww","rsststssswwwwwww","rsssssssswwwwwww","rsssssssswwwwwww","rrssssssswwwwwww","rrrrrrrsswwwwwww"],"D6":["wrrrrrrrrrrrrrrw","wrrrrrrrrrrrrrrw","wrssssssssssssrw","wrsssssstsssssrw","wrssttstctsttsrw","wrssssssssssssrw","wrssssssssssssrw","wrssssssssssssrw","wrssssssssssssrw","wrssssssssssssrw","wrrrrrrrlrrrrrrw"],"D7":["wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwwwwwwwww","wwwwwwwwssssssss","wwwwwwwsssssssss","wwwwwwwssttttttt","wwwwwwwssttttttt","wwwwwwwssttttttt","wwwwwwwssttttttt"],"D8":["wwwwwbwwwwwwwwww","wwwwwbwwwwwwwwww","wwwwwbwwwwwwwwww","wwwwwbwwwwwwwwww","wwwwwbwwwwwwwwww","ssssssssssssssss","ssssssssssssssss","tttttttttttttttt","tttttttttttttttt","tttttttttttttttt","tttttttttttttttt"],"C1":["hhhhhhhhhhhhhhwh","hhhhhhhhhhhhhhwh","hhhhhhhhhhhhhhwh","hhhhhhhhhhhhhhwh","hhhhhhhhhhhhhhwh","hhgggggggggggggh","hhgggggggggggggh","hhgggggggggggggh","hhgggggggggggggh","hhgggggggggggghh","hhgggggggggggghh"],"C2":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrrrrrr","rrssssssssssrrrr","rsssssssssssrrrr","rssrsrsrsrssssss","rsssssssssssssss","rsssssssssssssss","rsssssssssssssss","rsssssssssssrrrr","rrssssssssssrrrr","rrrrrrrrrrssrrrr"],"C3":["rrrrrrrssrrrrrrr","rrrrrrrssrrrrrrr","rrssssssssssssss","rrssrrrrrrrrrrrr","ssssrrrrrrrrrrrr","ssssrrrrrrrrrrrr","ssssrrrrrrrrrrrr","ssssrrrrrrrrrrrr","rrssssssssssssss","rrssssssssssssss","rrrrrssrrsssssrr"],"C4":["rrrrrrrssrrrrrrr","rrrrrrrssrrrrrrr","ssssssssssssssrr","rrsssssssssssssr","rrsssstsssssssss","rrsssssssstsssss","rrsssstsssssssss","rrssssssssssssss","sssssssssssssssr","ssssssssssssssrr","rrrrssrsssrsrsrr"],"C5":["tttttttsswwwwwww","tttttttsswwwwwww","ttssssssswwwwwww","ttssstssswwwwwww","ssssssssswwwwwww","ssssstssssssssss","ssssssssssssssss","ssssstsssssssstt","ttsssssssssssstt","tttssttttssttstt","tttssttttssttstt"],"C6":["wwwwwwwwbwwwwwww","wwwwwwwwbwwwwwww","wwwwwwwwbwwwwwww","wwwwwwwwbwwwwwww","wwwwwwwwswwwwwww","ssssswwwssssssss","ssssswwsssssssss","ttssswwssssssstt","ttssswwssssssstt","ttssswwssssssstt","ttssswwssstststt"],"C7":["wwwwwwwssttttttt","wwwwwwwssttttttt","wwwwwwwsssssssss","wwwwwwwsssssssss","wwwwwwwssststtss","ssssssssssssssss","sssssssssststtss","tttsssssssssssss","tttsssssssssssss","tttttttttttttttt","tttttttttttttttt"],"C8":["tttttttttttttttt","tttttttttttttttt","ssssssssssssssss","ssssssststssstst","ssssssssssssssss","ssststststststst","ssssssssssssssss","ssssssststssstst","ssssssssssssssss","tttttttttttttttt","tttttttttttttttt"],"B1":["rrssssssssssssrr","rrssssssssssssrr","rrssssssssssssrr","rrsssssssssssssr","rrssssssssssssss","rrssssssssssssss","rrssssssssssssss","rrssssssssssssss","rrsssssssssssssr","rrssssssssssssrr","rrrrrrrrrrrrrrrr"],"B2":["rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr"],"B3":["rrrrrssrrsssssrr","rrrrrssrrsssssrr","rrrrrsssrsssssrr","rrrrrsssrsssssss","ssssssssrsssssss","ssssssssrsssssss","ssssssssrsssssss","ssssssssrsssssss","rrrrrrssrrrrrrss","rrrrrrssrrrrrrrr","rrrrrrssrrrrrrrr"],"B4":["rrrrssrsssrsrsrr","rrrrssrsssrsrsrr","rrssssssssssssrr","sssrssssssrssssr","ssssssrsssssssss","sssrssssssrsrsss","ssssssssssssssss","ssssssssssssssss","sssssssssssssssr","rrssssssssssssrr","rrrrrrrsssrsrsrr"],"B5":["tttssttttssttstt","tttssttccsstcstt","ttcsssssssssssss","tcssssssssssssss","sssssstsssssssss","ssssssssssssssss","sssssstsssssssss","ssssssssssssssss","ttssssssssssssss","tttsssssssssssss","tttttttttttttttt"],"B6":["ttssswwssstststt","tcssswwssstststt","ssssswwsssssssss","ssssswwsssrsssss","ssssswwsssssrsss","sssssbbsssrsssss","ssssswwsssrsrsss","ssssswwsssrsrsss","ssssswwsssrsssss","ssssswwsssssssss","ttttswwttttttttt"],"B7":["tttttttttttttttt","tttttttctttttttt","sssssssssssssstt","sssrrrrsssssssst","ssssssssrrrsssss","sssrrrrsssssssss","sssrrrrsrrrsssss","sssrrrrsrrrsssss","sssrrrrsssssssst","sssssssssssssstt","ttttttttttttsstt"],"B8":["tttttttttttttttt","tttttttttttttttt","tcssssssstcssstt","csststsssssstsst","ssssssssssssssss","ssststsssssstsss","ssssssssssssssss","ssststsssssstsss","tsssssssssssssst","ttsssssssttssstt","tttttttssttttttt"],"A1":["rrrrrrrrrrrrrrrr","rrrrrrrrrrrcrrrr","rrrrssssssssssss","rrrsssssssssssss","rrssssrssrssssss","rsssssssssssssss","rsssssssssssssss","rrsssssrssrsssss","rrrsssssssssssss","rrrrssssssssssss","rrrrrrrrrrrrrrrr"],"A2":["rrrrrrrrrrssrrrr","rrrrrrrrrrssrrrr","sssssssssssssrrr","ssssssssssssssrr","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssss","ssssssssssssssrr","sssssssssssssrrr","rrrrrrrrrrrrrrrr"],"A3":["rrrrrrssrrrrrrrr","rrrrrrssrrrrrrrr","rrrrrrssssssssss","rrrrrrrrrrrrrrrr","ssrrrrrrrrrrrrrr","ssssssrrrrrrrrrr","ssssssrrrrrrrrrr","ssssssrrrrrrrrrr","rrssssssssssssss","rrssssssssssssss","rrrrrrrrrrrrrrrr"],"A4":["rrrrrrrsssrsrsrr","rrrrrrrsssrsrsrr","ssssssssssssssrr","rrrrrrrssssssssr","rrrrrrrsssssssss","rrrrrrrsssrsssss","rrrrrrrsssssssss","rrrrrrrsssssssss","sssssssssssssssr","ssssssssssssssrr","rrrrrrrrrrrrrrrr"],"A5":["tttttttttttttttt","tttttttttttttttt","tcsssssssssssstt","csssssssrsssssst","ssssrsrrcrrsrsst","ssssssssssssssst","ssssssssssssssst","ssssssssssssssst","tsssssssssssssst","ttsssssssssssstt","tttttttttttttttt"],"A6":["ttttswwttttttttt","ttccswwttttttttt","tcssswwsssssssss","tsssswwstssstsss","tsssswwssstsssss","tsstswwstssstsss","tsssswwssstsssss","tsssswwstssstsss","tsssswwsssssssss","ttssswwsssssssss","tttttwwttttttttt"],"A7":["ttttttttttttsstt","tttttttttttcsstt","sssssssssssssstt","sssssssstssssstt","sssssssssstsssst","sstsstsstsssssss","sssssssssstsssss","sssssssstsssssst","sssssssssssssstt","sssssssssssssstt","tttttttttttttttt"],"A8":["tttttttssttttttt","ttttctcssttttttt","tttcsssssttttttt","ttcssssssttttttt","tcsssssssttttttt","ssssssssssssssss","ssssssssssssssss","ttsssssssssssstt","ttsssssssssssstt","ttsssssssssssstt","tttttttttttttttt"]};
+const ROWS = "HGFEDCBA";              // ligne 0 = H (en haut), ligne 7 = A (en bas)
+const T = 16, TW = 16, TH = 11;       // tuile 16px, écran 16x11 tuiles
+const PW = TW*T, PH = TH*T;           // 256 x 176
+const HUD = 56, SW = PW, SH = PH + HUD;
+const SCALE = 3;
+const WALK = new Set(["s","g","l","b"]);
+
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+cv.width = SW*SCALE; cv.height = SH*SCALE;
+function fit(){
+  const touch = matchMedia("(pointer:coarse)").matches;
+  const availH = innerHeight - (touch ? 200 : 20), availW = innerWidth - 10;
+  const s = Math.max(1, Math.min(availW/SW, availH/SH));
+  cv.style.width = Math.floor(SW*s)+"px"; cv.style.height = Math.floor(SH*s)+"px";
+}
+addEventListener("resize", fit); fit();
+
+/* ---------- utilitaires ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function mk(w,h){const c=document.createElement("canvas");c.width=w;c.height=h;return c}
+function fromStrings(rows, pal){
+  const c = mk(rows[0].length, rows.length), x = c.getContext("2d");
+  rows.forEach((r,y)=>{[...r].forEach((ch,i)=>{ if(pal[ch]){x.fillStyle=pal[ch];x.fillRect(i,y,1,1);} })});
+  return c;
+}
+const key = (r,c)=>ROWS[r]+(c+1);
+
+/* ---------- tuiles ---------- */
+const COL = {sand:"#ffe7ad", sandD:"#e8c88a", rock:"#c84c0c", rockL:"#e7701c", rockD:"#5c1c00",
+             green:"#00a800", greenD:"#005800", water:"#2038ec", waterL:"#6888fc", gray:"#7b7b7b", grayD:"#5e5e5e", white:"#fcfcfc", black:"#000"};
+function tileCanvas(fn){const c=mk(T,T);const x=c.getContext("2d");fn(x);return c}
+function px(x,c,a,b,w=1,h=1){x.fillStyle=c;x.fillRect(a,b,w,h)}
+const TILES = {};
+TILES.s = tileCanvas(x=>{px(x,COL.sand,0,0,16,16);[[3,4],[11,2],[7,10],[13,12],[2,13]].forEach(([a,b])=>px(x,COL.sandD,a,b))});
+TILES.g = tileCanvas(x=>{px(x,COL.gray,0,0,16,16);[[3,4],[11,2],[7,10],[13,12],[2,13]].forEach(([a,b])=>px(x,COL.grayD,a,b))});
+TILES.r = tileCanvas(x=>{
+  px(x,COL.rock,0,0,16,16);
+  for(const [ox,oy] of [[0,0],[8,0],[4,8],[-4,8],[12,8]]){
+    px(x,COL.rockL,ox+1,oy+1,5,1);px(x,COL.rockL,ox+1,oy+2,1,3);
+    px(x,COL.rockD,ox+7,oy+1,1,6);px(x,COL.rockD,ox+1,oy+7,7,1);px(x,COL.black,ox+6,oy+5,1,2);
+  }
+});
+TILES.c = tileCanvas(x=>{x.drawImage(TILES.r,0,0);px(x,COL.black,3,4,10,12);px(x,COL.black,4,3,8,1);px(x,COL.black,5,2,6,1)});
+TILES.t = fromStrings([
+"................",".....kkkkkk.....","...kkGGGGGGkk...","..kGGGGgGGGGGk..",".kGGgGGGGGgGGGk.",".kGGGGGgGGGGgGk.","kGGgGGGGGgGGGGGk","kGGGGGgGGGGGgGGk",
+"kGgGGGGGgGGGGGGk","kGGGGgGGGGGgGGgk",".kGGGGGGgGGGGGk.",".kgGGgGGGGGgGgk.","..kkGGGbbGGGkk..","....kkkbbkkk....","......kbbk......","......kkkk......"],
+{G:COL.green,g:COL.greenD,k:COL.black,b:"#7c3c00"});
+{ const bg=tileCanvas(x=>{x.drawImage(TILES.s,0,0);x.drawImage(TILES.t,0,0)}); TILES.t=bg; }
+TILES.h = tileCanvas(x=>{x.drawImage(TILES.g,0,0);
+  px(x,COL.black,3,3,10,12);px(x,COL.white,4,4,8,10);px(x,COL.white,5,3,6,1);px(x,COL.black,5,2,6,1);
+  px(x,COL.grayD,7,5,2,7);px(x,COL.grayD,5,7,6,2);px(x,COL.black,3,14,10,1)});
+TILES.l = tileCanvas(x=>{x.drawImage(TILES.r,0,0);px(x,COL.sand,2,0,12,16);for(let y=1;y<16;y+=4){px(x,"#a05010",2,y,12,1);px(x,COL.sandD,2,y+1,12,1)}px(x,COL.rockD,2,0,1,16);px(x,COL.rockD,13,0,1,16)});
+TILES.b = tileCanvas(x=>{px(x,"#a04000",0,0,16,16);for(let y=0;y<16;y+=4){px(x,"#d07020",0,y,16,1);px(x,"#602000",0,y+3,16,1)}px(x,"#602000",0,0,1,16);px(x,"#602000",15,0,1,16)});
+const WATER = [0,1].map(f=>tileCanvas(x=>{px(x,COL.water,0,0,16,16);
+  for(const [a,b] of [[2,3],[9,7],[3,11],[10,14]]){const o=f?2:0;px(x,COL.waterL,(a+o)%16,b,3,1);px(x,COL.waterL,(a+o+3)%16,b+1,2,1)}}));
+
+/* ---------- sprites ---------- */
+const HP = {G:"#80d010",g:"#3c8000",S:"#fca044",B:"#a04000",K:"#000",W:"#fff"};
+const HERO = {
+ down:[[
+"......GGGG......",".....GGGGGG.....","....GBBBBBBG....","....BSSSSSSB....","....SKSSSSKS....","....SSSSSSSS....",".....SSBBSS.....","...GGGGGGGGGG...",
+"..SGGGBBBBGGGS..","..SGGGGGGGGGGS..","...GGGGGGGGGG...","....GGGGGGGG....","....GGG..GGG....","....BBB..BBB....","...BBBB...BBB...","................"],
+ [
+"......GGGG......",".....GGGGGG.....","....GBBBBBBG....","....BSSSSSSB....","....SKSSSSKS....","....SSSSSSSS....",".....SSBBSS.....","...GGGGGGGGGG...",
+"..SGGGBBBBGGGS..","..SGGGGGGGGGGS..","...GGGGGGGGGG...","....GGGGGGGG....","....GGG..GGG....","....BBB..BBB....","...BBB...BBBB...","................"]],
+ up:[[
+"......GGGG......",".....GGGGGG.....","....GGGGGGGG....","....BBBBBBBB....","....SBBBBBBS....","....SBBBBBBS....",".....BBBBBB.....","...GGGGGGGGGG...",
+"..SGGGGGGGGGGS..","..SGGGBBBBGGGS..","...GGGGGGGGGG...","....GGGGGGGG....","....GGG..GGG....","....BBB..BBB....","...BBBB...BBB...","................"],
+ [
+"......GGGG......",".....GGGGGG.....","....GGGGGGGG....","....BBBBBBBB....","....SBBBBBBS....","....SBBBBBBS....",".....BBBBBB.....","...GGGGGGGGGG...",
+"..SGGGGGGGGGGS..","..SGGGBBBBGGGS..","...GGGGGGGGGG...","....GGGGGGGG....","....GGG..GGG....","....BBB..BBB....","...BBB...BBBB...","................"]],
+ right:[[
+".....GGGGG......","....GGGGGGG.....","...GGGGGBBBG....","...BBBSSSSSS....","...BBSSSSKSS....","....BSSSSSSSS...",".....SSSSSS.....","....GGGGGGG.....",
+"...GGGGGGGSS....","...GBBBBBGGS....","...GGGGGGGG.....","....GGGGGG......","....GG..GGG.....","...BBB...BBB....","..BBBB...BBBB...","................"],
+ [
+".....GGGGG......","....GGGGGGG.....","...GGGGGBBBG....","...BBBSSSSSS....","...BBSSSSKSS....","....BSSSSSSSS...",".....SSSSSS.....","....GGGGGGG.....",
+"...GGGGGGGSS....","...GBBBBBGGS....","...GGGGGGGG.....","....GGGGGG......",".....GGGG.......","....BBBBB.......","....BBBBBB......","................"]]
+};
+const heroSpr = {};
+for(const d in HERO) heroSpr[d]=HERO[d].map(f=>fromStrings(f,HP));
+function flip(c){const n=mk(c.width,c.height),x=n.getContext("2d");x.translate(c.width,0);x.scale(-1,1);x.drawImage(c,0,0);return n}
+heroSpr.left = heroSpr.right.map(flip);
+
+const OCTO = [[
+"................","......RRRR......","....RRRRRRRR....","...RRRRRRRRRR...","..RRWWRRRRWWRR..","..RRWKRRRRWKRR..","..RRRRRRRRRRRR..","..RRRRRRRRRRRR..",
+"...RRRRRRRRRR...","....RRRRRRRR....","...RR.RR.RR.RR..","..RR..RR..RR..R.","................","................","................","................"],[
+"................","......RRRR......","....RRRRRRRR....","...RRRRRRRRRR...","..RRWWRRRRWWRR..","..RRWKRRRRWKRR..","..RRRRRRRRRRRR..","..RRRRRRRRRRRR..",
+"...RRRRRRRRRR...","....RRRRRRRR....","..RR.RR.RR.RR...",".R..RR..RR..RR..","................","................","................","................"]];
+const octoRed = OCTO.map(f=>fromStrings(f,{R:"#d82800",W:"#fcfcfc",K:"#000"}));
+const octoBlue = OCTO.map(f=>fromStrings(f,{R:"#2060e8",W:"#fcfcfc",K:"#000"}));
+const RUPEE = fromStrings(["...K...","..KGK..",".KGWGK.","KGGWGGK","KGGGGGK","KGGGGGK","KGGGGGK",".KGGGK.","..KGK..","...K..."],{K:"#004000",G:"#00c840",W:"#c0ffc0"});
+const HEART = fromStrings([".RR.RR.","RRRRRRR","RWRRRRR","RRRRRRR",".RRRRR.","..RRR..","...R..."],{R:"#e82020",W:"#fff"});
+const HEART_E = fromStrings([".KK.KK.","KkkKkkK","KkkkkkK","KkkkkkK",".KkkkK.","..KkK..","...K..."],{K:"#e82020",k:"#300"});
+const HEART_H = fromStrings([".RR.KK.","RRRKkkK","RWRkkkK","RRRkkkK",".RRkkK.","..RkK..","...K..."],{R:"#e82020",W:"#fff",K:"#e82020",k:"#300"});
+
+/* ---------- état ---------- */
+const keys = {};
+const DIRS = {up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+let startLatch=false, overAt=0, hero, enemies, items, shots, puffs, cur, visited, trans, frame=0, mode="title", showMap=false, winTimer=0, msgTimer=0, msg="";
+
+function reset(){
+  cur = {r:7, c:4};                     // A5
+  hero = {x:112, y:112, dir:"down", anim:0, hp:6, maxHp:6, atk:0, inv:0, kb:null, rupees:0};
+  visited = new Set([key(cur.r,cur.c)]);
+  trans = null; showMap=false; winTimer=0;
+  enterScreen(true);
+}
+function tileAt(r,c,tx,ty){
+  if(tx<0||ty<0||tx>=TW||ty>=TH) return null;
+  return WORLD[key(r,c)][ty][tx];
+}
+function neighborExists(dx,dy){const r=cur.r+dy,c=cur.c+dx;return r>=0&&r<8&&c>=0&&c<8}
+function solidForHero(px_,py_){
+  const tx=Math.floor(px_/T), ty=Math.floor(py_/T);
+  if(tx<0) return !neighborExists(-1,0);
+  if(tx>=TW) return !neighborExists(1,0);
+  if(ty<0) return !neighborExists(0,-1);
+  if(ty>=TH) return !neighborExists(0,1);
+  return !WALK.has(WORLD[key(cur.r,cur.c)][ty][tx]);
+}
+function solidForEnemy(px_,py_){
+  const tx=Math.floor(px_/T), ty=Math.floor(py_/T);
+  if(tx<0||ty<0||tx>=TW||ty>=TH) return true;
+  const t=WORLD[key(cur.r,cur.c)][ty][tx];
+  return !(t==="s"||t==="g");
+}
+// hitbox du héros : x+2..x+14, y+4..y+16
+function heroBlocked(x,y){
+  const pts=[[x+2,y+4],[x+13.9,y+4],[x+2,y+15.9],[x+13.9,y+15.9]];
+  return pts.some(p=>solidForHero(p[0],p[1]));
+}
+function enemyBlocked(x,y){
+  const pts=[[x+1,y+1],[x+14.9,y+1],[x+1,y+14.9],[x+14.9,y+14.9]];
+  return pts.some(p=>solidForEnemy(p[0],p[1]));
+}
+function nearestFree(){
+  // replace le héros sur la tuile praticable la plus proche
+  if(!heroBlocked(hero.x,hero.y)) return;
+  const sx=Math.round(hero.x/T), sy=Math.round(hero.y/T);
+  let best=null,bd=1e9;
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){
+    if(WALK.has(WORLD[key(cur.r,cur.c)][ty][tx])){const d=(tx-sx)**2+(ty-sy)**2;if(d<bd){bd=d;best=[tx,ty]}}
+  }
+  if(best){hero.x=best[0]*T;hero.y=best[1]*T;}
+}
+function enterScreen(first){
+  const k=key(cur.r,cur.c);
+  enemies=[];items=[];shots=[];puffs=[];
+  nearestFree();
+  if(first) return;
+  if(!visited.has(k)){visited.add(k); if(visited.size===64) winTimer=360;}
+  const rnd = mulberry((cur.r*8+cur.c+1)*7919 + frame);
+  const n = 2 + Math.floor(rnd()*3);
+  const spots=[];
+  for(let ty=1;ty<TH-1;ty++)for(let tx=1;tx<TW-1;tx++){
+    const t=WORLD[k][ty][tx];
+    if((t==="s"||t==="g") && Math.abs(tx*T-hero.x)+Math.abs(ty*T-hero.y) > 5*T) spots.push([tx,ty]);
+  }
+  for(let i=0;i<n && spots.length;i++){
+    const [tx,ty]=spots.splice(Math.floor(rnd()*spots.length),1)[0];
+    const blue = rnd() < 0.3 + (7-cur.r)*0.0 + (cur.r<3?0.3:0);
+    enemies.push({x:tx*T,y:ty*T,dir:["up","down","left","right"][Math.floor(rnd()*4)],hp:blue?2:1,blue,spawn:30+i*8,
+                  cool:80+Math.floor(rnd()*160),hurt:0,kb:null,step:0});
+  }
+}
+
+/* ---------- mise à jour ---------- */
+function startTransition(dx,dy){
+  trans={dx,dy,t:0,len:dx?48:36, from:{r:cur.r,c:cur.c}};
+  shots=[];
+}
+function update(){
+  frame++;
+  if(mode==="title"){ if(startLatch){startLatch=false;mode="play";reset();keys.atk=false;} return; }
+  if(mode==="over"){ if(startLatch && frame-overAt>40){startLatch=false;mode="play";reset();keys.atk=false;} else startLatch=false; return; }
+  if(keys.mapToggle){showMap=!showMap;keys.mapToggle=false;}
+  if(showMap) return;
+  if(winTimer>0) winTimer--;
+
+  if(trans){
+    trans.t++;
+    // le héros glisse avec l'écran
+    const prog=1/trans.len;
+    if(trans.dx) hero.x -= trans.dx*(PW-16)*prog;
+    if(trans.dy) hero.y -= trans.dy*(PH-16)*prog;
+    if(trans.t>=trans.len){
+      hero.x = trans.dx>0?0:trans.dx<0?PW-16:hero.x;
+      hero.y = trans.dy>0?0:trans.dy<0?PH-16:hero.y;
+      trans=null; enterScreen(false);
+    }
+    return;
+  }
+
+  // héros
+  const h=hero;
+  if(h.inv>0) h.inv--;
+  if(h.kb){ tryMove(h, h.kb[0]*3, h.kb[1]*3); if(--h.kb[2]<=0) h.kb=null; }
+  else if(h.atk>0){ h.atk--; }
+  else {
+    if(keys.atk){ h.atk=14; keys.atk=false; }
+    else{
+      let mx=0,my=0;
+      if(keys.left)mx=-1;else if(keys.right)mx=1;
+      else if(keys.up)my=-1;else if(keys.down)my=1;
+      if(mx||my){
+        h.dir = mx<0?"left":mx>0?"right":my<0?"up":"down";
+        const sp=1.25;
+        // alignement sur la demi-tuile (comme sur NES) pour passer dans les couloirs
+        if(mx){const ty=Math.round(h.y/8)*8;h.y+=Math.sign(ty-h.y)*Math.min(sp,Math.abs(ty-h.y))}
+        if(my){const tx=Math.round(h.x/8)*8;h.x+=Math.sign(tx-h.x)*Math.min(sp,Math.abs(tx-h.x))}
+        tryMove(h,mx*sp,my*sp);
+        h.anim++;
+      }
+    }
+  }
+  // changement d'écran
+  const cx=h.x+8, cy=h.y+10;
+  if(cx<0 && neighborExists(-1,0)){cur.c--;startTransition(-1,0);return}
+  if(cx>PW && neighborExists(1,0)){cur.c++;startTransition(1,0);return}
+  if(cy<2 && neighborExists(0,-1)){cur.r--;startTransition(0,-1);return}
+  if(cy>PH-2 && neighborExists(0,1)){cur.r++;startTransition(0,1);return}
+
+  // épée
+  let sword=null;
+  if(h.atk>2 && h.atk<13){
+    const d=DIRS[h.dir];
+    sword = d[0] ? {x:h.x+8+d[0]*12-6, y:h.y+8, w:12, h:4} : {x:h.x+6, y:h.y+8+d[1]*12-6+(d[1]<0?-2:2), w:4, h:12};
+  }
+
+  // ennemis
+  for(const e of enemies){
+    if(e.spawn>0){e.spawn--;continue}
+    if(e.hurt>0) e.hurt--;
+    if(e.kb){ const [kx,ky]=e.kb; if(!enemyBlocked(e.x+kx*3,e.y+ky*3)){e.x+=kx*3;e.y+=ky*3} if(--e.kb[2]<=0)e.kb=null; continue;}
+    const d=DIRS[e.dir], sp=e.blue?0.8:0.6;
+    const aligned = e.x%16===0 && e.y%16===0;
+    if(aligned && Math.random()<0.12) e.dir=["up","down","left","right"][Math.floor(Math.random()*4)];
+    const nx=e.x+d[0]*sp, ny=e.y+d[1]*sp;
+    if(enemyBlocked(nx,ny)){ e.x=Math.round(e.x/16)*16; e.y=Math.round(e.y/16)*16; e.dir=["up","down","left","right"][Math.floor(Math.random()*4)]; }
+    else { e.x=nx; e.y=ny; if(Math.abs(e.x-Math.round(e.x/16)*16)<sp/2) e.x=Math.round(e.x/16)*16; if(Math.abs(e.y-Math.round(e.y/16)*16)<sp/2) e.y=Math.round(e.y/16)*16; }
+    e.step++;
+    if(--e.cool<=0){ e.cool=120+Math.floor(Math.random()*160); shots.push({x:e.x+5,y:e.y+4,dx:d[0]*2.2,dy:d[1]*2.2,dir:e.dir}); }
+    // coup d'épée
+    if(sword && e.hurt===0 && overlap(sword,{x:e.x+1,y:e.y+1,w:14,h:12})){
+      e.hp--; e.hurt=20; e.kb=[...DIRS[h.dir],6];
+      if(e.hp<=0){ e.dead=true; puffs.push({x:e.x,y:e.y,t:0});
+        const r=Math.random(); if(r<0.35) items.push({type:"rupee",x:e.x+4,y:e.y+3,t:600}); else if(r<0.55) items.push({type:"heart",x:e.x+4,y:e.y+4,t:600}); }
+    }
+    // contact
+    if(!e.dead && h.inv===0 && overlap({x:h.x+3,y:h.y+5,w:10,h:10},{x:e.x+2,y:e.y+2,w:12,h:10})) hurtHero(e.x,e.y);
+  }
+  enemies=enemies.filter(e=>!e.dead);
+
+  // projectiles
+  for(const s of shots){
+    s.x+=s.dx; s.y+=s.dy;
+    if(s.x<-8||s.y<-8||s.x>PW||s.y>PH||solidForEnemy(s.x+3,s.y+3)&&!WATERISH(s)) s.gone=true;
+    if(!s.gone && overlap({x:s.x,y:s.y,w:6,h:6},{x:h.x+3,y:h.y+4,w:10,h:12})){
+      const opp={up:"down",down:"up",left:"right",right:"left"}[s.dir];
+      if(h.dir===opp && h.atk===0){ s.gone=true; puffs.push({x:s.x-5,y:s.y-5,t:4,small:true}); } // bouclier
+      else if(h.inv===0){ s.gone=true; hurtHero(s.x-s.dx*4,s.y-s.dy*4); }
+    }
+  }
+  shots=shots.filter(s=>!s.gone);
+
+  // objets
+  for(const it of items){
+    if(--it.t<=0) it.gone=true;
+    if(overlap({x:h.x+2,y:h.y+4,w:12,h:12},{x:it.x,y:it.y,w:8,h:8})){
+      it.gone=true;
+      if(it.type==="rupee") h.rupees=Math.min(999,h.rupees+1); else h.hp=Math.min(h.maxHp,h.hp+2);
+    }
+  }
+  items=items.filter(i=>!i.gone);
+  puffs.forEach(p=>p.t++); puffs=puffs.filter(p=>p.t<16);
+}
+function WATERISH(s){const tx=Math.floor((s.x+3)/T),ty=Math.floor((s.y+3)/T);const t=tileAt(cur.r,cur.c,tx,ty);return t==="w"||t==="b"||t==="l"}
+function tryMove(o,dx,dy){
+  if(dx && !heroBlocked(o.x+dx,o.y)) o.x+=dx;
+  if(dy && !heroBlocked(o.x,o.y+dy)) o.y+=dy;
+}
+function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function hurtHero(fx,fy){
+  hero.hp--; hero.inv=60; hero.atk=0;
+  const dx=hero.x-fx, dy=hero.y-fy;
+  hero.kb = Math.abs(dx)>Math.abs(dy) ? [Math.sign(dx)||1,0,6] : [0,Math.sign(dy)||1,6];
+  if(hero.hp<=0){ mode="over"; overAt=frame; startLatch=false; }
+}
+
+/* ---------- rendu ---------- */
+function drawScreen(r,c,ox,oy){
+  const k=key(r,c), g=WORLD[k], wf=(frame>>4)&1;
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){
+    const t=g[ty][tx];
+    const img = t==="w" ? WATER[wf] : (TILES[t]||TILES.s);
+    ctx.drawImage(img, ox+tx*T, oy+ty*T+HUD);
+  }
+}
+function drawHero(){
+  const h=hero;
+  if(h.inv>0 && (frame>>2)&1) return;
+  const f = h.atk>0 ? 0 : ((h.anim>>3)&1);
+  let x=h.x,y=h.y;
+  const d=DIRS[h.dir];
+  if(h.atk>2 && h.atk<13){
+    // épée
+    const bl="#fcfcfc", hi="#a04000", ed="#7b7b7b";
+    if(d[0]){ const sx = d[0]>0 ? x+14 : x-10; const sy=y+9;
+      ctx.fillStyle=ed;ctx.fillRect(sx,sy+HUD,12,3);ctx.fillStyle=bl;ctx.fillRect(sx+(d[0]>0?3:0),sy+1+HUD,9,1);
+      ctx.fillStyle=hi;ctx.fillRect(d[0]>0?sx:sx+9,sy-1+HUD,3,5);
+    } else { const sx=x+(d[1]>0?5:9), sy = d[1]>0 ? y+14 : y-10;
+      ctx.fillStyle=ed;ctx.fillRect(sx,sy+HUD,3,12);ctx.fillStyle=bl;ctx.fillRect(sx+1,sy+(d[1]>0?3:0)+HUD,1,9);
+      ctx.fillStyle=hi;ctx.fillRect(sx-1,(d[1]>0?sy:sy+9)+HUD,5,3);
+    }
+    x+=d[0]*2; y+=d[1]*2;
+  }
+  ctx.drawImage(heroSpr[h.dir][f], Math.round(x), Math.round(y)+HUD);
+}
+function drawEnemies(){
+  for(const e of enemies){
+    if(e.spawn>0){ // nuage d'apparition
+      ctx.fillStyle = (frame>>2)&1 ? "#fcfcfc" : "#fca044";
+      const s=4+((30-e.spawn)%8); ctx.fillRect(e.x+8-s/2, e.y+8-s/2+HUD, s, s); continue;
+    }
+    const set = e.blue?octoBlue:octoRed;
+    const img = set[(e.step>>3)&1];
+    ctx.save();
+    const cx=Math.round(e.x)+8, cy=Math.round(e.y)+8+HUD;
+    ctx.translate(cx,cy);
+    ctx.rotate({down:0,left:Math.PI/2,up:Math.PI,right:-Math.PI/2}[e.dir]);
+    if(e.hurt>0 && (frame>>1)&1) ctx.filter="invert(1)";
+    ctx.drawImage(img,-8,-6);
+    ctx.restore();
+  }
+  for(const s of shots){ ctx.fillStyle="#7b7b7b";ctx.fillRect(s.x+1,s.y+HUD,4,6);ctx.fillRect(s.x,s.y+1+HUD,6,4);ctx.fillStyle="#fff";ctx.fillRect(s.x+1,s.y+1+HUD,2,2); }
+  for(const it of items){ if(it.t<120 && (frame>>2)&1) continue; ctx.drawImage(it.type==="rupee"?RUPEE:HEART, it.x, it.y+HUD); }
+  for(const p of puffs){ const s=p.t*1.2; ctx.fillStyle=p.t&2?"#fcfcfc":"#fca044";
+    for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]) ctx.fillRect(p.x+8+a*s-2, p.y+8+b*s-2+HUD, 4, 4); }
+}
+function text(s,x,y,size=8,color="#fff",align="left"){
+  ctx.fillStyle=color; ctx.font=`bold ${size}px "Courier New",monospace`; ctx.textAlign=align; ctx.textBaseline="top"; ctx.fillText(s,x,y);
+}
+function drawHud(){
+  ctx.fillStyle="#000";ctx.fillRect(0,0,SW,HUD);
+  // mini-carte
+  const mx=8,my=8,cw=8,ch=5;
+  ctx.fillStyle="#3c3c3c";ctx.fillRect(mx-1,my-1,cw*8+1,ch*8+1);
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    ctx.fillStyle = visited.has(key(r,c)) ? "#a8a8a8" : "#1c1c1c";
+    ctx.fillRect(mx+c*cw,my+r*ch,cw-1,ch-1);
+  }
+  if((frame>>4)&1 || trans){ctx.fillStyle="#80d010";ctx.fillRect(mx+cur.c*cw,my+cur.r*ch,cw-1,ch-1);}
+  text("ÉCRAN "+key(cur.r,cur.c), 84, 8, 9, "#fca044");
+  text("EXPLORÉ "+visited.size+"/64", 84, 22, 8, "#fff");
+  ctx.drawImage(RUPEE,84,36); text("× "+hero.rupees, 94, 37, 8);
+  text("-VIE-", 200, 8, 9, "#e82020", "center");
+  for(let i=0;i<hero.maxHp/2;i++){
+    const v=hero.hp-i*2; const img = v>=2?HEART:v===1?HEART_H:HEART_E;
+    ctx.drawImage(img, 178+i*9, 24);
+  }
+  text("M: carte", 248, 40, 7, "#777", "right");
+}
+function drawWorldMap(){
+  ctx.fillStyle="#000";ctx.fillRect(0,HUD,PW,PH);
+  const s=2; // 16x11 tuiles * 2px = 32x22 par écran -> 256x176
+  const cols={s:"#ffe7ad",g:"#7b7b7b",r:"#c84c0c",t:"#00a800",w:"#2038ec",h:"#fcfcfc",c:"#000",l:"#ffe7ad",b:"#a04000"};
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const k=key(r,c), ox=c*32, oy=HUD+r*22;
+    if(!visited.has(k)){ctx.fillStyle="#141414";ctx.fillRect(ox,oy,32,22);continue}
+    const g=WORLD[k];
+    for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TW;tx++){ctx.fillStyle=cols[g[ty][tx]];ctx.fillRect(ox+tx*s,oy+ty*s,s,s)}
+  }
+  ctx.strokeStyle="rgba(0,0,0,.6)";ctx.lineWidth=0.5;
+  for(let i=0;i<=8;i++){ctx.beginPath();ctx.moveTo(i*32,HUD);ctx.lineTo(i*32,HUD+PH);ctx.stroke();ctx.beginPath();ctx.moveTo(0,HUD+i*22);ctx.lineTo(PW,HUD+i*22);ctx.stroke();}
+  if((frame>>3)&1){ctx.fillStyle="#80d010";ctx.fillRect(cur.c*32+hero.x/8-1, HUD+cur.r*22+hero.y/8-1, 3, 3);}
+  ctx.strokeStyle="#80d010";ctx.lineWidth=1;ctx.strokeRect(cur.c*32+0.5,HUD+cur.r*22+0.5,31,21);
+  ctx.fillStyle="rgba(0,0,0,.75)";ctx.fillRect(0,HUD,PW,11);
+  text("CARTE DU ROYAUME — M pour fermer", PW/2, HUD+2, 7, "#fff", "center");
+}
+function render(){
+  ctx.setTransform(SCALE,0,0,SCALE,0,0);
+  ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle="#000";ctx.fillRect(0,0,SW,SH);
+  if(mode==="title"){
+    for(let i=0;i<6;i++) ctx.drawImage(TILES.r,i*48-8,HUD-16);
+    text("LA QUÊTE", SW/2, 50, 18, "#fca044", "center");
+    text("DES 64 ÉCRANS", SW/2, 72, 18, "#fca044", "center");
+    ctx.drawImage(heroSpr.down[(frame>>4)&1], SW/2-8, 104);
+    text("Explore chaque case de la carte !", SW/2, 130, 8, "#fff", "center");
+    text("Flèches / ZQSD : se déplacer", SW/2, 150, 8, "#a8a8a8", "center");
+    text("Espace / J : épée    M : carte", SW/2, 162, 8, "#a8a8a8", "center");
+    text("Ton bouclier bloque les tirs de face", SW/2, 174, 8, "#a8a8a8", "center");
+    if((frame>>5)&1) text("APPUIE SUR UNE TOUCHE", SW/2, 200, 9, "#80d010", "center");
+    return;
+  }
+  ctx.save(); ctx.beginPath(); ctx.rect(0,HUD,PW,PH); ctx.clip();
+  if(showMap){ drawWorldMap(); }
+  else if(trans){
+    const p=trans.t/trans.len;
+    const fx=-trans.dx*PW*p, fy=-trans.dy*PH*p;
+    drawScreen(trans.from.r,trans.from.c,fx,fy);
+    drawScreen(cur.r,cur.c,fx+trans.dx*PW,fy+trans.dy*PH);
+    drawHero();
+  } else {
+    drawScreen(cur.r,cur.c,0,0);
+    drawEnemies();
+    drawHero();
+  }
+  ctx.restore();
+  drawHud();
+  if(winTimer>0){
+    ctx.fillStyle="rgba(0,0,0,.7)";ctx.fillRect(0,HUD+60,SW,52);
+    text("BRAVO !", SW/2, HUD+66, 14, "#fca044", "center");
+    text("Tu as exploré les 64 écrans du royaume", SW/2, HUD+88, 8, "#fff", "center");
+  }
+  if(mode==="over"){
+    ctx.fillStyle="rgba(0,0,0,.75)";ctx.fillRect(0,0,SW,SH);
+    text("GAME OVER", SW/2, 90, 18, "#e82020", "center");
+    text("Écrans explorés : "+visited.size+"/64", SW/2, 120, 9, "#fff", "center");
+    if((frame>>5)&1) text("Entrée / Espace pour rejouer", SW/2, 150, 8, "#80d010", "center");
+  }
+}
+
+/* ---------- contrôles ---------- */
+const KMAP={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",z:"up",w:"up",s:"down",q:"left",a:"left",d:"right"};
+addEventListener("keydown",e=>{
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(KMAP[k]) keys[KMAP[k]]=true;
+  if(k===" "||k==="j"||k==="k"||k==="x"){ if(!e.repeat) keys.atk=true; keys[" "]=true; }
+  if(k==="m" && !e.repeat && mode==="play") keys.mapToggle=true;
+  if(k==="Enter") keys.Enter=true;
+  if(mode!=="play" && !e.repeat) startLatch=true;
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) e.preventDefault();
+});
+addEventListener("keyup",e=>{
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(KMAP[k]) keys[KMAP[k]]=false;
+  if(k===" "||k==="j"||k==="k"||k==="x") keys[" "]=false;
+  if(k==="Enter") keys.Enter=false;
+});
+document.querySelectorAll("[data-k]").forEach(b=>{
+  const k=b.dataset.k;
+  const on=e=>{e.preventDefault();b.classList.add("on");
+    if(k==="atk"){keys.atk=true;keys[" "]=true} else if(k==="map"){ if(mode==="play") keys.mapToggle=true; } else keys[k]=true;
+    if(mode!=="play") startLatch=true; };
+  const off=e=>{e.preventDefault();b.classList.remove("on"); if(k==="atk") keys[" "]=false; else if(k!=="map") keys[k]=false;};
+  b.addEventListener("touchstart",on,{passive:false}); b.addEventListener("touchend",off,{passive:false}); b.addEventListener("touchcancel",off);
+  b.addEventListener("mousedown",on); b.addEventListener("mouseup",off); b.addEventListener("mouseleave",off);
+});
+cv.addEventListener("pointerdown",()=>{ if(mode!=="play") startLatch=true; });
+
+/* ---------- boucle ---------- */
+let last=performance.now(), acc=0;
+function loop(t){
+  acc+=Math.min(100,t-last); last=t;
+  while(acc>=1000/60){ update(); acc-=1000/60; }
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
 
