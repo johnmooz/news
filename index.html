@@ -36,25 +36,32 @@
                 Sélectionnez une Page
             </h1>
             <p class="text-slate-400 text-sm sm:text-base max-w-lg mt-1">
-                Accédez rapidement à vos jeux de dés, cartes, réflexion et outils préférés (26 modules disponibles).
+                Accédez rapidement à vos jeux de dés, cartes, réflexion et outils préférés (<span id="module-count">26</span> modules disponibles).
             </p>
+            
+            <!-- Barre de recherche -->
+            <div class="w-full max-w-md mt-4 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" placeholder="Rechercher une application ou un jeu..." 
+                       class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-sm">
+            </div>
         </div>
     </header>
 
     <!-- Contenu Principal / Main Content -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-10 sm:py-14">
         <!-- Grille responsive 1 à 4 colonnes -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
+        <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6">
 
             <!-- 1. 5000 -->
             <a href="5000.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-xl group-hover:bg-purple-500/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-trophy"></i>
+                        <i class="fa-solid fa-dice-5"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">5000</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le grand classique du jeu de 5 000. Accumulez les points avec stratégie.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de dés 5000</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer la partie</span>
@@ -70,7 +77,7 @@
                         <i class="fa-solid fa-newspaper"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-orange-400 transition-colors">Actualité</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Dernières nouvelles, fil d'information en direct et articles récents.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Fil d'informations</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lire le fil d'info</span>
@@ -78,7 +85,23 @@
                 </div>
             </a>
 
-            <!-- 3. Binero -->
+            <!-- 3. Belote coinchée -->
+            <a href="belotte-coinchee.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-600/50 hover:shadow-xl hover:shadow-emerald-600/10 overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-600/10 rounded-full blur-xl group-hover:bg-emerald-600/20 transition-all"></div>
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-600/20 text-emerald-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-note-sticky"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-500 transition-colors">Belote coinchée</h2>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de cartes belote coinchée</p>
+                </div>
+                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
+                    <span>Jouer à la belote</span>
+                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                </div>
+            </a>
+
+            <!-- 4. Binero -->
             <a href="binero.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-indigo-400/50 hover:shadow-xl hover:shadow-indigo-400/10 overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-400/10 rounded-full blur-xl group-hover:bg-indigo-400/20 transition-all"></div>
                 <div>
@@ -86,7 +109,7 @@
                         <i class="fa-solid fa-border-all"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">Binero</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de logique binaire Takuzu. Remplissez les grilles de 0 et de 1.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de logique binaire</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Résoudre la grille</span>
@@ -94,7 +117,7 @@
                 </div>
             </a>
 
-            <!-- 4. Calculatrice -->
+            <!-- 5. Calculatrice -->
             <a href="calculatrice.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/10 overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-500/10 rounded-full blur-xl group-hover:bg-teal-500/20 transition-all"></div>
                 <div>
@@ -102,7 +125,7 @@
                         <i class="fa-solid fa-calculator"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-teal-400 transition-colors">Calculatrice</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Outil de calcul rapide, opérations standards et fonctions scientifiques.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Calculs et opérations</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Ouvrir la calculatrice</span>
@@ -110,7 +133,7 @@
                 </div>
             </a>
 
-            <!-- 5. Chronomètre -->
+            <!-- 6. Chronomètre -->
             <a href="chronometre.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-violet-500/50 hover:shadow-xl hover:shadow-violet-500/10 overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-violet-500/10 rounded-full blur-xl group-hover:bg-violet-500/20 transition-all"></div>
                 <div>
@@ -118,7 +141,7 @@
                         <i class="fa-solid fa-stopwatch"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-violet-400 transition-colors">Chronomètre</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Mesurez vos temps, tours et performances avec précision.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Mesure du temps</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer le chronomètre</span>
@@ -126,7 +149,7 @@
                 </div>
             </a>
 
-            <!-- 6. Cinéma -->
+            <!-- 7. Cinéma -->
             <a href="cinema.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-amber-600/50 hover:shadow-xl hover:shadow-amber-600/10 overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-600/10 rounded-full blur-xl group-hover:bg-amber-600/20 transition-all"></div>
                 <div>
@@ -134,26 +157,10 @@
                         <i class="fa-solid fa-film"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-500 transition-colors">Cinéma</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Séances, films à l'affiche, bandes-annonces et réservations.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Films et séances</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Voir le programme</span>
-                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
-                </div>
-            </a>
-
-            <!-- 7. Coinche -->
-            <a href="coinche.html" class="game-card group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-600/50 hover:shadow-xl hover:shadow-emerald-600/10 overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-600/10 rounded-full blur-xl group-hover:bg-emerald-600/20 transition-all"></div>
-                <div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-600/20 text-emerald-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-spade"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-500 transition-colors">Coinche</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le jeu de cartes traditionnel de belote coinchée. Enchères et stratégies d'équipe.</p>
-                </div>
-                <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
-                    <span>Jouer à la coinche</span>
                     <i class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
                 </div>
             </a>
@@ -166,7 +173,7 @@
                         <i class="fa-solid fa-calendar-days"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-300 transition-colors">Date</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Calendrier, calcul d'intervalles de jours et éphéméride.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Calendrier et repères</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Consulter le calendrier</span>
@@ -182,7 +189,7 @@
                         <i class="fa-solid fa-gamepad"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Jeu de plateforme</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Sautez sur les plateformes, évitez les obstacles et collectez des bonus dans une aventure dynamique.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu vidéo d'action</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer l'aventure</span>
@@ -195,10 +202,10 @@
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-400/10 rounded-full blur-xl group-hover:bg-amber-400/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-300 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-shield-halved"></i>
+                        <i class="fa-solid fa-gamepad"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-300 transition-colors">Jeu Zelba</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Partez à l'aventure dans une quête légendaire, explorez des donjons et résolvez des énigmes.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu d'aventure Zelba</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Entrer dans le royaume</span>
@@ -214,7 +221,7 @@
                         <i class="fa-solid fa-bullseye"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-500 transition-colors">Jeux de fléchettes</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Compteur de points (501, Cricket) et jeux de précision au cibleur.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Comptage des points fléchettes</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Jouer aux fléchettes</span>
@@ -227,10 +234,10 @@
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-700/10 rounded-full blur-xl group-hover:bg-amber-700/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-amber-700/10 border border-amber-700/20 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-seedling"></i>
+                        <i class="fa-solid fa-cubes"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-500 transition-colors">Jeux de noix</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Casse-tête, compétences et mini-jeux de collecte amusants.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de réflexion</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Explorer le jeu</span>
@@ -262,7 +269,7 @@
                         <i class="fa-solid fa-hourglass-half"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Minuteur</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Décompte et alarme de temps interactifs pour toutes vos activités.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Décompte du temps</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Régler le minuteur</span>
@@ -278,7 +285,7 @@
                         <i class="fa-solid fa-house-flag"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Monopoly</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Achetez des propriétés, négociez et devenez le plus riche des magnats de l'immobilier.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de société et d'immobilier</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer la partie</span>
@@ -294,7 +301,7 @@
                         <i class="fa-solid fa-music"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-rose-400 transition-colors">Musique</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Lecteur audio, playlists, découvrabilité et ambiance sonore.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Lecteur et listes de lecture</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Écouter</span>
@@ -310,7 +317,7 @@
                         <i class="fa-solid fa-user"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Personne</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Profil, gestion des utilisateurs ou feuille d'information personnelle.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Gestion des contacts</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Accéder</span>
@@ -326,7 +333,7 @@
                         <i class="fa-solid fa-camera"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-purple-300 transition-colors">Photo</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Galerie, prises de vue et retouche d'images.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Galerie et images</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Ouvrir la galerie</span>
@@ -339,10 +346,10 @@
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-400/10 rounded-full blur-xl group-hover:bg-indigo-400/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-indigo-400/10 border border-indigo-400/20 text-indigo-300 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-keyboard"></i>
+                        <i class="fa-solid fa-sliders"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">Piano</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Clavier interactif, synthèse de notes et pratique musicale en ligne.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Clavier musical virtuel</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Jouer du piano</span>
@@ -358,7 +365,7 @@
                         <i class="fa-solid fa-person-swimming"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-sky-400 transition-colors">Piscine</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Horaires, lignes d'eau, séances de natation et suivi des bassins.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Horaires et séances</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Accéder</span>
@@ -374,7 +381,7 @@
                         <i class="fa-solid fa-dice"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-400 transition-colors">Qwinto</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Complétez les rangées avec des chiffres croissants sans doublons.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de dés Qwinto</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer la partie</span>
@@ -390,7 +397,7 @@
                         <i class="fa-solid fa-dice-d6"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-400 transition-colors">Qwixxx</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de dés rapide et stratégique. Remplissez les lignes de couleurs.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de dés Qwixxx</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer la partie</span>
@@ -406,7 +413,7 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">Recherche</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Module d'exploration, filtre et recherche globale dans l'application.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Moteur de recherche</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Rechercher</span>
@@ -422,7 +429,7 @@
                         <i class="fa-solid fa-table-cells"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-lime-400 transition-colors">Sudoku</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le casse-tête classique 9x9. Complétez chaque ligne, colonne et bloc avec les chiffres de 1 à 9.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Grilles de Sudoku</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Jouer au Sudoku</span>
@@ -435,10 +442,10 @@
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-spade"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-indigo-400 transition-colors">Tarot</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Le jeu de cartes traditionnel français à 78 cartes. Excuse, bouts et contrats.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Jeu de cartes tarot</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Jouer au tarot</span>
@@ -451,10 +458,10 @@
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-pink-500/10 rounded-full blur-xl group-hover:bg-pink-500/20 transition-all"></div>
                 <div>
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-cubes"></i>
+                        <i class="fa-solid fa-dice-d20"></i>
                     </div>
                     <h2 class="text-xl font-bold text-slate-100 group-hover:text-pink-400 transition-colors">Yams</h2>
-                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Faites des combinaisons (Brelan, Carré, Yahtzee) et marquez le maximum de points.</p>
+                    <p class="text-xs text-slate-400 mt-2 line-clamp-2">Feuille de score Yams</p>
                 </div>
                 <div class="mt-6 flex items-center justify-between text-xs font-semibold text-slate-400 group-hover:text-slate-200">
                     <span>Lancer la partie</span>
@@ -465,17 +472,28 @@
         </div>
     </main>
 
-    <!-- Pied de page / Footer -->
-    <footer class="w-full py-6 border-t border-slate-900 text-center text-slate-500 text-xs">
-        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p>&copy; 2026 Portail Web. Tous droits réservés.</p>
-            <div class="flex gap-4">
-                <span class="hover:text-slate-400 transition-colors cursor-pointer">Accueil</span>
-                <span class="hover:text-slate-400 transition-colors cursor-pointer">Aide</span>
-                <span class="hover:text-slate-400 transition-colors cursor-pointer">Contact</span>
-            </div>
-        </div>
-    </footer>
+    <script>
+        // Recherche en direct
+        const searchInput = document.getElementById('search-input');
+        const cards = document.querySelectorAll('.game-card');
+        const moduleCount = document.getElementById('module-count');
 
-</body>
-</html>
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.querySelector('h2').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(query) || description.includes(query)) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            moduleCount.textContent = visibleCount;
+        });
+    </script>
