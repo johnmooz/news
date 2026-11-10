@@ -51,14 +51,29 @@ select{padding:6px 8px;border-radius:6px;font-size:15px}
 .pip{border-radius:50%;margin:1px}.pip.on{background:currentColor}
 .z{grid-area:1/1/4/4;display:flex;align-items:center;justify-content:center;font:700 18px system-ui}
 .pick{position:absolute;top:100%;left:0;z-index:5;display:flex;flex-wrap:wrap;gap:4px;width:196px;padding:6px;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+#start{text-align:center;padding:24px 0}
+#start p{margin:0 0 14px;font-weight:600}
+.mode{display:block;width:100%;max-width:320px;margin:10px auto;padding:16px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--fg);font:700 17px system-ui;cursor:pointer}
+.mode small{display:block;font-weight:400;font-size:13px;margin-top:4px;opacity:.8}
+#game[hidden],#start[hidden],#auto[hidden],#over[hidden]{display:none}
+#auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;padding:10px;background:var(--panel);border-radius:8px;font-weight:600}
+#auto button,.menu{padding:9px 14px;border-radius:6px;border:2px solid var(--line);background:var(--cell);color:#111;font-weight:700;cursor:pointer}
+#auto button:disabled{opacity:.4;cursor:default}
+#over{margin:12px 0;padding:12px;border-radius:8px;border:2px solid var(--o);background:var(--panel);font-weight:600;line-height:1.6}
 </style>
 </head>
 <body>
 <h1>Q<span>win</span>to – Feuille de score</h1>
-<div class="bar"><label>Joueurs : <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
+<div id="start"><p>Choisis le mode de jeu :</p>
+<button class="mode" data-m="manual">Jeu manuel<small>Tu saisis les dés et les nombres toi-même</small></button>
+<button class="mode" data-m="auto">Jeu automatique<small>Lancer de dés, tours des joueurs, fin de partie automatique</small></button></div>
+<div id="game" hidden>
+<div class="bar"><button class="menu" id="menu">⬅ Mode</button><label>Joueurs : <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
+<div id="auto" hidden><span id="turn"></span><button id="roll">🎲 Lancer les dés</button><button id="pass">Passer (✕ dé raté)</button></div>
 <div id="dice"></div>
 <div class="sheet"><div class="grid" id="grid"></div></div>
 <div id="msg"></div>
+<div id="over" hidden></div>
 <div class="fails">Dés ratés (−5 chacun) :
 <button class="f" data-i="0"></button><button class="f" data-i="1"></button><button class="f" data-i="2"></button><button class="f" data-i="3"></button></div>
 <div class="final">
@@ -69,6 +84,7 @@ select{padding:6px 8px;border-radius:6px;font-size:15px}
 <span>−</span><div class="b" id="sf">0</div><span>=</span><div class="b tot" id="tot">0</div>
 </div>
 <button class="r" id="reset">Nouvelle partie</button>
+</div>
 <script>
 const rows=[{k:'o',sh:3,pent:[1,5]},{k:'y',sh:5,pent:[7]},{k:'p',sh:4,pent:[2,9]}];
 const players=Array.from({length:4},()=>({vals:rows.map(()=>Array(10).fill(null)),fails:[0,0,0,0],total:0}));
@@ -81,7 +97,14 @@ rows.forEach((r,ri)=>{
     const e=document.createElement('input'); e.type='number'; e.min=1; e.max=18; e.inputMode='numeric';
     e.className='c'+(r.pent.includes(i)?' pent':'');
     e.addEventListener('change',()=>onChange(ri,i,e));
-    e.addEventListener('click',()=>{if(e.value!=='')return;if(dice[ri]===0){msg.textContent='Le dé '+dnm[ri]+' est à 0 : impossible de jouer sur la ligne '+dnm[ri]+'.';e.blur();return;}const t=diceTotal();if(t>0){e.value=t;onChange(ri,i,e);e.blur();}});
+    e.addEventListener('click',()=>{
+      if(over||e.value!=='')return;
+      if(mode==='auto'&&!rolled){msg.textContent='Lance d\'abord les dés.';return;}
+      if(dice[ri]===0){msg.textContent='Le dé '+dnm[ri]+' est à 0 : impossible de jouer sur la ligne '+dnm[ri]+'.';e.blur();return;}
+      const t=diceTotal();
+      if(t>0){e.value=t;const ok=onChange(ri,i,e);e.blur();if(ok&&mode==='auto')afterPlace();}
+      else if(mode==='auto')msg.textContent='Total 0 : tu dois passer.';
+    });
     inputs[ri][i]=e; d.appendChild(e);
   }
   grid.appendChild(d);
@@ -96,8 +119,8 @@ function onChange(ri,i,e){
     if(j<i&&w>=v){err='Règle : un nombre doit être plus grand que ceux à sa gauche ('+w+').';break;}
     if(j>i&&w<=v){err='Règle : un nombre doit être plus petit que ceux à sa droite ('+w+').';break;}
   }
-  if(err){e.classList.add('bad');msg.textContent=err;e.value=vals[ri][i]??'';setTimeout(()=>e.classList.remove('bad'),400);return;}
-  msg.textContent=''; vals[ri][i]=v; calc();
+  if(err){e.classList.add('bad');msg.textContent=err;e.value=vals[ri][i]??'';setTimeout(()=>e.classList.remove('bad'),400);return false;}
+  msg.textContent=''; vals[ri][i]=v; calc(); return true;
 }
 function rowScore(ri){
   const r=rows[ri]; const idx=[...Array(10).keys()].filter(i=>i!==r.sh);
@@ -114,32 +137,83 @@ function calc(){
   const T=s[0]+s[1]+s[2]+pt-fp;document.getElementById('tot').textContent=T;players[cur].total=T;drawTabs();
 }
 document.querySelectorAll('.f').forEach(b=>b.addEventListener('click',()=>{
-  const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
+  if(mode==='auto')return; const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
 }));
-document.getElementById('reset').addEventListener('click',()=>{
+let mode='manual',rolled=false,over=false;
+function newGame(){
   players.forEach(p=>{p.vals.forEach(a=>a.fill(null));p.fails.fill(0);p.total=0;});
-  inputs.forEach(a=>a.forEach(e=>e.value='')); document.querySelectorAll('.f').forEach(b=>b.textContent='');
-  msg.textContent=''; calc();
-});
+  dice.fill(0);rolled=false;over=false;
+  document.getElementById('over').hidden=true;
+  inputs.forEach(a=>a.forEach(e=>{e.value='';e.readOnly=(mode==='auto');}));
+  drawDice(-1);pick(0);updateAuto();
+}
+document.getElementById('reset').addEventListener('click',()=>newGame());
 const np=document.getElementById('np'),tabs=document.getElementById('tabs');
-function drawTabs(){const n=+np.value;tabs.innerHTML='';for(let k=0;k<n;k++){const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');b.textContent='J'+(k+1)+' : '+players[k].total;b.onclick=()=>pick(k);tabs.appendChild(b);}}
+function drawTabs(){const n=+np.value;tabs.innerHTML='';for(let k=0;k<n;k++){const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');b.textContent='J'+(k+1)+' : '+players[k].total;b.onclick=()=>{if(mode==='manual')pick(k);};tabs.appendChild(b);}}
 function pick(k){cur=k;vals=players[k].vals;fails=players[k].fails;
  rows.forEach((r,ri)=>inputs[ri].forEach((e,i)=>{e.value=vals[ri][i]??'';}));
  document.querySelectorAll('.f').forEach((b,i)=>b.textContent=fails[i]?'✕':'');
  msg.textContent='';calc();}
-np.onchange=()=>{if(cur>=+np.value)cur=0;pick(cur);};
+np.onchange=()=>{if(mode==='auto'){newGame();return;}if(cur>=+np.value)cur=0;pick(cur);};
 const dice=[0,0,0],dcol=['var(--o)','var(--y)','var(--p)'],dnm=['orange','jaune','violet'];
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 function face(n){let h='';for(let q=0;q<9;q++)h+='<span class="pip'+(PIPS[n].includes(q)?' on':'')+'"></span>';return h;}
 function diceTotal(){return dice[0]+dice[1]+dice[2];}
 const dbox=document.getElementById('dice');
 function drawDice(open){dbox.innerHTML='<span>Dés :</span>';dice.forEach((v,k)=>{const w=document.createElement('div');w.className='dw';
- const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>drawDice(open===k?-1:k);w.appendChild(b);
+ const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>{if(mode==='manual')drawDice(open===k?-1:k);};w.appendChild(b);
  if(open===k){const p=document.createElement('div');p.className='pick';for(let n=0;n<=6;n++){const o=document.createElement('button');o.className='die s';o.style.background=dcol[k];o.style.color=k===1?'#111':'#fff';o.innerHTML=face(n);o.onclick=()=>{dice[k]=n;drawDice(-1);};p.appendChild(o);}w.appendChild(p);}
  dbox.appendChild(w);});
  const t=document.createElement('span');t.textContent='Total : '+diceTotal();dbox.appendChild(t);}
-drawDice(-1);
-pick(0);
+/* ---- Mode automatique ---- */
+const turnEl=document.getElementById('turn'),rollB=document.getElementById('roll'),passB=document.getElementById('pass'),overEl=document.getElementById('over');
+function updateAuto(){
+  if(mode!=='auto')return;
+  turnEl.textContent=over?'Partie terminée':'Tour de J'+(cur+1)+' — '+(rolled?'place le total ou passe':'lance les dés');
+  rollB.disabled=over||rolled;passB.disabled=over||!rolled;
+}
+rollB.onclick=()=>{
+  if(over||rolled)return;
+  for(let k=0;k<3;k++)dice[k]=Math.floor(Math.random()*7);
+  rolled=true;drawDice(-1);updateAuto();
+  msg.textContent=diceTotal()===0?'Total 0 : tu dois passer.':'';
+};
+passB.onclick=()=>{
+  if(over||!rolled)return;
+  const i=fails.indexOf(0);
+  if(i>=0){fails[i]=1;document.querySelectorAll('.f')[i].textContent='✕';}
+  calc();
+  if(fails.every(x=>x===1)){endGame('4 dés ratés pour J'+(cur+1));return;}
+  nextTurn();
+};
+function afterPlace(){
+  const full=rows.filter((r,ri)=>vals[ri].filter(v=>v!==null).length===9).length;
+  if(full>=2){endGame('J'+(cur+1)+' a terminé 2 lignes');return;}
+  nextTurn();
+}
+function nextTurn(){
+  cur=(cur+1)%(+np.value);rolled=false;dice.fill(0);
+  drawDice(-1);pick(cur);updateAuto();
+}
+function endGame(reason){
+  over=true;calc();updateAuto();
+  const n=+np.value,sc=players.slice(0,n).map(p=>p.total),best=Math.max(...sc);
+  const w=sc.map((s,k)=>s===best?'J'+(k+1):null).filter(Boolean);
+  overEl.hidden=false;
+  overEl.innerHTML='🏁 Fin de partie : '+reason+'.<br>'+sc.map((s,k)=>'J'+(k+1)+' : '+s).join(' · ')+'<br>'+(w.length>1?'Égalité : ':'Vainqueur : ')+w.join(', ');
+}
+function startMode(m){
+  mode=m;
+  document.getElementById('start').hidden=true;
+  document.getElementById('game').hidden=false;
+  document.getElementById('auto').hidden=(m!=='auto');
+  newGame();
+}
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>startMode(b.dataset.m));
+document.getElementById('menu').onclick=()=>{
+  document.getElementById('game').hidden=true;
+  document.getElementById('start').hidden=false;
+};
 </script>
 </body>
 </html>
