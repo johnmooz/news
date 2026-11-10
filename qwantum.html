@@ -1,1 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qwantum</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --violet:#5b2a86; --bleu:#2fa4dc; --rouge:#d8262c; --jaune:#f3b600;
+    --board:#b9d99a; --board-dark:#9cc47a; --cream:#f4f1df; --ink:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Fredoka',system-ui,sans-serif;background:#e9efe3;color:var(--ink);min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#fff;border-bottom:3px solid var(--board-dark)}
+  h1{margin:0;font-weight:600;font-size:28px;color:#4d7a2e;font-style:italic;letter-spacing:.5px}
+  .btn{font-family:inherit;font-size:16px;font-weight:600;border:none;border-radius:12px;padding:10px 18px;cursor:pointer;background:#4d7a2e;color:#fff;box-shadow:0 3px 0 #2f4f1b;transition:transform .08s}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #2f4f1b}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.light{background:#fff;color:#4d7a2e;box-shadow:0 3px 0 #c9d7bd;border:2px solid #c9d7bd}
+  .btn.danger{background:#c0392b;box-shadow:0 3px 0 #7d2219}
+  main{max-width:1100px;margin:0 auto;padding:18px}
+
+  /* Setup */
+  .setup{max-width:480px;margin:40px auto;background:#fff;border-radius:18px;padding:26px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+  .setup h2{margin-top:0}
+  .setup label{display:block;margin:12px 0 4px;font-weight:500}
+  .setup input,.setup select{font-family:inherit;font-size:16px;width:100%;padding:9px 12px;border:2px solid #d5dccd;border-radius:10px}
+
+  /* Layout */
+  .game{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+  @media(max-width:900px){.game{grid-template-columns:1fr}}
+  .panel{background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .panel h3{margin:0 0 10px;font-weight:600}
+
+  /* Dice */
+  .dice{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:68px;margin:6px 0 14px}
+  .die{width:60px;height:60px;border-radius:13px;background:#fff;border:1px solid #ddd;
+       box-shadow:inset -4px -5px 0 #e4e4e4,0 4px 8px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center}
+  .die .pip{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       color:#fff;font-size:26px;font-weight:600}
+  .die.white .pip{color:#111;font-size:32px}
+  .die.white{outline:3px solid #333;outline-offset:-3px}
+  .die.rolling{animation:shake .45s ease-in-out}
+  @keyframes shake{0%{transform:rotate(0)}20%{transform:rotate(-18deg) translateY(-6px)}45%{transform:rotate(14deg)}70%{transform:rotate(-8deg) translateY(-3px)}100%{transform:rotate(0)}}
+  .placeholder{color:#999;align-self:center}
+
+  .sums{display:grid;gap:6px;margin-bottom:12px}
+  .sum{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-radius:10px;color:#fff;font-weight:500}
+  .sum.off{opacity:.35}
+  .sum b{font-size:20px}
+
+  .turnbox{display:flex;flex-direction:column;gap:8px}
+  .msg{font-size:14px;color:#555;min-height:20px}
+
+  /* Sheet */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .tab{font-family:inherit;border:2px solid #c9d7bd;background:#fff;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:15px}
+  .tab.active{background:#4d7a2e;color:#fff;border-color:#4d7a2e}
+  .tab.cur::after{content:" 🎲"}
+  .sheet{background:var(--board);border-radius:16px;padding:16px;position:relative;box-shadow:0 6px 0 #d9d4bd,0 8px 18px rgba(0,0,0,.12)}
+  .sheet-top{display:grid;grid-template-columns:1fr auto;gap:16px}
+  .row{display:grid;grid-template-columns:repeat(6,1fr);border-radius:9px;padding:5px;margin-bottom:10px;gap:0;border:2px solid rgba(0,0,0,.25)}
+  .cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,.25);position:relative}
+  .cell:last-child{border-right:none}
+  .cell:nth-child(5)::before{content:"";position:absolute;left:-3px;top:18%;bottom:18%;width:5px;background:#fff;border-radius:3px}
+  .circle{width:78%;height:78%;border-radius:50%;background:#f4f4f8;display:flex;align-items:center;justify-content:center;
+          font-size:clamp(16px,3.2vw,28px);font-weight:500;color:#222;font-family:'Fredoka',cursive}
+  .cell.cand .circle{background:#fff;outline:4px dashed #222;outline-offset:-2px;color:#888;cursor:pointer;animation:pulse 1s infinite}
+  .cell.cand .circle:hover{color:#222;background:#fffbe0}
+  @keyframes pulse{50%{transform:scale(1.07)}}
+  .arrow{font-size:12px;color:rgba(255,255,255,.85);text-align:center}
+  .pen{display:flex;flex-direction:column;align-items:flex-end;gap:7px;padding-top:4px}
+  .pen .skull{font-size:24px;color:#c0392b;font-weight:700;margin-bottom:4px}
+  .pbox{display:flex;align-items:center;gap:6px;font-size:18px}
+  .pbox span.b{width:34px;height:34px;border:2px solid #555;border-radius:6px;background:#dfe3ea;display:flex;align-items:center;justify-content:center;font-size:22px;color:#c0392b;font-weight:700}
+  .brand{font-style:italic;font-size:26px;color:#fff;text-align:right;margin-top:8px;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .bottom{background:var(--cream);margin:6px -16px -16px;padding:14px 16px;border-radius:0 0 16px 16px;display:grid;
+          grid-template-columns:repeat(6,1fr) auto 1.8fr;gap:10px;align-items:center}
+  .bcell{aspect-ratio:1/1;border:2px solid #777;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;
+         font-size:clamp(16px,3vw,26px);font-weight:500}
+  .eq{font-size:26px;color:#666}
+  .total{height:100%;border:2px solid #777;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:600}
+  .readonly .cell.cand .circle{animation:none}
+
+  .scores table{width:100%;border-collapse:collapse}
+  .scores td{padding:5px 4px;border-bottom:1px solid #eee}
+  .scores td:last-child{text-align:right;font-weight:600}
+
+  details.rules{margin-top:16px}
+  details.rules summary{cursor:pointer;font-weight:600}
+  details.rules li{margin:4px 0;font-size:15px}
+
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:10}
+  .modal{background:#fff;border-radius:18px;padding:26px;min-width:300px;max-width:92vw;text-align:center}
+  .modal h2{margin-top:0}
+  .modal ol{text-align:left;font-size:18px}
+
+  /* Menu */
+  .menu{max-width:760px;margin:40px auto;text-align:center}
+  .menu h2{font-size:30px;font-weight:600;margin:0 0 6px}
+  .menu p.sub{color:#666;margin:0 0 26px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.cards{grid-template-columns:1fr}}
+  .card{background:#fff;border:3px solid transparent;border-radius:20px;padding:26px 22px;cursor:pointer;text-align:left;
+        box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:inherit;transition:transform .12s,border-color .12s}
+  .card:hover{transform:translateY(-3px);border-color:var(--board-dark)}
+  .card .ico{font-size:44px}
+  .card h3{margin:8px 0 6px;font-size:22px;font-weight:600;color:#4d7a2e}
+  .card p{margin:0;color:#555;font-size:15px;line-height:1.4}
+  .resume{margin-top:22px}
+
+  /* Saisie manuelle */
+  .cell.edit .circle{background:#fff;outline:3px dashed rgba(0,0,0,.55);outline-offset:-2px;cursor:pointer;color:#aaa;font-size:clamp(11px,1.6vw,14px)}
+  .cell.edit .circle:hover{background:#fffbe0}
+  .circle input{width:80%;border:none;background:transparent;text-align:center;font-family:inherit;font-size:clamp(16px,3.2vw,28px);font-weight:500;outline:none;-moz-appearance:textfield}
+  .circle input::-webkit-outer-spin-button,.circle input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .cell.typing .circle{background:#fff;outline:4px solid #222;outline-offset:-2px}
+  .sheetmode .pbox span.b{cursor:pointer}
+  .sheetmode .pbox span.b:hover{background:#f3d9d6}
+  .msg.err{color:#c0392b;font-weight:500}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .setdice{gap:6px}
+  .dslot{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .dbtn{border:none;background:none;padding:0;cursor:pointer;transition:transform .1s}
+  .dbtn:hover{transform:translateY(-2px) rotate(-4deg)}
+  .dbtn:active{transform:scale(.92)}
+  .setdice .die{width:52px;height:52px}
+  .setdice .die .pip{width:38px;height:38px;font-size:22px}
+  .setdice .die.white .pip{font-size:28px}
+  .cdot{width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer;padding:0}
+  .dlabel{font-size:12px;color:#888;height:22px;line-height:22px}
+  .sumr{display:flex;align-items:center;gap:8px}
+  .ins{font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;padding:4px 9px;background:#fff;color:#333;cursor:pointer}
+  .ins:hover{background:#fffbe0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Qwantum</h1>
+  <button class="btn light" id="menuBtn">Menu</button>
+</header>
+<main id="app"></main>
+
+<script>
+const COLORS = [
+  {id:'violet', name:'Violet', hex:'#5b2a86'},
+  {id:'bleu',   name:'Bleu',   hex:'#2fa4dc'},
+  {id:'rouge',  name:'Rouge',  hex:'#d8262c'},
+  {id:'jaune',  name:'Jaune',  hex:'#f3b600'}
+];
+// Couleur de chaque face des 6 dés colorés (faces 1 à 6). 0 violet, 1 bleu, 2 rouge, 3 jaune.
+// Chaque dé a les 4 couleurs, et ses 2 couleurs en double sont différentes de celles des autres dés :
+// au total chaque couleur apparaît sur 9 faces sur 36 (même chance pour les 4 couleurs),
+// chaque chiffre existe dans les 4 couleurs, et la somme des chiffres par couleur est équilibrée (31-32).
+const FACE_COLORS = [
+  [2, 1, 1, 2, 0, 3],
+  [1, 3, 2, 0, 2, 0],
+  [0, 1, 3, 3, 2, 0],
+  [0, 3, 0, 1, 1, 2],
+  [2, 0, 3, 1, 2, 3],
+  [3, 2, 0, 1, 3, 1]
+];
+const faceColor = (die, v) => FACE_COLORS[die][v - 1];
+const MIN_SUM = 2, MAX_SUM = 42; // 1 + 1 au minimum, 6 + 6×6 au maximum
+
+let S = null;          // partie en cours
+let screen = 'menu';   // 'menu' | 'setup' | 'game'
+let setupMode = 'auto';
+let editRow = null;    // mode feuille : ligne en cours de saisie
+let sheetErr = '';
+let lastRaw = '';
+const $ = s => document.querySelector(s);
+const app = $('#app');
+
+function save(){ try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem('qwantum')); }catch(e){ return null; } }
+
+/* ---------- Menu ---------- */
+function renderMenu(){
+  const canResume = S && !S.over;
+  app.innerHTML = `
+  <div class="menu">
+    <h2>Comment veux-tu jouer ?</h2>
+    <p class="sub">Choisis un mode pour commencer une partie.</p>
+    <div class="cards">
+      <button class="card" data-mode="auto">
+        <div class="ico">🎲</div>
+        <h3>Jeu automatique</h3>
+        <p>La page lance les 7 dés au hasard, calcule les sommes par couleur et propose les cases possibles à chaque joueur.</p>
+      </button>
+      <button class="card" data-mode="sheet">
+        <div class="ico">📝</div>
+        <h3>Feuille de score</h3>
+        <p>Tu joues avec tes vrais dés et tu écris les chiffres que tu veux dans les cases. La feuille vérifie les règles et calcule le score.</p>
+      </button>
+    </div>
+    ${canResume ? `<div class="resume"><button class="btn light" id="resume">Reprendre la partie en cours (${S.mode==='sheet'?'feuille de score':'jeu automatique'})</button></div>` : ''}
+  </div>`;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ setupMode=b.dataset.mode; screen='setup'; render(); });
+  const r = $('#resume'); if (r) r.onclick = ()=>{ screen='game'; render(); };
+}
+
+/* ---------- Mise en place ---------- */
+function renderSetup(){
+  app.innerHTML = `
+  <div class="setup">
+    <h2>${setupMode==='sheet'?'📝 Feuille de score':'🎲 Jeu automatique'}</h2>
+    <label>Nombre de joueurs</label>
+    <select id="np">${[1,2,3,4,5].map(n=>`<option ${n==2?'selected':''}>${n}</option>`).join('')}</select>
+    <div id="names"></div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn light" id="back">◀ Retour</button>
+      <button class="btn" id="start">Commencer</button>
+    </div>
+  </div>`;
+  const drawNames = () => {
+    const n = +$('#np').value;
+    $('#names').innerHTML = Array.from({length:n},(_,i)=>
+      `<label>Joueur ${i+1}</label><input value="Joueur ${i+1}" data-i="${i}">`).join('');
+  };
+  $('#np').onchange = drawNames; drawNames();
+  $('#back').onclick = ()=>{ screen='menu'; render(); };
+  $('#start').onclick = () => {
+    const names = [...document.querySelectorAll('#names input')].map((x,i)=>x.value.trim()||`Joueur ${i+1}`);
+    S = { mode:setupMode,
+          players: names.map(name=>({name, rows:[0,1,2,3].map(()=>Array(6).fill(null)), pen:0})),
+          cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], history:[], over:false, msg:'' };
+    editRow = null; sheetErr = '';
+    screen = 'game'; save(); render();
+  };
+}
+
+/* ---------- Calculs communs ---------- */
+function columnValue(p, j){
+  const col = p.rows.map(r=>r[j]);
+  if (col.some(v=>v===null)) return null;
+  return [...col].sort((a,b)=>b-a)[2]; // 3e plus grand
+}
+const penaltyTotal = n => n*(n+1)/2; // -1 -2 -3 -4 -5
+function score(p){
+  let s = 0;
+  for (let j=0;j<6;j++){ const v=columnValue(p,j); if(v!==null) s+=v; }
+  return s - penaltyTotal(p.pen);
+}
+// Règle d'ordre : cases 1 à 4 croissantes, cases 5 et 6 décroissantes
+function fitsOrder(row, k, s){
+  if (k === 0) return true;
+  const prev = row[k-1];
+  return k <= 3 ? s > prev : s < prev;
+}
+function ruleText(row, k){
+  if (k === 0) return `de ${MIN_SUM} à ${MAX_SUM}`;
+  return k <= 3 ? `plus grand que ${row[k-1]}` : `plus petit que ${row[k-1]}`;
+}
+function isFinished(){
+  return S.players.some(q => q.pen>=5 || [0,1,2,3,4,5].every(j=>columnValue(q,j)!==null));
+}
+
+/* ---------- Mode automatique ---------- */
+function colorSum(c){
+  if (!S.dice) return null;
+  const ds = S.dice.colored.filter(d=>d.c===c);
+  if (!ds.length) return null;
+  return { total: S.dice.white + ds.reduce((a,d)=>a+d.v,0), parts:[S.dice.white, ...ds.map(d=>d.v)] };
+}
+function candidate(pi, r){
+  if (!S.dice || S.over) return null;
+  if (pi === S.cur){ if (S.phase !== 'active') return null; }
+  else if (S.phase !== 'others' || S.wrote.includes(pi) || r === S.usedColor) return null;
+  const p = S.players[pi];
+  const sum = colorSum(r); if (!sum) return null;
+  const row = p.rows[r];
+  const k = row.indexOf(null); if (k === -1) return null;
+  if (!fitsOrder(row, k, sum.total)) return null;
+  return {k, s:sum.total};
+}
+function randomDice(){
+  return { white: 1+Math.floor(Math.random()*6),
+    colored: Array.from({length:6},(_,d)=>{ const v=1+Math.floor(Math.random()*6); return {v, c:faceColor(d,v)}; }) };
+}
+function roll(){
+  if (S.phase !== 'roll' || S.over) return;
+  const final = randomDice();
+  let t = 0;
+  const tick = setInterval(()=>{
+    S.dice = randomDice(); renderDice(true);
+    if (++t > 6){ clearInterval(tick); S.dice = final; S.phase='active'; S.usedColor=null; S.wrote=[]; S.msg=''; save(); render(); }
+  }, 70);
+}
+function write(pi, r){
+  const p = S.players[pi];
+  const c = candidate(pi, r); if (!c) return;
+  p.rows[r][c.k] = c.s; S.wrote.push(pi);
+  S.msg = `${p.name} inscrit ${c.s} dans la ligne ${COLORS[r].name.toLowerCase()}.`;
+  if (pi === S.cur){ S.usedColor = r; goOthers(); return; }
+  save(); render();
+}
+function passActive(){
+  if (S.phase !== 'active') return;
+  const p = S.players[S.cur];
+  p.pen = Math.min(5, p.pen+1); S.usedColor = null;
+  S.msg = `${p.name} n'inscrit rien et prend une pénalité (−${p.pen}).`;
+  goOthers();
+}
+function goOthers(){
+  if (S.players.length === 1){ endTurn(); return; }
+  S.phase = 'others';
+  S.view = (S.cur+1) % S.players.length;
+  save(); render();
+}
+function endTurn(){
+  if (!S.dice) return;
+  if (isFinished()){ S.over = true; save(); render(); return; }
+  S.cur = (S.cur+1) % S.players.length; S.view = S.cur;
+  S.dice = null; S.phase = 'roll'; S.usedColor = null; S.wrote = []; S.msg = '';
+  save(); render();
+}
+
+/* ---------- Mode feuille de score ---------- */
+function sheetCommit(raw){
+  if (raw === '' ) { editRow = null; sheetErr=''; render(); return; }
+  lastRaw = raw;
+  sheetWrite(editRow, Number(raw));
+}
+// Inscrit s dans la prochaine case de la ligne r du joueur affiché, si les règles le permettent
+function sheetWrite(r, s){
+  const p = S.players[S.view], row = p.rows[r];
+  const k = row.indexOf(null);
+  if (k === -1){ sheetErr = `La ligne ${COLORS[r].name.toLowerCase()} est déjà complète.`; render(); return; }
+  if (!Number.isInteger(s) || s < MIN_SUM || s > MAX_SUM){
+    sheetErr = `Le nombre doit être un entier de ${MIN_SUM} à ${MAX_SUM}.`; render(); return;
+  }
+  if (!fitsOrder(row, k, s)){
+    sheetErr = `Impossible d'écrire ${s} en ${COLORS[r].name.toLowerCase()} : le nombre doit être ${ruleText(row,k)} (${k<=3?'croissant jusqu’à la 4ᵉ case':'décroissant après la barre'}).`;
+    render(); return;
+  }
+  row[k] = s; S.history.push({pi:S.view, r, k});
+  editRow = null; sheetErr = '';
+  S.msg = `${p.name} : ${s} inscrit en ${COLORS[r].name.toLowerCase()}.`;
+  if (isFinished()) S.over = true;
+  save(); render();
+}
+// Dés réglables à la main : clic = chiffre suivant, pastille = couleur suivante
+function defaultSheetDice(){ return { white:1, colored:Array.from({length:6},(_,d)=>({v:1, c:faceColor(d,1)})) }; }
+function cycleDie(i){
+  const D = S.sheetDice;
+  if (i < 0) D.white = D.white % 6 + 1;
+  else { const d = D.colored[i]; d.v = d.v % 6 + 1; d.c = faceColor(i, d.v); }
+  sheetErr=''; save(); render();
+}
+function cycleColor(i){
+  const d = S.sheetDice.colored[i]; d.c = (d.c + 1) % 4;
+  sheetErr=''; save(); render();
+}
+function sheetSum(c){
+  const D = S.sheetDice, ds = D.colored.filter(d=>d.c===c);
+  if (!ds.length) return null;
+  return { total: D.white + ds.reduce((a,d)=>a+d.v,0), parts:[D.white, ...ds.map(d=>d.v)] };
+}
+function sheetUndo(){
+  const h = S.history.pop(); if (!h) return;
+  const p = S.players[h.pi];
+  if (h.type === 'pen') p.pen = h.prev; else p.rows[h.r][h.k] = null;
+  S.view = h.pi; S.over = false; S.dismissed = false; editRow = null; sheetErr = '';
+  S.msg = 'Dernière action annulée.';
+  save(); render();
+}
+function sheetPenalty(n){
+  const p = S.players[S.view];
+  const prev = p.pen;
+  p.pen = p.pen >= n ? n-1 : n;
+  S.history.push({type:'pen', pi:S.view, prev});
+  S.msg = `${p.name} : ${p.pen} pénalité${p.pen>1?'s':''} (−${penaltyTotal(p.pen)}).`;
+  if (isFinished()) S.over = true;
+  save(); render();
+}
+
+/* ---------- Rendu ---------- */
+function dieHTML(v, colorHex, white, rolling){
+  return `<div class="die ${white?'white':''} ${rolling?'rolling':''}">
+    <div class="pip" style="${white?'':`background:${colorHex}`}">${v}${v===6&&white?'.':''}</div></div>`;
+}
+function renderDice(rolling){
+  const el = $('#dice'); if (!el) return;
+  if (!S.dice){ el.innerHTML = `<span class="placeholder">Lance les dés pour commencer le tour.</span>`; return; }
+  el.innerHTML = dieHTML(S.dice.white,null,true,rolling) +
+    S.dice.colored.map(d=>dieHTML(d.v, COLORS[d.c].hex, false, rolling)).join('');
+}
+
+function sheetHTML(view, cellFn, readonly, extraCls){
+  const rowsHTML = view.rows.map((row,r)=>
+    `<div class="row" style="background:${COLORS[r].hex}">${row.map((v,k)=>cellFn(row,r,v,k)).join('')}</div>`).join('');
+  const penHTML = [1,2,3,4,5].map(n=>
+    `<div class="pbox">−${n} <span class="b" data-pen="${n}">${view.pen>=n?'✕':''}</span></div>`).join('');
+  const bottomHTML = [0,1,2,3,4,5].map(j=>{
+    const v = columnValue(view,j);
+    return `<div class="bcell">${v!==null?v:''}</div>`;
+  }).join('') + `<div class="eq">=</div><div class="total">${score(view)}</div>`;
+  return `<div class="sheet ${readonly?'readonly':''} ${extraCls||''}">
+      <div class="sheet-top">
+        <div>${rowsHTML}</div>
+        <div class="pen"><div class="skull">✕</div>${penHTML}<div class="brand">Qwantum</div></div>
+      </div>
+      <div class="bottom">${bottomHTML}</div>
+    </div>`;
+}
+function tabsHTML(markCur){
+  return `<div class="tabs">${S.players.map((p,i)=>
+    `<button class="tab ${i===S.view?'active':''} ${markCur&&i===S.cur?'cur':''}" data-view="${i}">${p.name}${S.mode==='auto'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}</div>`;
+}
+function scoresHTML(){
+  return `<div class="scores" style="margin-top:14px"><h3>Scores</h3>
+    <table>${S.players.map(p=>`<tr><td>${p.name}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
+}
+function rulesHTML(){
+  const common = `
+    <li>Dans chaque ligne, les cases se remplissent de gauche à droite. Cases 1 à 4 : nombres <b>croissants</b>. Après la barre (cases 5 et 6) : nombres <b>décroissants</b>.</li>
+    <li>Quand une colonne a ses 4 nombres, la case blanche du bas reçoit le <b>3ᵉ nombre</b> de la colonne, classée du plus grand au plus petit.</li>
+    <li>Pénalités : −1, −2, −3, −4, −5, elles s'additionnent.</li>
+    <li>La partie se termine quand un joueur a rempli ses 6 cases du bas ou coché sa 5ᵉ pénalité. Score = somme des cases du bas − pénalités.</li>`;
+  const auto = `
+    <li>7 dés : un dé blanc (1 à 6) et six dés de couleur (1 à 6), chaque face avec sa couleur.</li>
+    <li>Le joueur en cours inscrit dans la ligne d'une couleur : <b>dé blanc + tous les dés de cette couleur</b>. S'il n'inscrit rien, il prend une pénalité.</li>
+    <li>Ensuite, chaque autre joueur peut inscrire <b>une</b> des combinaisons restantes (plusieurs joueurs peuvent prendre la même), sans pénalité s'il n'inscrit rien.</li>`;
+  const sheet = `
+    <li>Règle les 7 dés comme tes vrais dés : clic sur un dé = chiffre suivant (blanc 1 à 6, couleur 1 à 6), clic sur la pastille = couleur suivante. Les sommes « dé blanc + dés de la couleur » se calculent toutes seules.</li>
+    <li>Clique sur « Inscrire » à côté d'une somme, ou sur la case en pointillés d'une ligne pour taper le nombre que tu veux. La feuille refuse un nombre qui ne respecte pas l'ordre.</li>
+    <li>Clique sur une case de pénalité pour la cocher, ou de nouveau pour la décocher.</li>`;
+  return `<details class="rules"><summary>Rappel des règles</summary><ul>${S.mode==='sheet'?sheet:auto}${common}</ul></details>`;
+}
+
+function renderAuto(){
+  const cur = S.players[S.cur], view = S.players[S.view];
+  const canPlayView = (S.view === S.cur && S.phase === 'active') ||
+                      (S.view !== S.cur && S.phase === 'others' && !S.wrote.includes(S.view));
+
+  const sums = COLORS.map((c,i)=>{
+    const s = colorSum(i);
+    const taken = S.phase === 'others' && S.usedColor === i;
+    return `<div class="sum ${s && !taken?'':'off'}" style="background:${c.hex}">
+      <span>${c.name}${s?` : ${s.parts.join(' + ')}`:''}${taken?` — prise par ${cur.name}`:''}</span><b>${s?s.total:'–'}</b></div>`;
+  }).join('');
+
+  const cands = [0,1,2,3].map(r=>candidate(S.view, r));
+  const cellFn = (row,r,v,k)=>{
+    const cand = cands[r]; const isC = cand && cand.k===k;
+    return `<div class="cell ${isC?'cand':''}" ${isC?`data-write="${r}"`:''}>
+      <div class="circle">${v!==null?v:(isC?cand.s:'')}</div></div>`;
+  };
+
+  const anyCand = cands.some(Boolean);
+  let endLabel = 'Tour suivant ▶', endCls = '', endDisabled = S.phase !== 'others' || S.over;
+  if (S.phase === 'active'){ endLabel = `Ne rien inscrire (pénalité −${Math.min(5,cur.pen+1)})`; endCls='danger'; endDisabled = S.over; }
+
+  let hint = S.msg ? S.msg + ' ' : '';
+  if (S.phase === 'active'){
+    hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
+          : anyCand ? 'Clique sur une case en pointillés pour inscrire la somme.'
+          : 'Aucune case possible : tu dois prendre une pénalité.';
+  } else if (S.phase === 'others'){
+    const waiting = S.players.filter((p,i)=>i!==S.cur && !S.wrote.includes(i));
+    hint += `Les autres joueurs peuvent inscrire une combinaison restante (sans pénalité s'ils ne le font pas). `;
+    if (S.view === S.cur) hint += 'Choisis un autre joueur dans les onglets.';
+    else if (S.wrote.includes(S.view)) hint += `${view.name} a déjà inscrit ce tour-ci.`;
+    else if (!anyCand) hint += `Aucune case possible pour ${view.name}.`;
+    else hint += `${view.name} : clique sur une case en pointillés.`;
+    if (!waiting.length) hint += ' Tout le monde a joué : passe au tour suivant.';
+  }
+
+  app.innerHTML = `
+  <div class="game">
+    <section>${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
+    <aside class="panel">
+      <h3>Tour de ${cur.name}</h3>
+      <div class="dice" id="dice"></div>
+      <div class="sums">${sums}</div>
+      <div class="turnbox">
+        <button class="btn" id="rollBtn" ${S.phase!=='roll'||S.over?'disabled':''}>🎲 Lancer les dés</button>
+        <button class="btn ${endCls}" id="endBtn" ${endDisabled?'disabled':''}>${endLabel}</button>
+        <div class="msg">${hint}</div>
+      </div>
+      ${scoresHTML()}
+    </aside>
+  </div>
+  ${S.over && !S.dismissed ? endModal() : ''}`;
+
+  renderDice(false);
+  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>write(S.view, +el.dataset.write));
+  $('#rollBtn').onclick = roll;
+  $('#endBtn').onclick = () => S.phase === 'active' ? passActive() : endTurn();
+}
+
+function renderSheet(){
+  const view = S.players[S.view];
+  const cellFn = (row,r,v,k)=>{
+    if (v !== null) return `<div class="cell"><div class="circle">${v}</div></div>`;
+    const next = row.indexOf(null) === k;
+    if (!next || S.over) return `<div class="cell"><div class="circle"></div></div>`;
+    if (editRow === r) return `<div class="cell typing"><div class="circle">
+        <input type="number" inputmode="numeric" min="${MIN_SUM}" max="${MAX_SUM}" id="cellInput" aria-label="Nombre ${COLORS[r].name}"></div></div>`;
+    const prev = k===0 ? '' : (k<=3 ? `&gt; ${row[k-1]}` : `&lt; ${row[k-1]}`);
+    return `<div class="cell edit" data-edit="${r}"><div class="circle">${prev}</div></div>`;
+  };
+  const msg = sheetErr ? `<div class="msg err">${sheetErr}</div>` : `<div class="msg">${S.msg||''}</div>`;
+  const row = editRow!==null ? view.rows[editRow] : null;
+  const help = editRow!==null
+    ? `Ligne ${COLORS[editRow].name.toLowerCase()} : tape un nombre ${ruleText(row, row.indexOf(null))}, puis Entrée (Échap pour annuler).`
+    : `Clique sur une case en pointillés pour écrire un nombre, ou sur « Inscrire » à côté d'une somme.`;
+
+  if (!S.sheetDice) S.sheetDice = defaultSheetDice();
+  const D = S.sheetDice;
+  const diceHTML = `<div class="dice setdice">
+      <div class="dslot"><button class="dbtn" data-die="-1" title="Changer le chiffre">${dieHTML(D.white,null,true,false)}</button><span class="dlabel">blanc</span></div>
+      ${D.colored.map((d,i)=>`<div class="dslot">
+        <button class="dbtn" data-die="${i}" title="Changer le chiffre">${dieHTML(d.v, COLORS[d.c].hex, false, false)}</button>
+        <button class="cdot" data-dcol="${i}" title="Changer la couleur" style="background:${COLORS[d.c].hex}"></button></div>`).join('')}
+    </div>`;
+  const sumsHTML = COLORS.map((c,i)=>{
+    const s = sheetSum(i);
+    return `<div class="sum ${s?'':'off'}" style="background:${c.hex}">
+      <span>${c.name}${s?` : ${s.parts.join(' + ')}`:''}</span>
+      <span class="sumr"><b>${s?s.total:'–'}</b>${s&&!S.over?`<button class="ins" data-ins="${i}">Inscrire</button>`:''}</span></div>`;
+  }).join('');
+
+  app.innerHTML = `
+  <div class="game">
+    <section>${tabsHTML(false)}${sheetHTML(view, cellFn, false, 'sheetmode')}${rulesHTML()}</section>
+    <aside class="panel">
+      <h3>🎲 Tes dés</h3>
+      <div class="msg">Clique sur un dé pour changer son chiffre, sur la pastille dessous pour changer sa couleur.</div>
+      ${diceHTML}
+      <div class="sums">${sumsHTML}</div>
+      <h3>📝 Feuille de ${view.name}</h3>
+      <div class="stack">
+        <div class="msg">${help}</div>
+        ${msg}
+        <button class="btn light" id="undoBtn" ${S.history.length?'':'disabled'}>↶ Annuler la dernière action</button>
+        <button class="btn" id="finishBtn" ${S.over?'disabled':''}>🏁 Terminer la partie</button>
+      </div>
+      ${scoresHTML()}
+    </aside>
+  </div>
+  ${S.over && !S.dismissed ? endModal() : ''}`;
+
+  document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>{ editRow=+el.dataset.edit; sheetErr=''; render(); });
+  document.querySelectorAll('[data-pen]').forEach(el=>el.onclick=()=>{ if(!S.over) sheetPenalty(+el.dataset.pen); });
+  document.querySelectorAll('[data-die]').forEach(el=>el.onclick=()=>cycleDie(+el.dataset.die));
+  document.querySelectorAll('[data-dcol]').forEach(el=>el.onclick=()=>cycleColor(+el.dataset.dcol));
+  document.querySelectorAll('[data-ins]').forEach(el=>el.onclick=()=>{ editRow=null; const r=+el.dataset.ins; sheetWrite(r, sheetSum(r).total); });
+  const inp = $('#cellInput');
+  if (inp){
+    inp.value = sheetErr ? lastRaw : ''; inp.focus();
+    inp.onkeydown = e=>{
+      if (e.key === 'Enter'){ e.preventDefault(); sheetCommit(inp.value.trim()); }
+      else if (e.key === 'Escape'){ editRow=null; sheetErr=''; render(); }
+    };
+    inp.onblur = ()=>{ setTimeout(()=>{ if ($('#cellInput')===inp) sheetCommit(inp.value.trim()); }, 120); };
+  }
+  $('#undoBtn').onclick = sheetUndo;
+  $('#finishBtn').onclick = ()=>{ S.over = true; save(); render(); };
+}
+
+function render(){
+  if (screen === 'menu' || !S && screen === 'game'){ screen='menu'; renderMenu(); return; }
+  if (screen === 'setup'){ renderSetup(); return; }
+  if (S.mode === 'sheet') renderSheet(); else renderAuto();
+  document.querySelectorAll('[data-view]').forEach(el=>el.onclick=()=>{
+    S.view=+el.dataset.view; S.msg=''; editRow=null; sheetErr=''; render();
+  });
+  const again = $('#again'); if (again) again.onclick = ()=>{ setupMode=S.mode; S=null; save(); screen='setup'; render(); };
+  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ S=null; save(); screen='menu'; render(); };
+  const look = $('#look'); if (look) look.onclick = ()=>{ S.dismissed = true; save(); render(); };
+}
+function endModal(){
+  const ranked = [...S.players].sort((a,b)=>score(b)-score(a));
+  return `<div class="overlay"><div class="modal">
+    <h2>🏆 Fin de partie</h2>
+    <ol>${ranked.map(p=>`<li><b>${p.name}</b> — ${score(p)} points</li>`).join('')}</ol>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn light" id="look">Voir les feuilles</button>
+      <button class="btn light" id="toMenu">Menu</button>
+      <button class="btn" id="again">Rejouer</button>
+    </div>
+  </div></div>`;
+}
+
+$('#menuBtn').onclick = ()=>{ editRow=null; sheetErr=''; screen='menu'; render(); };
+S = load();
+if (S && (!S.phase || !S.mode)){ S = null; } // ancienne sauvegarde incompatible
+if (S && !S.history) S.history = [];
+screen = 'menu';
+render();
+</script>
+</body>
+</html>
 
