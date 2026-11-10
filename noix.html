@@ -93,6 +93,7 @@
         <li>Chaque dé a 6 faces : 3 écureuils, 2 noisettes, 1 corbeau.</li>
         <li>Les corbeaux sont bloqués : ils ne peuvent plus être relancés ce tour-ci.</li>
         <li>Après chaque lancer : <b>cacher ses noisettes</b> (chaque noisette visible vaut 1 point, fin du tour) ou <b>continuer sa collecte</b> (relancer les écureuils et/ou noisettes sélectionnés).</li>
+        <li>Quand tous les dés sont joués (plus aucun écureuil, seulement des noisettes et des corbeaux), on peut <b>relancer tous les dés</b>, corbeaux compris : les noisettes déjà obtenues restent acquises pour ce tour.</li>
         <li>Si un lancer ne donne que des corbeaux : fin du tour, 0 point.</li>
         <li>Si un lancer ne donne que des écureuils : le joueur perd tous les points de ce tour, fin du tour.</li>
       </ul>
@@ -109,6 +110,7 @@
       <div class="boutons">
         <button class="b-orange" id="btnLancer">🎲 Lancer les dés</button>
         <button class="b-orange" id="btnContinuer">🐿️ Continuer sa collecte</button>
+        <button class="b-orange" id="btnTout">🔄 Relancer tous les dés</button>
         <button class="b-noisette" id="btnCacher">🌰 Cacher ses noisettes</button>
         <button class="b-creme" id="btnSuivant">Joueur suivant ➜</button>
       </div>
@@ -191,6 +193,7 @@
   let des = [];          // {face, bloque, relance}
   let etat = "debut";    // debut | choix | fin
   let numLancer = 0;
+  let reserve = 0;      // noisettes mises de côté lors des relances complètes
 
   function commencer(){
     memoriserNoms();
@@ -204,12 +207,14 @@
 
   function debutTour(){
     des = Array.from({length:NB_DES},()=>({face:null, bloque:false, relance:false}));
-    etat = "debut"; numLancer = 0;
+    etat = "debut"; numLancer = 0; reserve = 0;
     message(`À ${joueurs[actif].nom} de jouer : lance les 5 dés !`);
     rendu();
   }
 
-  const noisettes = () => des.filter(d=>d.face==="noisette").length;
+  const visibles = () => des.filter(d=>d.face==="noisette").length;
+  const noisettes = () => reserve + visibles();
+  const tousJoues = () => des.every(d=>d.face && d.face!=="ecureuil");
 
   function lancer(indices){
     indices.forEach(i => { des[i].face = FACES[Math.floor(Math.random()*6)]; des[i].relance = false; });
@@ -226,84 +231,3 @@
       etat = "choix";
       // Par défaut, les écureuils sont présélectionnés pour être relancés
       des.forEach(d => { if(!d.bloque && d.face==="ecureuil") d.relance = true; });
-      message(`${noisettes()} noisette${noisettes()>1?"s":""} en vue. Cache-les, ou sélectionne les dés à relancer et continue ta collecte.`);
-    }
-    rendu(indices);
-  }
-
-  function finTour(points, texte, style){
-    joueurs[actif].score += points;
-    etat = "fin";
-    des.forEach(d=>d.relance=false);
-    const li = document.createElement("li");
-    li.innerHTML = `<b>${echapper(joueurs[actif].nom)}</b> : ${points ? `+${points} point${points>1?"s":""}` : `<span class="zero">0 point</span>`} (${numLancer} lancer${numLancer>1?"s":""})`;
-    $("journal").prepend(li);
-    message(texte, style);
-  }
-
-  function basculer(i){
-    const d = des[i];
-    if(etat!=="choix" || d.bloque) return;
-    d.relance = !d.relance;
-    const n = des.filter(x=>x.relance).length;
-    message(n ? `${n} dé${n>1?"s":""} sélectionné${n>1?"s":""} pour la relance.` : "Aucun dé sélectionné : choisis au moins un dé pour continuer ta collecte.");
-    rendu();
-  }
-
-  /* ---------- Affichage ---------- */
-  function message(t, style=""){ const el=$("info"); el.textContent=t; el.className="info "+style; }
-  function echapper(s){ return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-  function rendu(animer=[]){
-    $("scores").innerHTML = joueurs.map((j,i)=>`<div class="joueur ${i===actif?"actif":""}"><div class="nom">${echapper(j.nom)}</div><div class="pts">${j.score}</div></div>`).join("");
-    $("tour").innerHTML = `Tour de <b>${echapper(joueurs[actif].nom)}</b>${numLancer?` — lancer n°${numLancer}`:""}`;
-
-    $("des").innerHTML = "";
-    des.forEach((d,i)=>{
-      const el = document.createElement("div");
-      let cls = "de";
-      let badge = "";
-      if(!d.face) cls += " vide";
-      else if(d.bloque){ cls += " bloque"; badge = "bloqué"; }
-      else if(etat==="choix"){
-        cls += " cliquable";
-        if(d.relance){ cls += " relance"; badge = "à relancer"; }
-        else if(d.face==="noisette"){ cls += " garde"; badge = "gardée"; }
-      }
-      if(animer.includes(i)) cls += " roule";
-      el.className = cls;
-      el.innerHTML = SVG[d.face || "ecureuil"] + (badge?`<span class="badge">${badge}</span>`:"");
-      if(etat==="choix" && !d.bloque){
-        el.setAttribute("role","button"); el.tabIndex = 0;
-        el.onclick = () => basculer(i);
-        el.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); basculer(i); } };
-      }
-      $("des").appendChild(el);
-    });
-
-    $("collecte").textContent = etat==="fin" ? 0 : noisettes();
-    $("btnLancer").style.display    = etat==="debut" ? "" : "none";
-    $("btnContinuer").style.display = etat==="choix" ? "" : "none";
-    $("btnCacher").style.display    = etat==="choix" ? "" : "none";
-    $("btnSuivant").style.display   = etat==="fin"   ? "" : "none";
-    $("btnContinuer").disabled = !des.some(d=>d.relance);
-    $("btnCacher").disabled = noisettes()===0;
-  }
-
-  /* ---------- Boutons ---------- */
-  $("btnCommencer").onclick = commencer;
-  $("btnLancer").onclick = () => lancer(des.map((_,i)=>i));
-  $("btnContinuer").onclick = () => lancer(des.map((d,i)=>d.relance?i:-1).filter(i=>i>=0));
-  $("btnCacher").onclick = () => {
-    const p = noisettes();
-    finTour(p, `${joueurs[actif].nom} cache ${p} noisette${p>1?"s":""} : +${p} point${p>1?"s":""} !`, "succes");
-    rendu();
-  };
-  $("btnSuivant").onclick = () => { actif = (actif+1) % joueurs.length; debutTour(); };
-  $("btnNouvelle").onclick = () => { $("jeu").style.display="none"; $("config").style.display=""; afficherConfig(); };
-
-  afficherConfig();
-</script>
-</body>
-</html>
-
