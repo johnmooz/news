@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les Chats de Schrödinger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --alive:#6fae3f; --alive-d:#4c8a22;
+  --dead:#8c929b; --dead-d:#5f646c;
+  --box:#b88658; --box-d:#8a5f37;
+  --heis:#9b4fc4; --heis-d:#723399;
+  --paper:#fbf4e6; --card:#fffaf0; --ink:#3b2a1d; --muted:#8a7562;
+  --cardboard:#d9a86c; --cardboard-d:#a8773f; --red:#c0392b;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+.pl .nm{color:#5a2d82}
+.modal .box,.panel,#setup{color:var(--ink)}
+body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);
+  background:#e7cfa4 radial-gradient(circle at 20% 10%,#f1dcb5 0,transparent 50%),radial-gradient(circle at 90% 90%,#d8b583 0,transparent 55%);
+  min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;font-size:1rem;font-weight:600;padding:.7em 1.2em;transition:transform .1s,box-shadow .1s,opacity .2s}
+button:active{transform:translateY(2px)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn{background:var(--alive);color:#fff;box-shadow:0 4px 0 var(--alive-d)}
+.btn.red{background:var(--red);box-shadow:0 4px 0 #8e2418}
+.btn.purple{background:var(--heis);box-shadow:0 4px 0 var(--heis-d)}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cdb89a}
+header{text-align:center;padding:14px 10px 4px}
+header h1{margin:0;font-size:clamp(1.5rem,4vw,2.3rem);letter-spacing:.5px}
+header h1 span{color:var(--heis)}
+header .sub{color:var(--muted);font-size:.95rem}
+.hidden{display:none!important}
+
+/* ---------- SETUP ---------- */
+#setup{max-width:520px;margin:20px auto;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(80,50,20,.2)}
+#setup h2{margin-top:0}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.counts button{background:#f1e3c8;color:var(--ink);width:52px;height:52px;font-size:1.3rem;padding:0}
+.counts button.on{background:var(--heis);color:#fff}
+.names{display:grid;gap:10px;margin-bottom:20px}
+.names label{display:flex;align-items:center;gap:10px}
+.names input{flex:1;font-family:inherit;font-size:1.05rem;font-weight:600;padding:.6em .8em;border:2px solid #e3cfac;border-radius:10px;background:#fff6e6;color:#5a2d82;caret-color:#5a2d82;-webkit-text-fill-color:#5a2d82}
+.names input::placeholder{color:#b49a7c;-webkit-text-fill-color:#b49a7c}
+.names input:focus{outline:none;border-color:var(--heis)}
+.deckinfo{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 20px;font-size:.9rem}
+.deckinfo div{display:flex;align-items:center;gap:6px;background:#f6ead4;padding:4px 10px 4px 4px;border-radius:30px}
+
+/* ---------- GAME LAYOUT ---------- */
+#game{max-width:1200px;margin:0 auto;padding:8px 12px 30px;display:grid;grid-template-columns:260px 1fr;gap:16px}
+@media(max-width:860px){#game{grid-template-columns:1fr}}
+.panel{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 6px 18px rgba(80,50,20,.15)}
+#players{display:flex;flex-direction:column;gap:10px}
+@media(max-width:860px){#players{flex-direction:row;overflow-x:auto}#players .pl{min-width:200px}}
+.pl{border:3px solid transparent;border-radius:14px;padding:10px;background:#fbf0dc;position:relative}
+.pl.active{border-color:var(--heis);background:#f7ecfb}
+.pl.out{opacity:.45;filter:grayscale(1)}
+.pl .nm{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tag{font-size:.7rem;padding:2px 7px;border-radius:20px;background:var(--heis);color:#fff;font-weight:600}
+.tag.bet{background:var(--box-d)}
+.lives{display:flex;gap:2px;margin:4px 0}
+.lives svg{width:30px;height:30px}
+.pl .info{font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.minibacks{display:flex}
+.minibacks i{display:block;width:12px;height:17px;border-radius:3px;background:var(--cardboard);border:1px solid var(--cardboard-d);margin-right:-4px}
+.tablecards{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
+.tablecards .mc{width:24px;height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.mc svg{width:20px;height:20px}
+
+/* ---------- BOARD ---------- */
+#center{display:flex;flex-direction:column;gap:14px;min-width:0}
+#status{text-align:center;font-size:1.1rem;font-weight:500}
+#status b{color:var(--heis)}
+.betnow{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:30px;padding:4px 14px 4px 6px;margin-top:6px;font-weight:600}
+.clip{background:#7a5a3a;border-radius:16px;padding:12px;box-shadow:0 8px 20px rgba(60,35,10,.35);position:relative}
+.clip::before{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:90px;height:20px;background:linear-gradient(#c9ccd1,#8d9198);border-radius:6px}
+#board{position:relative;display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(7,auto);gap:5px;background:#fffdf7;border-radius:8px;padding:10px}
+.cell{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-weight:700;font-size:clamp(.75rem,2.1vw,1.35rem);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.35);user-select:none;transition:transform .12s,opacity .2s}
+.cell svg.ic{width:52%;height:auto;opacity:.95;margin-top:-2px}
+.cell .n{line-height:1}
+.cell.alive{background:var(--alive)}
+.cell.dead{background:var(--dead)}
+.cell.box{background:var(--box)}
+.cell.past{opacity:.35}
+.cell.pick{cursor:pointer}
+.cell.pick:hover{transform:scale(1.08);z-index:3;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.cell.sel{outline:4px dashed var(--heis);outline-offset:2px;z-index:4;animation:pulse 1s infinite}
+@keyframes pulse{50%{outline-color:#e4b9f7}}
+.yarn{position:absolute;inset:-12%;z-index:5;pointer-events:none;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4));animation:drop .4s ease-out}
+.yarn.start{opacity:.55}
+@keyframes drop{from{transform:translateY(-20px) scale(1.3);opacity:0}}
+#thread{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);pointer-events:none;z-index:2}
+
+/* ---------- HAND ---------- */
+#handpanel{text-align:center}
+#handpanel h3{margin:0 0 4px}
+#hand{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:12px 0;min-height:120px}
+.card{width:96px;height:138px;border-radius:12px;border:4px solid #fff;position:relative;box-shadow:0 4px 10px rgba(0,0,0,.25);overflow:hidden;transition:transform .15s,box-shadow .15s;flex-shrink:0}
+@media(max-width:520px){.card{width:72px;height:104px;border-width:3px}}
+.card.alive{background:var(--alive)}.card.dead{background:var(--dead)}.card.box{background:var(--box)}.card.heis{background:var(--heis)}
+.card .art{position:absolute;inset:14% 6% 14% 6%;width:88%;height:72%}
+.card .co{position:absolute;width:24%;}
+.card .co.tl{top:3%;left:4%}.card .co.br{bottom:3%;right:4%;transform:rotate(180deg)}
+.card .lbl{position:absolute;bottom:2px;left:0;right:0;font-size:.62rem;color:#fff;font-weight:600;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.card.back{background:repeating-linear-gradient(45deg,var(--cardboard) 0 10px,#cf9c5f 10px 20px)}
+.card.back .art{inset:20%;width:60%;height:60%}
+.card.can{cursor:pointer}
+.card.can:hover{transform:translateY(-6px)}
+.card.dim{opacity:.35}
+.card.chosen{transform:translateY(-14px);box-shadow:0 0 0 4px var(--heis),0 10px 18px rgba(0,0,0,.3)}
+.card.fresh{animation:fresh 1.2s ease-out;box-shadow:0 0 0 4px #ffd54a,0 4px 10px rgba(0,0,0,.25)}
+@keyframes fresh{from{transform:translateY(-40px) rotate(-8deg);opacity:0}}
+.card.match{box-shadow:0 0 0 4px #ffd54a,0 4px 10px rgba(0,0,0,.25)}
+.card.flip{animation:flip .5s ease-out both}
+@keyframes flip{from{transform:rotateY(90deg)}}
+#actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.hint{color:var(--muted);font-size:.92rem;margin:4px 0 10px}
+.privacy{background:#3b2a1d;color:#fff;border-radius:14px;padding:16px;margin:10px auto;max-width:460px}
+.privacy p{margin:0 0 12px}
+#log{font-size:.85rem;color:var(--muted);max-height:120px;overflow:auto;margin-top:10px;text-align:left}
+#log div{padding:2px 0;border-bottom:1px dashed #ead9bd}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;background:rgba(40,25,10,.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
+.modal .box{background:var(--card);border-radius:20px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:22px;text-align:center;animation:pop .3s}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.reveal-row{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px dashed #e3cfac;flex-wrap:wrap}
+.reveal-row .who{min-width:110px;text-align:left;font-weight:700}
+.reveal-row .cards{display:flex;gap:6px;flex-wrap:wrap}
+.reveal-row .card{width:58px;height:84px;border-width:3px}
+.reveal-row .card .lbl{display:none}
+.reveal-row .cnt{margin-left:auto;font-weight:700;font-size:1.2rem}
+.sep{width:2px;align-self:stretch;background:#e3cfac;margin:0 4px}
+.verdict{font-size:1.4rem;font-weight:700;margin:16px 0 6px}
+.verdict.ok{color:var(--alive-d)}.verdict.ko{color:var(--red)}
+.total{font-size:2.4rem;font-weight:700}
+.rules{text-align:left;line-height:1.5}
+.rules li{margin-bottom:6px}
+.linkbtn{background:none;color:var(--heis);padding:4px;text-decoration:underline;font-weight:500}
+</style>
+</head>
+<body>
+<header>
+  <h1>Les Chats de <span>Schrödinger</span></h1>
+  <div class="sub">Vivant ? Mort ? Ou… la boîte est vide ? <button class="linkbtn" onclick="showRules()">Règles</button></div>
+</header>
+
+<!-- SETUP -->
+<section id="setup">
+  <h2>Nouvelle partie</h2>
+  <div>Nombre de joueurs</div>
+  <div class="counts" id="counts"></div>
+  <div class="names" id="names"></div>
+  <div class="deckinfo" id="deckinfo"></div>
+  <button class="btn purple" style="width:100%;font-size:1.15rem" onclick="startGame()">Commencer la partie</button>
+</section>
+
+<!-- GAME -->
+<section id="game" class="hidden">
+  <aside class="panel"><div id="players"></div></aside>
+  <div id="center">
+    <div id="status"></div>
+    <div class="clip"><div id="board"></div></div>
+    <div class="panel" id="handpanel">
+      <h3 id="handtitle"></h3>
+      <div id="handzone"></div>
+      <div id="log"></div>
+    </div>
+  </div>
+</section>
+
+<div id="modal" class="modal hidden"><div class="box" id="modalbox"></div></div>
+
+<script>
+/* ================= DONNÉES ================= */
+const DECK_DEF = {alive:20, dead:20, box:8, heis:4};
+const TNAME = {alive:'Vivant', dead:'Mort', box:'Boîte vide', heis:'Heisenberg'};
+const COL = {alive:'#6fae3f', dead:'#8c929b', box:'#b88658', heis:'#9b4fc4'};
+
+const BOARD = [];
+for (let g = 0; g < 13; g++) {
+  const a = 2*g+1, b = a+1;
+  BOARD.push({n:a,t:'alive'},{n:a,t:'dead'},{n:b,t:'alive'},{n:b,t:'dead'},{n:g+1,t:'box'});
+}
+function betLabel(i){
+  const c = BOARD[i], p = c.n > 1 ? 's' : '';
+  if (c.t === 'alive') return `${c.n} chat${p} vivant${p}`;
+  if (c.t === 'dead')  return `${c.n} chat${p} mort${p}`;
+  return `${c.n} boîte${p} vide${p}`;
+}
+
+/* ================= DESSINS SVG ================= */
+function catHead(cx, cy, r, fill, dead, stroke='#3b2a1d'){
+  const sw = r*0.09;
+  let s = `<polygon points="${cx-r*.95},${cy-r*.15} ${cx-r*.8},${cy-r*1.25} ${cx-r*.2},${cy-r*.8}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+  s += `<polygon points="${cx+r*.95},${cy-r*.15} ${cx+r*.8},${cy-r*1.25} ${cx+r*.2},${cy-r*.8}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+  s += `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r*.88}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+  const ex = r*.4, ey = cy - r*.1, er = r*.24;
+  if (dead){
+    for (const x of [cx-ex, cx+ex]){
+      s += `<path d="M${x-er},${ey-er} L${x+er},${ey+er} M${x+er},${ey-er} L${x-er},${ey+er}" stroke="${stroke}" stroke-width="${sw*1.3}" stroke-linecap="round"/>`;
+    }
+    s += `<path d="M${cx-r*.18},${cy+r*.42} q${r*.18},${r*.2} ${r*.36},0" stroke="${stroke}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`;
+    s += `<ellipse cx="${cx+r*.1}" cy="${cy+r*.55}" rx="${r*.1}" ry="${r*.14}" fill="#f28aa0"/>`;
+  } else {
+    for (const x of [cx-ex, cx+ex]){
+      s += `<ellipse cx="${x}" cy="${ey}" rx="${er}" ry="${er*1.1}" fill="#ffe14d" stroke="${stroke}" stroke-width="${sw*.7}"/>`;
+      s += `<ellipse cx="${x}" cy="${ey}" rx="${er*.3}" ry="${er*.85}" fill="${stroke}"/>`;
+    }
+    s += `<path d="M${cx-r*.1},${cy+r*.28} L${cx+r*.1},${cy+r*.28} L${cx},${cy+r*.4} Z" fill="#f28aa0"/>`;
+    s += `<path d="M${cx},${cy+r*.4} q-${r*.15},${r*.18} -${r*.3},${r*.05} M${cx},${cy+r*.4} q${r*.15},${r*.18} ${r*.3},${r*.05}" stroke="${stroke}" stroke-width="${sw*.7}" fill="none" stroke-linecap="round"/>`;
+  }
+  return s;
+}
+function miniIcon(t, cls=''){
+  let inner = '';
+  if (t === 'alive') inner = catHead(12,13.5,8.5,'#fff',false);
+  else if (t === 'dead') inner = catHead(12,13.5,8.5,'#fff',true);
+  else if (t === 'box') inner = `<circle cx="12" cy="12" r="9" fill="#fff" stroke="#3b2a1d" stroke-width="1.6"/><circle cx="12" cy="12" r="6" fill="none" stroke="#8a5f37" stroke-width="2"/><path d="M7.8,16.2 L16.2,7.8" stroke="#8a5f37" stroke-width="2.2" stroke-linecap="round"/>`;
+  else inner = `<circle cx="12" cy="12" r="9.5" fill="#fff" stroke="#3b2a1d" stroke-width="1.4"/><text x="12" y="16.8" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="14" fill="#9b4fc4">?</text>`;
+  return `<svg class="${cls}" viewBox="0 0 24 24">${inner}</svg>`;
+}
+function boxArt(content){
+  return `<svg class="art" viewBox="0 0 100 120">
+    <polygon points="8,6 92,6 82,22 18,22" fill="#f3d08c" stroke="#a8773f" stroke-width="1.5"/>
+    <polygon points="2,16 18,22 18,100 2,112" fill="#e2b46e" stroke="#a8773f" stroke-width="1.5"/>
+    <polygon points="98,16 82,22 82,100 98,112" fill="#e2b46e" stroke="#a8773f" stroke-width="1.5"/>
+    <rect x="18" y="22" width="64" height="78" fill="#5b3d22"/>
+    <rect x="18" y="22" width="64" height="12" fill="#3e2915" opacity=".6"/>
+    ${content}
+    <polygon points="18,100 82,100 94,116 6,116" fill="#f3d08c" stroke="#a8773f" stroke-width="1.5"/>
+  </svg>`;
+}
+function cardArt(t){
+  if (t === 'alive') return boxArt(catHead(50,62,19,'#ec9a4b',false) + `<circle cx="66" cy="86" r="7" fill="#7cc04a" stroke="#3b2a1d" stroke-width="1.2"/><path d="M60,84 q6,-3 12,2 M61,89 q6,-4 11,0" stroke="#3b2a1d" stroke-width=".9" fill="none"/>`);
+  if (t === 'dead')  return boxArt(catHead(50,62,19,'#d4d6da',true) + `<path d="M28,92 l6,-3 M70,40 l5,4" stroke="#bbb" stroke-width="2" stroke-linecap="round"/>`);
+  if (t === 'box')   return boxArt(`<g stroke="#e9e2d0" stroke-width="2" stroke-linecap="round" fill="none"><path d="M36,70 L64,70"/><path d="M42,70 l-4,-6 M42,70 l-4,6 M50,70 l-4,-7 M50,70 l-4,7 M58,70 l-3,-6 M58,70 l-3,6"/><circle cx="66" cy="70" r="3"/></g><circle cx="34" cy="88" r="7" fill="#e07a6a" stroke="#3b2a1d" stroke-width="1.2"/><circle cx="34" cy="88" r="4" fill="#9ed4c0"/>`);
+  return boxArt(`<g opacity=".9">${catHead(50,64,19,'rgba(255,255,255,.25)',false,'rgba(255,255,255,.7)')}</g><text x="50" y="76" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="38" fill="#fff" stroke="#723399" stroke-width="1.5">?</text><g fill="#fff"><circle cx="26" cy="36" r="1.6"/><circle cx="75" cy="44" r="2"/><circle cx="30" cy="90" r="1.4"/><circle cx="72" cy="88" r="1.8"/></g>`);
+}
+function cardHTML(c, cls=''){
+  return `<div class="card ${c.t} ${cls}" data-id="${c.id}">
+    <div class="co tl">${miniIcon(c.t)}</div>${cardArt(c.t)}<div class="co br">${miniIcon(c.t)}</div>
+    <div class="lbl">${TNAME[c.t]}</div></div>`;
+}
+function backHTML(){
+  return `<div class="card back"><svg class="art" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="#fff8ea" stroke="#8a5f37" stroke-width="3"/><text x="30" y="42" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="34" fill="#8a5f37">?</text></svg></div>`;
+}
+function lifeSVG(alive){
+  return `<svg viewBox="0 0 40 40">${catHead(20,23,13,alive?'#ec9a4b':'#d4d6da',!alive)}</svg>`;
+}
+const YARN = `<svg class="yarn" viewBox="0 0 60 60"><circle cx="30" cy="30" r="19" fill="#c0392b" stroke="#7a1f14" stroke-width="2"/>
+<g stroke="#7a1f14" stroke-width="1.6" fill="none"><path d="M14,24 q16,-8 32,6"/><path d="M12,32 q18,-10 34,8"/><path d="M18,44 q10,-18 26,-26"/><path d="M22,14 q-2,18 10,34"/></g>
+<path d="M46,40 q8,6 12,16" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+
+/* ================= ÉTAT ================= */
+let S = null;
+let setupN = 4;
+const setupNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+let uid = 0;
+
+function shuffle(a){ for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function newDeck(){
+  const d = [];
+  for (const t in DECK_DEF) for (let i=0;i<DECK_DEF[t];i++) d.push({id:++uid, t});
+  return shuffle(d);
+}
+
+/* ================= SETUP ================= */
+function renderSetup(){
+  $('counts').innerHTML = [2,3,4,5,6].map(n => `<button class="${n===setupN?'on':''}" onclick="setN(${n})">${n}</button>`).join('');
+  $('names').innerHTML = Array.from({length:setupN},(_,i) =>
+    `<label>${lifeSVG(true).replace('<svg','<svg width="34" height="34"')}<input maxlength="16" value="${esc(setupNames[i])}" oninput="setupNames[${i}]=this.value" placeholder="Nom du joueur ${i+1}"></label>`).join('');
+  $('deckinfo').innerHTML = Object.keys(DECK_DEF).map(t =>
+    `<div><span style="display:inline-flex;width:26px;height:26px;border-radius:50%;background:${COL[t]};align-items:center;justify-content:center">${miniIcon(t).replace('<svg','<svg width="20" height="20"')}</span>${DECK_DEF[t]} × ${TNAME[t]}</div>`).join('');
+}
+function setN(n){ setupN = n; renderSetup(); }
+
+function startGame(){
+  const players = Array.from({length:setupN},(_,i) => ({
+    name: (setupNames[i]||'').trim() || `Joueur ${i+1}`, lives:3, hand:[], table:[]
+  }));
+  S = { players, handSize:6, dir:-1, round:0, starter:0, log:[] };
+  $('setup').classList.add('hidden');
+  $('game').classList.remove('hidden');
+  newRound();
+}
+
+/* ================= MANCHES ================= */
+function alivePlayers(){ return S.players.map((p,i)=>i).filter(i => S.players[i].lives > 0); }
+function nextAlive(i){
+  const n = S.players.length;
+  for (let k=1;k<=n;k++){ const j=(i+k)%n; if (S.players[j].lives>0) return j; }
+  return i;
+}
+function newRound(){
+  S.round++;
+  S.deck = newDeck();
+  for (const p of S.players){ p.hand=[]; p.table=[]; }
+  for (const i of alivePlayers()) S.players[i].hand = S.deck.splice(0, S.handSize);
+  S.bet = -1; S.lastBettor = null; S.current = S.starter;
+  S.phase = 'pass'; S.sel = null; S.chosen = new Set(); S.fresh = new Set(); S.firstTurn = true;
+  addLog(`— Manche ${S.round} : ${S.handSize} carte${S.handSize>1?'s':''} par joueur. ${S.players[S.current].name} commence.`);
+  render();
+}
+function nextHandSize(){
+  let n = S.handSize + S.dir;
+  if (n < 1){ S.dir = 1; n = 2; }
+  if (n > 6){ S.dir = -1; n = 5; }
+  S.handSize = n;
+}
+function addLog(t){ S.log.unshift(t); }
+
+/* ================= RENDU ================= */
+function render(){
+  renderPlayers(); renderStatus(); renderBoard(); renderHand();
+  $('log').innerHTML = S.log.slice(0,30).map(l => `<div>${esc(l)}</div>`).join('');
+}
+function renderPlayers(){
+  $('players').innerHTML = S.players.map((p,i) => {
+    const out = p.lives <= 0;
+    const tags = (!out && i===S.current ? `<span class="tag">joue</span>` : '') + (i===S.lastBettor && S.bet>=0 ? `<span class="tag bet">dernier pari</span>` : '');
+    const lives = [0,1,2].map(k => lifeSVG(k < p.lives)).join('');
+    return `<div class="pl ${!out&&i===S.current?'active':''} ${out?'out':''}">
+      <div class="nm">${esc(p.name)} ${tags}</div>
+      <div class="lives">${lives}</div>
+      <div class="info">${out ? 'Éliminé' : `<span class="minibacks">${'<i></i>'.repeat(p.hand.length)}</span> ${p.hand.length} en main`}</div>
+      ${p.table.length ? `<div class="info" style="margin-top:6px">Sur la table :</div><div class="tablecards">${p.table.map(c=>`<div class="mc" style="background:${COL[c.t]}" title="${TNAME[c.t]}">${miniIcon(c.t)}</div>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+function renderStatus(){
+  const p = S.players[S.current];
+  let html = `Manche ${S.round} · ${S.handSize} carte${S.handSize>1?'s':''} · Pioche : ${S.deck.length}<br>`;
+  if (S.bet >= 0){
+    html += `<span class="betnow"><span style="display:inline-flex;width:28px;height:28px;border-radius:50%;background:${COL[BOARD[S.bet].t]};align-items:center;justify-content:center">${miniIcon(BOARD[S.bet].t).replace('<svg','<svg width="22" height="22"')}</span>Pari actuel : ${betLabel(S.bet)} <small style="color:var(--muted)">(par ${esc(S.players[S.lastBettor].name)})</small></span>`;
+  } else {
+    html += `<span class="betnow">Aucun pari pour l'instant — <b>${esc(p.name)}</b> ouvre les enchères</span>`;
+  }
+  $('status').innerHTML = html;
+}
+function cellPos(i){ const r = Math.floor(i/10), c = r%2===0 ? i%10 : 9 - i%10; return {r, c}; }
+function canPick(i){
+  if (S.phase !== 'turn') return false;
+  return S.bet < 0 ? i >= 0 : i > S.bet;
+}
+function renderBoard(){
+  let html = '';
+  BOARD.forEach((b,i) => {
+    const {r,c} = cellPos(i);
+    const cls = ['cell', b.t];
+    if (S.phase==='turn' && !canPick(i)) cls.push('past');
+    if (canPick(i)) cls.push('pick');
+    if (S.sel === i) cls.push('sel');
+    const yarn = (S.bet >= 0 && i === S.bet) ? YARN : (S.bet < 0 && i === 0 ? YARN.replace('class="yarn"','class="yarn start"') : '');
+    html += `<div class="${cls.join(' ')}" style="grid-row:${r+1};grid-column:${c+1}" ${canPick(i)?`onclick="pickCell(${i})"`:''} title="${betLabel(i)}">
+      <span class="n">${b.n}</span>${miniIcon(b.t,'ic')}${yarn}</div>`;
+  });
+  // fil rouge
+  const pts = BOARD.map((_,i) => { const {r,c} = cellPos(i); return `${(c+.5)*10},${(r+.5)*10}`; }).join(' ');
+  html += `<svg id="thread" viewBox="0 0 100 70" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#a93226" stroke-width="1.6" stroke-opacity=".55" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="stroke-width:2.5px"/></svg>`;
+  $('board').innerHTML = html;
+}
+function matches(c){ return S.bet >= 0 && (c.t === BOARD[S.bet].t || c.t === 'heis'); }
+
+function renderHand(){
+  const p = S.players[S.current];
+  const z = $('handzone');
+  if (S.phase === 'pass'){
+    $('handtitle').innerHTML = `Au tour de <span style="color:var(--heis)">${esc(p.name)}</span>`;
+    z.innerHTML = `<div id="hand">${p.hand.map(()=>backHTML()).join('')}</div>
+      <div class="privacy"><p>🙈 Passez l'appareil à <b>${esc(p.name)}</b>.<br>Les autres joueurs, ne regardez pas l'écran !</p>
+      <button class="btn purple" onclick="ready()">Je suis ${esc(p.name)}, je suis prêt·e</button></div>`;
+    return;
+  }
+  let cardsCls = c => '';
+  let hint = '', actions = '';
+  if (S.phase === 'turn'){
+    hint = S.bet < 0
+      ? `Choisissez une case sur le plateau pour faire votre pari (vous pouvez garder « 1 chat vivant »).`
+      : `Accusez <b>${esc(S.players[S.lastBettor].name)}</b> de mentir, ou cliquez une case plus loin sur le plateau pour surenchérir.`;
+    if (S.bet >= 0) actions += `<button class="btn red" onclick="challenge()">${esc(S.players[S.lastBettor].name)} a menti !</button>`;
+    actions += `<button class="btn" ${S.sel===null?'disabled':''} onclick="confirmBet()">${S.sel===null ? 'Choisissez une case' : 'Parier : ' + betLabel(S.sel)}</button>`;
+    if (S.sel !== null) actions += `<button class="btn ghost" onclick="S.sel=null;render()">Annuler</button>`;
+  } else if (S.phase === 'reveal'){
+    const nMatch = p.hand.filter(matches).length;
+    cardsCls = c => matches(c) ? ('can' + (S.chosen.has(c.id)?' chosen':'')) : 'dim';
+    hint = nMatch
+      ? `Vous avez parié <b>${betLabel(S.bet)}</b>. Voulez-vous montrer des cartes qui le prouvent ? Cliquez-les pour les sélectionner : elles iront face visible sur la table et vous piocherez autant de nouvelles cartes.`
+      : `Vous avez parié <b>${betLabel(S.bet)}</b>. Aucune carte de votre main ne correspond à ce pari.`;
+    const k = S.chosen.size;
+    if (nMatch) actions += `<button class="btn purple" ${k?'':'disabled'} onclick="showCards()">${k ? `Poser ${k} carte${k>1?'s':''} sur la table` : 'Sélectionnez des cartes'}</button>`;
+    actions += `<button class="btn ghost" onclick="endTurn()">Garder mes cartes et finir mon tour</button>`;
+  } else if (S.phase === 'exchange'){
+    const k = S.chosen.size;
+    cardsCls = c => 'can' + (S.chosen.has(c.id) ? ' chosen' : (k >= S.exLimit ? ' dim' : ''));
+    hint = `Vous avez posé des cartes : vous pouvez maintenant <b>échanger jusqu'à ${S.exLimit} carte${S.exLimit>1?'s':''}</b> de votre main contre des nouvelles de la pioche. Cliquez les cartes à changer.`;
+    actions += `<button class="btn purple" ${k?'':'disabled'} onclick="exchangeCards()">${k ? `Échanger ${k} carte${k>1?'s':''}` : 'Sélectionnez les cartes à changer'}</button>`;
+    actions += `<button class="btn ghost" onclick="endTurn()">Ne rien échanger et finir mon tour</button>`;
+  } else if (S.phase === 'drawn'){
+    cardsCls = c => S.fresh.has(c.id) ? 'fresh' : '';
+    hint = S.fresh.size ? `Voici vos nouvelles cartes (entourées en jaune).` : (S.deck.length ? `Votre tour est terminé.` : `La pioche est vide : aucune nouvelle carte.`);
+    actions = `<button class="btn" onclick="endTurn()">Finir mon tour</button>`;
+  }
+  $('handtitle').innerHTML = `Main de ${esc(p.name)}`;
+  z.innerHTML = `<p class="hint">${hint}</p>
+    <div id="hand">${p.hand.map(c => cardHTML(c, cardsCls(c))).join('') || '<em style="color:var(--muted);align-self:center">Plus de cartes en main</em>'}</div>
+    <div id="actions">${actions}</div>`;
+  if (S.phase === 'reveal' || S.phase === 'exchange'){
+    z.querySelectorAll('.card.can').forEach(el => el.onclick = () => {
+      const id = +el.dataset.id;
+      if (S.chosen.has(id)) S.chosen.delete(id);
+      else if (S.phase === 'reveal' || S.chosen.size < S.exLimit) S.chosen.add(id);
+      renderHand();
+    });
+  }
+}
+
+/* ================= ACTIONS ================= */
+function ready(){ S.phase = 'turn'; S.sel = null; render(); }
+function pickCell(i){ if (canPick(i)){ S.sel = i; render(); } }
+function confirmBet(){
+  if (S.sel === null) return;
+  S.bet = S.sel; S.lastBettor = S.current; S.sel = null; S.firstTurn = false;
+  addLog(`${S.players[S.current].name} parie : ${betLabel(S.bet)}.`);
+  S.phase = 'reveal'; S.chosen = new Set();
+  render();
+}
+function showCards(){
+  const p = S.players[S.current];
+  const shown = p.hand.filter(c => S.chosen.has(c.id));
+  p.hand = p.hand.filter(c => !S.chosen.has(c.id));
+  p.table.push(...shown);
+  addLog(`${p.name} montre ${shown.length} carte${shown.length>1?'s':''} (${shown.map(c=>TNAME[c.t]).join(', ')}).`);
+  S.exLimit = Math.min(shown.length, p.hand.length);
+  S.chosen = new Set();
+  S.phase = S.exLimit > 0 ? 'exchange' : 'drawn';
+  S.fresh = new Set();
+  render();
+}
+function exchangeCards(){
+  const p = S.players[S.current];
+  const out = p.hand.filter(c => S.chosen.has(c.id));
+  const drawn = S.deck.splice(0, out.length);
+  const keep = out.slice(drawn.length);           // si la pioche est vide, on garde les cartes non remplacées
+  p.hand = p.hand.filter(c => !S.chosen.has(c.id)).concat(keep, drawn);
+  S.fresh = new Set(drawn.map(c => c.id));
+  if (drawn.length) addLog(`${p.name} échange ${drawn.length} carte${drawn.length>1?'s':''} de sa main.`);
+  S.chosen = new Set(); S.phase = 'drawn';
+  render();
+}
+function endTurn(){
+  S.current = nextAlive(S.current);
+  S.phase = 'pass'; S.sel = null; S.fresh = new Set(); S.chosen = new Set();
+  render();
+}
+
+function challenge(){
+  const accuser = S.current, bettor = S.lastBettor, cell = BOARD[S.bet];
+  let total = 0;
+  const rows = alivePlayers().map(i => {
+    const p = S.players[i];
+    const all = [...p.hand, ...p.table];
+    const cnt = all.filter(matches).length; total += cnt;
+    const handH = p.hand.map((c,k) => cardHTML(c, (matches(c)?'match ':'') + 'flip').replace('class="card', `style="animation-delay:${k*0.08}s" class="card`)).join('');
+    const tabH = p.table.map(c => cardHTML(c, matches(c)?'match':'')).join('');
+    return `<div class="reveal-row"><div class="who">${esc(p.name)}</div>
+      <div class="cards">${handH || '<em style="color:var(--muted)">—</em>'}</div>
+      ${p.table.length ? `<div class="sep"></div><div class="cards" title="Cartes déjà sur la table">${tabH}</div>` : ''}
+      <div class="cnt">${cnt}</div></div>`;
+  }).join('');
+  const holds = total >= cell.n;
+  const loser = holds ? accuser : bettor;
+  S.players[loser].lives--;
+  const eliminated = S.players[loser].lives <= 0;
+  addLog(`${S.players[accuser].name} accuse ${S.players[bettor].name} de mentir. Il y avait ${total} carte(s) pour ${betLabel(S.bet)} → ${S.players[loser].name} perd une vie.`);
+  if (eliminated) addLog(`${S.players[loser].name} est éliminé·e !`);
+  S.starter = eliminated ? nextAlive(loser) : loser;
+  S.phase = 'challenge';
+  render();
+
+  const left = alivePlayers();
+  const over = left.length <= 1;
+  $('modalbox').innerHTML = `
+    <h2 style="margin-top:0">${esc(S.players[accuser].name)} accuse ${esc(S.players[bettor].name)} de mentir !</h2>
+    <div>Pari : <b>${betLabel(S.bet)}</b> — les cartes Heisenberg comptent comme des « ${TNAME[cell.t].toLowerCase()} ».</div>
+    <div style="margin:14px 0">${rows}</div>
+    <div class="total">${total} / ${cell.n}</div>
+    <div class="verdict ${holds?'ok':'ko'}">${holds ? `Le pari tient ! ${esc(S.players[bettor].name)} disait vrai.` : `Mensonge ! Il n'y a pas assez de cartes.`}</div>
+    <div style="font-size:1.1rem;margin-bottom:6px"><b>${esc(S.players[loser].name)}</b> perd une vie ${lifeSVG(false).replace('<svg','<svg width="28" height="28" style="vertical-align:middle"')}
+      ${eliminated ? `<br><b style="color:var(--red)">${esc(S.players[loser].name)} est éliminé·e !</b>` : ''}</div>
+    ${over ? '' : `<p class="hint">Prochaine manche : ${(()=>{const s=S.handSize, d=S.dir; let n=s+d; if(n<1)n=2; if(n>6)n=5; return n;})()} carte(s) par joueur, ${esc(S.players[S.starter].name)} commence.</p>`}
+    <button class="btn purple" onclick="${over ? 'gameOver()' : 'closeChallenge()'}">${over ? 'Voir le gagnant' : 'Manche suivante'}</button>`;
+  $('modal').classList.remove('hidden');
+}
+function closeChallenge(){
+  $('modal').classList.add('hidden');
+  nextHandSize();
+  newRound();
+}
+function gameOver(){
+  const w = S.players[alivePlayers()[0]];
+  $('modalbox').innerHTML = `<div style="width:120px;margin:0 auto">${lifeSVG(true)}</div>
+    <h2>🎉 ${esc(w.name)} remporte la partie !</h2>
+    <p>Son chat est bien vivant… pour l'instant.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn purple" onclick="rematch()">Rejouer avec les mêmes joueurs</button>
+      <button class="btn ghost" onclick="backToSetup()">Changer les joueurs</button></div>`;
+}
+function rematch(){
+  $('modal').classList.add('hidden');
+  for (const p of S.players){ p.lives = 3; }
+  S.handSize = 6; S.dir = -1; S.round = 0; S.log = [];
+  S.starter = Math.floor(Math.random()*S.players.length);
+  newRound();
+}
+function backToSetup(){
+  $('modal').classList.add('hidden');
+  $('game').classList.add('hidden');
+  $('setup').classList.remove('hidden');
+  renderSetup();
+}
+function showRules(){
+  $('modalbox').innerHTML = `<h2 style="margin-top:0">Règles</h2><ul class="rules">
+    <li><b>52 cartes</b> : 20 chats vivants (vert), 20 chats morts (gris), 8 boîtes vides (marron), 4 Heisenberg (violet). Les Heisenberg comptent comme le type du pari en cours.</li>
+    <li>Chaque joueur a <b>3 vies</b>. Première manche : 6 cartes chacun, puis une de moins à chaque manche jusqu'à 1, puis on remonte (2, 3…).</li>
+    <li>Le plateau se lit dans l'ordre : 1 vivant, 1 mort, 2 vivants, 2 morts, 1 boîte vide, 3 vivants… Chaque case est un pari plus fort que la précédente.</li>
+    <li>À son tour, un joueur peut <b>surenchérir</b> (avancer la pelote d'une ou plusieurs cases) ou dire que <b>le joueur précédent a menti</b> (impossible pour le premier joueur de la manche).</li>
+    <li>Après une surenchère, il peut <b>montrer</b> des cartes qui soutiennent son pari : elles restent face visible sur la table (sa main diminue d'autant). Il peut ensuite échanger, parmi les cartes qui lui restent, autant de cartes qu'il en a posé contre des nouvelles de la pioche. Sinon il garde sa main.</li>
+    <li>En cas d'accusation, toutes les cartes sont révélées (mains + table). S'il y a <b>au moins</b> le nombre annoncé, l'accusateur perd une vie ; sinon c'est le parieur.</li>
+    <li>Le perdant commence la manche suivante ; s'il est éliminé, c'est le joueur suivant. Le dernier joueur en vie gagne.</li></ul>
+    <button class="btn" onclick="$('modal').classList.add('hidden')">Compris !</button>`;
+  $('modal').classList.remove('hidden');
+}
+$('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal' && S && S.phase !== 'challenge') $('modal').classList.add('hidden');
+  if (e.target.id === 'modal' && !S) $('modal').classList.add('hidden');
+});
+renderSetup();
+</script>
+</body>
+</html>
