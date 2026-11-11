@@ -116,6 +116,24 @@ button{font-family:inherit}
 .c-green{background-color:#5cb83a}
 .c-yellow{background-color:#f4dc2c}
 .c-red{background-color:#e2402a}
+.c-purple{background-color:#8a3cb4}
+.card.face.c-star{
+  background-image:
+    radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.55) 0, transparent 50%),
+    var(--mosaic),
+    linear-gradient(160deg,#2fb24a 0%,#f2d000 30%,#f08a1c 50%,#e8452c 68%,#8a3cb4 85%,#3d6fe0 100%);
+  background-size:100% 100%, 46px 46px, 100% 100%;
+}
+.card .star{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.card .star svg{width:62%;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.card .eye{position:absolute;width:30%;height:16%;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.card .eye::after{content:"";width:34%;height:62%;border-radius:50%;background:#222}
+.card .eye.tr{top:5%;right:4%}
+.card .eye.bl{bottom:5%;left:4%}
+.mode-btns button{font-size:16px;padding:12px 4px}
+.mode-btns small{display:block;font-weight:normal;font-size:12px;opacity:.8;margin-top:2px}
+.peek-card{display:flex;justify-content:center;margin:10px 0 16px}
+.peek-card .card{--card-w:110px}
 .card .num{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-family: Georgia, "Times New Roman", serif;font-weight:bold;color:#111;
@@ -193,6 +211,11 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     <div class="count-btns" id="countBtns">
       <button data-n="1">1</button><button data-n="2" class="sel">2</button><button data-n="3">3</button><button data-n="4">4</button>
     </div>
+    <div class="label">Version</div>
+    <div class="count-btns mode-btns" id="modeBtns">
+      <button data-m="classic" class="sel">Classique<small>150 cartes</small></button>
+      <button data-m="ext">Avec extension<small>+ 13, −4 et Étoiles</small></button>
+    </div>
     <div class="label">Noms des joueurs</div>
     <div class="names" id="names"></div>
     <button class="primary" id="startBtn">Commencer la partie</button>
@@ -201,6 +224,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       <p>Chacun a 12 cartes face cachée (4 × 3). Au premier tour, chaque joueur retourne 2 cartes ; celui qui a le plus de points commence.</p>
       <p>À ton tour : prends la carte de la défausse <i>ou</i> pioche une carte, puis clique sur une de tes cartes pour l'échanger (la carte remplacée part à la défausse). Tu peux aussi simplement retourner une de tes cartes cachées. Une carte piochée peut aussi être défaussée : tu retournes alors une carte cachée.</p>
       <p>3 cartes identiques visibles dans une même colonne sont éliminées. Dès qu'un joueur a tout dévoilé, les autres jouent un dernier tour. Le moins de points gagne ; la partie s'arrête quand un joueur atteint 100.</p>
+      <p><b>Extension</b> (+14 cartes) : 10 cartes <b>13</b> — quand tu en retournes une dans ta grille, tu regardes secrètement une de tes cartes cachées. 1 carte <b>−4</b>. 3 cartes <b>Étoile</b> — jokers qui complètent n'importe quelle colonne, mais valent 20 points si elles sont encore dans ta grille en fin de manche.</p>
     </details>
   </div>
 </section>
@@ -268,7 +292,16 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   });
   renderNames();
 
+  let gameMode = 'classic';
+  $('#modeBtns').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    gameMode = b.dataset.m;
+    document.querySelectorAll('#modeBtns button').forEach(x => x.classList.toggle('sel', x===b));
+  });
+
   // ---------- État ----------
+  const STAR = 'S';                       // carte Étoile (joker, 20 points)
+  const pts = v => v===STAR ? 20 : v;
   let S = null;
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
@@ -278,12 +311,17 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     for(let i=0;i<10;i++) d.push(-1);
     for(let i=0;i<15;i++) d.push(0);
     for(let v=1;v<=12;v++) for(let i=0;i<10;i++) d.push(v);
-    return shuffle(d); // 150 cartes
+    if(S && S.mode === 'ext'){           // extension : +14 cartes
+      for(let i=0;i<10;i++) d.push(13);
+      d.push(-4);
+      for(let i=0;i<3;i++) d.push(STAR);
+    }
+    return shuffle(d); // 150 cartes (164 avec l'extension)
   }
 
   $('#startBtn').addEventListener('click', () => {
     const names = [...$('#names').querySelectorAll('input')].map((i,k) => i.value.trim() || ('Joueur '+(k+1)));
-    S = { players: names.map(n => ({name:n, total:0, grid:null, revealed:0})), round:0 };
+    S = { players: names.map(n => ({name:n, total:0, grid:null, revealed:0})), round:0, mode:gameMode };
     $('#setup').classList.add('hidden'); $('#game').classList.remove('hidden');
     startRound();
   });
@@ -305,14 +343,14 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     });
     S.discard = [S.deck.pop()];
     S.phase = 'reveal'; S.current = 0;
-    S.drawn = null; S.mustFlip = false; S.finisher = null;
+    S.drawn = null; S.mustFlip = false; S.finisher = null; S.peek = null;
     S.fx = new Set(); S.poof = new Set();
     render();
   }
 
   // ---------- Utilitaires ----------
   const cardsOf = p => p.grid.flat().filter(Boolean);
-  const visibleSum = p => cardsOf(p).filter(c=>c.up).reduce((s,c)=>s+c.v,0);
+  const visibleSum = p => cardsOf(p).filter(c=>c.up).reduce((s,c)=>s+pts(c.v),0);
   const allRevealed = p => cardsOf(p).every(c=>c.up);
   const hasHidden = p => cardsOf(p).some(c=>!c.up);
   const cur = () => S.players[S.current];
@@ -329,7 +367,9 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     const p = S.players[pi]; let removed = false;
     for(let c=0;c<COLS;c++){
       const col = p.grid[c];
-      if(col.every(x => x && x.up) && col[0].v===col[1].v && col[1].v===col[2].v){
+      // Les Étoiles sont des jokers : il suffit que les autres cartes soient identiques
+      const vals = col.every(x => x && x.up) ? new Set(col.filter(x => x.v!==STAR).map(x => x.v)) : null;
+      if(vals && vals.size <= 1){
         col.forEach(x => S.discard.push(x.v));
         p.grid[c] = [null,null,null];
         for(let r=0;r<ROWS;r++) S.poof.add(`${pi}-${c}-${r}`);
@@ -346,20 +386,20 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     const p = cur(), card = p.grid[c][r];
     if(!card) return;
 
+    // Pouvoir de la carte 13 : regarder secrètement une carte cachée
+    if(S.peek){
+      if(card.up) return;
+      showModal(`<h2>👁 Carte secrète</h2><p>${esc(p.name)}, voici ta carte cachée. Mémorise-la !</p>
+        <div class="peek-card">${faceHTML(card.v)}</div>
+        <div class="modal-btns"><button class="primary" data-act="peekdone">J'ai mémorisé</button></div>`);
+      return;
+    }
+
     if(S.phase === 'reveal'){
       if(card.up) return;
       card.up = true; p.revealed++; S.fx.add(`${pi}-${c}-${r}`);
-      if(p.revealed >= 2){
-        if(S.current < S.players.length-1){ S.current++; }
-        else {
-          // Celui qui a le plus de points commence
-          let best = 0;
-          S.players.forEach((q,i) => { if(visibleSum(q) > visibleSum(S.players[best])) best = i; });
-          S.phase = 'play'; S.current = best;
-          if(S.players.length > 1) toast(`${S.players[best].name} commence (${visibleSum(S.players[best])} points visibles)`);
-        }
-      }
-      render(); return;
+      afterFlip(card, revealNext);
+      return;
     }
 
     if(S.phase !== 'play') return;
@@ -367,7 +407,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     if(S.mustFlip){
       if(card.up) return;
       card.up = true; S.mustFlip = false; S.fx.add(`${pi}-${c}-${r}`);
-      endTurn(); return;
+      afterFlip(card, endTurn); return;
     }
     if(S.drawn){
       // Échange : la carte en main prend la place, l'ancienne (révélée) part à la défausse
@@ -379,11 +419,40 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     // Retourner simplement une carte cachée
     if(card.up) return;
     card.up = true; S.fx.add(`${pi}-${c}-${r}`);
-    endTurn();
+    afterFlip(card, endTurn);
+  }
+
+  // Après avoir retourné une carte de sa grille : une carte 13 déclenche le pouvoir
+  function afterFlip(card, next){
+    if(card.v === 13 && hasHidden(cur())){
+      S.peek = {next};
+      render();
+      toast('Carte 13 : regarde secrètement une de tes cartes cachées');
+    } else next();
+  }
+  function peekDone(){
+    hideModal();
+    const next = S.peek.next; S.peek = null;
+    next();
+  }
+
+  function revealNext(){
+    const p = cur();
+    if(p.revealed >= 2){
+      if(S.current < S.players.length-1){ S.current++; }
+      else {
+        // Celui qui a le plus de points commence
+        let best = 0;
+        S.players.forEach((q,i) => { if(visibleSum(q) > visibleSum(S.players[best])) best = i; });
+        S.phase = 'play'; S.current = best;
+        if(S.players.length > 1) toast(`${S.players[best].name} commence (${visibleSum(S.players[best])} points visibles)`);
+      }
+    }
+    render();
   }
 
   function onDeck(){
-    if(S.phase!=='play' || S.drawn || S.mustFlip) return;
+    if(S.phase!=='play' || S.drawn || S.mustFlip || S.peek) return;
     refillDeck();
     if(!S.deck.length) return;
     S.drawn = {v:S.deck.pop(), from:'deck'}; S.fx.add('hand');
@@ -391,7 +460,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   }
 
   function onDiscard(){
-    if(S.phase!=='play' || S.mustFlip) return;
+    if(S.phase!=='play' || S.mustFlip || S.peek) return;
     if(S.drawn){
       if(S.drawn.from === 'deck') discardDrawn(); else cancelDrawn();
       return;
@@ -414,18 +483,19 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       if(S.players.length > 1) toast(`${p.name} a tout dévoilé : dernier tour pour les autres !`);
     }
     const next = (pi + 1) % S.players.length;
-    if(S.finisher !== null && next === S.finisher){ render(); setTimeout(endRound, 700); return; }
+    if(S.finisher !== null && next === S.finisher){ S.phase = 'ending'; render(); setTimeout(endRound, 700); return; }
     S.current = next;
     render();
   }
 
   function endRound(){
+    if(S.phase !== 'ending') return;
     S.phase = 'roundEnd'; S.drawn = null;
     S.players.forEach((p,pi) => {
       p.grid.forEach((col,c) => col.forEach((x,r) => { if(x && !x.up){ x.up = true; S.fx.add(`${pi}-${c}-${r}`); } }));
       checkColumns(pi);
     });
-    const scores = S.players.map(p => cardsOf(p).reduce((s,x)=>s+x.v,0));
+    const scores = S.players.map(p => cardsOf(p).reduce((s,x)=>s+pts(x.v),0));
     scores.forEach((s,i) => S.players[i].total += s);
     render();
 
@@ -457,8 +527,15 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
 
   // ---------- Rendu ----------
   function esc(s){ return s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
-  function colorClass(v){ return v<0?'c-dblue':v===0?'c-lblue':v<=4?'c-green':v<=8?'c-yellow':'c-red'; }
+  function colorClass(v){ return v<0?'c-dblue':v===0?'c-lblue':v<=4?'c-green':v<=8?'c-yellow':v<=12?'c-red':'c-purple'; }
+  const STAR_SVG = '<svg viewBox="0 0 100 95"><path d="M50 3l13.5 29.5 32 3.5-24 21.8 6.8 31.7L50 73.3 21.7 89.5l6.8-31.7-24-21.8 32-3.5z" fill="#f7d33a" stroke="#d9a800" stroke-width="4" stroke-linejoin="round"/></svg>';
   function faceHTML(v, extra=''){
+    if(v === STAR){
+      return `<div class="card face c-star ${extra}"><span class="corner tl">20</span><span class="star">${STAR_SVG}</span><span class="corner br">20</span></div>`;
+    }
+    if(v === 13){
+      return `<div class="card face c-purple ${extra}"><span class="corner tl">13</span><span class="eye tr"></span><span class="num two">13</span><span class="eye bl"></span><span class="corner br">13</span></div>`;
+    }
     const u = (v===6||v===9) ? ' ul' : '';
     const two = String(v).length >= 2 ? ' two' : '';
     return `<div class="card face ${colorClass(v)} ${extra}"><span class="corner tl${u}">${v}</span><span class="num${two}${u}">${v}</span><span class="corner br${u}">${v}</span></div>`;
@@ -468,8 +545,10 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   function statusHTML(){
     const p = cur(), n = `<b>${esc(p.name)}</b>`;
     const last = (S.finisher!==null && S.phase==='play') ? '<span class="last">Dernier tour ! </span>' : '';
+    if(S.peek) return `👁 ${n}, clique sur une de tes cartes cachées pour la regarder secrètement`;
     if(S.phase==='reveal') return `${n}, retourne 2 de tes cartes (${p.revealed}/2)`;
     if(S.phase!=='play') return `Fin de la manche ${S.round}`;
+    if(S.peek) return `👁 ${n}, clique sur une de tes cartes cachées pour la regarder secrètement`;
     if(S.mustFlip) return `${last}${n}, retourne une de tes cartes cachées`;
     if(S.drawn) return `${last}${n}, clique sur la carte à remplacer` + (S.drawn.from==='deck' ? ' — ou défausse la carte piochée' : '');
     return `${last}${n}, pioche, prends la défausse ou retourne une carte`;
@@ -480,7 +559,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     const poof = S.poof; S.poof = new Set();
     $('#status').innerHTML = statusHTML();
 
-    const playing = S.phase==='play' && !S.mustFlip;
+    const playing = S.phase==='play' && !S.mustFlip && !S.peek;
     // Pioche
     const canDeck = playing && !S.drawn;
     $('#deck').innerHTML = (S.deck.length || S.discard.length>1) ? backHTML(canDeck?'clickable':'') : '<div class="slot-empty"></div>';
@@ -512,7 +591,8 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
         const card = p.grid[c][r], key = `${pi}-${c}-${r}`;
         let clickable = false;
         if(active && card){
-          if(S.phase==='reveal') clickable = !card.up;
+          if(S.peek) clickable = !card.up;
+          else if(S.phase==='reveal') clickable = !card.up;
           else if(S.mustFlip) clickable = !card.up;
           else if(S.drawn) clickable = true;
           else clickable = !card.up;
@@ -546,6 +626,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   $('#modal').addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if(!b) return;
     const a = b.dataset.act;
+    if(a==='peekdone'){ peekDone(); return; }
     if(a==='close'){
       hideModal();
       if(S.phase==='roundEnd'){ // bouton flottant pour continuer après avoir regardé les cartes
