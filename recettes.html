@@ -1,1 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recettes par ingrédients</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf6ef; --card:#fff; --ink:#2b2420; --muted:#7a6e64;
+    --accent:#c4552d; --accent-soft:#f6e3d8; --line:#e8dfd3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:40px 20px 80px}
+  h1{font-family:Fraunces,Georgia,serif;font-size:2.2rem;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 28px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;animation:in .2s ease}
+  @keyframes in{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+  label{font-size:.85rem;font-weight:600;color:var(--muted)}
+  input[type=text]{font:inherit;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:#fffdfa;outline:none;transition:border-color .15s,box-shadow .15s}
+  input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 22px;background:var(--accent);color:#fff;cursor:pointer;transition:opacity .15s}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .actions{display:flex;align-items:center;gap:14px;margin-top:6px;flex-wrap:wrap}
+  .hint{color:var(--muted);font-size:.9rem}
+  #status{margin:28px 0 12px;color:var(--muted)}
+  #status.err{color:#a3261b}
+  ol{list-style:none;padding:0;margin:0;counter-reset:r}
+  li{counter-increment:r;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start}
+  li::before{content:counter(r);font-family:Fraunces,Georgia,serif;font-size:1.3rem;color:var(--accent);min-width:1.4em}
+  .name{font-size:.82rem;color:var(--muted);margin-bottom:6px}
+  a.kw{display:flex;flex-wrap:wrap;gap:6px;text-decoration:none}
+  a.kw span{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 11px;font-size:.88rem;font-weight:500;transition:background .15s,color .15s}
+  a.kw:hover span{background:var(--accent);color:#fff}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Que cuisiner ?</h1>
+  <p class="sub">Saisissez vos ingrédients : un nouveau champ apparaît dès que le précédent est rempli.</p>
+
+  <form class="panel" id="form">
+    <div id="fields"></div>
+    <div class="actions">
+      <button type="submit" id="go" disabled>Rechercher des recettes</button>
+      <span class="hint" id="count"></span>
+    </div>
+  </form>
+
+  <p id="status" hidden></p>
+  <ol id="results"></ol>
+</main>
+
+<script>
+const fieldsEl = document.getElementById('fields');
+const goBtn = document.getElementById('go');
+const countEl = document.getElementById('count');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+let sample = null;
+let busy = false;
+
+function addField(){
+  const n = fieldsEl.children.length + 1;
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  wrap.innerHTML = `<label for="ing${n}">Ingrédient ${n}</label>
+    <input type="text" id="ing${n}" autocomplete="off" placeholder="ex. ${['tomate','poulet','riz','oignon','citron','ail'][(n-1)%6]}">`;
+  fieldsEl.appendChild(wrap);
+  wrap.querySelector('input').addEventListener('input', sync);
+}
+
+function inputs(){ return [...fieldsEl.querySelectorAll('input')]; }
+function ingredients(){ return inputs().map(i => i.value.trim()).filter(Boolean); }
+
+function sync(){
+  const ins = inputs();
+  // Un champ vide toujours disponible à la fin
+  if (ins[ins.length-1].value.trim()) addField();
+  // Retirer les champs vides en trop en fin de liste (sauf celui qui a le focus)
+  let list = inputs();
+  while (list.length > 1 && !list[list.length-1].value.trim() && !list[list.length-2].value.trim()
+         && document.activeElement !== list[list.length-1]) {
+    list[list.length-1].parentElement.remove();
+    list = inputs();
+  }
+  const n = ingredients().length;
+  goBtn.disabled = n === 0 || busy;
+  countEl.textContent = n ? `${n} ingrédient${n>1?'s':''}` : '';
+}
+
+addField();
+
+function setStatus(html, err){
+  statusEl.hidden = false;
+  statusEl.className = err ? 'err' : '';
+  statusEl.innerHTML = html;
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function searchUrl(name){
+  return 'https://www.marmiton.org/recettes/recherche.aspx?aqt=' + encodeURIComponent(name);
+}
+
+function render(recipes){
+  resultsEl.innerHTML = '';
+  recipes.slice(0,10).forEach(r => {
+    const kws = (r.motsCles || []).slice(0,5);
+    const li = document.createElement('li');
+    li.innerHTML = `<div>
+      <div class="name">${esc(r.nom)}</div>
+      <a class="kw" href="${searchUrl(r.nom)}" target="_blank" rel="noopener" title="${esc(r.nom)}">
+        ${kws.map(k => `<span>${esc(k)}</span>`).join('')}
+      </a></div>`;
+    resultsEl.appendChild(li);
+  });
+}
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const ings = ingredients();
+  if (!ings.length || busy) return;
+  resultsEl.innerHTML = '';
+
+  if (!sample) {
+    setStatus(`La recherche intelligente n'est pas disponible ici.
+      <a href="${searchUrl(ings.join(' '))}" target="_blank" rel="noopener">Chercher « ${esc(ings.join(', '))} » sur Marmiton</a>`, true);
+    return;
+  }
+
+  busy = true; sync();
+  setStatus('<span class="spinner"></span>Recherche de recettes avec : ' + esc(ings.join(', ')) + '…');
+
+  const prompt = `Tu es un chef cuisinier français. Propose exactement 10 recettes réelles et connues qui utilisent TOUS les ingrédients suivants : ${ings.join(', ')}.
+D'autres ingrédients courants peuvent s'ajouter. Classe-les de la plus pertinente à la moins pertinente.
+Pour chaque recette, donne :
+- "nom" : le nom usuel de la recette en français (tel qu'on le chercherait sur un site de recettes)
+- "motsCles" : exactement 5 mots-clés courts en français (1 à 2 mots chacun) qui décrivent la recette : type de plat, ingrédient principal, mode de cuisson, origine, caractéristique.
+Réponds UNIQUEMENT avec un tableau JSON : [{"nom": "...", "motsCles": ["...","...","...","...","..."]}, ...]`;
+
+  try {
+    let data = await sample.json(prompt, { modelTier: 'quick' });
+    if (data && !Array.isArray(data)) data = data.recettes || data.recipes || Object.values(data).find(Array.isArray);
+    if (!Array.isArray(data) || !data.length) throw { message: 'Réponse vide' };
+    render(data);
+    setStatus(`${Math.min(10, data.length)} recettes avec ${esc(ings.join(', '))} — cliquez sur les mots-clés pour ouvrir la recette.`);
+  } catch (err) {
+    if (err && err.code === 'not_granted') {
+      setStatus(`Recherche non autorisée. <a href="${searchUrl(ings.join(' '))}" target="_blank" rel="noopener">Chercher sur Marmiton</a>`, true);
+    } else if (err && err.code === 'rate_limited') {
+      setStatus('Trop de recherches d\'affilée, réessayez dans un instant.', true);
+    } else {
+      setStatus('La recherche a échoué, réessayez.', true);
+    }
+  } finally {
+    busy = false; sync();
+  }
+});
+
+if (window.claude && window.claude.use) {
+  window.claude.use('sample').then(s => { sample = s; }).catch(() => {});
+}
+</script>
+</body>
+</html>
 
