@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff6e9; --ink:#2b2350; --muted:#7a7396; --card-back:#5b4bdb; --card-back2:#7c6cf0;
+    --p0:#ff6b6b; --p1:#4dabf7; --p2:#51cf66; --p3:#fcc419;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(circle at 10% 10%, #ffe3c4 0 12%, transparent 13%),
+      radial-gradient(circle at 92% 85%, #dcd6ff 0 14%, transparent 15%),
+      var(--bg);
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none !important}
+  .nm{color:#1c7ed6;font-weight:600}
+
+  /* ---------- Écran de configuration ---------- */
+  #setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .panel{
+    background:#fff;border-radius:28px;padding:32px 32px 28px;width:100%;max-width:520px;
+    box-shadow:0 10px 0 #e9dcc8, 0 20px 50px rgba(43,35,80,.12);
+  }
+  .logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px}
+  .logo svg{width:54px;height:54px}
+  h1{font-size:56px;margin:0;letter-spacing:1px;color:var(--card-back)}
+  .subtitle{text-align:center;color:var(--muted);margin:0 0 24px}
+  h2{font-size:18px;margin:22px 0 10px;font-weight:600}
+  .seg{display:flex;gap:10px}
+  .seg button{
+    flex:1;height:52px;border-radius:16px;border:3px solid #ece7ff;background:#f7f5ff;
+    font-size:22px;font-weight:600;color:var(--ink);transition:.15s;
+  }
+  .seg button.on{background:var(--card-back);border-color:var(--card-back);color:#fff;transform:translateY(-2px);box-shadow:0 4px 0 #3e30b0}
+  .names{display:grid;gap:10px}
+  .name-row{display:flex;align-items:center;gap:10px}
+  .dot{width:16px;height:16px;border-radius:50%;flex:none}
+  .name-row input{
+    flex:1;height:46px;border-radius:14px;border:3px solid #ece7ff;padding:0 14px;
+    font:inherit;font-size:17px;color:#1c7ed6;font-weight:600;outline:none;
+  }
+  .name-row input:focus{border-color:var(--card-back2)}
+  .dims{display:flex;gap:14px;align-items:flex-end}
+  .dims label{flex:1;display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:15px}
+  .dims select{
+    height:48px;border-radius:14px;border:3px solid #ece7ff;font:inherit;font-size:18px;
+    padding:0 12px;color:var(--ink);background:#fff;outline:none;
+  }
+  .dims .x{font-size:26px;padding-bottom:8px;color:var(--muted)}
+  .info{margin-top:12px;font-size:16px;color:var(--muted);min-height:24px}
+  .info.err{color:#e03131;font-weight:500}
+  .start{
+    margin-top:22px;width:100%;height:60px;border:none;border-radius:18px;font-size:24px;font-weight:700;
+    background:#ff8a3d;color:#fff;box-shadow:0 6px 0 #d4621b;transition:.1s;
+  }
+  .start:active{transform:translateY(4px);box-shadow:0 2px 0 #d4621b}
+  .start:disabled{background:#cfc9dc;box-shadow:0 6px 0 #aaa3bd;cursor:not-allowed}
+
+  /* ---------- Écran de jeu ---------- */
+  #game{height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:12px 16px;flex-wrap:wrap}
+  header .mini{font-size:28px;font-weight:700;color:var(--card-back);margin-right:6px}
+  .players{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+  .chip{
+    display:flex;align-items:center;gap:8px;background:#fff;border-radius:16px;padding:8px 14px;
+    border:3px solid transparent;box-shadow:0 3px 0 #e9dcc8;transition:.2s;font-size:17px;
+  }
+  .chip .sc{font-weight:700;font-size:20px;min-width:30px;text-align:right}
+  .chip.active{transform:translateY(-3px) scale(1.04)}
+  .tools{display:flex;gap:8px;align-items:center}
+  .tool{height:42px;min-width:42px;border-radius:14px;border:none;background:#fff;box-shadow:0 3px 0 #e9dcc8;font-size:17px;padding:0 12px;color:var(--ink)}
+  .status{text-align:center;font-size:18px;font-weight:500;min-height:28px;padding:0 12px 6px}
+  #boardWrap{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 12px 14px;overflow:auto;min-height:0}
+  #board{display:grid}
+  .card{border:none;padding:0;background:none;perspective:600px;outline:none}
+  .card .inner{position:relative;width:100%;height:100%;transition:transform .45s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d}
+  .card.flipped .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:14%;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .back{
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,.25) 0 18%, transparent 19%),
+      linear-gradient(145deg,var(--card-back2),var(--card-back));
+    color:#fff;font-weight:700;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);
+  }
+  .card:not(.flipped):hover .back{filter:brightness(1.12)}
+  .front{transform:rotateY(180deg);box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+  .front svg{width:100%;height:100%;display:block}
+  .card.matched .front{outline:4px solid var(--mc);outline-offset:-4px}
+  .card.matched{animation:pop .45s ease}
+  @keyframes pop{50%{transform:scale(1.12)}}
+  .card.shake .inner{animation:shake .4s ease}
+  @keyframes shake{25%{translate:-4px 0}75%{translate:4px 0}}
+
+  /* ---------- Fin de partie ---------- */
+  #end{position:fixed;inset:0;background:rgba(43,35,80,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+  #end .panel{text-align:center;animation:rise .4s ease}
+  @keyframes rise{from{transform:translateY(30px) scale(.95);opacity:0}}
+  .trophy{font-size:70px;line-height:1}
+  #end h2{font-size:32px;margin:10px 0 4px}
+  #end p{color:var(--muted);margin:0 0 16px;font-size:17px}
+  .rank{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:8px}
+  .rank li{display:flex;align-items:center;gap:10px;background:#f7f5ff;border-radius:14px;padding:10px 14px;font-size:18px}
+  .rank li b{margin-left:auto}
+  .btns{display:flex;gap:10px;margin-top:10px}
+  .btns .start{margin-top:8px}
+  .btns .alt{background:#7c6cf0;box-shadow:0 6px 0 #4b3cc0}
+  .confetti{position:fixed;top:-20px;width:10px;height:16px;z-index:11;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+
+<!-- Configuration -->
+<section id="setup">
+  <div class="panel">
+    <div class="logo" id="logo"></div>
+    <h1 style="text-align:center">Memory</h1>
+    <p class="subtitle">Retrouve les paires d'animaux !</p>
+
+    <h2>Nombre de joueurs</h2>
+    <div class="seg" id="nbPlayers">
+      <button data-n="1">1</button><button data-n="2" class="on">2</button><button data-n="3">3</button><button data-n="4">4</button>
+    </div>
+
+    <h2>Noms des joueurs</h2>
+    <div class="names" id="names"></div>
+
+    <h2>Taille de la grille</h2>
+    <div class="dims">
+      <label>Largeur<select id="w"></select></label>
+      <span class="x">×</span>
+      <label>Hauteur<select id="h"></select></label>
+    </div>
+    <div class="info" id="info"></div>
+
+    <button class="start" id="startBtn">Jouer !</button>
+  </div>
+</section>
+
+<!-- Jeu -->
+<section id="game" class="hidden">
+  <header>
+    <span class="mini">Memory</span>
+    <div class="players" id="players"></div>
+    <div class="tools">
+      <button class="tool" id="soundBtn" title="Son">🔊</button>
+      <button class="tool" id="quitBtn">Nouvelle partie</button>
+    </div>
+  </header>
+  <div class="status" id="status"></div>
+  <div id="boardWrap"><div id="board"></div></div>
+</section>
+
+<!-- Fin -->
+<div id="end" class="hidden">
+  <div class="panel">
+    <div class="trophy">🏆</div>
+    <h2 id="winTitle"></h2>
+    <p id="winSub"></p>
+    <ul class="rank" id="rank"></ul>
+    <div class="btns">
+      <button class="start" id="againBtn">Rejouer</button>
+      <button class="start alt" id="configBtn">Réglages</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= Dessins d'animaux (SVG 100×100) ================= */
+const E=(x,y,r=4.5)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#1f1f1f"/><circle cx="${x+r*.3}" cy="${y-r*.3}" r="${r*.35}" fill="#fff"/>`;
+const lionMane=(()=>{let s='<circle cx="50" cy="52" r="36" fill="#c8641c"/>';for(let i=0;i<12;i++){const a=i*Math.PI/6;s+=`<circle cx="${(50+34*Math.cos(a)).toFixed(1)}" cy="${(52+34*Math.sin(a)).toFixed(1)}" r="10" fill="#c8641c"/>`}return s})();
+
+const ANIMALS=[
+ // chat
+ `<polygon points="20,46 26,12 48,30" fill="#f29e38"/><polygon points="80,46 74,12 52,30" fill="#f29e38"/><polygon points="26,36 29,20 40,30" fill="#f8c6c0"/><polygon points="74,36 71,20 60,30" fill="#f8c6c0"/><ellipse cx="50" cy="56" rx="32" ry="29" fill="#f29e38"/><path d="M44 30 v8 M50 28 v9 M56 30 v8" stroke="#c9741c" stroke-width="3" stroke-linecap="round"/>`+E(38,52)+E(62,52)+`<polygon points="45,62 55,62 50,68" fill="#e8737a"/><path d="M50 68 q-5 6 -10 2 M50 68 q5 6 10 2" stroke="#5a3a1a" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M30 64 h-16 M30 68 l-15 4 M70 64 h16 M70 68 l15 4" stroke="#5a3a1a" stroke-width="1.6" stroke-linecap="round"/>`,
+ // chien
+ `<ellipse cx="50" cy="54" rx="29" ry="30" fill="#c98a4b"/><ellipse cx="21" cy="50" rx="10" ry="22" fill="#7b4a22" transform="rotate(15 21 50)"/><ellipse cx="79" cy="50" rx="10" ry="22" fill="#7b4a22" transform="rotate(-15 79 50)"/><ellipse cx="62" cy="45" rx="9" ry="8" fill="#7b4a22"/>`+E(39,46)+E(61,46)+`<ellipse cx="50" cy="68" rx="16" ry="12" fill="#f1d6b5"/><path d="M47 72 q3 10 6 0z" fill="#ee6b7a"/><ellipse cx="50" cy="62" rx="6.5" ry="4.5" fill="#222"/><path d="M50 66 v5 M42 71 q8 6 16 0" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+ // lapin
+ `<ellipse cx="37" cy="26" rx="8" ry="22" fill="#e9e6ef"/><ellipse cx="63" cy="26" rx="8" ry="22" fill="#e9e6ef"/><ellipse cx="37" cy="27" rx="4" ry="16" fill="#f6b8c8"/><ellipse cx="63" cy="27" rx="4" ry="16" fill="#f6b8c8"/><circle cx="50" cy="62" r="27" fill="#e9e6ef"/>`+E(40,58)+E(60,58)+`<circle cx="33" cy="68" r="5" fill="#f6b8c8" opacity=".7"/><circle cx="67" cy="68" r="5" fill="#f6b8c8" opacity=".7"/><rect x="46.5" y="74" width="7" height="7" rx="1.5" fill="#fff" stroke="#bbb"/><ellipse cx="50" cy="67" rx="4" ry="3" fill="#e8708a"/><path d="M50 70 v4 M44 74 q6 4 12 0" stroke="#555" stroke-width="1.8" fill="none"/>`,
+ // ours
+ `<circle cx="26" cy="30" r="13" fill="#8a5a32"/><circle cx="74" cy="30" r="13" fill="#8a5a32"/><circle cx="26" cy="30" r="7" fill="#c99b6d"/><circle cx="74" cy="30" r="7" fill="#c99b6d"/><circle cx="50" cy="55" r="32" fill="#8a5a32"/>`+E(38,48)+E(62,48)+`<ellipse cx="50" cy="66" rx="15" ry="12" fill="#d8b088"/><ellipse cx="50" cy="61" rx="6" ry="4.5" fill="#2a1a10"/><path d="M50 65 v4 M43 70 q7 5 14 0" stroke="#2a1a10" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+ // panda
+ `<circle cx="25" cy="29" r="12" fill="#222"/><circle cx="75" cy="29" r="12" fill="#222"/><circle cx="50" cy="55" r="32" fill="#fafafa" stroke="#ddd" stroke-width="1.5"/><ellipse cx="37" cy="51" rx="8" ry="11" fill="#222" transform="rotate(30 37 51)"/><ellipse cx="63" cy="51" rx="8" ry="11" fill="#222" transform="rotate(-30 63 51)"/><circle cx="38" cy="50" r="3.5" fill="#fff"/><circle cx="62" cy="50" r="3.5" fill="#fff"/><circle cx="38.6" cy="50" r="1.8" fill="#222"/><circle cx="61.4" cy="50" r="1.8" fill="#222"/><ellipse cx="50" cy="64" rx="5.5" ry="4" fill="#222"/><path d="M50 67 v4 M44 72 q6 5 12 0" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+ // cochon
+ `<polygon points="22,40 24,16 42,28" fill="#f49ab0"/><polygon points="78,40 76,16 58,28" fill="#f49ab0"/><circle cx="50" cy="56" r="31" fill="#f8b4c4"/>`+E(38,48)+E(62,48)+`<ellipse cx="50" cy="65" rx="14" ry="10" fill="#f28aa4"/><ellipse cx="45" cy="65" rx="3" ry="4.5" fill="#b8466a"/><ellipse cx="55" cy="65" rx="3" ry="4.5" fill="#b8466a"/><circle cx="29" cy="62" r="5" fill="#f28aa4" opacity=".6"/><circle cx="71" cy="62" r="5" fill="#f28aa4" opacity=".6"/>`,
+ // grenouille
+ `<circle cx="31" cy="36" r="14" fill="#5cbf4a"/><circle cx="69" cy="36" r="14" fill="#5cbf4a"/><ellipse cx="50" cy="60" rx="38" ry="27" fill="#5cbf4a"/><circle cx="31" cy="35" r="9" fill="#fff"/><circle cx="69" cy="35" r="9" fill="#fff"/>`+E(32,36,5)+E(68,36,5)+`<path d="M28 62 q22 18 44 0" stroke="#2c6e22" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="24" cy="58" r="5" fill="#f39aa8" opacity=".7"/><circle cx="76" cy="58" r="5" fill="#f39aa8" opacity=".7"/><circle cx="46" cy="52" r="1.5" fill="#2c6e22"/><circle cx="54" cy="52" r="1.5" fill="#2c6e22"/>`,
+ // souris
+ `<circle cx="24" cy="34" r="18" fill="#a9a9b8"/><circle cx="76" cy="34" r="18" fill="#a9a9b8"/><circle cx="24" cy="34" r="11" fill="#f6b8c8"/><circle cx="76" cy="34" r="11" fill="#f6b8c8"/><ellipse cx="50" cy="60" rx="26" ry="25" fill="#a9a9b8"/>`+E(41,54,4)+E(59,54,4)+`<circle cx="50" cy="68" r="4.5" fill="#e8708a"/><path d="M38 68 h-18 M38 72 l-16 5 M62 68 h18 M62 72 l16 5" stroke="#555" stroke-width="1.5" stroke-linecap="round"/><path d="M45 76 q5 4 10 0" stroke="#555" stroke-width="1.8" fill="none"/>`,
+ // lion
+ lionMane+`<circle cx="30" cy="32" r="6" fill="#f5bd4f"/><circle cx="70" cy="32" r="6" fill="#f5bd4f"/><circle cx="50" cy="53" r="27" fill="#f5bd4f"/>`+E(40,48)+E(60,48)+`<ellipse cx="50" cy="65" rx="12" ry="9" fill="#fbe0a8"/><polygon points="44,59 56,59 50,66" fill="#7a3d12"/><path d="M50 66 v3 M44 70 q6 4 12 0" stroke="#7a3d12" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+ // renard
+ `<polygon points="16,18 40,30 22,48" fill="#e8742a"/><polygon points="84,18 60,30 78,48" fill="#e8742a"/><polygon points="22,25 32,31 25,40" fill="#3a2414"/><polygon points="78,25 68,31 75,40" fill="#3a2414"/><path d="M14 40 Q50 18 86 40 Q80 66 50 86 Q20 66 14 40Z" fill="#e8742a"/><path d="M20 50 Q40 56 50 86 Q28 72 20 50Z M80 50 Q60 56 50 86 Q72 72 80 50Z" fill="#fff"/>`+E(37,47)+E(63,47)+`<ellipse cx="50" cy="80" rx="5" ry="4" fill="#222"/>`,
+ // hibou
+ `<polygon points="22,22 36,34 24,42" fill="#7b5236"/><polygon points="78,22 64,34 76,42" fill="#7b5236"/><ellipse cx="50" cy="56" rx="30" ry="34" fill="#9c6b45"/><ellipse cx="50" cy="66" rx="18" ry="20" fill="#e4c9a0"/><circle cx="37" cy="44" r="13" fill="#fff" stroke="#e0a23a" stroke-width="3"/><circle cx="63" cy="44" r="13" fill="#fff" stroke="#e0a23a" stroke-width="3"/>`+E(37,44,6)+E(63,44,6)+`<polygon points="45,54 55,54 50,63" fill="#f2a33a"/><path d="M42 72 q4 4 8 0 q4 4 8 0 M42 80 q4 4 8 0 q4 4 8 0" stroke="#b08a60" stroke-width="1.6" fill="none"/>`,
+ // pingouin
+ `<ellipse cx="22" cy="60" rx="7" ry="16" fill="#2b2d42" transform="rotate(20 22 60)"/><ellipse cx="78" cy="60" rx="7" ry="16" fill="#2b2d42" transform="rotate(-20 78 60)"/><ellipse cx="40" cy="88" rx="8" ry="4" fill="#f7a531"/><ellipse cx="60" cy="88" rx="8" ry="4" fill="#f7a531"/><ellipse cx="50" cy="53" rx="28" ry="34" fill="#2b2d42"/><ellipse cx="50" cy="58" rx="20" ry="26" fill="#fff"/>`+E(42,46)+E(58,46)+`<polygon points="44,53 56,53 50,61" fill="#f7a531"/><circle cx="36" cy="56" r="4" fill="#ff9aa8" opacity=".7"/><circle cx="64" cy="56" r="4" fill="#ff9aa8" opacity=".7"/>`,
+ // poussin
+ `<ellipse cx="22" cy="62" rx="8" ry="12" fill="#ffc400" transform="rotate(25 22 62)"/><ellipse cx="78" cy="62" rx="8" ry="12" fill="#ffc400" transform="rotate(-25 78 62)"/><circle cx="50" cy="56" r="30" fill="#ffd93b"/><path d="M50 28 q-8 -10 0 -14 q0 7 6 5 q-2 5 -6 9z" fill="#ffc400"/>`+E(40,50)+E(60,50)+`<polygon points="44,57 56,57 50,65" fill="#f57c1f"/><circle cx="33" cy="60" r="4.5" fill="#ff9aa8" opacity=".7"/><circle cx="67" cy="60" r="4.5" fill="#ff9aa8" opacity=".7"/><path d="M42 86 v6 M58 86 v6" stroke="#f57c1f" stroke-width="3" stroke-linecap="round"/>`,
+ // vache
+ `<path d="M30 30 q-12 -6 -8 -18 q4 8 13 9z M70 30 q12 -6 8 -18 q-4 8 -13 9z" fill="#e9d8a6"/><ellipse cx="18" cy="42" rx="11" ry="6" fill="#fff" stroke="#ccc" transform="rotate(20 18 42)"/><ellipse cx="82" cy="42" rx="11" ry="6" fill="#fff" stroke="#ccc" transform="rotate(-20 82 42)"/><ellipse cx="50" cy="52" rx="27" ry="30" fill="#fff" stroke="#ccc"/><path d="M30 36 q10 -8 15 4 q-6 10 -16 4z" fill="#333"/><path d="M62 44 q10 -4 12 6 q-4 6 -12 2z" fill="#333"/>`+E(40,50)+E(60,50)+`<ellipse cx="50" cy="70" rx="19" ry="13" fill="#f6b3bf"/><ellipse cx="43" cy="70" rx="3" ry="4" fill="#b44a63"/><ellipse cx="57" cy="70" rx="3" ry="4" fill="#b44a63"/>`,
+ // koala
+ `<circle cx="22" cy="38" r="17" fill="#9aa3ad"/><circle cx="78" cy="38" r="17" fill="#9aa3ad"/><circle cx="22" cy="38" r="10" fill="#e8e3df"/><circle cx="78" cy="38" r="10" fill="#e8e3df"/><ellipse cx="50" cy="57" rx="29" ry="28" fill="#9aa3ad"/>`+E(39,51)+E(61,51)+`<ellipse cx="50" cy="63" rx="8" ry="11" fill="#3b3b44"/><path d="M44 78 q6 4 12 0" stroke="#3b3b44" stroke-width="2" fill="none"/>`,
+ // singe
+ `<circle cx="20" cy="52" r="12" fill="#8b5a33"/><circle cx="80" cy="52" r="12" fill="#8b5a33"/><circle cx="20" cy="52" r="7" fill="#f0c9a0"/><circle cx="80" cy="52" r="7" fill="#f0c9a0"/><circle cx="50" cy="50" r="30" fill="#8b5a33"/><circle cx="40" cy="47" r="11" fill="#f0c9a0"/><circle cx="60" cy="47" r="11" fill="#f0c9a0"/><ellipse cx="50" cy="63" rx="20" ry="14" fill="#f0c9a0"/>`+E(41,47)+E(59,47)+`<circle cx="47" cy="59" r="1.6" fill="#5a3a1a"/><circle cx="53" cy="59" r="1.6" fill="#5a3a1a"/><path d="M40 66 q10 9 20 0" stroke="#5a3a1a" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M45 21 q5 -8 10 2" stroke="#8b5a33" stroke-width="3" fill="none"/>`,
+ // éléphant
+ `<ellipse cx="20" cy="50" rx="17" ry="23" fill="#9fb0c4"/><ellipse cx="80" cy="50" rx="17" ry="23" fill="#9fb0c4"/><ellipse cx="20" cy="50" rx="10" ry="15" fill="#f2b8c6"/><ellipse cx="80" cy="50" rx="10" ry="15" fill="#f2b8c6"/><circle cx="50" cy="46" r="25" fill="#b4c3d4"/><path d="M50 58 C50 72 46 80 56 86" stroke="#b4c3d4" stroke-width="13" fill="none" stroke-linecap="round"/>`+E(41,42)+E(59,42)+`<circle cx="35" cy="55" r="4" fill="#f2b8c6" opacity=".7"/><circle cx="65" cy="55" r="4" fill="#f2b8c6" opacity=".7"/>`,
+ // poisson
+ `<polygon points="68,50 90,30 90,70" fill="#ff8c42"/><path d="M38 32 q12 -14 24 0z" fill="#ff8c42"/><ellipse cx="46" cy="50" rx="32" ry="22" fill="#ffa95e"/><path d="M52 34 q-8 16 0 32 M62 38 q-6 12 0 24" stroke="#ff8c42" stroke-width="3" fill="none"/>`+E(28,46,5)+`<path d="M18 56 q4 3 8 0" stroke="#7a3a10" stroke-width="2" fill="none"/><circle cx="14" cy="28" r="4" fill="none" stroke="#5aa9e6" stroke-width="2"/><circle cx="23" cy="18" r="2.5" fill="none" stroke="#5aa9e6" stroke-width="2"/>`,
+ // tortue
+ `<circle cx="82" cy="56" r="10" fill="#8fcf6a"/>`+E(85,53,2.8)+`<path d="M82 60 q3 2 6 0" stroke="#2b6a28" stroke-width="1.5" fill="none"/><ellipse cx="30" cy="72" rx="8" ry="6" fill="#8fcf6a"/><ellipse cx="64" cy="72" rx="8" ry="6" fill="#8fcf6a"/><polygon points="12,66 4,62 6,70" fill="#8fcf6a"/><path d="M14 66 Q16 26 46 26 Q76 26 78 66Z" fill="#3f8f3a"/><path d="M28 64 l6 -14 h24 l6 14 M34 50 l-4 -12 M58 50 l4 -12 M46 50 v-22" stroke="#2b6a28" stroke-width="2.5" fill="none"/><rect x="12" y="63" width="68" height="6" rx="3" fill="#6bb04f"/>`,
+ // coccinelle
+ `<path d="M44 18 q-6 -10 -12 -8 M56 18 q6 -10 12 -8" stroke="#222" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="50" cy="28" r="13" fill="#222"/><circle cx="50" cy="58" r="30" fill="#e63946"/><path d="M50 29 V88" stroke="#222" stroke-width="3"/><circle cx="37" cy="48" r="6" fill="#222"/><circle cx="63" cy="48" r="6" fill="#222"/><circle cx="34" cy="68" r="5" fill="#222"/><circle cx="66" cy="68" r="5" fill="#222"/><circle cx="43" cy="80" r="3.5" fill="#222"/><circle cx="57" cy="80" r="3.5" fill="#222"/><circle cx="45" cy="24" r="3" fill="#fff"/><circle cx="55" cy="24" r="3" fill="#fff"/>`
+];
+// 10 couleurs de fond × 20 animaux = 200 paires possibles (grille 20×20)
+const COLORS=['#4dabf7','#69db7c','#ff8787','#ffd43b','#b197fc','#ffa94d','#f783ac','#3bc9db','#adb5bd','#5c7cfa'];
+const PCOLORS=['var(--p0)','var(--p1)','var(--p2)','var(--p3)'];
+
+const cardSVG=(a,c)=>`<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="${c}"/><circle cx="50" cy="50" r="42" fill="#fffdf6"/><g transform="translate(50 50) scale(.86) translate(-50 -50)">${ANIMALS[a]}</g></svg>`;
+
+/* ================= Son (Web Audio) ================= */
+let actx=null, soundOn=true;
+function ac(){ if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){} } if(actx&&actx.state==='suspended') actx.resume(); return actx; }
+const SCALE=[0,2,4,7,9,12,14,16,19,21,24,26,28,31,33,36]; // pentatonique de do
+const freq=st=>261.63*Math.pow(2,st/12);
+function tone(f,when=0,dur=.45,type='triangle',vol=.25){
+  const a=ac(); if(!a||!soundOn) return;
+  const t=a.currentTime+when, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.value=f;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+}
+const noteFor=pair=>freq(SCALE[pair%SCALE.length]);
+function playFlip(pair){ tone(noteFor(pair)); tone(noteFor(pair)*2,0,.25,'sine',.06); }
+function playMatch(){ [0,4,7,12].forEach((s,i)=>tone(freq(12+s),i*.08,.35,'triangle',.2)); }
+function playMiss(){ tone(freq(-5),0,.25,'sine',.18); tone(freq(-8),.14,.35,'sine',.18); }
+function playWin(){ [0,4,7,12,7,12,16,19].forEach((s,i)=>tone(freq(12+s),i*.12,.4,'square',.07)); }
+
+/* ================= Configuration ================= */
+const $=id=>document.getElementById(id);
+let nbPlayers=2;
+let savedNames=['Joueur 1','Joueur 2','Joueur 3','Joueur 4'];
+
+$('logo').innerHTML=[0,4,9].map(a=>cardSVG(a,COLORS[a%10])).join('');
+$('logo').querySelectorAll('svg').forEach((s,i)=>{s.style.borderRadius='12px';s.style.transform=`rotate(${[-10,0,10][i]}deg)`});
+
+function renderNames(){
+  const box=$('names');
+  box.querySelectorAll('input').forEach((inp,i)=>savedNames[i]=inp.value);
+  box.innerHTML='';
+  for(let i=0;i<nbPlayers;i++){
+    const row=document.createElement('div'); row.className='name-row';
+    row.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>`;
+    const inp=document.createElement('input'); inp.maxLength=16; inp.value=savedNames[i]; inp.placeholder='Joueur '+(i+1);
+    row.appendChild(inp); box.appendChild(row);
+  }
+}
+$('nbPlayers').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  nbPlayers=+b.dataset.n;
+  $('nbPlayers').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  renderNames();
+});
+for(const id of ['w','h']){
+  const s=$(id); for(let i=2;i<=20;i++){const o=document.createElement('option');o.value=i;o.textContent=i;s.appendChild(o)}
+  s.value=4; s.addEventListener('change',checkDims);
+}
+function checkDims(){
+  const n=$('w').value*$('h').value, ok=n%2===0;
+  $('info').className='info'+(ok?'':' err');
+  $('info').textContent= ok ? `${n} cartes · ${n/2} paires d'animaux` : `${$('w').value} × ${$('h').value} = ${n} : le nombre de cartes doit être pair.`;
+  $('startBtn').disabled=!ok;
+}
+renderNames(); checkDims();
+
+/* ================= Jeu ================= */
+let S={};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function startGame(){
+  ac();
+  const players=[...$('names').querySelectorAll('input')].map((inp,i)=>({name:inp.value.trim()||('Joueur '+(i+1)),score:0,tries:0,pairs:0}));
+  const W=+$('w').value, H=+$('h').value, nPairs=W*H/2;
+  // choix des paires : animaux différents d'abord, puis variantes de couleur
+  const aOrder=shuffle([...Array(ANIMALS.length).keys()]);
+  const cOrder=ANIMALS.map(()=>shuffle([...Array(COLORS.length).keys()]));
+  const deck=[];
+  for(let p=0;p<nPairs;p++){
+    const a=aOrder[p%ANIMALS.length], c=COLORS[cOrder[a][Math.floor(p/ANIMALS.length)]];
+    deck.push({pair:p,a,c},{pair:p,a,c});
+  }
+  shuffle(deck);
+  S={players,cur:0,W,H,nPairs,found:0,first:null,lock:false,cards:[]};
+
+  const board=$('board'); board.innerHTML='';
+  board.style.gridTemplateColumns=`repeat(${W},var(--cs))`;
+  board.style.gridTemplateRows=`repeat(${H},var(--cs))`;
+  deck.forEach(d=>{
+    const el=document.createElement('button'); el.className='card';
+    el.setAttribute('aria-label','Carte cachée');
+    el.innerHTML=`<div class="inner"><div class="face back">?</div><div class="face front">${cardSVG(d.a,d.c)}</div></div>`;
+    const card={...d,el,flipped:false,matched:false};
+    el.addEventListener('click',()=>onCard(card));
+    S.cards.push(card); board.appendChild(el);
+  });
+
+  $('setup').classList.add('hidden'); $('end').classList.add('hidden'); $('game').classList.remove('hidden');
+  renderPlayers(); setStatus(`À ${N(S.players[0].name)} de commencer !`); fit();
+}
+
+function fit(){
+  if(!S.cards) return;
+  const wrap=$('boardWrap'), r=wrap.getBoundingClientRect();
+  const availW=r.width-24, availH=window.innerHeight-r.top-18;
+  const gap=Math.max(S.W,S.H)>10?5:9;
+  let cs=Math.min((availW-gap*(S.W-1))/S.W,(availH-gap*(S.H-1))/S.H,140);
+  cs=Math.max(cs,22);
+  const b=$('board'); b.style.setProperty('--cs',cs+'px'); b.style.gap=gap+'px';
+  b.querySelectorAll('.back').forEach(x=>x.style.fontSize=(cs*.5)+'px');
+}
+window.addEventListener('resize',fit);
+
+function renderPlayers(){
+  const box=$('players'); box.innerHTML='';
+  S.players.forEach((p,i)=>{
+    const c=document.createElement('div'); c.className='chip'+(i===S.cur?' active':'');
+    if(i===S.cur) c.style.borderColor=PCOLORS[i];
+    c.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span><span class="nm"></span><span class="sc">${p.score}</span>`;
+    c.querySelector('.nm').textContent=p.name;
+    box.appendChild(c);
+  });
+}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const N=n=>`<span class="nm">${esc(n)}</span>`;
+function setStatus(t){ $('status').innerHTML=t; }
+
+function onCard(card){
+  if(S.lock||card.flipped||card.matched) return;
+  card.flipped=true; card.el.classList.add('flipped'); card.el.setAttribute('aria-label','Carte retournée');
+  playFlip(card.pair);
+  if(!S.first){ S.first=card; return; }
+  const a=S.first, b=card, p=S.players[S.cur];
+  S.first=null; S.lock=true; p.tries++;
+  if(a.pair===b.pair){
+    setTimeout(()=>{
+      [a,b].forEach(c=>{c.matched=true;c.el.classList.add('matched');c.el.style.setProperty('--mc',PCOLORS[S.cur])});
+      p.score+=10; p.pairs++; S.found++; playMatch(); renderPlayers();
+      if(S.found===S.nPairs){ setStatus('Toutes les paires sont trouvées !'); setTimeout(endGame,800); return; }
+      setStatus(`Bravo ${N(p.name)} ! +10 points, tu rejoues.`);
+      S.lock=false;
+    },420);
+  } else {
+    setTimeout(()=>{
+      [a,b].forEach(c=>c.el.classList.add('shake'));
+    },500);
+    setTimeout(()=>{
+      [a,b].forEach(c=>{c.flipped=false;c.el.classList.remove('flipped','shake');c.el.setAttribute('aria-label','Carte cachée')});
+      playMiss();
+      S.cur=(S.cur+1)%S.players.length; renderPlayers();
+      const n=S.players[S.cur].name;
+      setStatus(S.players.length>1 ? `Raté ! Au tour de ${N(n)}.` : 'Raté ! Essaie encore.');
+      S.lock=false;
+    },1150);
+  }
+}
+
+function endGame(){
+  playWin(); confetti();
+  const ps=S.players, max=Math.max(...ps.map(p=>p.score));
+  const winners=ps.filter(p=>p.score===max);
+  if(ps.length===1){
+    $('winTitle').innerHTML=`Bravo ${N(ps[0].name)} !`;
+    $('winSub').textContent=`Tu as trouvé les ${S.nPairs} paires en ${ps[0].tries} coups.`;
+  } else if(winners.length===1){
+    $('winTitle').innerHTML=`${N(winners[0].name)} gagne !`;
+    $('winSub').textContent=`Avec ${max} points (${winners[0].pairs} paires).`;
+  } else {
+    $('winTitle').textContent='Égalité !';
+    $('winSub').innerHTML=`${winners.map(w=>N(w.name)).join(' et ')} terminent avec ${max} points.`;
+  }
+  const rank=$('rank'); rank.innerHTML='';
+  ps.map((p,i)=>({...p,i})).sort((x,y)=>y.score-x.score).forEach((p,k)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${['🥇','🥈','🥉','4.'][k]}</span><span class="dot" style="background:${PCOLORS[p.i]}"></span><span class="nm"></span><b>${p.score} pts</b>`;
+    li.querySelector('.nm').textContent=p.name;
+    rank.appendChild(li);
+  });
+  $('end').classList.remove('hidden');
+}
+
+function confetti(){
+  const cols=['#ff6b6b','#4dabf7','#51cf66','#fcc419','#b197fc','#ffa94d'];
+  for(let i=0;i<70;i++){
+    const d=document.createElement('div'); d.className='confetti';
+    d.style.left=Math.random()*100+'vw'; d.style.background=cols[i%cols.length];
+    d.style.animationDuration=(2+Math.random()*2)+'s'; d.style.animationDelay=Math.random()*.6+'s';
+    d.style.borderRadius=Math.random()<.5?'50%':'2px';
+    document.body.appendChild(d); setTimeout(()=>d.remove(),5000);
+  }
+}
+
+$('startBtn').addEventListener('click',startGame);
+$('againBtn').addEventListener('click',startGame);
+function toSetup(){ $('end').classList.add('hidden'); $('game').classList.add('hidden'); $('setup').classList.remove('hidden'); S={}; }
+$('configBtn').addEventListener('click',toSetup);
+$('quitBtn').addEventListener('click',toSetup);
+$('soundBtn').addEventListener('click',()=>{ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+</script>
+</body>
+</html>
