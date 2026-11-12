@@ -13,7 +13,7 @@
     min-height: 100vh; display: flex; justify-content: center; align-items: flex-start;
     padding: 48px 16px;
   }
-  .card { width: 100%; max-width: 520px; }
+  .card { width: 100%; max-width: 560px; }
   h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
   p.sub { color: #555; margin-bottom: 28px; font-size: 15px; }
   label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
@@ -22,6 +22,7 @@
     border: 2px solid #000; border-radius: 0; background: #fff; color: #000; outline: none;
   }
   input:focus { box-shadow: 4px 4px 0 #000; }
+  input:disabled { opacity: .4; }
   button {
     font-size: 16px; font-weight: 600; padding: 14px 22px; cursor: pointer;
     background: #000; color: #fff; border: 2px solid #000; border-radius: 0;
@@ -30,6 +31,10 @@
   button:disabled { opacity: .4; cursor: default; background: #000; color: #fff; }
   button.ghost { background: #fff; color: #000; }
   button.ghost:hover { background: #000; color: #fff; }
+  button.icon { padding: 14px; width: 54px; font-size: 20px; line-height: 1; background: #fff; color: #000; }
+  button.icon:hover { background: #000; color: #fff; }
+  button.icon.rec { background: #b00000; border-color: #b00000; color: #fff; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .6; } }
   .row { display: flex; gap: 10px; margin-top: 14px; }
   .row input { flex: 1; }
   .hidden { display: none !important; }
@@ -38,23 +43,40 @@
     border: 2px solid #000; padding: 18px; margin-bottom: 32px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
-  .idbox .id { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 30px; font-weight: 700; letter-spacing: 4px; }
+  .mono { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  .idbox .id { font-size: 30px; font-weight: 700; letter-spacing: 4px; }
   .status { font-size: 14px; color: #555; margin-top: 12px; min-height: 20px; }
   .status.err { color: #b00000; }
+  .tag { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: .8em; font-weight: 600; letter-spacing: 1px; border: 1.5px solid currentColor; padding: 1px 5px; margin-left: 6px; }
 
   /* Chat */
-  .chat-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 0; }
-  .chat-head .who { font-size: 18px; font-weight: 700; }
-  .chat-head .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #1a9c3a; margin-right: 8px; }
-  .chat-head .dot.off { background: #bbb; }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 2px solid #000; padding-bottom: 12px; }
+  .chat-head .who { font-size: 18px; font-weight: 700; display: flex; align-items: center; flex-wrap: wrap; }
+  .chat-head .self { font-size: 13px; color: #555; margin-top: 4px; display: flex; align-items: center; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #1a9c3a; margin-right: 8px; }
+  .dot.off { background: #bbb; }
   .msgs { height: 55vh; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 10px; }
   .msg { max-width: 78%; padding: 10px 14px; font-size: 16px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }
-  .msg .meta { font-size: 11px; opacity: .6; margin-bottom: 3px; }
+  .msg .meta { font-size: 11px; opacity: .7; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; }
+  .msg .meta .tag { font-size: 10px; padding: 0 4px; margin: 0 6px 0 5px; }
   .msg.mine { align-self: flex-end; background: #000; color: #fff; }
   .msg.theirs { align-self: flex-start; background: #fff; color: #000; border: 2px solid #000; }
-  .sys { align-self: center; font-size: 13px; color: #777; }
-  .chat-form { display: flex; gap: 10px; border-top: 2px solid #000; padding-top: 14px; }
-  .chat-form input { flex: 1; }
+  .msg img { display: block; max-width: 100%; max-height: 320px; cursor: zoom-in; margin-top: 2px; }
+  .msg audio { display: block; width: 240px; max-width: 100%; margin-top: 4px; }
+  .sys { align-self: center; font-size: 13px; color: #777; text-align: center; }
+  .chat-form { display: flex; gap: 8px; border-top: 2px solid #000; padding-top: 14px; }
+  .chat-form input { flex: 1; min-width: 0; }
+  .rec-info { font-size: 13px; color: #b00000; margin-top: 8px; min-height: 18px; }
+
+  /* Visionneuse photo */
+  .viewer { position: fixed; inset: 0; background: rgba(255,255,255,.96); display: flex; align-items: center; justify-content: center; cursor: zoom-out; padding: 20px; }
+  .viewer img { max-width: 100%; max-height: 100%; border: 2px solid #000; }
+
+  @media (max-width: 480px) {
+    body { padding: 24px 12px; }
+    .chat-form button[type=submit] { padding: 14px 12px; }
+    button.icon { width: 48px; padding: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -75,12 +97,12 @@
     <div class="me">Bonjour, <span id="me-name"></span></div>
     <label>Ton identifiant</label>
     <div class="idbox">
-      <span class="id" id="my-id">······</span>
+      <span class="id mono" id="my-id">······</span>
       <button class="ghost" id="btn-copy">Copier</button>
     </div>
     <label for="peer-id">Identifiant de l'autre personne</label>
     <div class="row" style="margin-top:0">
-      <input id="peer-id" maxlength="6" placeholder="ABC123" autocomplete="off" style="text-transform:uppercase;font-family:Menlo,Consolas,monospace;letter-spacing:3px">
+      <input id="peer-id" class="mono" maxlength="6" placeholder="ABC123" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px">
       <button id="btn-connect">Se connecter</button>
     </div>
     <div class="status" id="status-connect">Partage ton identifiant, ou entre celui de l'autre personne.</div>
@@ -89,14 +111,21 @@
   <!-- Étape 3 : chat -->
   <section id="step-chat" class="hidden">
     <div class="chat-head">
-      <div class="who"><span class="dot" id="dot"></span><span id="peer-name"></span></div>
+      <div>
+        <div class="who"><span class="dot" id="dot"></span><span id="peer-name"></span><span class="tag" id="peer-tag"></span></div>
+        <div class="self">Toi : <span id="self-name" style="margin-left:4px"></span><span class="tag" id="self-tag"></span></div>
+      </div>
       <button class="ghost" id="btn-leave">Quitter</button>
     </div>
     <div class="msgs" id="msgs"></div>
     <form class="chat-form" id="chat-form">
+      <button type="button" class="icon" id="btn-photo" title="Envoyer une photo">📷</button>
+      <button type="button" class="icon" id="btn-rec" title="Enregistrer un message vocal">🎤</button>
       <input id="msg" placeholder="Écris un message…" autocomplete="off">
       <button type="submit">Envoyer</button>
+      <input type="file" id="file" accept="image/*" class="hidden">
     </form>
+    <div class="rec-info" id="rec-info"></div>
   </section>
 
 </div>
@@ -106,12 +135,16 @@
   const $ = id => document.getElementById(id);
   const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans 0/O/1/I pour éviter les confusions
   const PREFIX = "chat2-";                             // évite les collisions sur le serveur PeerJS public
+  const MAX_REC_SECONDS = 120;
+  const MAX_IMG_SIDE = 1600;
 
-  let myName = "", peer = null, conn = null, peerName = "";
+  let myName = "", myId = "", peer = null, conn = null, peerName = "", peerId = "";
 
   const genId = () => Array.from({length: 6}, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
   const show = id => ["step-name", "step-connect", "step-chat"].forEach(s => $(s).classList.toggle("hidden", s !== id));
   const setStatus = (el, text, err = false) => { $(el).textContent = text; $(el).classList.toggle("err", err); };
+  const shortId = full => String(full || "").replace(PREFIX, "").toUpperCase();
+  const connected = () => conn && conn.open;
 
   // ---------- Étape 1 ----------
   $("name").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-start").click(); });
@@ -131,6 +164,7 @@
     peer = new Peer(PREFIX + short);
 
     peer.on("open", () => {
+      myId = short;
       $("me-name").textContent = myName;
       $("my-id").textContent = short;
       show("step-connect");
@@ -138,7 +172,7 @@
     });
 
     peer.on("connection", c => {
-      if (conn && conn.open) { c.on("open", () => { c.send({type: "busy"}); setTimeout(() => c.close(), 300); }); return; }
+      if (connected()) { c.on("open", () => { c.send({type: "busy"}); setTimeout(() => c.close(), 300); }); return; }
       setupConn(c);
     });
 
@@ -160,7 +194,7 @@
 
   // ---------- Étape 2 ----------
   $("btn-copy").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText($("my-id").textContent); $("btn-copy").textContent = "Copié ✓"; }
+    try { await navigator.clipboard.writeText(myId); $("btn-copy").textContent = "Copié ✓"; }
     catch { $("btn-copy").textContent = "Sélectionne-le"; }
     setTimeout(() => $("btn-copy").textContent = "Copier", 1500);
   });
@@ -170,7 +204,7 @@
   $("btn-connect").addEventListener("click", () => {
     const other = $("peer-id").value.trim().toUpperCase();
     if (other.length !== 6) { setStatus("status-connect", "L'identifiant fait 6 caractères.", true); return; }
-    if (other === $("my-id").textContent) { setStatus("status-connect", "C'est ton propre identifiant 🙂", true); return; }
+    if (other === myId) { setStatus("status-connect", "C'est ton propre identifiant 🙂", true); return; }
     $("btn-connect").disabled = true;
     setStatus("status-connect", "Connexion en cours…");
     setupConn(peer.connect(PREFIX + other, { reliable: true, metadata: { name: myName } }));
@@ -179,7 +213,8 @@
   // ---------- Connexion ----------
   function setupConn(c) {
     conn = c;
-    c.on("open", () => c.send({ type: "hello", name: myName }));
+    peerId = shortId(c.peer);
+    c.on("open", () => c.send({ type: "hello", name: myName, id: myId }));
 
     c.on("data", d => {
       if (!d || typeof d !== "object") return;
@@ -187,7 +222,11 @@
         peerName = String(d.name || "Anonyme").slice(0, 24);
         openChat();
       } else if (d.type === "msg") {
-        addMsg(String(d.text).slice(0, 2000), "theirs", peerName);
+        addMsg({ text: String(d.text).slice(0, 4000) }, "theirs");
+      } else if (d.type === "img" && /^data:image\//.test(d.data)) {
+        addMsg({ img: d.data }, "theirs");
+      } else if (d.type === "audio" && /^data:audio\//.test(d.data)) {
+        addMsg({ audio: d.data }, "theirs");
       } else if (d.type === "busy") {
         setStatus("status-connect", "Cette personne est déjà en conversation.", true);
         $("btn-connect").disabled = false;
@@ -198,9 +237,10 @@
     c.on("close", () => {
       if (conn !== c) return;
       if (!$("step-chat").classList.contains("hidden")) {
-        sys(peerName + " s'est déconnecté(e).");
+        sys(peerName + " (" + peerId + ") s'est déconnecté(e).");
         $("dot").classList.add("off");
-        $("msg").disabled = true;
+        ["msg", "btn-photo", "btn-rec"].forEach(id => $(id).disabled = true);
+        stopRecording(true);
       }
       conn = null;
     });
@@ -212,10 +252,13 @@
   function openChat() {
     if (!$("step-chat").classList.contains("hidden")) return;
     $("peer-name").textContent = peerName;
+    $("peer-tag").textContent = peerId;
+    $("self-name").textContent = myName;
+    $("self-tag").textContent = myId;
     $("msgs").innerHTML = "";
     $("dot").classList.remove("off");
-    $("msg").disabled = false;
-    sys("Connecté(e) avec " + peerName + ". Dites bonjour !");
+    ["msg", "btn-photo", "btn-rec"].forEach(id => $(id).disabled = false);
+    sys("Connecté(e) avec " + peerName + " (" + peerId + "). Dites bonjour !");
     show("step-chat");
     $("msg").focus();
   }
@@ -223,13 +266,14 @@
   $("chat-form").addEventListener("submit", e => {
     e.preventDefault();
     const text = $("msg").value.trim();
-    if (!text || !conn || !conn.open) return;
+    if (!text || !connected()) return;
     conn.send({ type: "msg", text });
-    addMsg(text, "mine", myName);
+    addMsg({ text }, "mine");
     $("msg").value = "";
   });
 
   $("btn-leave").addEventListener("click", () => {
+    stopRecording(true);
     if (conn) { const c = conn; conn = null; c.close(); }
     $("btn-connect").disabled = false;
     $("peer-id").value = "";
@@ -237,25 +281,153 @@
     show("step-connect");
   });
 
-  function addMsg(text, who, name) {
+  // ---------- Photo ----------
+  $("btn-photo").addEventListener("click", () => $("file").click());
+
+  $("file").addEventListener("change", async () => {
+    const f = $("file").files[0];
+    $("file").value = "";
+    if (!f || !connected()) return;
+    if (!f.type.startsWith("image/")) { sys("Ce fichier n'est pas une image."); return; }
+    try {
+      const data = await compressImage(f);
+      conn.send({ type: "img", data });
+      addMsg({ img: data }, "mine");
+    } catch {
+      sys("Impossible de lire cette image.");
+    }
+  });
+
+  // Réduit la photo (max 1600 px, JPEG) pour qu'elle passe vite
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_IMG_SIDE / Math.max(img.width, img.height));
+        const cv = document.createElement("canvas");
+        cv.width = Math.round(img.width * scale);
+        cv.height = Math.round(img.height * scale);
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
+
+  // ---------- Message vocal ----------
+  let recorder = null, recStream = null, recChunks = [], recTimer = null, recStart = 0, recCancel = false;
+
+  $("btn-rec").addEventListener("click", async () => {
+    if (recorder) { stopRecording(false); return; }
+    if (!connected()) return;
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      sys("L'enregistrement audio n'est pas disponible dans ce navigateur (ou la page n'est pas en https).");
+      return;
+    }
+    try {
+      recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      sys("Accès au micro refusé.");
+      return;
+    }
+    recChunks = []; recCancel = false;
+    recorder = new MediaRecorder(recStream);
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.onstop = () => {
+      recStream.getTracks().forEach(t => t.stop());
+      const type = recorder.mimeType || "audio/webm";
+      recorder = null; recStream = null;
+      clearInterval(recTimer);
+      $("btn-rec").classList.remove("rec");
+      $("btn-rec").textContent = "🎤";
+      $("rec-info").textContent = "";
+      if (recCancel || !recChunks.length || !connected()) return;
+      const blob = new Blob(recChunks, { type });
+      const fr = new FileReader();
+      fr.onload = () => {
+        if (!connected()) return;
+        conn.send({ type: "audio", data: fr.result });
+        addMsg({ audio: fr.result }, "mine");
+      };
+      fr.readAsDataURL(blob);
+    };
+    recorder.start();
+    recStart = Date.now();
+    $("btn-rec").classList.add("rec");
+    $("btn-rec").textContent = "■";
+    $("btn-rec").title = "Arrêter et envoyer";
+    const tick = () => {
+      const s = Math.floor((Date.now() - recStart) / 1000);
+      $("rec-info").textContent = "● Enregistrement " + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") + " — clique sur ■ pour envoyer";
+      if (s >= MAX_REC_SECONDS) stopRecording(false);
+    };
+    tick();
+    recTimer = setInterval(tick, 250);
+  });
+
+  function stopRecording(cancel) {
+    if (!recorder) return;
+    recCancel = cancel;
+    $("btn-rec").title = "Enregistrer un message vocal";
+    recorder.stop();
+  }
+
+  // ---------- Affichage ----------
+  function addMsg(content, who) {
+    const name = who === "mine" ? myName : peerName;
+    const id = who === "mine" ? myId : peerId;
     const div = document.createElement("div");
     div.className = "msg " + who;
+
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = name + " · " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-    const body = document.createElement("div");
-    body.textContent = text; // textContent : pas d'injection HTML possible
-    div.append(meta, body);
+    const n = document.createElement("span"); n.textContent = name;
+    const t = document.createElement("span"); t.className = "tag"; t.textContent = id;
+    const h = document.createElement("span"); h.textContent = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    meta.append(n, t, h);
+    div.append(meta);
+
+    if (content.text) {
+      const body = document.createElement("div");
+      body.textContent = content.text; // textContent : pas d'injection HTML possible
+      div.append(body);
+    } else if (content.img) {
+      const img = document.createElement("img");
+      img.src = content.img; img.alt = "Photo";
+      img.onload = scrollDown;
+      img.addEventListener("click", () => openViewer(content.img));
+      div.append(img);
+    } else if (content.audio) {
+      const a = document.createElement("audio");
+      a.controls = true; a.src = content.audio;
+      div.append(a);
+    }
     $("msgs").append(div);
-    $("msgs").scrollTop = $("msgs").scrollHeight;
+    scrollDown();
   }
+
+  function scrollDown() { $("msgs").scrollTop = $("msgs").scrollHeight; }
 
   function sys(text) {
     const div = document.createElement("div");
     div.className = "sys";
     div.textContent = text;
     $("msgs").append(div);
-    $("msgs").scrollTop = $("msgs").scrollHeight;
+    scrollDown();
+  }
+
+  function openViewer(src) {
+    const v = document.createElement("div");
+    v.className = "viewer";
+    const img = document.createElement("img"); img.src = src;
+    v.append(img);
+    v.addEventListener("click", () => v.remove());
+    document.body.append(v);
   }
 })();
 </script>
