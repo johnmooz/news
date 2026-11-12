@@ -53,22 +53,50 @@ select{padding:6px 8px;border-radius:6px;font-size:15px}
 .pick{position:absolute;top:100%;left:0;z-index:5;display:flex;flex-wrap:wrap;gap:4px;width:196px;padding:6px;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 #start{text-align:center;padding:24px 0}
 #start p{margin:0 0 14px;font-weight:600}
-.mode{display:block;width:100%;max-width:320px;margin:10px auto;padding:16px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--fg);font:700 17px system-ui;cursor:pointer}
+.mode{display:block;width:100%;max-width:340px;margin:10px auto;padding:14px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--fg);font:700 17px system-ui;cursor:pointer}
 .mode small{display:block;font-weight:400;font-size:13px;margin-top:4px;opacity:.8}
-#game[hidden],#start[hidden],#auto[hidden],#over[hidden]{display:none}
+#game[hidden],#start[hidden],#auto[hidden],#over[hidden],#netp[hidden],#hostui[hidden],#joinui[hidden]{display:none}
 #auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;padding:10px;background:var(--panel);border-radius:8px;font-weight:600}
 #auto button,.menu{padding:9px 14px;border-radius:6px;border:2px solid var(--line);background:var(--cell);color:#111;font-weight:700;cursor:pointer}
 #auto button:disabled{opacity:.4;cursor:default}
 #over{margin:12px 0;padding:12px;border-radius:8px;border:2px solid var(--o);background:var(--panel);font-weight:600;line-height:1.6}
+#netp{max-width:520px}
+#netp h2{font-size:18px;margin:12px 0 4px}
+#netp p{margin:10px 0 4px;font-weight:600}
+#netp textarea{display:block;width:100%;height:96px;margin-bottom:6px;font:11px/1.3 monospace;word-break:break-all;border-radius:6px;padding:6px}
+#netst{min-height:20px;font-size:14px;font-weight:600;color:var(--o)}
 </style>
 </head>
 <body>
 <h1>Q<span>win</span>to – Feuille de score</h1>
+
 <div id="start"><p>Choisis le mode de jeu :</p>
 <button class="mode" data-m="manual">Jeu manuel<small>Tu saisis les dés et les nombres toi-même</small></button>
-<button class="mode" data-m="auto">Jeu automatique<small>Lancer de dés, tours des joueurs, fin de partie automatique</small></button></div>
+<button class="mode" data-m="auto">Jeu automatique<small>Plusieurs joueurs sur le même appareil, lancer de dés et fin de partie automatiques</small></button>
+<button class="mode" data-m="solo">Solo<small>1 joueur : lance les dés et bats ton score</small></button>
+<button class="mode" data-m="host">Réseau (hôte)<small>Crée la partie et envoie le code à ton adversaire</small></button>
+<button class="mode" data-m="join">Réseau (rejoindre)<small>Colle le code reçu de l'hôte</small></button></div>
+
+<div id="netp" hidden>
+<button class="menu" id="netback">⬅ Retour</button>
+<h2 id="nettitle"></h2>
+<div id="hostui" hidden>
+<p>1. Envoie ce code à l'invité :</p>
+<textarea id="hcode" readonly></textarea><button class="menu" id="hcopy">Copier le code</button>
+<p>2. Colle ici la réponse de l'invité :</p>
+<textarea id="hans"></textarea><button class="menu" id="hgo">Connecter</button>
+</div>
+<div id="joinui" hidden>
+<p>1. Colle ici le code de l'hôte :</p>
+<textarea id="jcode"></textarea><button class="menu" id="jgo">Générer la réponse</button>
+<p>2. Envoie cette réponse à l'hôte :</p>
+<textarea id="jans" readonly></textarea><button class="menu" id="jcopy">Copier la réponse</button>
+</div>
+<p id="netst"></p>
+</div>
+
 <div id="game" hidden>
-<div class="bar"><button class="menu" id="menu">⬅ Mode</button><label>Joueurs : <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
+<div class="bar"><button class="menu" id="menu">⬅ Mode</button><label id="npl">Joueurs : <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
 <div id="auto" hidden><span id="turn"></span><button id="roll">🎲 Lancer les dés</button><button id="pass">Passer (✕ dé raté)</button></div>
 <div id="dice"></div>
 <div class="sheet"><div class="grid" id="grid"></div></div>
@@ -85,11 +113,15 @@ select{padding:6px 8px;border-radius:6px;font-size:15px}
 </div>
 <button class="r" id="reset">Nouvelle partie</button>
 </div>
+
 <script>
 const rows=[{k:'o',sh:3,pent:[1,5]},{k:'y',sh:5,pent:[7]},{k:'p',sh:4,pent:[2,9]}];
 const players=Array.from({length:4},()=>({vals:rows.map(()=>Array(10).fill(null)),fails:[0,0,0,0],total:0}));
 let cur=0,vals=players[0].vals,fails=players[0].fails;
+let mode='manual',isAuto=false,isNet=false,me=0,turn=0,rolled=false,over=false;
 const inputs=[], grid=document.getElementById('grid'), msg=document.getElementById('msg');
+const $=id=>document.getElementById(id);
+
 rows.forEach((r,ri)=>{
   const d=document.createElement('div'); d.className='row '+r.k; inputs[ri]=[];
   for(let i=0;i<10;i++){
@@ -99,11 +131,13 @@ rows.forEach((r,ri)=>{
     e.addEventListener('change',()=>onChange(ri,i,e));
     e.addEventListener('click',()=>{
       if(over||e.value!=='')return;
-      if(mode==='auto'&&!rolled){msg.textContent='Lance d\'abord les dés.';return;}
+      if(isNet&&cur!==me)return;
+      if(isAuto&&!myTurn()){msg.textContent="Ce n'est pas ton tour.";return;}
+      if(isAuto&&!rolled){msg.textContent="Lance d'abord les dés.";return;}
       if(dice[ri]===0){msg.textContent='Le dé '+dnm[ri]+' est à 0 : impossible de jouer sur la ligne '+dnm[ri]+'.';e.blur();return;}
       const t=diceTotal();
-      if(t>0){e.value=t;const ok=onChange(ri,i,e);e.blur();if(ok&&mode==='auto')afterPlace();}
-      else if(mode==='auto')msg.textContent='Total 0 : tu dois passer.';
+      if(t>0){e.value=t;const ok=onChange(ri,i,e);e.blur();if(ok&&isAuto)afterPlace();}
+      else if(isAuto)msg.textContent='Total 0 : tu dois passer.';
     });
     inputs[ri][i]=e; d.appendChild(e);
   }
@@ -129,57 +163,78 @@ function rowScore(ri){
 }
 function calc(){
   const s=[0,1,2].map(rowScore);
-  ['so','sy','sp'].forEach((id,k)=>document.getElementById(id).textContent=s[k]);
+  ['so','sy','sp'].forEach((id,k)=>$(id).textContent=s[k]);
   const pv=[];rows.forEach((r,ri)=>r.pent.forEach(i=>pv.push(vals[ri][i])));
-  pv.forEach((v,k)=>document.getElementById('d'+k).textContent=v??'');
+  pv.forEach((v,k)=>$('d'+k).textContent=v??'');
   const fp=fails.reduce((a,b)=>a+b,0)*5, pt=pv.reduce((a,b)=>a+(b||0),0);
-  document.getElementById('sf').textContent=fp;
-  const T=s[0]+s[1]+s[2]+pt-fp;document.getElementById('tot').textContent=T;players[cur].total=T;drawTabs();
+  $('sf').textContent=fp;
+  const T=s[0]+s[1]+s[2]+pt-fp;$('tot').textContent=T;players[cur].total=T;drawTabs();
+  if(isNet&&cur===me)sendState();
 }
 document.querySelectorAll('.f').forEach(b=>b.addEventListener('click',()=>{
-  if(mode==='auto')return; const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
+  if(isAuto)return; const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
 }));
-let mode='manual',rolled=false,over=false;
-function newGame(){
-  players.forEach(p=>{p.vals.forEach(a=>a.fill(null));p.fails.fill(0);p.total=0;});
-  dice.fill(0);rolled=false;over=false;
-  document.getElementById('over').hidden=true;
-  inputs.forEach(a=>a.forEach(e=>{e.value='';e.readOnly=(mode==='auto');}));
-  drawDice(-1);pick(0);updateAuto();
+
+const np=$('np'),tabs=$('tabs');
+function drawTabs(){
+  const n=+np.value;tabs.innerHTML='';
+  for(let k=0;k<n;k++){
+    const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');
+    b.textContent='J'+(k+1)+(isNet&&k===me?' (toi)':'')+' : '+players[k].total;
+    b.onclick=()=>{if(!isAuto||isNet)pick(k);};
+    tabs.appendChild(b);
+  }
 }
-document.getElementById('reset').addEventListener('click',()=>newGame());
-const np=document.getElementById('np'),tabs=document.getElementById('tabs');
-function drawTabs(){const n=+np.value;tabs.innerHTML='';for(let k=0;k<n;k++){const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');b.textContent='J'+(k+1)+' : '+players[k].total;b.onclick=()=>{if(mode==='manual')pick(k);};tabs.appendChild(b);}}
 function pick(k){cur=k;vals=players[k].vals;fails=players[k].fails;
  rows.forEach((r,ri)=>inputs[ri].forEach((e,i)=>{e.value=vals[ri][i]??'';}));
  document.querySelectorAll('.f').forEach((b,i)=>b.textContent=fails[i]?'✕':'');
  msg.textContent='';calc();}
-np.onchange=()=>{if(mode==='auto'){newGame();return;}if(cur>=+np.value)cur=0;pick(cur);};
+np.onchange=()=>{if(isAuto){newGame();return;}if(cur>=+np.value)cur=0;pick(cur);};
+
+/* ---- Dés ---- */
 const dice=[0,0,0],dcol=['var(--o)','var(--y)','var(--p)'],dnm=['orange','jaune','violet'];
 const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 function face(n){let h='';for(let q=0;q<9;q++)h+='<span class="pip'+(PIPS[n].includes(q)?' on':'')+'"></span>';return h;}
 function diceTotal(){return dice[0]+dice[1]+dice[2];}
-const dbox=document.getElementById('dice');
+const dbox=$('dice');
 function drawDice(open){dbox.innerHTML='<span>Dés :</span>';dice.forEach((v,k)=>{const w=document.createElement('div');w.className='dw';
- const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>{if(mode==='manual')drawDice(open===k?-1:k);};w.appendChild(b);
+ const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>{if(!isAuto)drawDice(open===k?-1:k);};w.appendChild(b);
  if(open===k){const p=document.createElement('div');p.className='pick';for(let n=0;n<=6;n++){const o=document.createElement('button');o.className='die s';o.style.background=dcol[k];o.style.color=k===1?'#111':'#fff';o.innerHTML=face(n);o.onclick=()=>{dice[k]=n;drawDice(-1);};p.appendChild(o);}w.appendChild(p);}
  dbox.appendChild(w);});
  const t=document.createElement('span');t.textContent='Total : '+diceTotal();dbox.appendChild(t);}
-/* ---- Mode automatique ---- */
-const turnEl=document.getElementById('turn'),rollB=document.getElementById('roll'),passB=document.getElementById('pass'),overEl=document.getElementById('over');
+
+/* ---- Parties ---- */
+function myTurn(){return !isNet||turn===me;}
+function newGame(){
+  players.forEach(p=>{p.vals.forEach(a=>a.fill(null));p.fails.fill(0);p.total=0;});
+  dice.fill(0);rolled=false;over=false;turn=0;
+  $('over').hidden=true;
+  inputs.forEach(a=>a.forEach(e=>{e.value='';e.readOnly=isAuto;}));
+  drawDice(-1);pick(isNet?me:0);updateAuto();
+}
+$('reset').addEventListener('click',()=>{newGame();if(isNet)send({t:'new'});});
+
+/* ---- Mode automatique / solo / réseau ---- */
+const turnEl=$('turn'),rollB=$('roll'),passB=$('pass'),overEl=$('over');
 function updateAuto(){
-  if(mode!=='auto')return;
-  turnEl.textContent=over?'Partie terminée':'Tour de J'+(cur+1)+' — '+(rolled?'place le total ou passe':'lance les dés');
-  rollB.disabled=over||rolled;passB.disabled=over||!rolled;
+  if(!isAuto)return;
+  const mine=myTurn();
+  if(over)turnEl.textContent='Partie terminée';
+  else if(!mine)turnEl.textContent='Tour de J'+(turn+1)+' (adversaire) — '+(rolled?'il joue…':'il lance les dés…');
+  else turnEl.textContent='Tour de J'+(turn+1)+(isNet?' (toi)':'')+' — '+(rolled?'place le total ou passe':'lance les dés');
+  rollB.disabled=over||rolled||!mine;passB.disabled=over||!rolled||!mine;
 }
 rollB.onclick=()=>{
-  if(over||rolled)return;
+  if(over||rolled||!myTurn())return;
+  if(isNet&&cur!==me)pick(me);
   for(let k=0;k<3;k++)dice[k]=Math.floor(Math.random()*7);
   rolled=true;drawDice(-1);updateAuto();
   msg.textContent=diceTotal()===0?'Total 0 : tu dois passer.':'';
+  if(isNet)send({t:'roll',dice:dice.slice()});
 };
 passB.onclick=()=>{
-  if(over||!rolled)return;
+  if(over||!rolled||!myTurn())return;
+  if(isNet&&cur!==me)pick(me);
   const i=fails.indexOf(0);
   if(i>=0){fails[i]=1;document.querySelectorAll('.f')[i].textContent='✕';}
   calc();
@@ -192,27 +247,130 @@ function afterPlace(){
   nextTurn();
 }
 function nextTurn(){
-  cur=(cur+1)%(+np.value);rolled=false;dice.fill(0);
-  drawDice(-1);pick(cur);updateAuto();
+  turn=(turn+1)%(+np.value);rolled=false;dice.fill(0);
+  if(isNet)send({t:'turn',turn});
+  drawDice(-1);pick(isNet?me:turn);updateAuto();
 }
-function endGame(reason){
+function endGame(reason,remote){
   over=true;calc();updateAuto();
-  const n=+np.value,sc=players.slice(0,n).map(p=>p.total),best=Math.max(...sc);
-  const w=sc.map((s,k)=>s===best?'J'+(k+1):null).filter(Boolean);
-  overEl.hidden=false;
-  overEl.innerHTML='🏁 Fin de partie : '+reason+'.<br>'+sc.map((s,k)=>'J'+(k+1)+' : '+s).join(' · ')+'<br>'+(w.length>1?'Égalité : ':'Vainqueur : ')+w.join(', ');
+  const n=+np.value,sc=players.slice(0,n).map(p=>p.total);
+  let h='🏁 Fin de partie : '+reason+'.<br>'+sc.map((s,k)=>'J'+(k+1)+(isNet&&k===me?' (toi)':'')+' : '+s).join(' · ');
+  if(n>1){
+    const best=Math.max(...sc),w=sc.map((s,k)=>s===best?'J'+(k+1):null).filter(Boolean);
+    h+='<br>'+(w.length>1?'Égalité : ':'Vainqueur : ')+w.join(', ');
+  }
+  overEl.hidden=false;overEl.innerHTML=h;
+  if(isNet&&!remote)send({t:'end',reason});
 }
+
+/* ---- Réseau (WebRTC, échange de codes manuel) ---- */
+let pc=null,dc=null;
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const netst=$('netst');
+function enc(d){return btoa(JSON.stringify(d));}
+function dec(s){return JSON.parse(atob(s.trim()));}
+function gathered(p){return new Promise(res=>{
+  if(p.iceGatheringState==='complete')return res();
+  const t=setTimeout(res,5000);
+  p.addEventListener('icegatheringstatechange',()=>{if(p.iceGatheringState==='complete'){clearTimeout(t);res();}});
+});}
+function send(o){try{if(dc&&dc.readyState==='open')dc.send(JSON.stringify(o));}catch(_){}}
+function sendState(){const P=players[me];send({t:'state',p:me,vals:P.vals,fails:P.fails,total:P.total});}
+function closeNet(){
+  try{if(dc){dc.onclose=null;dc.close();}}catch(_){}
+  try{if(pc)pc.close();}catch(_){}
+  dc=null;pc=null;
+}
+function setupDC(ch,m){
+  dc=ch;
+  ch.onopen=()=>{netst.textContent='Connecté !';startMode(m);};
+  ch.onmessage=ev=>{try{onNet(JSON.parse(ev.data));}catch(_){}};
+  ch.onclose=()=>{if(isNet&&!over){over=true;msg.textContent='Connexion perdue.';updateAuto();}};
+  if(ch.readyState==='open')ch.onopen();
+}
+function onNet(m){
+  if(m.t==='state'){
+    const P=players[m.p];
+    for(let r=0;r<3;r++)for(let i=0;i<10;i++)P.vals[r][i]=m.vals[r][i];
+    for(let i=0;i<4;i++)P.fails[i]=m.fails[i];
+    P.total=m.total;
+    if(cur===m.p)pick(cur);else drawTabs();
+  }else if(m.t==='roll'){
+    for(let k=0;k<3;k++)dice[k]=m.dice[k];
+    rolled=true;drawDice(-1);updateAuto();msg.textContent='';
+  }else if(m.t==='turn'){
+    turn=m.turn;rolled=false;dice.fill(0);drawDice(-1);pick(me);updateAuto();
+  }else if(m.t==='end'){
+    endGame(m.reason,true);
+  }else if(m.t==='new'){
+    newGame();
+  }
+}
+function showNet(role){
+  $('start').hidden=true;$('netp').hidden=false;
+  $('hostui').hidden=role!=='host';$('joinui').hidden=role!=='join';
+  $('nettitle').textContent=role==='host'?'Réseau – hôte':'Réseau – rejoindre';
+  ['hcode','hans','jcode','jans'].forEach(id=>$(id).value='');
+  netst.textContent='';
+}
+async function hostBegin(){
+  showNet('host');closeNet();
+  try{
+    pc=new RTCPeerConnection(ICE);
+    setupDC(pc.createDataChannel('qwinto'),'host');
+    $('hcode').value='Génération du code…';
+    await pc.setLocalDescription(await pc.createOffer());
+    await gathered(pc);
+    $('hcode').value=enc(pc.localDescription);
+  }catch(e){netst.textContent='Le réseau (WebRTC) n\'est pas disponible dans ce navigateur.';}
+}
+function joinBegin(){
+  showNet('join');closeNet();
+  try{
+    pc=new RTCPeerConnection(ICE);
+    pc.ondatachannel=e=>setupDC(e.channel,'join');
+  }catch(e){netst.textContent='Le réseau (WebRTC) n\'est pas disponible dans ce navigateur.';}
+}
+$('hgo').onclick=async()=>{
+  try{await pc.setRemoteDescription(dec($('hans').value));netst.textContent='Connexion en cours…';}
+  catch(e){netst.textContent='Réponse invalide.';}
+};
+$('jgo').onclick=async()=>{
+  try{
+    await pc.setRemoteDescription(dec($('jcode').value));
+    await pc.setLocalDescription(await pc.createAnswer());
+    $('jans').value='Génération de la réponse…';
+    await gathered(pc);
+    $('jans').value=enc(pc.localDescription);
+    netst.textContent="Envoie la réponse à l'hôte, puis attends la connexion…";
+  }catch(e){netst.textContent='Code invalide.';}
+};
+function copyEl(el){
+  el.select();
+  try{navigator.clipboard.writeText(el.value).catch(()=>document.execCommand('copy'));}
+  catch(_){try{document.execCommand('copy');}catch(__){}}
+  netst.textContent='Copié (ou sélectionné : fais Ctrl+C).';
+}
+$('hcopy').onclick=()=>copyEl($('hcode'));
+$('jcopy').onclick=()=>copyEl($('jans'));
+$('netback').onclick=()=>{closeNet();$('netp').hidden=true;$('start').hidden=false;};
+
+/* ---- Démarrage ---- */
 function startMode(m){
-  mode=m;
-  document.getElementById('start').hidden=true;
-  document.getElementById('game').hidden=false;
-  document.getElementById('auto').hidden=(m!=='auto');
+  mode=m;isAuto=(m!=='manual');isNet=(m==='host'||m==='join');me=(m==='join'?1:0);
+  $('start').hidden=true;$('netp').hidden=true;$('game').hidden=false;
+  $('auto').hidden=!isAuto;
+  if(m==='solo')np.value='1';else if(isNet)np.value='2';
+  $('npl').hidden=(m==='solo'||isNet);
   newGame();
 }
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>startMode(b.dataset.m));
-document.getElementById('menu').onclick=()=>{
-  document.getElementById('game').hidden=true;
-  document.getElementById('start').hidden=false;
+document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
+  const m=b.dataset.m;
+  if(m==='host')hostBegin();else if(m==='join')joinBegin();else startMode(m);
+});
+$('menu').onclick=()=>{
+  closeNet();mode='manual';isAuto=false;isNet=false;
+  $('game').hidden=true;$('start').hidden=false;
 };
 </script>
 </body>
