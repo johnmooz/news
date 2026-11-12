@@ -13,12 +13,10 @@
   --box:#b88658; --box-d:#8a5f37;
   --heis:#9b4fc4; --heis-d:#723399;
   --paper:#fbf4e6; --card:#fffaf0; --ink:#3b2a1d; --muted:#8a7562;
-  --cardboard:#d9a86c; --cardboard-d:#a8773f; --red:#c0392b;
+  --cardboard:#d9a86c; --cardboard-d:#a8773f; --red:#c0392b; --name:#5a2d82;
 }
 *{box-sizing:border-box}
 html{color-scheme:light}
-.pl .nm{color:#5a2d82}
-.modal .box,.panel,#setup{color:var(--ink)}
 body{margin:0;font-family:'Fredoka',system-ui,sans-serif;color:var(--ink);
   background:#e7cfa4 radial-gradient(circle at 20% 10%,#f1dcb5 0,transparent 50%),radial-gradient(circle at 90% 90%,#d8b583 0,transparent 55%);
   min-height:100vh}
@@ -29,38 +27,65 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .btn.red{background:var(--red);box-shadow:0 4px 0 #8e2418}
 .btn.purple{background:var(--heis);box-shadow:0 4px 0 var(--heis-d)}
 .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cdb89a}
-header{text-align:center;padding:14px 10px 4px}
+.btn.small{padding:.4em .8em;font-size:.85rem}
+header{text-align:center;padding:14px 10px 4px;position:relative}
 header h1{margin:0;font-size:clamp(1.5rem,4vw,2.3rem);letter-spacing:.5px}
 header h1 span{color:var(--heis)}
 header .sub{color:var(--muted);font-size:.95rem}
+#quitBtn{position:absolute;right:14px;top:14px}
 .hidden{display:none!important}
+input.txt{font-family:inherit;font-size:1.05rem;font-weight:600;padding:.6em .8em;border:2px solid #e3cfac;border-radius:10px;background:#fff6e6;color:var(--name);caret-color:var(--name);-webkit-text-fill-color:var(--name);width:100%}
+input.txt::placeholder{color:#b49a7c;-webkit-text-fill-color:#b49a7c;font-weight:500}
+input.txt:focus{outline:none;border-color:var(--heis)}
+code{background:#f1e3c8;padding:2px 8px;border-radius:6px;font-size:1.05rem;font-weight:600;color:var(--name)}
 
-/* ---------- SETUP ---------- */
-#setup{max-width:520px;margin:20px auto;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(80,50,20,.2)}
-#setup h2{margin-top:0}
-.counts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+/* ---------- ÉCRANS DE MENU ---------- */
+.screen{max-width:560px;margin:20px auto;background:var(--card);border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(80,50,20,.2)}
+.screen h2{margin-top:0;display:flex;align-items:center;gap:10px}
+.screen .back{background:none;color:var(--muted);padding:4px 0;font-weight:500;margin-bottom:6px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.modes{grid-template-columns:1fr}}
+.mode{background:#fbf0dc;border-radius:16px;padding:18px 14px;text-align:center;color:var(--ink);box-shadow:0 5px 0 #e3cfac;display:flex;flex-direction:column;align-items:center;gap:6px}
+.mode:hover{background:#f7ecfb;box-shadow:0 5px 0 #d5b7e6}
+.mode .ico{font-size:2.2rem;line-height:1}
+.mode b{font-size:1.15rem}
+.mode small{color:var(--muted);font-weight:400}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
 .counts button{background:#f1e3c8;color:var(--ink);width:52px;height:52px;font-size:1.3rem;padding:0}
 .counts button.on{background:var(--heis);color:#fff}
 .names{display:grid;gap:10px;margin-bottom:20px}
 .names label{display:flex;align-items:center;gap:10px}
-.names input{flex:1;font-family:inherit;font-size:1.05rem;font-weight:600;padding:.6em .8em;border:2px solid #e3cfac;border-radius:10px;background:#fff6e6;color:#5a2d82;caret-color:#5a2d82;-webkit-text-fill-color:#5a2d82}
-.names input::placeholder{color:#b49a7c;-webkit-text-fill-color:#b49a7c}
-.names input:focus{outline:none;border-color:var(--heis)}
 .deckinfo{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 20px;font-size:.9rem}
 .deckinfo div{display:flex;align-items:center;gap:6px;background:#f6ead4;padding:4px 10px 4px 4px;border-radius:30px}
+.field{margin-bottom:16px}
+.field > div{margin-bottom:6px}
+.note{background:#f6ead4;border-radius:12px;padding:10px 14px;font-size:.9rem;color:#6b5643;margin:12px 0}
+.note.warn{background:#fde8e4;color:#8e2418}
+.seats{display:grid;gap:8px;margin:10px 0 16px}
+.seat{display:flex;align-items:center;gap:10px;background:#fbf0dc;border-radius:12px;padding:6px 10px}
+.seat svg{width:30px;height:30px}
+.seat .nm{flex:1;font-weight:700;color:var(--name)}
+.seat .kind{font-size:.78rem;color:var(--muted)}
+.wide{width:100%;font-size:1.1rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > *{flex:1}
+.err{color:var(--red);font-weight:600;margin-top:10px}
 
 /* ---------- GAME LAYOUT ---------- */
 #game{max-width:1200px;margin:0 auto;padding:8px 12px 30px;display:grid;grid-template-columns:260px 1fr;gap:16px}
 @media(max-width:860px){#game{grid-template-columns:1fr}}
-.panel{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 6px 18px rgba(80,50,20,.15)}
+.panel{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 6px 18px rgba(80,50,20,.15);color:var(--ink)}
 #players{display:flex;flex-direction:column;gap:10px}
 @media(max-width:860px){#players{flex-direction:row;overflow-x:auto}#players .pl{min-width:200px}}
 .pl{border:3px solid transparent;border-radius:14px;padding:10px;background:#fbf0dc;position:relative}
 .pl.active{border-color:var(--heis);background:#f7ecfb}
 .pl.out{opacity:.45;filter:grayscale(1)}
-.pl .nm{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pl .nm{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:var(--name)}
 .tag{font-size:.7rem;padding:2px 7px;border-radius:20px;background:var(--heis);color:#fff;font-weight:600}
 .tag.bet{background:var(--box-d)}
+.tag.me{background:var(--alive-d)}
+.tag.bot{background:#5f646c}
+.tag.away{background:var(--red)}
 .lives{display:flex;gap:2px;margin:4px 0}
 .lives svg{width:30px;height:30px}
 .pl .info{font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -69,6 +94,7 @@ header .sub{color:var(--muted);font-size:.95rem}
 .tablecards{display:flex;gap:3px;flex-wrap:wrap;margin-top:6px}
 .tablecards .mc{width:24px;height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .mc svg{width:20px;height:20px}
+#conn{position:fixed;left:50%;top:8px;transform:translateX(-50%);background:var(--red);color:#fff;padding:6px 16px;border-radius:20px;z-index:60;font-weight:600}
 
 /* ---------- BOARD ---------- */
 #center{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -120,15 +146,17 @@ header .sub{color:var(--muted);font-size:.95rem}
 .hint{color:var(--muted);font-size:.92rem;margin:4px 0 10px}
 .privacy{background:#3b2a1d;color:#fff;border-radius:14px;padding:16px;margin:10px auto;max-width:460px}
 .privacy p{margin:0 0 12px}
+.thinking{display:inline-block;animation:think 1.2s infinite}
+@keyframes think{50%{opacity:.3}}
 #log{font-size:.85rem;color:var(--muted);max-height:120px;overflow:auto;margin-top:10px;text-align:left}
 #log div{padding:2px 0;border-bottom:1px dashed #ead9bd}
 
 /* ---------- MODAL ---------- */
 .modal{position:fixed;inset:0;background:rgba(40,25,10,.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
-.modal .box{background:var(--card);border-radius:20px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:22px;text-align:center;animation:pop .3s}
+.modal .mbox{background:var(--card);color:var(--ink);border-radius:20px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:22px;text-align:center;animation:pop .3s}
 @keyframes pop{from{transform:scale(.85);opacity:0}}
 .reveal-row{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px dashed #e3cfac;flex-wrap:wrap}
-.reveal-row .who{min-width:110px;text-align:left;font-weight:700}
+.reveal-row .who{min-width:110px;text-align:left;font-weight:700;color:var(--name)}
 .reveal-row .cards{display:flex;gap:6px;flex-wrap:wrap}
 .reveal-row .card{width:58px;height:84px;border-width:3px}
 .reveal-row .card .lbl{display:none}
@@ -146,19 +174,58 @@ header .sub{color:var(--muted);font-size:.95rem}
 <header>
   <h1>Les Chats de <span>Schrödinger</span></h1>
   <div class="sub">Vivant ? Mort ? Ou… la boîte est vide ? <button class="linkbtn" onclick="showRules()">Règles</button></div>
+  <button id="quitBtn" class="btn ghost small hidden" onclick="askQuit()">Quitter</button>
 </header>
+<div id="conn" class="hidden"></div>
 
-<!-- SETUP -->
-<section id="setup">
-  <h2>Nouvelle partie</h2>
+<!-- MENU -->
+<section id="menu" class="screen">
+  <h2>Choisissez un mode de jeu</h2>
+  <div class="modes">
+    <button class="mode" onclick="openSolo()"><span class="ico">🤖</span><b>Solo</b><small>Vous contre des robots</small></button>
+    <button class="mode" onclick="openLocal()"><span class="ico">🖥️</span><b>Même écran</b><small>2 à 6 joueurs se passent l'ordinateur</small></button>
+    <button class="mode" onclick="openHost()"><span class="ico">📡</span><b>Réseau (hôte)</b><small>Créer une partie sur le réseau local</small></button>
+    <button class="mode" onclick="openJoin()"><span class="ico">🔗</span><b>Réseau (rejoindre)</b><small>Rejoindre la partie d'un autre PC</small></button>
+  </div>
+  <div id="netNote" class="note hidden"></div>
+</section>
+
+<!-- SOLO -->
+<section id="solo" class="screen hidden">
+  <button class="back" onclick="toMenu()">← Menu</button>
+  <h2>🤖 Partie solo</h2>
+  <div class="field"><div>Votre nom</div><input class="txt" id="soloName" maxlength="16" placeholder="Votre nom"></div>
+  <div>Nombre de robots adversaires</div>
+  <div class="counts" id="botCounts"></div>
+  <button class="btn purple wide" onclick="startSolo()">Commencer la partie</button>
+</section>
+
+<!-- LOCAL -->
+<section id="setup" class="screen hidden">
+  <button class="back" onclick="toMenu()">← Menu</button>
+  <h2>🖥️ Même écran</h2>
   <div>Nombre de joueurs</div>
   <div class="counts" id="counts"></div>
   <div class="names" id="names"></div>
   <div class="deckinfo" id="deckinfo"></div>
-  <button class="btn purple" style="width:100%;font-size:1.15rem" onclick="startGame()">Commencer la partie</button>
+  <button class="btn purple wide" onclick="startLocal()">Commencer la partie</button>
 </section>
 
-<!-- GAME -->
+<!-- HÔTE -->
+<section id="host" class="screen hidden">
+  <button class="back" onclick="leaveHost()">← Menu</button>
+  <h2>📡 Héberger une partie</h2>
+  <div id="hostBody"></div>
+</section>
+
+<!-- REJOINDRE -->
+<section id="join" class="screen hidden">
+  <button class="back" onclick="leaveClient()">← Menu</button>
+  <h2>🔗 Rejoindre une partie</h2>
+  <div id="joinBody"></div>
+</section>
+
+<!-- JEU -->
 <section id="game" class="hidden">
   <aside class="panel"><div id="players"></div></aside>
   <div id="center">
@@ -172,13 +239,17 @@ header .sub{color:var(--muted);font-size:.95rem}
   </div>
 </section>
 
-<div id="modal" class="modal hidden"><div class="box" id="modalbox"></div></div>
+<div id="modal" class="modal hidden"><div class="mbox" id="modalbox"></div></div>
 
 <script>
-/* ================= DONNÉES ================= */
+/* =====================================================================
+   DONNÉES
+   ===================================================================== */
 const DECK_DEF = {alive:20, dead:20, box:8, heis:4};
+const DECK_TOTAL = 52;
 const TNAME = {alive:'Vivant', dead:'Mort', box:'Boîte vide', heis:'Heisenberg'};
 const COL = {alive:'#6fae3f', dead:'#8c929b', box:'#b88658', heis:'#9b4fc4'};
+const BOT_NAMES = ['Minou','Félix','Pacha','Moustache','Caramel','Tigrou','Grisou','Filou'];
 
 const BOARD = [];
 for (let g = 0; g < 13; g++) {
@@ -192,7 +263,9 @@ function betLabel(i){
   return `${c.n} boîte${p} vide${p}`;
 }
 
-/* ================= DESSINS SVG ================= */
+/* =====================================================================
+   DESSINS SVG
+   ===================================================================== */
 function catHead(cx, cy, r, fill, dead, stroke='#3b2a1d'){
   const sw = r*0.09;
   let s = `<polygon points="${cx-r*.95},${cy-r*.15} ${cx-r*.8},${cy-r*1.25} ${cx-r*.2},${cy-r*.8}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
@@ -240,291 +313,534 @@ function cardArt(t){
   if (t === 'box')   return boxArt(`<g stroke="#e9e2d0" stroke-width="2" stroke-linecap="round" fill="none"><path d="M36,70 L64,70"/><path d="M42,70 l-4,-6 M42,70 l-4,6 M50,70 l-4,-7 M50,70 l-4,7 M58,70 l-3,-6 M58,70 l-3,6"/><circle cx="66" cy="70" r="3"/></g><circle cx="34" cy="88" r="7" fill="#e07a6a" stroke="#3b2a1d" stroke-width="1.2"/><circle cx="34" cy="88" r="4" fill="#9ed4c0"/>`);
   return boxArt(`<g opacity=".9">${catHead(50,64,19,'rgba(255,255,255,.25)',false,'rgba(255,255,255,.7)')}</g><text x="50" y="76" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="38" fill="#fff" stroke="#723399" stroke-width="1.5">?</text><g fill="#fff"><circle cx="26" cy="36" r="1.6"/><circle cx="75" cy="44" r="2"/><circle cx="30" cy="90" r="1.4"/><circle cx="72" cy="88" r="1.8"/></g>`);
 }
-function cardHTML(c, cls=''){
-  return `<div class="card ${c.t} ${cls}" data-id="${c.id}">
+function cardHTML(c, cls='', style=''){
+  return `<div class="card ${c.t} ${cls}" data-id="${c.id}" style="${style}">
     <div class="co tl">${miniIcon(c.t)}</div>${cardArt(c.t)}<div class="co br">${miniIcon(c.t)}</div>
     <div class="lbl">${TNAME[c.t]}</div></div>`;
 }
 function backHTML(){
   return `<div class="card back"><svg class="art" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27" fill="#fff8ea" stroke="#8a5f37" stroke-width="3"/><text x="30" y="42" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="34" fill="#8a5f37">?</text></svg></div>`;
 }
-function lifeSVG(alive){
-  return `<svg viewBox="0 0 40 40">${catHead(20,23,13,alive?'#ec9a4b':'#d4d6da',!alive)}</svg>`;
+function lifeSVG(alive, attrs=''){
+  return `<svg viewBox="0 0 40 40" ${attrs}>${catHead(20,23,13,alive?'#ec9a4b':'#d4d6da',!alive)}</svg>`;
+}
+function typeBadge(t, size=28){
+  return `<span style="display:inline-flex;width:${size}px;height:${size}px;border-radius:50%;background:${COL[t]};align-items:center;justify-content:center">${miniIcon(t).replace('<svg',`<svg width="${size*.78}" height="${size*.78}"`)}</span>`;
 }
 const YARN = `<svg class="yarn" viewBox="0 0 60 60"><circle cx="30" cy="30" r="19" fill="#c0392b" stroke="#7a1f14" stroke-width="2"/>
 <g stroke="#7a1f14" stroke-width="1.6" fill="none"><path d="M14,24 q16,-8 32,6"/><path d="M12,32 q18,-10 34,8"/><path d="M18,44 q10,-18 26,-26"/><path d="M22,14 q-2,18 10,34"/></g>
 <path d="M46,40 q8,6 12,16" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
 
-/* ================= ÉTAT ================= */
-let S = null;
-let setupN = 4;
-const setupNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6'];
+/* =====================================================================
+   OUTILS
+   ===================================================================== */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const cleanName = (s, def) => (String(s||'').replace(/\s+/g,' ').trim().slice(0,16)) || def;
+function shuffle(a){ for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function store(k,v){ try{ localStorage.setItem('csd_'+k, v); }catch(e){} }
+function load(k,d){ try{ const v = localStorage.getItem('csd_'+k); return v===null ? d : v; }catch(e){ return d; } }
+
+/* =====================================================================
+   MOTEUR DU JEU (exécuté par l'ordinateur qui fait autorité :
+   solo, même écran, ou hôte réseau)
+   ===================================================================== */
+let MODE = null;      // 'solo' | 'local' | 'host' | 'client'
+let S = null;         // état complet (autorité uniquement)
 let uid = 0;
 
-function shuffle(a){ for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function newDeck(){
   const d = [];
   for (const t in DECK_DEF) for (let i=0;i<DECK_DEF[t];i++) d.push({id:++uid, t});
   return shuffle(d);
 }
-
-/* ================= SETUP ================= */
-function renderSetup(){
-  $('counts').innerHTML = [2,3,4,5,6].map(n => `<button class="${n===setupN?'on':''}" onclick="setN(${n})">${n}</button>`).join('');
-  $('names').innerHTML = Array.from({length:setupN},(_,i) =>
-    `<label>${lifeSVG(true).replace('<svg','<svg width="34" height="34"')}<input maxlength="16" value="${esc(setupNames[i])}" oninput="setupNames[${i}]=this.value" placeholder="Nom du joueur ${i+1}"></label>`).join('');
-  $('deckinfo').innerHTML = Object.keys(DECK_DEF).map(t =>
-    `<div><span style="display:inline-flex;width:26px;height:26px;border-radius:50%;background:${COL[t]};align-items:center;justify-content:center">${miniIcon(t).replace('<svg','<svg width="20" height="20"')}</span>${DECK_DEF[t]} × ${TNAME[t]}</div>`).join('');
-}
-function setN(n){ setupN = n; renderSetup(); }
-
-function startGame(){
-  const players = Array.from({length:setupN},(_,i) => ({
-    name: (setupNames[i]||'').trim() || `Joueur ${i+1}`, lives:3, hand:[], table:[]
-  }));
-  S = { players, handSize:6, dir:-1, round:0, starter:0, log:[] };
-  $('setup').classList.add('hidden');
-  $('game').classList.remove('hidden');
-  newRound();
-}
-
-/* ================= MANCHES ================= */
-function alivePlayers(){ return S.players.map((p,i)=>i).filter(i => S.players[i].lives > 0); }
+function isAuto(p){ return p.isBot || p.away; }
+function aliveIdx(){ return S.players.map((p,i)=>i).filter(i => S.players[i].lives > 0); }
 function nextAlive(i){
   const n = S.players.length;
   for (let k=1;k<=n;k++){ const j=(i+k)%n; if (S.players[j].lives>0) return j; }
   return i;
 }
+function matchesBet(c, bet){ return bet >= 0 && (c.t === BOARD[bet].t || c.t === 'heis'); }
+function turnPhase(){ return MODE === 'local' ? 'pass' : 'turn'; }
+
+function createGame(seats, starter){
+  S = {
+    players: seats.map(s => ({name:s.name, isBot:!!s.isBot, clientId:s.clientId||null, away:false, lives:3, hand:[], table:[]})),
+    handSize:6, dir:-1, round:0, starter: starter ?? 0, log:[], result:null, winner:null, seq:0, gid: Math.random().toString(36).slice(2)
+  };
+  newRound();
+}
 function newRound(){
   S.round++;
   S.deck = newDeck();
   for (const p of S.players){ p.hand=[]; p.table=[]; }
-  for (const i of alivePlayers()) S.players[i].hand = S.deck.splice(0, S.handSize);
+  for (const i of aliveIdx()) S.players[i].hand = S.deck.splice(0, S.handSize);
   S.bet = -1; S.lastBettor = null; S.current = S.starter;
-  S.phase = 'pass'; S.sel = null; S.chosen = new Set(); S.fresh = new Set(); S.firstTurn = true;
+  S.phase = turnPhase(); S.fresh = []; S.exLimit = 0; S.result = null;
   addLog(`— Manche ${S.round} : ${S.handSize} carte${S.handSize>1?'s':''} par joueur. ${S.players[S.current].name} commence.`);
+}
+function computeNextHandSize(){
+  let n = S.handSize + S.dir, d = S.dir;
+  if (n < 1){ d = 1; n = 2; }
+  if (n > 6){ d = -1; n = 5; }
+  return {n, d};
+}
+function addLog(t){ S.log.unshift(t); if (S.log.length > 60) S.log.length = 60; }
+
+function doChallenge(){
+  const accuser = S.current, bettor = S.lastBettor, cell = BOARD[S.bet];
+  let total = 0;
+  const rows = aliveIdx().map(i => {
+    const p = S.players[i];
+    const cnt = [...p.hand, ...p.table].filter(c => matchesBet(c, S.bet)).length;
+    total += cnt;
+    return {name:p.name, hand:p.hand.slice(), table:p.table.slice(), cnt};
+  });
+  const holds = total >= cell.n;
+  const loser = holds ? accuser : bettor;
+  S.players[loser].lives--;
+  const eliminated = S.players[loser].lives <= 0;
+  addLog(`${S.players[accuser].name} accuse ${S.players[bettor].name} de mentir. Il y avait ${total} carte(s) pour « ${betLabel(S.bet)} » → ${S.players[loser].name} perd une vie.`);
+  if (eliminated) addLog(`${S.players[loser].name} est éliminé·e !`);
+  S.starter = eliminated ? nextAlive(loser) : loser;
+  const over = aliveIdx().length <= 1;
+  S.result = {accuser, bettor, bet:S.bet, total, holds, loser, eliminated, rows, over,
+              nextHand: computeNextHandSize().n, nextStarter: S.starter};
+  S.phase = 'challenge';
+}
+
+/* Toutes les actions passent par ici. seat = siège du joueur qui agit. */
+function engineAct(seat, a){
+  if (!S || !a) return;
+  const p = S.players[S.current];
+  const mine = seat === S.current;
+  switch (a.type){
+    case 'ready':
+      if (S.phase !== 'pass') return;
+      S.phase = 'turn'; break;
+    case 'bet': {
+      if (!mine || S.phase !== 'turn') return;
+      const c = a.cell;
+      if (!Number.isInteger(c) || c < 0 || c >= BOARD.length) return;
+      if (S.bet >= 0 && c <= S.bet) return;
+      S.bet = c; S.lastBettor = S.current;
+      addLog(`${p.name} parie : ${betLabel(c)}.`);
+      S.phase = 'reveal'; break;
+    }
+    case 'challenge':
+      if (!mine || S.phase !== 'turn' || S.bet < 0) return;
+      doChallenge(); break;
+    case 'show': {
+      if (!mine || S.phase !== 'reveal' || !Array.isArray(a.ids)) return;
+      const ids = new Set(a.ids);
+      const shown = p.hand.filter(c => ids.has(c.id) && matchesBet(c, S.bet));
+      if (!shown.length) return;
+      p.hand = p.hand.filter(c => !shown.includes(c));
+      p.table.push(...shown);
+      addLog(`${p.name} montre ${shown.length} carte${shown.length>1?'s':''} (${shown.map(c=>TNAME[c.t]).join(', ')}).`);
+      S.exLimit = Math.min(shown.length, p.hand.length);
+      S.fresh = [];
+      S.phase = S.exLimit > 0 ? 'exchange' : 'drawn';
+      break;
+    }
+    case 'exchange': {
+      if (!mine || S.phase !== 'exchange' || !Array.isArray(a.ids)) return;
+      const ids = new Set(a.ids);
+      const out = p.hand.filter(c => ids.has(c.id)).slice(0, S.exLimit);
+      if (!out.length) return;
+      const drawn = S.deck.splice(0, out.length);
+      const keep = out.slice(drawn.length);
+      p.hand = p.hand.filter(c => !out.includes(c)).concat(keep, drawn);
+      S.fresh = drawn.map(c => c.id);
+      if (drawn.length) addLog(`${p.name} échange ${drawn.length} carte${drawn.length>1?'s':''} de sa main.`);
+      S.phase = 'drawn'; break;
+    }
+    case 'end':
+      if (!mine || !['reveal','exchange','drawn'].includes(S.phase)) return;
+      S.current = nextAlive(S.current);
+      S.phase = turnPhase(); S.fresh = []; S.exLimit = 0;
+      break;
+    case 'next':
+      if (S.phase !== 'challenge') return;
+      if (S.result.over){ S.phase = 'over'; S.winner = aliveIdx()[0]; }
+      else { const {n,d} = computeNextHandSize(); S.handSize = n; S.dir = d; newRound(); }
+      break;
+    default: return;
+  }
+  afterChange();
+}
+
+/* Vue d'un joueur : on ne transmet que ce qu'il a le droit de voir */
+function viewFor(i){
+  return {
+    seq: S.seq, gid: S.gid,
+    players: S.players.map((p,j) => ({
+      name:p.name, lives:p.lives, handCount:p.hand.length, table:p.table,
+      isBot:p.isBot, away:p.away, hand: j === i ? p.hand : null
+    })),
+    deckCount:S.deck.length, bet:S.bet, lastBettor:S.lastBettor, current:S.current,
+    phase:S.phase, exLimit:S.exLimit, fresh: i === S.current ? S.fresh : [],
+    log:S.log, round:S.round, handSize:S.handSize, result:S.result, winner:S.winner
+  };
+}
+
+function afterChange(){
+  S.seq++;
+  if (MODE === 'host') broadcastState();
+  ME = MODE === 'local' ? S.current : 0;
+  applyView(viewFor(ME));
+  scheduleBot();
+}
+
+/* =====================================================================
+   ROBOTS
+   ===================================================================== */
+let botTimer = null;
+function binom(n,k){ let r=1; for (let i=1;i<=k;i++) r = r*(n-k+i)/i; return r; }
+function probAtLeast(k, n, p){
+  if (k <= 0) return 1; if (k > n) return 0;
+  let s = 0; for (let x=k;x<=n;x++) s += binom(n,x) * p**x * (1-p)**(n-x);
+  return s;
+}
+function botEval(seat, cell){
+  const me = S.players[seat], t = BOARD[cell].t, need = BOARD[cell].n;
+  const seen = [...me.hand, ...S.players.flatMap((q,j)=> j===seat ? me.table : q.table)];
+  const known = seen.filter(c => c.t === t || c.t === 'heis').length;
+  const unknown = S.players.reduce((s,q,j) => s + (j===seat || q.lives<=0 ? 0 : q.hand.length), 0);
+  const pool = DECK_TOTAL - seen.length;
+  const poolMatch = Math.max(0, DECK_DEF[t] + DECK_DEF.heis - known);
+  return probAtLeast(need - known, unknown, pool > 0 ? poolMatch / pool : 0);
+}
+function botDecide(seat){
+  const start = S.bet < 0 ? 0 : S.bet + 1;
+  const opts = [];
+  for (let i=start; i<Math.min(BOARD.length, start+9); i++) opts.push({i, pr:botEval(seat,i)});
+  if (S.bet >= 0){
+    const prBet = botEval(seat, S.bet);
+    if (!opts.length || prBet < 0.28 + Math.random()*0.17) return {type:'challenge'};
+  }
+  const best = opts.map(o => ({...o, score: o.pr - 0.045*(o.i-start) + Math.random()*0.15}))
+                   .sort((a,b) => b.score - a.score)[0];
+  if (S.bet >= 0 && best.pr < 0.22 && Math.random() < 0.8) return {type:'challenge'};
+  return {type:'bet', cell:best.i};
+}
+function botStep(){
+  if (!S) return;
+  const seat = S.current, p = S.players[seat];
+  if (!isAuto(p) || p.lives <= 0) return;
+  if (S.phase === 'turn') return engineAct(seat, botDecide(seat));
+  if (S.phase === 'reveal'){
+    const m = p.hand.filter(c => matchesBet(c, S.bet));
+    if (m.length && Math.random() < 0.6){
+      const ids = m.filter(c => c.t !== 'heis' || Math.random() < 0.5).map(c => c.id);
+      if (ids.length) return engineAct(seat, {type:'show', ids});
+    }
+    return engineAct(seat, {type:'end'});
+  }
+  if (S.phase === 'exchange'){
+    const bad = p.hand.filter(c => !matchesBet(c, S.bet)).slice(0, S.exLimit).map(c => c.id);
+    if (bad.length) return engineAct(seat, {type:'exchange', ids:bad});
+    return engineAct(seat, {type:'end'});
+  }
+  if (S.phase === 'drawn') return engineAct(seat, {type:'end'});
+}
+function scheduleBot(){
+  clearTimeout(botTimer);
+  if (!S || MODE === 'client') return;
+  const p = S.players[S.current];
+  if (!p || !isAuto(p) || !['turn','reveal','exchange','drawn'].includes(S.phase)) return;
+  const delay = S.phase === 'turn' ? 1300 + Math.random()*900 : 750;
+  botTimer = setTimeout(botStep, delay);
+}
+
+/* =====================================================================
+   AFFICHAGE (à partir d'une « vue »)
+   ===================================================================== */
+let V = null, ME = 0;
+const U = {sel:null, chosen:new Set(), key:''};
+let modalKey = '', rulesOpen = false, quitOpen = false;
+
+function applyView(v){
+  if (MODE === 'client' && V && v.gid === V.gid && v.seq < V.seq) return;
+  V = v;
+  const key = `${V.round}-${V.current}-${V.phase}-${ME}`;
+  if (key !== U.key){ U.sel = null; U.chosen = new Set(); U.key = key; }
+  showScreen('game');
   render();
 }
-function nextHandSize(){
-  let n = S.handSize + S.dir;
-  if (n < 1){ S.dir = 1; n = 2; }
-  if (n > 6){ S.dir = -1; n = 5; }
-  S.handSize = n;
-}
-function addLog(t){ S.log.unshift(t); }
+function myTurn(){ return V && ME === V.current; }
+function matches(c){ return matchesBet(c, V.bet); }
 
-/* ================= RENDU ================= */
 function render(){
-  renderPlayers(); renderStatus(); renderBoard(); renderHand();
-  $('log').innerHTML = S.log.slice(0,30).map(l => `<div>${esc(l)}</div>`).join('');
+  renderPlayers(); renderStatus(); renderBoard(); renderHand(); renderModal();
+  $('log').innerHTML = V.log.slice(0,40).map(l => `<div>${esc(l)}</div>`).join('');
 }
 function renderPlayers(){
-  $('players').innerHTML = S.players.map((p,i) => {
+  $('players').innerHTML = V.players.map((p,i) => {
     const out = p.lives <= 0;
-    const tags = (!out && i===S.current ? `<span class="tag">joue</span>` : '') + (i===S.lastBettor && S.bet>=0 ? `<span class="tag bet">dernier pari</span>` : '');
+    let tags = '';
+    if (MODE !== 'local' && i === ME) tags += `<span class="tag me">vous</span>`;
+    if (p.isBot) tags += `<span class="tag bot">robot</span>`;
+    if (p.away) tags += `<span class="tag away">déconnecté</span>`;
+    if (!out && i === V.current && !['challenge','over'].includes(V.phase)) tags += `<span class="tag">joue</span>`;
+    if (i === V.lastBettor && V.bet >= 0) tags += `<span class="tag bet">dernier pari</span>`;
     const lives = [0,1,2].map(k => lifeSVG(k < p.lives)).join('');
-    return `<div class="pl ${!out&&i===S.current?'active':''} ${out?'out':''}">
+    return `<div class="pl ${!out&&i===V.current?'active':''} ${out?'out':''}">
       <div class="nm">${esc(p.name)} ${tags}</div>
       <div class="lives">${lives}</div>
-      <div class="info">${out ? 'Éliminé' : `<span class="minibacks">${'<i></i>'.repeat(p.hand.length)}</span> ${p.hand.length} en main`}</div>
+      <div class="info">${out ? 'Éliminé·e' : `<span class="minibacks">${'<i></i>'.repeat(p.handCount)}</span> ${p.handCount} en main`}</div>
       ${p.table.length ? `<div class="info" style="margin-top:6px">Sur la table :</div><div class="tablecards">${p.table.map(c=>`<div class="mc" style="background:${COL[c.t]}" title="${TNAME[c.t]}">${miniIcon(c.t)}</div>`).join('')}</div>` : ''}
     </div>`;
   }).join('');
 }
 function renderStatus(){
-  const p = S.players[S.current];
-  let html = `Manche ${S.round} · ${S.handSize} carte${S.handSize>1?'s':''} · Pioche : ${S.deck.length}<br>`;
-  if (S.bet >= 0){
-    html += `<span class="betnow"><span style="display:inline-flex;width:28px;height:28px;border-radius:50%;background:${COL[BOARD[S.bet].t]};align-items:center;justify-content:center">${miniIcon(BOARD[S.bet].t).replace('<svg','<svg width="22" height="22"')}</span>Pari actuel : ${betLabel(S.bet)} <small style="color:var(--muted)">(par ${esc(S.players[S.lastBettor].name)})</small></span>`;
+  let html = `Manche ${V.round} · ${V.handSize} carte${V.handSize>1?'s':''} · Pioche : ${V.deckCount}<br>`;
+  if (V.bet >= 0){
+    html += `<span class="betnow">${typeBadge(BOARD[V.bet].t)}Pari actuel : ${betLabel(V.bet)} <small style="color:var(--muted)">(par ${esc(V.players[V.lastBettor].name)})</small></span>`;
   } else {
-    html += `<span class="betnow">Aucun pari pour l'instant — <b>${esc(p.name)}</b> ouvre les enchères</span>`;
+    html += `<span class="betnow">Aucun pari pour l'instant — <b>${esc(V.players[V.current].name)}</b> ouvre les enchères</span>`;
   }
   $('status').innerHTML = html;
 }
 function cellPos(i){ const r = Math.floor(i/10), c = r%2===0 ? i%10 : 9 - i%10; return {r, c}; }
 function canPick(i){
-  if (S.phase !== 'turn') return false;
-  return S.bet < 0 ? i >= 0 : i > S.bet;
+  if (!myTurn() || V.phase !== 'turn') return false;
+  return V.bet < 0 ? i >= 0 : i > V.bet;
 }
 function renderBoard(){
   let html = '';
+  const picking = myTurn() && V.phase === 'turn';
   BOARD.forEach((b,i) => {
     const {r,c} = cellPos(i);
     const cls = ['cell', b.t];
-    if (S.phase==='turn' && !canPick(i)) cls.push('past');
-    if (canPick(i)) cls.push('pick');
-    if (S.sel === i) cls.push('sel');
-    const yarn = (S.bet >= 0 && i === S.bet) ? YARN : (S.bet < 0 && i === 0 ? YARN.replace('class="yarn"','class="yarn start"') : '');
-    html += `<div class="${cls.join(' ')}" style="grid-row:${r+1};grid-column:${c+1}" ${canPick(i)?`onclick="pickCell(${i})"`:''} title="${betLabel(i)}">
+    const ok = canPick(i);
+    if (picking && !ok) cls.push('past');
+    if (ok) cls.push('pick');
+    if (U.sel === i) cls.push('sel');
+    const yarn = (V.bet >= 0 && i === V.bet) ? YARN : (V.bet < 0 && i === 0 ? YARN.replace('class="yarn"','class="yarn start"') : '');
+    html += `<div class="${cls.join(' ')}" style="grid-row:${r+1};grid-column:${c+1}" ${ok?`onclick="pickCell(${i})"`:''} title="${betLabel(i)}">
       <span class="n">${b.n}</span>${miniIcon(b.t,'ic')}${yarn}</div>`;
   });
-  // fil rouge
   const pts = BOARD.map((_,i) => { const {r,c} = cellPos(i); return `${(c+.5)*10},${(r+.5)*10}`; }).join(' ');
-  html += `<svg id="thread" viewBox="0 0 100 70" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#a93226" stroke-width="1.6" stroke-opacity=".55" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="stroke-width:2.5px"/></svg>`;
+  html += `<svg id="thread" viewBox="0 0 100 70" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#a93226" stroke-opacity=".55" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="stroke-width:2.5px"/></svg>`;
   $('board').innerHTML = html;
 }
-function matches(c){ return S.bet >= 0 && (c.t === BOARD[S.bet].t || c.t === 'heis'); }
 
 function renderHand(){
-  const p = S.players[S.current];
+  const cur = V.players[V.current];
+  const me = V.players[ME];
   const z = $('handzone');
-  if (S.phase === 'pass'){
-    $('handtitle').innerHTML = `Au tour de <span style="color:var(--heis)">${esc(p.name)}</span>`;
-    z.innerHTML = `<div id="hand">${p.hand.map(()=>backHTML()).join('')}</div>
-      <div class="privacy"><p>🙈 Passez l'appareil à <b>${esc(p.name)}</b>.<br>Les autres joueurs, ne regardez pas l'écran !</p>
-      <button class="btn purple" onclick="ready()">Je suis ${esc(p.name)}, je suis prêt·e</button></div>`;
+  const hand = me.hand || [];
+
+  // Mode même écran : écran de confidentialité
+  if (MODE === 'local' && V.phase === 'pass'){
+    $('handtitle').innerHTML = `Au tour de <span style="color:var(--heis)">${esc(cur.name)}</span>`;
+    z.innerHTML = `<div id="hand">${hand.map(()=>backHTML()).join('')}</div>
+      <div class="privacy"><p>🙈 Passez l'ordinateur à <b>${esc(cur.name)}</b>.<br>Les autres joueurs, ne regardez pas l'écran !</p>
+      <button class="btn purple" onclick="doAction({type:'ready'})">Je suis ${esc(cur.name)}, je suis prêt·e</button></div>`;
     return;
   }
-  let cardsCls = c => '';
-  let hint = '', actions = '';
-  if (S.phase === 'turn'){
-    hint = S.bet < 0
-      ? `Choisissez une case sur le plateau pour faire votre pari (vous pouvez garder « 1 chat vivant »).`
-      : `Accusez <b>${esc(S.players[S.lastBettor].name)}</b> de mentir, ou cliquez une case plus loin sur le plateau pour surenchérir.`;
-    if (S.bet >= 0) actions += `<button class="btn red" onclick="challenge()">${esc(S.players[S.lastBettor].name)} a menti !</button>`;
-    actions += `<button class="btn" ${S.sel===null?'disabled':''} onclick="confirmBet()">${S.sel===null ? 'Choisissez une case' : 'Parier : ' + betLabel(S.sel)}</button>`;
-    if (S.sel !== null) actions += `<button class="btn ghost" onclick="S.sel=null;render()">Annuler</button>`;
-  } else if (S.phase === 'reveal'){
-    const nMatch = p.hand.filter(matches).length;
-    cardsCls = c => matches(c) ? ('can' + (S.chosen.has(c.id)?' chosen':'')) : 'dim';
-    hint = nMatch
-      ? `Vous avez parié <b>${betLabel(S.bet)}</b>. Voulez-vous montrer des cartes qui le prouvent ? Cliquez-les pour les sélectionner : elles iront face visible sur la table et vous piocherez autant de nouvelles cartes.`
-      : `Vous avez parié <b>${betLabel(S.bet)}</b>. Aucune carte de votre main ne correspond à ce pari.`;
-    const k = S.chosen.size;
-    if (nMatch) actions += `<button class="btn purple" ${k?'':'disabled'} onclick="showCards()">${k ? `Poser ${k} carte${k>1?'s':''} sur la table` : 'Sélectionnez des cartes'}</button>`;
-    actions += `<button class="btn ghost" onclick="endTurn()">Garder mes cartes et finir mon tour</button>`;
-  } else if (S.phase === 'exchange'){
-    const k = S.chosen.size;
-    cardsCls = c => 'can' + (S.chosen.has(c.id) ? ' chosen' : (k >= S.exLimit ? ' dim' : ''));
-    hint = `Vous avez posé des cartes : vous pouvez maintenant <b>échanger jusqu'à ${S.exLimit} carte${S.exLimit>1?'s':''}</b> de votre main contre des nouvelles de la pioche. Cliquez les cartes à changer.`;
-    actions += `<button class="btn purple" ${k?'':'disabled'} onclick="exchangeCards()">${k ? `Échanger ${k} carte${k>1?'s':''}` : 'Sélectionnez les cartes à changer'}</button>`;
-    actions += `<button class="btn ghost" onclick="endTurn()">Ne rien échanger et finir mon tour</button>`;
-  } else if (S.phase === 'drawn'){
-    cardsCls = c => S.fresh.has(c.id) ? 'fresh' : '';
-    hint = S.fresh.size ? `Voici vos nouvelles cartes (entourées en jaune).` : (S.deck.length ? `Votre tour est terminé.` : `La pioche est vide : aucune nouvelle carte.`);
-    actions = `<button class="btn" onclick="endTurn()">Finir mon tour</button>`;
+  // Éliminé (solo / réseau) : spectateur
+  if (MODE !== 'local' && me.lives <= 0){
+    $('handtitle').textContent = 'Vous êtes éliminé·e';
+    z.innerHTML = `<p class="hint">Vous regardez la fin de la partie.${!['challenge','over'].includes(V.phase) ? ` C'est au tour de <b>${esc(cur.name)}</b>.` : ''}</p>`;
+    return;
   }
-  $('handtitle').innerHTML = `Main de ${esc(p.name)}`;
+
+  let cardsCls = () => '';
+  let hint = '', actions = '';
+  const playing = myTurn() && ['turn','reveal','exchange','drawn'].includes(V.phase);
+
+  if (!playing){
+    if (['challenge','over'].includes(V.phase)) hint = 'Révélation des cartes…';
+    else hint = `C'est au tour de <b>${esc(cur.name)}</b> ${isAutoView(cur) ? '<span class="thinking">réfléchit…</span>' : ''}`;
+  } else if (V.phase === 'turn'){
+    const lb = V.bet >= 0 ? V.players[V.lastBettor].name : '';
+    hint = V.bet < 0
+      ? `À vous d'ouvrir ! Choisissez une case sur le plateau (vous pouvez garder « 1 chat vivant »).`
+      : `Accusez <b>${esc(lb)}</b> de mentir, ou cliquez une case plus loin sur le plateau pour surenchérir.`;
+    if (V.bet >= 0) actions += `<button class="btn red" onclick="doAction({type:'challenge'})">${esc(lb)} a menti !</button>`;
+    if (V.bet < BOARD.length - 1)
+      actions += `<button class="btn" ${U.sel===null?'disabled':''} onclick="confirmBet()">${U.sel===null ? 'Choisissez une case' : 'Parier : ' + betLabel(U.sel)}</button>`;
+    if (U.sel !== null) actions += `<button class="btn ghost" onclick="U.sel=null;render()">Annuler</button>`;
+  } else if (V.phase === 'reveal'){
+    const nMatch = hand.filter(matches).length;
+    cardsCls = c => matches(c) ? ('can' + (U.chosen.has(c.id)?' chosen':'')) : 'dim';
+    hint = nMatch
+      ? `Vous avez parié <b>${betLabel(V.bet)}</b>. Voulez-vous montrer des cartes qui le prouvent ? Cliquez-les : elles iront face visible sur la table.`
+      : `Vous avez parié <b>${betLabel(V.bet)}</b>. Aucune carte de votre main ne correspond à ce pari.`;
+    const k = U.chosen.size;
+    if (nMatch) actions += `<button class="btn purple" ${k?'':'disabled'} onclick="doAction({type:'show',ids:[...U.chosen]})">${k ? `Poser ${k} carte${k>1?'s':''} sur la table` : 'Sélectionnez des cartes'}</button>`;
+    actions += `<button class="btn ghost" onclick="doAction({type:'end'})">Garder mes cartes et finir mon tour</button>`;
+  } else if (V.phase === 'exchange'){
+    const k = U.chosen.size;
+    cardsCls = c => 'can' + (U.chosen.has(c.id) ? ' chosen' : (k >= V.exLimit ? ' dim' : ''));
+    hint = `Vous pouvez maintenant <b>échanger jusqu'à ${V.exLimit} carte${V.exLimit>1?'s':''}</b> de votre main contre des nouvelles de la pioche. Cliquez les cartes à changer.`;
+    actions += `<button class="btn purple" ${k?'':'disabled'} onclick="doAction({type:'exchange',ids:[...U.chosen]})">${k ? `Échanger ${k} carte${k>1?'s':''}` : 'Sélectionnez les cartes à changer'}</button>`;
+    actions += `<button class="btn ghost" onclick="doAction({type:'end'})">Ne rien échanger et finir mon tour</button>`;
+  } else if (V.phase === 'drawn'){
+    const fresh = new Set(V.fresh);
+    cardsCls = c => fresh.has(c.id) ? 'fresh' : '';
+    hint = fresh.size ? `Voici vos nouvelles cartes (entourées en jaune).` : `Votre tour est terminé.`;
+    actions = `<button class="btn" onclick="doAction({type:'end'})">Finir mon tour</button>`;
+  }
+  $('handtitle').innerHTML = MODE === 'local' ? `Main de ${esc(me.name)}` : 'Votre main';
   z.innerHTML = `<p class="hint">${hint}</p>
-    <div id="hand">${p.hand.map(c => cardHTML(c, cardsCls(c))).join('') || '<em style="color:var(--muted);align-self:center">Plus de cartes en main</em>'}</div>
+    <div id="hand">${hand.map(c => cardHTML(c, cardsCls(c))).join('') || '<em style="color:var(--muted);align-self:center">Plus de cartes en main</em>'}</div>
     <div id="actions">${actions}</div>`;
-  if (S.phase === 'reveal' || S.phase === 'exchange'){
+  if (playing && (V.phase === 'reveal' || V.phase === 'exchange')){
     z.querySelectorAll('.card.can').forEach(el => el.onclick = () => {
       const id = +el.dataset.id;
-      if (S.chosen.has(id)) S.chosen.delete(id);
-      else if (S.phase === 'reveal' || S.chosen.size < S.exLimit) S.chosen.add(id);
+      if (U.chosen.has(id)) U.chosen.delete(id);
+      else if (V.phase === 'reveal' || U.chosen.size < V.exLimit) U.chosen.add(id);
       renderHand();
     });
   }
 }
+function isAutoView(p){ return p.isBot || p.away; }
 
-/* ================= ACTIONS ================= */
-function ready(){ S.phase = 'turn'; S.sel = null; render(); }
-function pickCell(i){ if (canPick(i)){ S.sel = i; render(); } }
-function confirmBet(){
-  if (S.sel === null) return;
-  S.bet = S.sel; S.lastBettor = S.current; S.sel = null; S.firstTurn = false;
-  addLog(`${S.players[S.current].name} parie : ${betLabel(S.bet)}.`);
-  S.phase = 'reveal'; S.chosen = new Set();
-  render();
-}
-function showCards(){
-  const p = S.players[S.current];
-  const shown = p.hand.filter(c => S.chosen.has(c.id));
-  p.hand = p.hand.filter(c => !S.chosen.has(c.id));
-  p.table.push(...shown);
-  addLog(`${p.name} montre ${shown.length} carte${shown.length>1?'s':''} (${shown.map(c=>TNAME[c.t]).join(', ')}).`);
-  S.exLimit = Math.min(shown.length, p.hand.length);
-  S.chosen = new Set();
-  S.phase = S.exLimit > 0 ? 'exchange' : 'drawn';
-  S.fresh = new Set();
-  render();
-}
-function exchangeCards(){
-  const p = S.players[S.current];
-  const out = p.hand.filter(c => S.chosen.has(c.id));
-  const drawn = S.deck.splice(0, out.length);
-  const keep = out.slice(drawn.length);           // si la pioche est vide, on garde les cartes non remplacées
-  p.hand = p.hand.filter(c => !S.chosen.has(c.id)).concat(keep, drawn);
-  S.fresh = new Set(drawn.map(c => c.id));
-  if (drawn.length) addLog(`${p.name} échange ${drawn.length} carte${drawn.length>1?'s':''} de sa main.`);
-  S.chosen = new Set(); S.phase = 'drawn';
-  render();
-}
-function endTurn(){
-  S.current = nextAlive(S.current);
-  S.phase = 'pass'; S.sel = null; S.fresh = new Set(); S.chosen = new Set();
-  render();
-}
-
-function challenge(){
-  const accuser = S.current, bettor = S.lastBettor, cell = BOARD[S.bet];
-  let total = 0;
-  const rows = alivePlayers().map(i => {
-    const p = S.players[i];
-    const all = [...p.hand, ...p.table];
-    const cnt = all.filter(matches).length; total += cnt;
-    const handH = p.hand.map((c,k) => cardHTML(c, (matches(c)?'match ':'') + 'flip').replace('class="card', `style="animation-delay:${k*0.08}s" class="card`)).join('');
-    const tabH = p.table.map(c => cardHTML(c, matches(c)?'match':'')).join('');
-    return `<div class="reveal-row"><div class="who">${esc(p.name)}</div>
+function renderModal(){
+  if (rulesOpen || quitOpen) return;
+  if (!['challenge','over'].includes(V.phase)){ $('modal').classList.add('hidden'); modalKey=''; return; }
+  const key = V.phase + V.round + (V.phase==='over' ? 'o' : '') + (MODE==='client' ? '' : 'a');
+  if (key === modalKey) return;
+  modalKey = key;
+  const authority = MODE !== 'client';
+  if (V.phase === 'over'){
+    const w = V.players[V.winner];
+    const iWon = MODE !== 'local' && V.winner === ME;
+    $('modalbox').innerHTML = `<div style="width:120px;margin:0 auto">${lifeSVG(true)}</div>
+      <h2>🎉 ${iWon ? 'Vous remportez la partie !' : esc(w.name) + ' remporte la partie !'}</h2>
+      <p>Son chat est bien vivant… pour l'instant.</p>
+      <div class="row" style="justify-content:center">
+        ${authority ? `<button class="btn purple" onclick="rematch()">Rejouer avec les mêmes joueurs</button>` : `<p class="hint">L'hôte peut relancer une partie.</p>`}
+        <button class="btn ghost" onclick="quitGame()">Retour au menu</button></div>`;
+    $('modal').classList.remove('hidden');
+    return;
+  }
+  const R = V.result, cell = BOARD[R.bet];
+  const rows = R.rows.map(row => {
+    const handH = row.hand.map((c,k) => cardHTML(c, (matchesBet(c,R.bet)?'match ':'') + 'flip', `animation-delay:${k*0.08}s`)).join('');
+    const tabH = row.table.map(c => cardHTML(c, matchesBet(c,R.bet)?'match':'')).join('');
+    return `<div class="reveal-row"><div class="who">${esc(row.name)}</div>
       <div class="cards">${handH || '<em style="color:var(--muted)">—</em>'}</div>
-      ${p.table.length ? `<div class="sep"></div><div class="cards" title="Cartes déjà sur la table">${tabH}</div>` : ''}
-      <div class="cnt">${cnt}</div></div>`;
+      ${row.table.length ? `<div class="sep"></div><div class="cards" title="Cartes déjà sur la table">${tabH}</div>` : ''}
+      <div class="cnt">${row.cnt}</div></div>`;
   }).join('');
-  const holds = total >= cell.n;
-  const loser = holds ? accuser : bettor;
-  S.players[loser].lives--;
-  const eliminated = S.players[loser].lives <= 0;
-  addLog(`${S.players[accuser].name} accuse ${S.players[bettor].name} de mentir. Il y avait ${total} carte(s) pour ${betLabel(S.bet)} → ${S.players[loser].name} perd une vie.`);
-  if (eliminated) addLog(`${S.players[loser].name} est éliminé·e !`);
-  S.starter = eliminated ? nextAlive(loser) : loser;
-  S.phase = 'challenge';
-  render();
-
-  const left = alivePlayers();
-  const over = left.length <= 1;
+  const P = i => esc(V.players[i].name);
+  const btn = authority
+    ? `<button class="btn purple" onclick="doAction({type:'next'})">${R.over ? 'Voir le gagnant' : 'Manche suivante'}</button>`
+    : `<p class="hint"><span class="thinking">En attente de l'hôte pour continuer…</span></p>`;
   $('modalbox').innerHTML = `
-    <h2 style="margin-top:0">${esc(S.players[accuser].name)} accuse ${esc(S.players[bettor].name)} de mentir !</h2>
-    <div>Pari : <b>${betLabel(S.bet)}</b> — les cartes Heisenberg comptent comme des « ${TNAME[cell.t].toLowerCase()} ».</div>
+    <h2 style="margin-top:0">${P(R.accuser)} accuse ${P(R.bettor)} de mentir !</h2>
+    <div>Pari : <b>${betLabel(R.bet)}</b> — les cartes Heisenberg comptent comme des « ${TNAME[cell.t].toLowerCase()} ».</div>
     <div style="margin:14px 0">${rows}</div>
-    <div class="total">${total} / ${cell.n}</div>
-    <div class="verdict ${holds?'ok':'ko'}">${holds ? `Le pari tient ! ${esc(S.players[bettor].name)} disait vrai.` : `Mensonge ! Il n'y a pas assez de cartes.`}</div>
-    <div style="font-size:1.1rem;margin-bottom:6px"><b>${esc(S.players[loser].name)}</b> perd une vie ${lifeSVG(false).replace('<svg','<svg width="28" height="28" style="vertical-align:middle"')}
-      ${eliminated ? `<br><b style="color:var(--red)">${esc(S.players[loser].name)} est éliminé·e !</b>` : ''}</div>
-    ${over ? '' : `<p class="hint">Prochaine manche : ${(()=>{const s=S.handSize, d=S.dir; let n=s+d; if(n<1)n=2; if(n>6)n=5; return n;})()} carte(s) par joueur, ${esc(S.players[S.starter].name)} commence.</p>`}
-    <button class="btn purple" onclick="${over ? 'gameOver()' : 'closeChallenge()'}">${over ? 'Voir le gagnant' : 'Manche suivante'}</button>`;
+    <div class="total">${R.total} / ${cell.n}</div>
+    <div class="verdict ${R.holds?'ok':'ko'}">${R.holds ? `Le pari tient ! ${P(R.bettor)} disait vrai.` : `Mensonge ! Il n'y a pas assez de cartes.`}</div>
+    <div style="font-size:1.1rem;margin-bottom:6px"><b>${P(R.loser)}</b> perd une vie ${lifeSVG(false,'width="28" height="28" style="vertical-align:middle"')}
+      ${R.eliminated ? `<br><b style="color:var(--red)">${P(R.loser)} est éliminé·e !</b>` : ''}</div>
+    ${R.over ? '' : `<p class="hint">Prochaine manche : ${R.nextHand} carte${R.nextHand>1?'s':''} par joueur, ${P(R.nextStarter)} commence.</p>`}
+    ${btn}`;
   $('modal').classList.remove('hidden');
 }
-function closeChallenge(){
-  $('modal').classList.add('hidden');
-  nextHandSize();
-  newRound();
-}
-function gameOver(){
-  const w = S.players[alivePlayers()[0]];
-  $('modalbox').innerHTML = `<div style="width:120px;margin:0 auto">${lifeSVG(true)}</div>
-    <h2>🎉 ${esc(w.name)} remporte la partie !</h2>
-    <p>Son chat est bien vivant… pour l'instant.</p>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn purple" onclick="rematch()">Rejouer avec les mêmes joueurs</button>
-      <button class="btn ghost" onclick="backToSetup()">Changer les joueurs</button></div>`;
+
+/* ---------- interactions ---------- */
+function pickCell(i){ if (canPick(i)){ U.sel = i; render(); } }
+function confirmBet(){ if (U.sel !== null) doAction({type:'bet', cell:U.sel}); }
+function doAction(a){
+  if (MODE === 'client'){ netSend('host', {type:'action', action:a}); return; }
+  const seat = MODE === 'local' ? S.current : 0;
+  engineAct(seat, a);
 }
 function rematch(){
-  $('modal').classList.add('hidden');
-  for (const p of S.players){ p.lives = 3; }
-  S.handSize = 6; S.dir = -1; S.round = 0; S.log = [];
-  S.starter = Math.floor(Math.random()*S.players.length);
-  newRound();
+  const seats = S.players.filter(p => !(p.clientId && p.away)).map(p => ({name:p.name, isBot:p.isBot, clientId:p.clientId}));
+  if (seats.length < 2){ quitGame(); return; }
+  modalKey = '';
+  createGame(seats, MODE === 'local' ? 0 : Math.floor(Math.random()*seats.length));
+  afterChange();
 }
-function backToSetup(){
-  $('modal').classList.add('hidden');
-  $('game').classList.add('hidden');
-  $('setup').classList.remove('hidden');
-  renderSetup();
+
+/* =====================================================================
+   ÉCRANS / MENUS
+   ===================================================================== */
+const SCREENS = ['menu','solo','setup','host','join','game'];
+function showScreen(id){
+  SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
+  $('quitBtn').classList.toggle('hidden', id !== 'game');
 }
+function toMenu(){ showScreen('menu'); renderMenuNote(); }
+
+function renderMenuNote(){
+  const n = $('netNote');
+  if (NET.available){
+    n.classList.add('hidden');
+  } else {
+    n.classList.remove('hidden');
+    n.innerHTML = `ℹ️ Les modes <b>Réseau</b> fonctionnent avec l'application Windows (<b>Chats-de-Schrodinger.exe</b>), qui contient le serveur de jeu.`;
+  }
+}
+
+/* ---- Solo ---- */
+let botCount = +load('bots', 3) || 3;
+function openSolo(){
+  $('soloName').value = load('name', '');
+  renderBotCounts();
+  showScreen('solo');
+}
+function renderBotCounts(){
+  $('botCounts').innerHTML = [1,2,3,4,5].map(n => `<button class="${n===botCount?'on':''}" onclick="botCount=${n};renderBotCounts()">${n}</button>`).join('');
+}
+function botSeats(n, taken=[]){
+  const names = shuffle(BOT_NAMES.filter(b => !taken.includes(b)));
+  return Array.from({length:n}, (_,i) => ({name:names[i] || 'Robot '+(i+1), isBot:true}));
+}
+function startSolo(){
+  const name = cleanName($('soloName').value, 'Vous');
+  store('name', name); store('bots', botCount);
+  MODE = 'solo';
+  createGame([{name}, ...botSeats(botCount, [name])], Math.floor(Math.random()*(botCount+1)));
+  afterChange();
+}
+
+/* ---- Même écran ---- */
+let setupN = 4;
+const setupNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6'];
+function openLocal(){ renderSetup(); showScreen('setup'); }
+function renderSetup(){
+  $('counts').innerHTML = [2,3,4,5,6].map(n => `<button class="${n===setupN?'on':''}" onclick="setupN=${n};renderSetup()">${n}</button>`).join('');
+  $('names').innerHTML = Array.from({length:setupN},(_,i) =>
+    `<label>${lifeSVG(true,'width="34" height="34"')}<input class="txt" maxlength="16" value="${esc(setupNames[i])}" oninput="setupNames[${i}]=this.value" placeholder="Nom du joueur ${i+1}"></label>`).join('');
+  $('deckinfo').innerHTML = Object.keys(DECK_DEF).map(t => `<div>${typeBadge(t,26)}${DECK_DEF[t]} × ${TNAME[t]}</div>`).join('');
+}
+function startLocal(){
+  MODE = 'local';
+  createGame(Array.from({length:setupN}, (_,i) => ({name: cleanName(setupNames[i], `Joueur ${i+1}`)})), 0);
+  afterChange();
+}
+
+/* ---- Quitter ---- */
+function askQuit(){
+  quitOpen = true;
+  const what = MODE === 'host' ? 'La partie sera arrêtée pour tous les joueurs connectés.' : MODE === 'client' ? 'Un robot jouera à votre place.' : '';
+  $('modalbox').innerHTML = `<h2 style="margin-top:0">Quitter la partie ?</h2><p>${what}</p>
+    <div class="row" style="justify-content:center"><button class="btn red" onclick="quitOpen=false;quitGame()">Quitter</button>
+    <button class="btn ghost" onclick="closeQuit()">Continuer à jouer</button></div>`;
+  $('modal').classList.remove('hidden');
+}
+function closeQuit(){ quitOpen = false; modalKey = ''; $('modal').classList.add('hidden'); if (V) renderModal(); }
+function quitGame(){
+  clearTimeout(botTimer);
+  $('modal').classList.add('hidden'); modalKey = ''; quitOpen = false;
+  if (MODE === 'host') stopHosting(true);
+  if (MODE === 'client') leaveClient();
+  S = null; V = null; MODE = null;
+  toMenu();
+}
+
+/* ---- Règles ---- */
 function showRules(){
+  rulesOpen = true;
   $('modalbox').innerHTML = `<h2 style="margin-top:0">Règles</h2><ul class="rules">
     <li><b>52 cartes</b> : 20 chats vivants (vert), 20 chats morts (gris), 8 boîtes vides (marron), 4 Heisenberg (violet). Les Heisenberg comptent comme le type du pari en cours.</li>
     <li>Chaque joueur a <b>3 vies</b>. Première manche : 6 cartes chacun, puis une de moins à chaque manche jusqu'à 1, puis on remonte (2, 3…).</li>
@@ -533,14 +849,267 @@ function showRules(){
     <li>Après une surenchère, il peut <b>montrer</b> des cartes qui soutiennent son pari : elles restent face visible sur la table (sa main diminue d'autant). Il peut ensuite échanger, parmi les cartes qui lui restent, autant de cartes qu'il en a posé contre des nouvelles de la pioche. Sinon il garde sa main.</li>
     <li>En cas d'accusation, toutes les cartes sont révélées (mains + table). S'il y a <b>au moins</b> le nombre annoncé, l'accusateur perd une vie ; sinon c'est le parieur.</li>
     <li>Le perdant commence la manche suivante ; s'il est éliminé, c'est le joueur suivant. Le dernier joueur en vie gagne.</li></ul>
-    <button class="btn" onclick="$('modal').classList.add('hidden')">Compris !</button>`;
+    <button class="btn" onclick="closeRules()">Compris !</button>`;
   $('modal').classList.remove('hidden');
 }
+function closeRules(){ rulesOpen = false; modalKey = ''; $('modal').classList.add('hidden'); if (V && $('game').offsetParent !== null) renderModal(); }
+
+/* =====================================================================
+   RÉSEAU
+   L'exe contient un petit serveur : il sert cette page et relaie les
+   messages (flux SSE + POST). La partie elle-même tourne sur l'hôte.
+   ===================================================================== */
+const NET = {available:false, ips:[], port:0, es:null, streamId:null, myId:null, connected:false};
+const L = {seats:[]};     // salon de l'hôte
+let joinName = '', joined = false;
+
+function sessionId(){
+  let id = null;
+  try { id = sessionStorage.getItem('csd_id'); } catch(e){}
+  if (!id){ id = 'p' + Math.random().toString(36).slice(2,10); try { sessionStorage.setItem('csd_id', id); } catch(e){} }
+  return id;
+}
+async function detectNet(){
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const r = await fetch('/api/info', {cache:'no-store'});
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j.app !== 'chats-schrodinger') return;
+    NET.available = true; NET.ips = j.ips || []; NET.port = j.port;
+    NET.myId = sessionId();
+    openStream(NET.myId);
+  } catch(e){}
+}
+function openStream(id){
+  if (NET.es){ NET.es.close(); NET.es = null; }
+  NET.streamId = id;
+  const es = new EventSource('/api/events?id=' + encodeURIComponent(id));
+  NET.es = es;
+  es.onopen = () => { NET.connected = true; setConn(''); onStreamOpen(); };
+  es.onerror = () => { NET.connected = false; if (MODE === 'client' || joined) setConn('Connexion à l\'hôte perdue… nouvelle tentative'); };
+  es.onmessage = e => { try { const m = JSON.parse(e.data); onNet(m.from, m.data); } catch(err){} };
+}
+function setConn(t){ $('conn').textContent = t; $('conn').classList.toggle('hidden', !t); }
+async function netSend(to, data){
+  try {
+    const r = await fetch('/api/send', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({from: NET.streamId, to, data})});
+    return r.ok;
+  } catch(e){ return false; }
+}
+function onStreamOpen(){
+  if (joined && joinName) netSend('host', {type:'hello', name:joinName});
+}
+function onNet(from, d){
+  if (!d) return;
+  if (NET.streamId === 'host') return hostOnNet(from, d);
+  return clientOnNet(from, d);
+}
+
+/* ---------------- HÔTE ---------------- */
+function openHost(){
+  if (!NET.available){ $('hostBody').innerHTML = noNetHTML(); showScreen('host'); return; }
+  if (onHostServer()){
+    $('hostBody').innerHTML = `<div class="note warn">Vous êtes connecté·e au PC <code>${esc(location.host)}</code>. Pour héberger une partie, lancez l'application <b>Chats-de-Schrodinger.exe</b> sur votre propre PC. Pour jouer avec ce PC, choisissez plutôt <b>Réseau (rejoindre)</b>.</div>`;
+    showScreen('host'); return;
+  }
+  L.seats = [{name: load('name','') || 'Hôte', kind:'host'}];
+  openStream('host');
+  renderHostLobby(true);
+  showScreen('host');
+}
+function noNetHTML(){
+  return `<div class="note warn">Le jeu en réseau fonctionne uniquement avec l'application Windows <b>Chats-de-Schrodinger.exe</b>, qui contient le serveur de jeu. Lancez la partie depuis l'application.</div>`;
+}
+function hostAddrs(){
+  return NET.ips.length ? NET.ips.map(ip => `${ip}:${NET.port}`) : [`(adresse IP de ce PC):${NET.port}`];
+}
+function renderHostLobby(full){
+  if (full){
+    const addrs = hostAddrs();
+    $('hostBody').innerHTML = `
+      <div class="field"><div>Votre nom</div><input class="txt" id="hostName" maxlength="16" value="${esc(L.seats[0].name)}" oninput="L.seats[0].name=cleanName(this.value,'Hôte');store('name',L.seats[0].name);renderSeats();broadcastLobby()"></div>
+      <div class="note">Les autres joueurs (même réseau Wi-Fi / box) choisissent <b>Réseau (rejoindre)</b> et tapent :<br>
+        ${addrs.map(a => `<code>${esc(a)}</code>`).join(' ou ')}<br>
+        <small>Sans l'application, ils peuvent aussi ouvrir <b>http://${esc(addrs[0])}</b> dans un navigateur (PC, tablette, téléphone).</small></div>
+      <div class="note">🛡️ Si Windows affiche une alerte du pare-feu, cliquez <b>Autoriser</b> (réseaux privés), sinon les autres ne pourront pas se connecter.</div>
+      <div>Joueurs (${'<span id="seatCount"></span>'}/6)</div>
+      <div class="seats" id="seats"></div>
+      <div class="row"><button class="btn ghost" id="addBot" onclick="hostAddBot()">+ Ajouter un robot</button>
+        <button class="btn purple" id="hostStart" onclick="hostStart()">Lancer la partie</button></div>
+      <div id="hostErr"></div>`;
+  }
+  renderSeats();
+}
+function renderSeats(){
+  if (!$('seats')) return;
+  $('seats').innerHTML = L.seats.map((s,i) => `<div class="seat">${lifeSVG(true)}<span class="nm">${esc(s.name)}</span>
+      <span class="kind">${s.kind==='host'?'hôte (vous)':s.kind==='bot'?'robot':'en réseau'}</span>
+      ${s.kind!=='host' ? `<button class="btn ghost small" onclick="hostRemove(${i})">Retirer</button>` : ''}</div>`).join('')
+    + (L.seats.length < 2 ? `<div class="hint"><span class="thinking">En attente de joueurs…</span></div>` : '');
+  $('seatCount').textContent = L.seats.length;
+  $('addBot').disabled = L.seats.length >= 6;
+  $('hostStart').disabled = L.seats.length < 2;
+}
+function hostAddBot(){
+  if (L.seats.length >= 6) return;
+  const taken = L.seats.map(s => s.name);
+  L.seats.push({...botSeats(1, taken)[0], kind:'bot'});
+  renderSeats(); broadcastLobby();
+}
+function hostRemove(i){
+  const s = L.seats[i]; if (!s || s.kind === 'host') return;
+  if (s.kind === 'remote') netSend(s.clientId, {type:'refused', reason:'L\'hôte vous a retiré de la partie.'});
+  L.seats.splice(i,1); renderSeats(); broadcastLobby();
+}
+function broadcastLobby(){
+  const list = L.seats.map(s => ({name:s.name, kind:s.kind}));
+  for (const s of L.seats) if (s.kind === 'remote') netSend(s.clientId, {type:'lobby', seats:list});
+}
+function broadcastState(){
+  S.players.forEach((p,i) => {
+    if (p.clientId && !p.away) netSend(p.clientId, {type:'state', view:viewFor(i), me:i});
+  });
+}
+function hostStart(){
+  if (L.seats.length < 2) return;
+  MODE = 'host';
+  createGame(L.seats.map(s => ({name:s.name, isBot:s.kind==='bot', clientId:s.kind==='remote'?s.clientId:null})),
+             Math.floor(Math.random()*L.seats.length));
+  afterChange();
+}
+function hostOnNet(from, d){
+  const name = cleanName(d.name, 'Joueur');
+  if (d.type === 'hello'){
+    if (S && MODE === 'host'){
+      const i = S.players.findIndex(p => p.clientId === from);
+      if (i >= 0){
+        if (S.players[i].away){ S.players[i].away = false; addLog(`${S.players[i].name} est de retour.`); }
+        afterChange();
+      } else netSend(from, {type:'refused', reason:'La partie a déjà commencé. Attendez la prochaine partie.'});
+      return;
+    }
+    if (!$('seats')) return;
+    const s = L.seats.find(x => x.clientId === from);
+    if (s) s.name = name;
+    else if (L.seats.length >= 6){ netSend(from, {type:'refused', reason:'La partie est complète (6 joueurs).'}); return; }
+    else L.seats.push({name, kind:'remote', clientId:from});
+    renderSeats(); broadcastLobby();
+    return;
+  }
+  if (d.type === 'leave' || d.type === 'bye'){
+    if (S && MODE === 'host'){
+      const p = S.players.find(p => p.clientId === from);
+      if (p && !p.away){ p.away = true; addLog(`${p.name} s'est déconnecté·e : un robot joue à sa place.`); afterChange(); }
+      return;
+    }
+    const i = L.seats.findIndex(x => x.clientId === from);
+    if (i >= 0){ L.seats.splice(i,1); renderSeats(); broadcastLobby(); }
+    return;
+  }
+  if (d.type === 'action' && S && MODE === 'host'){
+    const i = S.players.findIndex(p => p.clientId === from);
+    if (i < 0 || S.players[i].away) return;
+    if (d.action && d.action.type === 'next') return;   // seul l'hôte passe à la manche suivante
+    engineAct(i, d.action);
+  }
+}
+function stopHosting(notify){
+  if (notify) for (const s of (S ? S.players : L.seats)) if (s.clientId) netSend(s.clientId, {type:'hostgone'});
+  L.seats = [];
+  if (NET.available) openStream(NET.myId);
+}
+function leaveHost(){ stopHosting(true); toMenu(); }
+
+/* ---------------- CLIENT ---------------- */
+function onHostServer(){
+  return NET.available && !['localhost','127.0.0.1','[::1]'].includes(location.hostname);
+}
+function openJoin(){
+  if (onHostServer() || (NET.available && location.hash === '#join')) renderJoinName();
+  else renderJoinAddr();
+  showScreen('join');
+}
+function renderJoinAddr(err=''){
+  $('joinBody').innerHTML = `
+    <div class="field"><div>Adresse de l'hôte (affichée sur son écran)</div>
+      <input class="txt" id="joinAddr" placeholder="ex. 192.168.1.20:8765" value="${esc(load('lastHost',''))}"></div>
+    <button class="btn purple wide" onclick="goToHost()">Se connecter</button>
+    ${err ? `<div class="err">${esc(err)}</div>` : ''}
+    <div class="note">Les deux ordinateurs doivent être sur le même réseau (même box ou Wi-Fi). L'hôte doit d'abord cliquer sur <b>Réseau (hôte)</b>.</div>`;
+  const inp = $('joinAddr');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') goToHost(); });
+  inp.focus();
+}
+function goToHost(){
+  let a = $('joinAddr').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if (!/^[a-zA-Z0-9.\-]+(:\d{1,5})?$/.test(a)) return renderJoinAddr('Adresse invalide. Exemple : 192.168.1.20:8765');
+  if (!/:\d+$/.test(a)) a += ':8765';
+  store('lastHost', a);
+  location.href = `http://${a}/#join`;
+}
+function renderJoinName(err=''){
+  $('joinBody').innerHTML = `
+    <div class="note">Connecté au serveur <code>${esc(location.host)}</code></div>
+    <div class="field"><div>Votre nom</div><input class="txt" id="joinNameInp" maxlength="16" value="${esc(load('name',''))}" placeholder="Votre nom"></div>
+    <button class="btn purple wide" onclick="doJoin()">Rejoindre la partie</button>
+    ${err ? `<div class="err">${esc(err)}</div>` : ''}`;
+  const inp = $('joinNameInp');
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
+}
+async function doJoin(){
+  joinName = cleanName($('joinNameInp').value, 'Joueur');
+  store('name', joinName);
+  if (!NET.connected) return renderJoinName('Connexion au serveur en cours… réessayez dans un instant.');
+  const ok = await netSend('host', {type:'hello', name:joinName});
+  if (!ok) return renderJoinName('Aucune partie n\'est hébergée ici pour l\'instant. Demandez à l\'hôte de cliquer sur « Réseau (hôte) ».');
+  joined = true; MODE = 'client';
+  $('joinBody').innerHTML = `<p class="hint"><span class="thinking">Connexion…</span></p>`;
+}
+function clientOnNet(from, d){
+  if (!joined) return;
+  if (d.type === 'lobby'){
+    if (V) return;
+    $('joinBody').innerHTML = `<p>Vous êtes dans le salon. <span class="thinking">En attente que l'hôte lance la partie…</span></p>
+      <div class="seats">${d.seats.map(s => `<div class="seat">${lifeSVG(true)}<span class="nm">${esc(s.name)}</span><span class="kind">${s.kind==='host'?'hôte':s.kind==='bot'?'robot':'en réseau'}</span></div>`).join('')}</div>`;
+    showScreen('join');
+  } else if (d.type === 'state'){
+    if (V && d.view.round !== V.round) modalKey = '';
+    ME = d.me;
+    applyView(d.view);
+  } else if (d.type === 'refused'){
+    joined = false; MODE = null; V = null;
+    $('modal').classList.add('hidden');
+    showScreen('join'); renderJoinName(d.reason);
+  } else if (d.type === 'hostgone'){
+    joined = false; MODE = null; V = null; modalKey = '';
+    $('modal').classList.add('hidden');
+    showScreen('join'); renderJoinName('L\'hôte a arrêté la partie.');
+  }
+}
+function leaveClient(){
+  if (joined) netSend('host', {type:'bye'});
+  joined = false; V = null;
+  if (MODE === 'client') MODE = null;
+  setConn('');
+  if (onHostServer()){ toMenu(); return; }
+  toMenu();
+}
+
+/* =====================================================================
+   DÉMARRAGE
+   ===================================================================== */
 $('modal').addEventListener('click', e => {
-  if (e.target.id === 'modal' && S && S.phase !== 'challenge') $('modal').classList.add('hidden');
-  if (e.target.id === 'modal' && !S) $('modal').classList.add('hidden');
+  if (e.target.id !== 'modal') return;
+  if (rulesOpen) closeRules();
+  else if (quitOpen) closeQuit();
 });
-renderSetup();
+(async () => {
+  await detectNet();
+  renderMenuNote();
+  if (NET.available && location.hash === '#join'){ openJoin(); }
+})();
 </script>
 </body>
 </html>
