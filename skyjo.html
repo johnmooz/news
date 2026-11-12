@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -181,7 +180,7 @@ button{font-family:inherit}
 
 /* ---------- Toast & modale ---------- */
 #toast{
-  position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-120%);
+  position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-250%);
   background:#2b1d12;color:#fff;padding:12px 20px;border-radius:12px;font-weight:bold;z-index:50;
   transition:transform .3s;box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:90vw;text-align:center;
 }
@@ -199,6 +198,24 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
 .modal-btns .alt{background:#c9b49b}
 .rules{font-size:13px;color:#7a6250;margin-top:16px;line-height:1.45}
 .rules summary{cursor:pointer;font-weight:bold}
+.txt{display:block;width:100%;padding:10px 12px;margin-bottom:8px;border-radius:8px;border:2px solid #d9c6b0;font-size:16px}
+.txt:focus{outline:none;border-color:#2f6fe0}
+.play-btns button{font-size:16px;padding:10px 2px}
+.play-btns small{display:block;font-weight:normal;font-size:12px;opacity:.8;margin-top:2px}
+.count-btns button:disabled{opacity:.4;cursor:not-allowed}
+.net-note{font-size:13px;color:#7a6250;background:#f5ead9;border-radius:8px;padding:8px 10px;margin-top:8px}
+.err{font-size:14px;color:#b3261e;background:#fde8e5;border-radius:8px;padding:8px 10px;margin-top:12px}
+#lobby h2{text-align:center;margin:4px 0 12px}
+.lobby-info{font-size:14px;color:#5a4030;background:#f5ead9;border-radius:10px;padding:10px 12px;line-height:1.5}
+.addr{font-size:26px;font-weight:bold;color:#2f6fe0;text-align:center;margin:6px 0;letter-spacing:1px;user-select:all}
+#lobbyList{list-style:none;padding:0;margin:0}
+#lobbyList li{padding:9px 12px;background:#fff;border:2px solid #eadbc8;border-radius:8px;margin-bottom:6px;font-weight:bold}
+.tag{font-size:11px;background:#2f6fe0;color:#fff;border-radius:10px;padding:2px 7px;margin-left:6px;font-weight:normal}
+.wait{text-align:center;color:#7a6250;margin-top:10px;font-size:14px}
+.linkbtn{display:block;margin:12px auto 0;background:none;border:none;color:#7a6250;text-decoration:underline;cursor:pointer;font-size:14px}
+.badge.you{background:#2f6fe0}
+.badge.off{background:#777}
+#status .sbtn{width:auto;margin:0 0 0 8px;padding:6px 14px;font-size:14px;display:inline-block}
 </style>
 </head>
 <body>
@@ -207,26 +224,65 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
 <section id="setup">
   <div class="panel">
     <h1 class="logo">SKYJO</h1>
-    <p class="sub">Le jeu de cartes, à plusieurs sur le même écran</p>
-    <div class="label">Nombre de joueurs</div>
-    <div class="count-btns" id="countBtns">
-      <button data-n="1">1</button><button data-n="2" class="sel">2</button><button data-n="3">3</button><button data-n="4">4</button>
+    <p class="sub">Le jeu de cartes</p>
+
+    <div id="setupForm">
+      <div class="label">Mode de jeu</div>
+      <div class="count-btns play-btns" id="playBtns">
+        <button data-p="solo" class="sel">Solo<small>sur cet écran</small></button>
+        <button data-p="host">Réseau<small>héberger</small></button>
+        <button data-p="join">Réseau<small>rejoindre</small></button>
+      </div>
+      <div class="net-note hidden" id="netNote">Le jeu en réseau fonctionne avec l'application <b>Skyjo.exe</b>.</div>
+
+      <div id="verBox">
+        <div class="label">Version</div>
+        <div class="count-btns mode-btns" id="modeBtns">
+          <button data-m="classic" class="sel">Classique<small>150 cartes</small></button>
+          <button data-m="ext">Avec extension<small>+ 13, −4 et Étoiles</small></button>
+        </div>
+      </div>
+
+      <div id="soloBox">
+        <div class="label">Nombre de joueurs</div>
+        <div class="count-btns" id="countBtns">
+          <button data-n="1">1</button><button data-n="2" class="sel">2</button><button data-n="3">3</button><button data-n="4">4</button>
+        </div>
+        <div class="label">Noms des joueurs</div>
+        <div class="names" id="names"></div>
+      </div>
+
+      <div id="netNameBox" class="hidden">
+        <div class="label">Ton nom</div>
+        <input class="txt" id="netName" maxlength="16" placeholder="Ton prénom">
+      </div>
+      <div id="joinBox" class="hidden">
+        <div class="label">Adresse de l'hôte</div>
+        <input class="txt" id="hostAddr" placeholder="ex : 192.168.1.20" inputmode="decimal">
+      </div>
+
+      <div class="err hidden" id="setupErr"></div>
+      <button class="primary" id="startBtn">Commencer la partie</button>
+
+      <details class="rules">
+        <summary>Rappel des règles</summary>
+        <p>Chacun a 12 cartes face cachée (4 × 3). Au premier tour, chaque joueur retourne 2 cartes ; celui qui a le plus de points commence.</p>
+        <p>À ton tour : prends la carte de la défausse <i>ou</i> pioche une carte, puis clique sur une de tes cartes pour l'échanger (la carte remplacée part à la défausse). Tu peux aussi simplement retourner une de tes cartes cachées. Une carte piochée peut aussi être défaussée : tu retournes alors une carte cachée.</p>
+        <p>3 cartes identiques visibles dans une même colonne sont éliminées. Dès qu'un joueur a tout dévoilé, les autres jouent un dernier tour. Le moins de points gagne ; la partie s'arrête quand un joueur atteint 100.</p>
+        <p><b>Extension</b> (+14 cartes) : 10 cartes <b>13</b> — quand tu en retournes une dans ta grille, tu regardes secrètement une de tes cartes cachées. 1 carte <b>−4</b>. 3 cartes <b>Étoile</b> — jokers qui complètent n'importe quelle colonne, mais valent 20 points si elles sont encore dans ta grille en fin de manche.</p>
+        <p><b>Réseau</b> : l'hôte lance Skyjo.exe et choisit « Réseau – héberger ». Les autres, sur le même Wi-Fi, lancent Skyjo.exe → « Réseau – rejoindre » et tapent l'adresse affichée, ou l'ouvrent dans leur navigateur (téléphone compris).</p>
+      </details>
     </div>
-    <div class="label">Version</div>
-    <div class="count-btns mode-btns" id="modeBtns">
-      <button data-m="classic" class="sel">Classique<small>150 cartes</small></button>
-      <button data-m="ext">Avec extension<small>+ 13, −4 et Étoiles</small></button>
+
+    <div id="lobby" class="hidden">
+      <h2 id="lobbyTitle"></h2>
+      <div class="lobby-info" id="lobbyInfo"></div>
+      <div class="label">Joueurs</div>
+      <ul id="lobbyList"></ul>
+      <div class="wait" id="lobbyWait"></div>
+      <button class="primary" id="lobbyStart">Lancer la partie</button>
+      <button class="linkbtn" id="lobbyQuit">Quitter</button>
     </div>
-    <div class="label">Noms des joueurs</div>
-    <div class="names" id="names"></div>
-    <button class="primary" id="startBtn">Commencer la partie</button>
-    <details class="rules">
-      <summary>Rappel des règles</summary>
-      <p>Chacun a 12 cartes face cachée (4 × 3). Au premier tour, chaque joueur retourne 2 cartes ; celui qui a le plus de points commence.</p>
-      <p>À ton tour : prends la carte de la défausse <i>ou</i> pioche une carte, puis clique sur une de tes cartes pour l'échanger (la carte remplacée part à la défausse). Tu peux aussi simplement retourner une de tes cartes cachées. Une carte piochée peut aussi être défaussée : tu retournes alors une carte cachée.</p>
-      <p>3 cartes identiques visibles dans une même colonne sont éliminées. Dès qu'un joueur a tout dévoilé, les autres jouent un dernier tour. Le moins de points gagne ; la partie s'arrête quand un joueur atteint 100.</p>
-      <p><b>Extension</b> (+14 cartes) : 10 cartes <b>13</b> — quand tu en retournes une dans ta grille, tu regardes secrètement une de tes cartes cachées. 1 carte <b>−4</b>. 3 cartes <b>Étoile</b> — jokers qui complètent n'importe quelle colonne, mais valent 20 points si elles sont encore dans ta grille en fin de manche.</p>
-    </details>
   </div>
 </section>
 
@@ -235,7 +291,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   <div class="topbar">
     <div class="logo">SKYJO</div>
     <div id="status"></div>
-    <button class="secondary" id="quitBtn">Nouvelle partie</button>
+    <button class="secondary" id="quitBtn">Menu</button>
   </div>
   <div class="table">
     <div class="pile">
@@ -269,74 +325,284 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   document.documentElement.style.setProperty('--hex', `url("data:image/svg+xml,${encodeURIComponent(hex)}")`);
 
   const $ = s => document.querySelector(s);
-  const ROWS = 3, COLS = 4, END_SCORE = 100;
+  const ROWS = 3, COLS = 4, END_SCORE = 100, MAX_PLAYERS = 4, LAN_PORT = 8765;
+  const STAR = 'S';                         // carte Étoile (joker, 20 points)
+  const pts = v => v===STAR ? 20 : v;
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  const rid = () => Math.random().toString(36).slice(2,10);
+  const store = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  };
 
-  // ---------- Accueil ----------
-  let nbPlayers = 2;
-  let savedNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4'];
+  // =====================================================================
+  //  ACCUEIL
+  // =====================================================================
+  let playMode = 'solo', gameMode = 'classic', nbPlayers = 2;
+  const savedNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4'];
+
   function renderNames(){
     const box = $('#names');
-    const current = [...box.querySelectorAll('input')].map(i => i.value);
-    current.forEach((v,i) => savedNames[i] = v);
+    [...box.querySelectorAll('input')].forEach((i,k) => savedNames[k] = i.value);
     box.innerHTML = '';
     for(let i=0;i<nbPlayers;i++){
       const inp = document.createElement('input');
-      inp.maxLength = 16; inp.value = savedNames[i]; inp.placeholder = 'Joueur '+(i+1);
+      inp.className = 'txt'; inp.maxLength = 16; inp.value = savedNames[i]; inp.placeholder = 'Joueur '+(i+1);
       box.appendChild(inp);
     }
   }
+  function pick(groupSel, btn){ document.querySelectorAll(groupSel+' button').forEach(x => x.classList.toggle('sel', x===btn)); }
   $('#countBtns').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
-    nbPlayers = +b.dataset.n;
-    document.querySelectorAll('#countBtns button').forEach(x => x.classList.toggle('sel', x===b));
-    renderNames();
+    nbPlayers = +b.dataset.n; pick('#countBtns', b); renderNames();
   });
-  renderNames();
-
-  let gameMode = 'classic';
   $('#modeBtns').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
-    gameMode = b.dataset.m;
-    document.querySelectorAll('#modeBtns button').forEach(x => x.classList.toggle('sel', x===b));
+    gameMode = b.dataset.m; pick('#modeBtns', b);
+  });
+  $('#playBtns').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b || b.disabled) return;
+    setPlayMode(b.dataset.p);
+  });
+  function setPlayMode(m){
+    playMode = m;
+    pick('#playBtns', document.querySelector(`#playBtns button[data-p=${m}]`));
+    $('#soloBox').classList.toggle('hidden', m!=='solo');
+    $('#netNameBox').classList.toggle('hidden', m==='solo');
+    $('#joinBox').classList.toggle('hidden', m!=='join' || NET.remotePage);
+    $('#verBox').classList.toggle('hidden', m==='join');
+    $('#startBtn').textContent = m==='solo' ? 'Commencer la partie' : m==='host' ? 'Créer la partie' : 'Rejoindre la partie';
+    setErr('');
+  }
+  function setErr(msg){ const e = $('#setupErr'); e.textContent = msg; e.classList.toggle('hidden', !msg); }
+  renderNames();
+  $('#netName').value = store.get('skyjo-name') || '';
+  $('#hostAddr').value = store.get('skyjo-host') || '';
+
+  $('#startBtn').addEventListener('click', () => {
+    setErr('');
+    if(playMode==='solo') startSolo();
+    else if(playMode==='host') startHosting();
+    else startJoin();
   });
 
-  // ---------- État ----------
-  const STAR = 'S';                       // carte Étoile (joker, 20 points)
-  const pts = v => v===STAR ? 20 : v;
-  let S = null;
+  function showSetup(){
+    $('#game').classList.add('hidden'); $('#setup').classList.remove('hidden');
+    $('#setupForm').classList.remove('hidden'); $('#lobby').classList.add('hidden');
+  }
+  function showGame(){ $('#setup').classList.add('hidden'); $('#game').classList.remove('hidden'); }
+
+  // =====================================================================
+  //  RÉSEAU  (le serveur de Skyjo.exe relaie les messages ; l'hôte arbitre)
+  // =====================================================================
+  const NET = { available:false, remotePage:false, info:null, role:null, id:null, es:null,
+                lobby:[], gameMode:'classic', ips:[], port:LAN_PORT };
+
+  async function probe(){
+    if(location.protocol.startsWith('http')){
+      try{
+        const r = await fetch('/api/info', {cache:'no-store'});
+        const j = await r.json();
+        if(j && j.skyjo){ NET.available = true; NET.info = j; }
+      }catch(e){}
+    }
+    NET.remotePage = NET.available && !['localhost','127.0.0.1'].includes(location.hostname);
+    document.querySelectorAll('#playBtns button[data-p=host], #playBtns button[data-p=join]').forEach(b => b.disabled = !NET.available);
+    $('#netNote').classList.toggle('hidden', NET.available);
+    if(NET.available && !NET.remotePage) openPresence();
+    if(NET.remotePage){
+      // Page ouverte depuis l'ordinateur de l'hôte : on rejoint directement
+      document.querySelector('#playBtns button[data-p=host]').disabled = true;
+      setPlayMode('join');
+      const n = new URLSearchParams(location.search).get('name');
+      if(n){ $('#netName').value = n; startJoin(); }
+    }
+  }
+  // Une connexion ouverte garde Skyjo.exe actif tant que la fenêtre est ouverte
+  function openPresence(){ if(!NET.es) connect('p-'+rid(), () => {}); }
+  function closeES(){ if(NET.es){ NET.es.close(); NET.es = null; } }
+  function connect(id, onmsg, onopen){
+    closeES();
+    NET.id = id;
+    const es = new EventSource('/events?id='+encodeURIComponent(id));
+    es.onmessage = e => { let m; try{ m = JSON.parse(e.data); }catch(err){ return; } onmsg(m); };
+    if(onopen) es.onopen = onopen;
+    NET.es = es;
+  }
+  function send(to, msg){
+    return fetch('/send?from='+encodeURIComponent(NET.id), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({to, msg})
+    }).then(r => r.ok).catch(() => false);
+  }
+
+  // ----- Hôte -----
+  async function startHosting(){
+    const name = $('#netName').value.trim() || 'Hôte';
+    store.set('skyjo-name', name);
+    let j;
+    try{
+      const r = await fetch('/api/lan', {method:'POST'});
+      j = await r.json();
+      if(!r.ok) throw new Error(j.error || 'erreur inconnue');
+    }catch(e){ setErr("Impossible d'ouvrir la partie en réseau : " + e.message); return; }
+    NET.role = 'host'; NET.ips = j.ips || []; NET.port = j.port || LAN_PORT;
+    NET.gameMode = gameMode;
+    NET.lobby = [{id:'host', name}];
+    S = null; VIEW = null;
+    connect('host', hostOnMsg);
+    showLobby();
+  }
+  function hostOnMsg(m){
+    const from = m.from, msg = m.msg || {};
+    if(msg.type === 'join'){
+      const name = String(msg.name || 'Joueur').trim().slice(0,16) || 'Joueur';
+      if(S){                                   // partie déjà lancée : seulement une reconnexion
+        const pl = S.players.find(p => p.netId===from);
+        if(!pl){ send(from, {type:'refused', reason:'La partie a déjà commencé.'}); return; }
+        pl.online = true; update(); return;
+      }
+      let p = NET.lobby.find(x => x.id===from);
+      if(!p){
+        if(NET.lobby.length >= MAX_PLAYERS){ send(from, {type:'refused', reason:'La partie est complète (4 joueurs maximum).'}); return; }
+        NET.lobby.push({id:from, name});
+      } else p.name = name;
+      broadcastLobby(); showLobby();
+    } else if(msg.type === 'left'){
+      if(S){ const pl = S.players.find(p => p.netId===from); if(pl){ pl.online = false; update(); } }
+      else { NET.lobby = NET.lobby.filter(x => x.id!==from); broadcastLobby(); showLobby(); }
+    } else if(msg.type === 'act'){
+      if(!S) return;
+      const pi = S.players.findIndex(p => p.netId===from);
+      if(pi >= 0) applyAction(pi, msg.a);
+    }
+  }
+  function broadcastLobby(){ send('all', {type:'lobby', players: NET.lobby.map(p => p.name), mode: NET.gameMode}); }
+
+  // ----- Joueur qui rejoint -----
+  async function startJoin(){
+    const name = $('#netName').value.trim() || 'Joueur';
+    store.set('skyjo-name', name);
+    if(!NET.remotePage){
+      // Depuis Skyjo.exe : on ouvre la page servie par l'ordinateur de l'hôte
+      let addr = $('#hostAddr').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+      if(!addr){ setErr("Indique l'adresse de l'hôte (par exemple 192.168.1.20)."); return; }
+      store.set('skyjo-host', addr);
+      if(!/:\d+$/.test(addr)) addr += ':' + LAN_PORT;
+      $('#startBtn').disabled = true; $('#startBtn').textContent = 'Connexion…';
+      const ok = await reachable(`http://${addr}/api/info`);
+      $('#startBtn').disabled = false; setPlayMode('join');
+      if(!ok){ setErr(`Aucune partie trouvée à l'adresse ${addr}. Vérifie l'adresse, que l'hôte a bien cliqué sur « Créer la partie » et que vous êtes sur le même réseau.`); return; }
+      location.href = `http://${addr}/?name=${encodeURIComponent(name)}`;
+      return;
+    }
+    try{ const r = await fetch('/api/info', {cache:'no-store'}); NET.info = await r.json(); }catch(e){}
+    if(!NET.info || !NET.info.host){ setErr("L'hôte n'a pas encore créé de partie. Réessaie dans un instant."); return; }
+    NET.role = 'client'; NET.lobby = [];
+    let id = null;
+    try{ id = sessionStorage.getItem('skyjo-id'); }catch(e){}
+    if(!id){ id = 'c-'+rid(); try{ sessionStorage.setItem('skyjo-id', id); }catch(e){} }
+    connect(id, clientOnMsg, () => {
+      send('host', {type:'join', name}).then(ok => { if(!ok) clientFail("L'hôte n'est pas joignable."); });
+    });
+    showLobby();
+  }
+  async function reachable(url){
+    const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 4000);
+    try{ const r = await fetch(url, {signal:ctl.signal, cache:'no-store'}); const j = await r.json(); return !!(j && j.skyjo); }
+    catch(e){ return false; } finally{ clearTimeout(t); }
+  }
+  function clientOnMsg(m){
+    const msg = m.msg || {};
+    switch(msg.type){
+      case 'lobby':
+        NET.lobby = msg.players.map(n => ({name:n})); NET.gameMode = msg.mode;
+        if(!VIEW) showLobby();
+        break;
+      case 'state':
+        VIEW = msg.view;
+        if($('#game').classList.contains('hidden')) showGame();
+        renderView(VIEW);
+        break;
+      case 'toast': toast(msg.text); break;
+      case 'peek': showPeekModal(msg.v); break;
+      case 'refused': clientFail(msg.reason); break;
+      case 'hostleft': clientFail("L'hôte a quitté la partie."); break;
+    }
+  }
+  function clientFail(reason){
+    closeES(); NET.role = null; VIEW = null; hideModal(); showSetup(); setErr(reason);
+  }
+
+  // ----- Salle d'attente -----
+  function showLobby(){
+    $('#game').classList.add('hidden'); $('#setup').classList.remove('hidden');
+    $('#setupForm').classList.add('hidden'); $('#lobby').classList.remove('hidden');
+    const host = NET.role === 'host';
+    const ver = NET.gameMode==='ext' ? 'avec extension' : 'classique';
+    $('#lobbyTitle').textContent = host ? 'Partie en réseau' : "Salle d'attente";
+    if(host){
+      $('#lobbyInfo').innerHTML = NET.ips.length
+        ? `Les autres joueurs lancent <b>Skyjo.exe</b> → <b>Réseau – rejoindre</b> et tapent :
+           <div class="addr">${NET.ips.map(esc).join('<br>')}</div>
+           Ou ils ouvrent dans un navigateur (téléphone compris) : <b>http://${esc(NET.ips[0])}:${NET.port}</b><br>Version : ${ver}`
+        : "Aucune adresse réseau trouvée : vérifie que l'ordinateur est connecté au Wi-Fi ou à la box.";
+    } else {
+      $('#lobbyInfo').innerHTML = NET.lobby.length ? `Connecté ! Version : ${ver}` : 'Connexion à la partie…';
+    }
+    $('#lobbyList').innerHTML = NET.lobby.map((p,i) => `<li>${esc(p.name)}${i===0?'<span class="tag">hôte</span>':''}</li>`).join('');
+    $('#lobbyStart').classList.toggle('hidden', !host);
+    $('#lobbyStart').disabled = NET.lobby.length < 2;
+    $('#lobbyWait').textContent = host
+      ? (NET.lobby.length < 2 ? "En attente d'au moins un autre joueur…" : `${NET.lobby.length} joueurs (4 maximum)`)
+      : "En attente que l'hôte lance la partie…";
+  }
+  $('#lobbyStart').addEventListener('click', () => {
+    if(NET.role!=='host' || NET.lobby.length < 2) return;
+    S = newGame(NET.lobby.map(p => ({name:p.name, netId:p.id})), NET.gameMode);
+    showGame(); startRound();
+  });
+  $('#lobbyQuit').addEventListener('click', leaveGame);
+
+  function leaveGame(){
+    closeES(); NET.role = null; S = null; VIEW = null;
+    hideModal(); showSetup(); setPlayMode(playMode);
+    if(NET.available && !NET.remotePage) openPresence();
+  }
+
+  // =====================================================================
+  //  LOGIQUE DU JEU  (solo ou hôte)
+  // =====================================================================
+  let S = null;      // état complet (solo / hôte)
+  let VIEW = null;   // ce qui est affiché (identique pour tous, cartes cachées masquées)
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-  function buildDeck(){
+  function buildDeck(mode){
     const d = [];
     for(let i=0;i<5;i++) d.push(-2);
     for(let i=0;i<10;i++) d.push(-1);
     for(let i=0;i<15;i++) d.push(0);
     for(let v=1;v<=12;v++) for(let i=0;i<10;i++) d.push(v);
-    if(S && S.mode === 'ext'){           // extension : +14 cartes
+    if(mode === 'ext'){                    // extension : +14 cartes
       for(let i=0;i<10;i++) d.push(13);
       d.push(-4);
       for(let i=0;i<3;i++) d.push(STAR);
     }
-    return shuffle(d); // 150 cartes (164 avec l'extension)
+    return shuffle(d);                     // 150 cartes (164 avec l'extension)
   }
-
-  $('#startBtn').addEventListener('click', () => {
+  function newGame(list, mode){
+    return { players: list.map(p => ({name:p.name, netId:p.netId||null, online:true, total:0, grid:null, revealed:0})),
+             round:0, mode };
+  }
+  function startSolo(){
     const names = [...$('#names').querySelectorAll('input')].map((i,k) => i.value.trim() || ('Joueur '+(k+1)));
-    S = { players: names.map(n => ({name:n, total:0, grid:null, revealed:0})), round:0, mode:gameMode };
-    $('#setup').classList.add('hidden'); $('#game').classList.remove('hidden');
-    startRound();
-  });
-  $('#quitBtn').addEventListener('click', () => {
-    if(S && S.phase !== 'over'){
-      showModal(`<h2>Nouvelle partie ?</h2><p>La partie en cours sera perdue.</p>
-        <div class="modal-btns"><button class="primary alt" data-act="close">Continuer</button><button class="primary" data-act="setup">Recommencer</button></div>`);
-    } else backToSetup();
-  });
-  function backToSetup(){ hideModal(); $('#game').classList.add('hidden'); $('#setup').classList.remove('hidden'); }
-
+    closeES(); NET.role = null;
+    S = newGame(names.map(n => ({name:n})), gameMode);
+    showGame(); startRound();
+    if(NET.available && !NET.remotePage) openPresence();
+  }
   function startRound(){
     S.round++;
-    S.deck = buildDeck();
+    S.deck = buildDeck(S.mode);
     S.players.forEach(p => {
       p.grid = [];
       for(let c=0;c<COLS;c++){ const col=[]; for(let r=0;r<ROWS;r++) col.push({v:S.deck.pop(), up:false}); p.grid.push(col); }
@@ -344,24 +610,25 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     });
     S.discard = [S.deck.pop()];
     S.phase = 'reveal'; S.current = 0;
-    S.drawn = null; S.mustFlip = false; S.finisher = null; S.peek = null;
+    S.drawn = null; S.mustFlip = false; S.finisher = null; S.peek = null; S.result = null;
     S.fx = new Set(); S.poof = new Set();
-    render();
+    update();
   }
 
-  // ---------- Utilitaires ----------
   const cardsOf = p => p.grid.flat().filter(Boolean);
   const visibleSum = p => cardsOf(p).filter(c=>c.up).reduce((s,c)=>s+pts(c.v),0);
   const allRevealed = p => cardsOf(p).every(c=>c.up);
   const hasHidden = p => cardsOf(p).some(c=>!c.up);
   const cur = () => S.players[S.current];
 
+  function notify(text){ toast(text); if(NET.role==='host') send('all', {type:'toast', text}); }
+
   function refillDeck(){
     if(S.deck.length) return;
     const top = S.discard.pop();
     S.deck = shuffle(S.discard);
     S.discard = top===undefined ? [] : [top];
-    toast('La pioche est vide : la défausse est mélangée');
+    notify('La pioche est vide : la défausse est mélangée');
   }
 
   function checkColumns(pi){
@@ -377,34 +644,41 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
         removed = true;
       }
     }
-    if(removed) toast(`${p.name} élimine une colonne !`);
-    return removed;
+    if(removed) notify(`${p.name} élimine une colonne !`);
   }
 
-  // ---------- Actions ----------
+  // Toutes les actions de jeu passent par ici (clic local ou message réseau)
+  function applyAction(seat, a){
+    if(!S || !a || seat !== S.current) return;
+    if(S.phase!=='reveal' && S.phase!=='play') return;
+    switch(a.t){
+      case 'card': onCard(seat, a.c|0, a.r|0); break;
+      case 'deck': onDeck(); break;
+      case 'discard': onDiscard(); break;
+      case 'handDiscard': if(S.drawn && S.drawn.from==='deck' && !S.mustFlip) discardDrawn(); break;
+      case 'handCancel': if(S.drawn && S.drawn.from==='discard') cancelDrawn(); break;
+      case 'peekdone': if(S.peek && S.peek.shown) peekDone(); break;
+    }
+  }
+
   function onCard(pi, c, r){
-    if(pi !== S.current) return;
-    const p = cur(), card = p.grid[c][r];
+    const p = cur(), card = p.grid[c] && p.grid[c][r];
     if(!card) return;
 
     // Pouvoir de la carte 13 : regarder secrètement une carte cachée
     if(S.peek){
-      if(card.up) return;
-      showModal(`<h2>👁 Carte secrète</h2><p>${esc(p.name)}, voici ta carte cachée. Mémorise-la !</p>
-        <div class="peek-card">${faceHTML(card.v)}</div>
-        <div class="modal-btns"><button class="primary" data-act="peekdone">J'ai mémorisé</button></div>`);
+      if(card.up || S.peek.shown) return;
+      S.peek.shown = true;
+      if(NET.role==='host' && pi!==0) send(p.netId, {type:'peek', v:card.v});
+      else showPeekModal(card.v);
       return;
     }
-
     if(S.phase === 'reveal'){
       if(card.up) return;
       card.up = true; p.revealed++; S.fx.add(`${pi}-${c}-${r}`);
       afterFlip(card, revealNext);
       return;
     }
-
-    if(S.phase !== 'play') return;
-
     if(S.mustFlip){
       if(card.up) return;
       card.up = true; S.mustFlip = false; S.fx.add(`${pi}-${c}-${r}`);
@@ -426,16 +700,12 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   // Après avoir retourné une carte de sa grille : une carte 13 déclenche le pouvoir
   function afterFlip(card, next){
     if(card.v === 13 && hasHidden(cur())){
-      S.peek = {next};
-      render();
-      toast('Carte 13 : regarde secrètement une de tes cartes cachées');
+      S.peek = {next, shown:false};
+      update();
+      notify(`Carte 13 : ${cur().name} regarde secrètement une de ses cartes cachées`);
     } else next();
   }
-  function peekDone(){
-    hideModal();
-    const next = S.peek.next; S.peek = null;
-    next();
-  }
+  function peekDone(){ const next = S.peek.next; S.peek = null; next(); }
 
   function revealNext(){
     const p = cur();
@@ -446,10 +716,10 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
         let best = 0;
         S.players.forEach((q,i) => { if(visibleSum(q) > visibleSum(S.players[best])) best = i; });
         S.phase = 'play'; S.current = best;
-        if(S.players.length > 1) toast(`${S.players[best].name} commence (${visibleSum(S.players[best])} points visibles)`);
+        if(S.players.length > 1) notify(`${S.players[best].name} commence (${visibleSum(S.players[best])} points visibles)`);
       }
     }
-    render();
+    update();
   }
 
   function onDeck(){
@@ -457,9 +727,8 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     refillDeck();
     if(!S.deck.length) return;
     S.drawn = {v:S.deck.pop(), from:'deck'}; S.fx.add('hand');
-    render();
+    update();
   }
-
   function onDiscard(){
     if(S.phase!=='play' || S.mustFlip || S.peek) return;
     if(S.drawn){
@@ -468,177 +737,265 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     }
     if(!S.discard.length) return;
     S.drawn = {v:S.discard.pop(), from:'discard'}; S.fx.add('hand');
-    render();
+    update();
   }
   function discardDrawn(){
     S.discard.push(S.drawn.v); S.drawn = null; S.fx.add('discard');
-    if(hasHidden(cur())){ S.mustFlip = true; render(); } else endTurn();
+    if(hasHidden(cur())){ S.mustFlip = true; update(); } else endTurn();
   }
-  function cancelDrawn(){ S.discard.push(S.drawn.v); S.drawn = null; render(); }
+  function cancelDrawn(){ S.discard.push(S.drawn.v); S.drawn = null; update(); }
 
   function endTurn(){
     const pi = S.current, p = cur();
     checkColumns(pi);
     if(S.finisher === null && allRevealed(p)){
       S.finisher = pi;
-      if(S.players.length > 1) toast(`${p.name} a tout dévoilé : dernier tour pour les autres !`);
+      if(S.players.length > 1) notify(`${p.name} a tout dévoilé : dernier tour pour les autres !`);
     }
     const next = (pi + 1) % S.players.length;
-    if(S.finisher !== null && next === S.finisher){ S.phase = 'ending'; render(); setTimeout(endRound, 700); return; }
+    if(S.finisher !== null && next === S.finisher){ S.phase = 'ending'; update(); setTimeout(endRound, 700); return; }
     S.current = next;
-    render();
+    update();
   }
 
   function endRound(){
-    if(S.phase !== 'ending') return;
-    S.phase = 'roundEnd'; S.drawn = null;
+    if(!S || S.phase !== 'ending') return;
+    S.drawn = null;
     S.players.forEach((p,pi) => {
       p.grid.forEach((col,c) => col.forEach((x,r) => { if(x && !x.up){ x.up = true; S.fx.add(`${pi}-${c}-${r}`); } }));
       checkColumns(pi);
     });
     const scores = S.players.map(p => cardsOf(p).reduce((s,x)=>s+pts(x.v),0));
     scores.forEach((s,i) => S.players[i].total += s);
-    render();
-
-    const over = S.players.length === 1 || S.players.some(p => p.total >= END_SCORE);
+    const single = S.players.length === 1;
+    const over = single || S.players.some(p => p.total >= END_SCORE);
     const minTotal = Math.min(...S.players.map(p=>p.total));
     const minRound = Math.min(...scores);
-    let rows = S.players.map((p,i) => {
-      const win = over ? p.total===minTotal : scores[i]===minRound;
-      return `<tr class="${win?'win':''}"><td>${esc(p.name)}${i===S.finisher&&S.players.length>1?' <span class="badge">a fini</span>':''}</td><td>${scores[i]}</td><td>${p.total}</td></tr>`;
-    }).join('');
-    let title, sub, btns;
-    if(S.players.length === 1){
-      title = 'Manche terminée'; sub = `Ton score : ${scores[0]} points`;
-      btns = `<button class="primary alt" data-act="setup">Menu</button><button class="primary" data-act="replay">Rejouer</button>`;
-      S.phase = 'over';
-    } else if(over){
-      const winners = S.players.filter(p=>p.total===minTotal).map(p=>esc(p.name)).join(' et ');
-      title = `🏆 ${winners} gagne !`; sub = `Un joueur a atteint ${END_SCORE} points : fin de la partie.`;
-      btns = `<button class="primary alt" data-act="setup">Menu</button><button class="primary" data-act="replay">Rejouer</button>`;
-      S.phase = 'over';
-    } else {
-      title = `Fin de la manche ${S.round}`; sub = `La partie s'arrête quand un joueur atteint ${END_SCORE} points.`;
-      btns = `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="next">Manche suivante</button>`;
-    }
-    setTimeout(() => showModal(`<h2>${title}</h2><p>${sub}</p>
-      <table class="scores"><tr><th>Joueur</th><th>Manche</th><th>Total</th></tr>${rows}</table>
-      <div class="modal-btns" style="margin-top:18px">${btns}</div>`), 900);
+    S.result = {
+      round:S.round, over, single,
+      winners: S.players.filter(p => p.total===minTotal).map(p => p.name),
+      rows: S.players.map((p,i) => ({ name:p.name, score:scores[i], total:p.total,
+        win: over ? p.total===minTotal : scores[i]===minRound, fin: i===S.finisher && !single }))
+    };
+    S.phase = over ? 'over' : 'roundEnd';
+    update();
   }
 
-  // ---------- Rendu ----------
-  function esc(s){ return s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+  // Construit la vue partagée (les cartes cachées n'y sont jamais dévoilées)
+  function makeView(){
+    const v = {
+      phase:S.phase, round:S.round, mode:S.mode, current:S.current, finisher:S.finisher,
+      mustFlip:S.mustFlip, peek:!!S.peek,
+      drawn: S.drawn ? {v:S.drawn.v, from:S.drawn.from} : null,
+      deckCount:S.deck.length, discardLen:S.discard.length,
+      discardTop: S.discard.length ? S.discard[S.discard.length-1] : null,
+      players: S.players.map(p => ({
+        name:p.name, netId:p.netId, online:p.online, total:p.total, revealed:p.revealed, visible:visibleSum(p),
+        grid: p.grid.map(col => col.map(x => x ? {up:x.up, v: x.up ? x.v : null} : null))
+      })),
+      result:S.result, fx:[...S.fx], poof:[...S.poof]
+    };
+    S.fx = new Set(); S.poof = new Set();
+    return v;
+  }
+  function update(){
+    const v = makeView();
+    VIEW = v; renderView(v);
+    if(NET.role==='host') send('all', {type:'state', view:v});
+  }
+
+  // Envoie une action : localement (solo / hôte) ou à l'hôte (joueur distant)
+  function act(a){
+    if(NET.role==='client') send('host', {type:'act', a});
+    else if(S) applyAction(NET.role==='host' ? 0 : S.current, a);
+  }
+
+  // =====================================================================
+  //  AFFICHAGE
+  // =====================================================================
   function colorClass(v){ return v<0?'c-dblue':v===0?'c-lblue':v<=4?'c-green':v<=8?'c-yellow':v<=12?'c-red':'c-purple'; }
   const STAR_SVG = '<svg viewBox="0 0 100 95"><path d="M50 3l13.5 29.5 32 3.5-24 21.8 6.8 31.7L50 73.3 21.7 89.5l6.8-31.7-24-21.8 32-3.5z" fill="#f7d33a" stroke="#d9a800" stroke-width="4" stroke-linejoin="round"/></svg>';
   function faceHTML(v, extra=''){
-    if(v === STAR){
-      return `<div class="card face c-star ${extra}"><span class="corner tl">20</span><span class="star">${STAR_SVG}</span><span class="corner br">20</span></div>`;
-    }
-    if(v === 13){
-      return `<div class="card face c-purple ${extra}"><span class="corner tl">13</span><span class="eye tr"></span><span class="num two">13</span><span class="eye bl"></span><span class="corner br">13</span></div>`;
-    }
+    if(v === STAR) return `<div class="card face c-star ${extra}"><span class="corner tl">20</span><span class="star">${STAR_SVG}</span><span class="corner br">20</span></div>`;
+    if(v === 13) return `<div class="card face c-purple ${extra}"><span class="corner tl">13</span><span class="eye tr"></span><span class="num two">13</span><span class="eye bl"></span><span class="corner br">13</span></div>`;
     const u = (v===6||v===9) ? ' ul' : '';
     const two = String(v).length >= 2 ? ' two' : '';
     return `<div class="card face ${colorClass(v)} ${extra}"><span class="corner tl${u}">${v}</span><span class="num${two}${u}">${v}</span><span class="corner br${u}">${v}</span></div>`;
   }
   function backHTML(extra=''){ return `<div class="card back ${extra}"><span class="word w2">SKYJO</span><span class="word w1">SKYJO</span></div>`; }
 
-  function statusHTML(){
-    const p = cur(), n = `<b>${esc(p.name)}</b>`;
-    const last = (S.finisher!==null && S.phase==='play') ? '<span class="last">Dernier tour ! </span>' : '';
-    if(S.peek) return `👁 ${n}, clique sur une de tes cartes cachées pour la regarder secrètement`;
-    if(S.phase==='reveal') return `${n}, retourne 2 de tes cartes (${p.revealed}/2)`;
-    if(S.phase!=='play') return `Fin de la manche ${S.round}`;
-    if(S.peek) return `👁 ${n}, clique sur une de tes cartes cachées pour la regarder secrètement`;
-    if(S.mustFlip) return `${last}${n}, retourne une de tes cartes cachées`;
-    if(S.drawn) return `${last}${n}, clique sur la carte à remplacer` + (S.drawn.from==='deck' ? ' — ou défausse la carte piochée' : '');
-    return `${last}${n}, pioche, prends la défausse ou retourne une carte`;
+  // Siège du joueur devant cet écran (en solo : le joueur dont c'est le tour)
+  function mySeat(v){
+    if(NET.role==='client') return v.players.findIndex(p => p.netId===NET.id);
+    if(NET.role==='host') return 0;
+    return v.current;
+  }
+  const isAuthority = () => NET.role !== 'client';
+
+  function statusHTML(v){
+    const seat = mySeat(v), net = !!NET.role, mine = v.current===seat;
+    const p = v.players[v.current], n = `<b>${esc(p.name)}</b>`;
+    const lead = net ? '' : `${n}, `;
+    const cap = s => net ? s.charAt(0).toUpperCase()+s.slice(1) : s;
+    const last = (v.finisher!==null && v.phase==='play') ? '<span class="last">Dernier tour ! </span>' : '';
+    if(v.phase==='ending') return 'Fin de la manche…';
+    if(v.phase==='roundEnd' || v.phase==='over'){
+      const scoresBtn = '<button class="primary sbtn alt" data-s="scores">Scores</button>';
+      if(v.phase==='over') return `Partie terminée ${scoresBtn}`;
+      return isAuthority()
+        ? `Fin de la manche ${v.round} ${scoresBtn}<button class="primary sbtn" data-s="next">Manche suivante</button>`
+        : `Fin de la manche ${v.round} — en attente de l'hôte ${scoresBtn}`;
+    }
+    if(!mine){
+      if(v.peek) return `👁 ${n} regarde secrètement une de ses cartes…`;
+      if(v.phase==='reveal') return `${n} retourne 2 cartes…`;
+      return `${last}C'est au tour de ${n}…`;
+    }
+    if(v.peek) return `👁 ${lead}${cap('clique sur une de tes cartes cachées pour la regarder secrètement')}`;
+    if(v.phase==='reveal') return `${lead}${cap('retourne 2 de tes cartes')} (${p.revealed}/2)`;
+    if(v.mustFlip) return `${last}${lead}${cap('retourne une de tes cartes cachées')}`;
+    if(v.drawn) return `${last}${lead}${cap('clique sur la carte à remplacer')}` + (v.drawn.from==='deck' ? ' — ou défausse la carte piochée' : '');
+    return `${last}${lead}${cap('pioche, prends la défausse ou retourne une carte')}`;
   }
 
-  function render(){
-    const fx = S.fx; S.fx = new Set();
-    const poof = S.poof; S.poof = new Set();
-    $('#status').innerHTML = statusHTML();
+  let resultKey = null;
+  function renderView(v){
+    const fx = new Set(v.fx), poof = new Set(v.poof);
+    const seat = mySeat(v), net = !!NET.role;
+    const myTurn = (v.phase==='reveal' || v.phase==='play') && v.current===seat;
+    const playing = myTurn && v.phase==='play' && !v.mustFlip && !v.peek;
 
-    const playing = S.phase==='play' && !S.mustFlip && !S.peek;
+    $('#status').innerHTML = statusHTML(v);
+    $('#quitBtn').textContent = net ? 'Quitter' : 'Menu';
+
     // Pioche
-    const canDeck = playing && !S.drawn;
-    $('#deck').innerHTML = (S.deck.length || S.discard.length>1) ? backHTML(canDeck?'clickable':'') : '<div class="slot-empty"></div>';
-    $('#deckCount').textContent = `${S.deck.length} cartes`;
+    const canDeck = playing && !v.drawn;
+    $('#deck').innerHTML = (v.deckCount || v.discardLen>1) ? backHTML(canDeck?'clickable':'') : '<div class="slot-empty"></div>';
+    $('#deckCount').textContent = `${v.deckCount} cartes`;
     // Défausse
-    const top = S.discard[S.discard.length-1];
-    const canDiscard = playing && (S.drawn || S.discard.length);
-    $('#discard').innerHTML = top===undefined ? `<div class="slot-empty ${canDiscard&&S.drawn?'clickable':''}"></div>`
-      : faceHTML(top, (canDiscard?'clickable ':'') + (fx.has('discard')?'flip':''));
+    const canDiscard = playing && (v.drawn || v.discardLen);
+    $('#discard').innerHTML = !v.discardLen ? `<div class="slot-empty ${canDiscard&&v.drawn?'clickable':''}"></div>`
+      : faceHTML(v.discardTop, (canDiscard?'clickable ':'') + (fx.has('discard')?'flip':''));
     // Main
-    $('#hand').innerHTML = S.drawn ? faceHTML(S.drawn.v, fx.has('hand')?'flip':'') : '<div class="slot-empty"></div>';
-    let acts = '';
-    if(S.drawn && S.phase==='play'){
-      acts = S.drawn.from==='deck' ? '<button data-h="discard">Défausser</button>' : '<button data-h="cancel">Reposer</button>';
-    }
-    $('#handActions').innerHTML = acts;
+    $('#hand').innerHTML = v.drawn ? faceHTML(v.drawn.v, fx.has('hand')?'flip':'') : '<div class="slot-empty"></div>';
+    $('#handActions').innerHTML = (playing && v.drawn)
+      ? (v.drawn.from==='deck' ? '<button data-h="handDiscard">Défausser</button>' : '<button data-h="handCancel">Reposer</button>')
+      : '';
 
     // Joueurs
     const box = $('#players'); box.innerHTML = '';
-    S.players.forEach((p,pi) => {
-      const active = pi===S.current && (S.phase==='reveal'||S.phase==='play');
+    v.players.forEach((p,pi) => {
+      const active = pi===v.current && (v.phase==='reveal' || v.phase==='play');
       const b = document.createElement('div');
       b.className = 'board' + (active?' active':'');
-      const totalTxt = S.players.length>1 || S.round>1 ? ` · total ${p.total}` : '';
-      b.innerHTML = `<div class="board-head"><span class="name">${esc(p.name)}${pi===S.finisher?'<span class="badge">a fini</span>':''}</span>
-        <span class="pts">${visibleSum(p)} pts visibles${totalTxt}</span></div>`;
+      const totalTxt = v.players.length>1 || v.round>1 ? ` · total ${p.total}` : '';
+      const badges = (pi===v.finisher ? '<span class="badge">a fini</span>' : '')
+        + (net && pi===seat ? '<span class="badge you">toi</span>' : '')
+        + (net && !p.online ? '<span class="badge off">déconnecté</span>' : '');
+      b.innerHTML = `<div class="board-head"><span class="name">${esc(p.name)}${badges}</span>
+        <span class="pts">${p.visible} pts visibles${totalTxt}</span></div>`;
       const g = document.createElement('div'); g.className = 'grid';
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         const card = p.grid[c][r], key = `${pi}-${c}-${r}`;
         let clickable = false;
-        if(active && card){
-          if(S.peek) clickable = !card.up;
-          else if(S.phase==='reveal') clickable = !card.up;
-          else if(S.mustFlip) clickable = !card.up;
-          else if(S.drawn) clickable = true;
+        if(myTurn && pi===v.current && card){
+          if(v.peek || v.phase==='reveal' || v.mustFlip) clickable = !card.up;
+          else if(v.drawn) clickable = true;
           else clickable = !card.up;
         }
         const cls = (clickable?'clickable ':'') + (fx.has(key)?'flip':'');
         const wrap = document.createElement('div');
         wrap.innerHTML = !card ? `<div class="slot-empty ${poof.has(key)?'poof':''}"></div>` : card.up ? faceHTML(card.v, cls) : backHTML(cls);
         const el = wrap.firstElementChild;
-        if(clickable) el.addEventListener('click', () => onCard(pi,c,r));
+        if(clickable) el.addEventListener('click', () => act({t:'card', c, r}));
         g.appendChild(el);
       }
       b.appendChild(g); box.appendChild(b);
     });
+
+    // Résultats de fin de manche
+    if(v.result){
+      const key = v.result.round + '-' + v.result.over;
+      if(resultKey !== key){
+        resultKey = key;
+        setTimeout(() => { if(VIEW && VIEW.result && modalKind!=='peek') showResultModal(VIEW); }, 900);
+      }
+    } else {
+      resultKey = null;
+      if(modalKind==='result') hideModal();
+    }
   }
 
-  $('#deck').addEventListener('click', onDeck);
-  $('#discard').addEventListener('click', onDiscard);
+  $('#deck').addEventListener('click', e => { if(e.target.closest('.clickable')) act({t:'deck'}); });
+  $('#discard').addEventListener('click', e => { if(e.target.closest('.clickable')) act({t:'discard'}); });
   $('#handActions').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    if(b.dataset.h==='discard') discardDrawn(); else cancelDrawn();
+    const b = e.target.closest('button'); if(b) act({t:b.dataset.h});
+  });
+  $('#status').addEventListener('click', e => {
+    const b = e.target.closest('button[data-s]'); if(!b) return;
+    if(b.dataset.s==='next' && isAuthority() && S && S.phase==='roundEnd'){ hideModal(); startRound(); }
+    if(b.dataset.s==='scores' && VIEW && VIEW.result) showResultModal(VIEW);
+  });
+  $('#quitBtn').addEventListener('click', () => {
+    const inProgress = VIEW && VIEW.phase!=='over';
+    if(!inProgress){ leaveGame(); return; }
+    modalKind = 'quit';
+    showModal(`<h2>Quitter la partie ?</h2><p>${NET.role==='host' ? 'La partie sera arrêtée pour tous les joueurs.' : 'La partie en cours sera perdue.'}</p>
+      <div class="modal-btns"><button class="primary alt" data-act="close">Continuer</button><button class="primary" data-act="setup">Quitter</button></div>`);
   });
 
   // ---------- Toast & modale ----------
-  let toastTimer;
+  let toastTimer, modalKind = null;
   function toast(msg){
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
   }
   function showModal(html){ $('#modalBody').innerHTML = html; $('#modal').classList.remove('hidden'); }
-  function hideModal(){ $('#modal').classList.add('hidden'); }
+  function hideModal(){ $('#modal').classList.add('hidden'); modalKind = null; }
+
+  function showPeekModal(v){
+    modalKind = 'peek';
+    showModal(`<h2>👁 Carte secrète</h2><p>Voici ta carte cachée. Mémorise-la !</p>
+      <div class="peek-card">${faceHTML(v)}</div>
+      <div class="modal-btns"><button class="primary" data-act="peekdone">J'ai mémorisé</button></div>`);
+  }
+  function showResultModal(v){
+    const r = v.result, auth = isAuthority();
+    const rows = r.rows.map(x => `<tr class="${x.win?'win':''}"><td>${esc(x.name)}${x.fin?' <span class="badge">a fini</span>':''}</td><td>${x.score}</td><td>${x.total}</td></tr>`).join('');
+    let title, sub, btns;
+    if(r.single){
+      title = 'Manche terminée'; sub = `Ton score : ${r.rows[0].score} points`;
+    } else if(r.over){
+      title = `🏆 ${r.winners.map(esc).join(' et ')} ${r.winners.length>1?'gagnent':'gagne'} !`;
+      sub = `Un joueur a atteint ${END_SCORE} points : fin de la partie.`;
+    } else {
+      title = `Fin de la manche ${r.round}`; sub = `La partie s'arrête quand un joueur atteint ${END_SCORE} points.`;
+    }
+    if(r.over){
+      btns = auth ? `<button class="primary alt" data-act="setup">Menu</button><button class="primary" data-act="replay">Rejouer</button>`
+                  : `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="setup">Quitter</button>`;
+      if(!auth) sub += " L'hôte peut relancer une partie.";
+    } else {
+      btns = auth ? `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="next">Manche suivante</button>`
+                  : `<button class="primary" data-act="close">Voir les cartes</button>`;
+      if(!auth) sub += " L'hôte lance la manche suivante.";
+    }
+    modalKind = 'result';
+    showModal(`<h2>${title}</h2><p>${sub}</p>
+      <table class="scores"><tr><th>Joueur</th><th>Manche</th><th>Total</th></tr>${rows}</table>
+      <div class="modal-btns" style="margin-top:18px">${btns}</div>`);
+  }
   $('#modal').addEventListener('click', e => {
     const b = e.target.closest('button[data-act]'); if(!b) return;
     const a = b.dataset.act;
-    if(a==='peekdone'){ peekDone(); return; }
-    if(a==='close'){
-      hideModal();
-      if(S.phase==='roundEnd'){ // bouton flottant pour continuer après avoir regardé les cartes
-        $('#status').innerHTML = `Fin de la manche ${S.round} — <button class="primary" style="width:auto;margin:0 0 0 8px;padding:6px 14px;font-size:14px" id="nextRoundBtn">Manche suivante</button>`;
-        $('#nextRoundBtn').addEventListener('click', startRound);
-      }
-    }
-    else if(a==='next'){ hideModal(); startRound(); }
-    else if(a==='replay'){ hideModal(); S.players.forEach(p=>p.total=0); S.round=0; startRound(); }
-    else if(a==='setup'){ backToSetup(); }
+    if(a==='peekdone'){ hideModal(); act({t:'peekdone'}); }
+    else if(a==='close'){ hideModal(); }
+    else if(a==='next'){ hideModal(); if(isAuthority() && S && S.phase==='roundEnd') startRound(); }
+    else if(a==='replay'){ hideModal(); if(isAuthority() && S){ S.players.forEach(p => p.total = 0); S.round = 0; startRound(); } }
+    else if(a==='setup'){ leaveGame(); }
   });
+
+  probe();
 })();
 </script>
 </body>
