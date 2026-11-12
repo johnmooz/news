@@ -146,6 +146,54 @@
   .btn.aide{background:#d9a600;box-shadow:0 4px 0 #8a6a00}
   .btn.solution{background:#5b6b8a;box-shadow:0 4px 0 #2e3a52}
   .actions + .actions{margin-top:10px}
+  .modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:100%;max-width:560px}
+  @media (max-width:520px){.modes{grid-template-columns:repeat(2,1fr)}}
+  .btn-mode{
+    border:none;border-radius:10px;padding:12px 8px;cursor:pointer;color:#fff;
+    font-family:'Archivo Black',sans-serif;font-size:1rem;line-height:1.15;
+    background:#2a4a7d;box-shadow:0 4px 0 #13284a;
+  }
+  .btn-mode small{display:block;font-family:'Archivo',sans-serif;font-weight:700;font-size:.75rem;opacity:.85}
+  .btn-mode.actif{background:var(--rouge);box-shadow:0 4px 0 var(--rouge-fonce)}
+  .bloc{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+  .btn-nb:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .note{max-width:460px;text-align:center;font-size:.88rem;opacity:.8;min-height:1em}
+  #liste-parties{display:flex;flex-direction:column;gap:8px;width:100%;max-width:440px}
+  .partie{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:10px;background:#0b2552;border:2px solid #24467e;font-weight:700}
+  .partie .btn{padding:8px 14px}
+  .vide{text-align:center;opacity:.75;font-size:.9rem}
+  #attente{display:none;flex-direction:column;align-items:center;gap:14px;margin-top:40px}
+  #attente-txt{font-size:1.2rem;font-weight:700;text-align:center}
+  #attente-code{font-family:'Archivo Black',sans-serif;font-size:1.6rem;letter-spacing:.15em;color:var(--jaune)}
+  .spinner{width:46px;height:46px;border-radius:50%;border:5px solid #24467e;border-top-color:var(--jaune);animation:tourne 1s linear infinite}
+  @keyframes tourne{to{transform:rotate(360deg)}}
+  #info-tour:empty{display:none}
+  #info-tour{color:#cfe2ff}
+  #info-tour.a-vous{color:#7dffa0}
+  #clavier.inactif{opacity:.55}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-mode{
+    border:none;border-radius:10px;padding:12px 18px;cursor:pointer;color:#fff;
+    font-family:'Archivo Black',sans-serif;font-size:1rem;background:#2a4a7d;box-shadow:0 4px 0 #13284a;
+  }
+  .btn-mode.actif{background:var(--rouge);box-shadow:0 4px 0 var(--rouge-fonce)}
+  .bloc{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .aide-texte{opacity:.75;font-size:.9rem;text-align:center}
+  .rejoindre{display:flex;gap:10px;align-items:center}
+  #code-saisi{
+    width:130px;padding:10px;border-radius:8px;border:2px solid #5aa5ff;background:#0b2552;color:#fff;
+    font-family:'Archivo Black',sans-serif;font-size:1.5rem;letter-spacing:.25em;text-align:center;text-transform:uppercase;
+  }
+  #code-saisi:focus{outline:none;border-color:var(--jaune)}
+  #accueil-msg{min-height:1.3em;color:#ffd36b;font-weight:700;text-align:center;max-width:460px}
+  #reseau-info{
+    display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 14px;border-radius:20px;
+    background:#0b2552;border:1px solid #24467e;font-weight:700;font-size:.9rem;
+  }
+  .pastille{width:10px;height:10px;border-radius:50%;background:#e07b16;box-shadow:0 0 6px #e07b16}
+  .pastille.ok{background:#3ddc6f;box-shadow:0 0 6px #3ddc6f}
+  #clavier.inactif{opacity:.45}
+  .btn:disabled{opacity:.4;cursor:default}
   .legende{display:flex;gap:16px;margin-top:16px;font-size:.85rem;opacity:.8;flex-wrap:wrap;justify-content:center}
   .legende span{display:flex;align-items:center;gap:6px}
   .mini{width:18px;height:18px;border-radius:3px;display:inline-block}
@@ -156,22 +204,47 @@
   <div class="sous-titre">Trouvez le mot avant la fin des essais</div>
 
   <section id="choix">
-    <p>Nombre de joueurs</p>
+    <p>Mode de jeu</p>
     <div class="boutons-choix">
-      <button class="btn-joueurs actif" data-j="1">1 joueur</button>
-      <button class="btn-joueurs" data-j="2">2 joueurs</button>
+      <button class="btn-mode actif" data-mode="solo">Solo</button>
+      <button class="btn-mode" data-mode="hote">Réseau (hôte)</button>
+      <button class="btn-mode" data-mode="invite">Réseau (rejoindre)</button>
     </div>
+
+    <div data-pour="solo" class="bloc">
+      <p>Nombre de joueurs sur cet écran</p>
+      <div class="boutons-choix">
+        <button class="btn-joueurs actif" data-j="1">1 joueur</button>
+        <button class="btn-joueurs" data-j="2">2 joueurs</button>
+      </div>
+    </div>
+
     <div class="noms">
-      <input id="nom1" maxlength="14" value="Joueur 1" aria-label="Nom du joueur 1">
-      <input id="nom2" maxlength="14" value="Joueur 2" aria-label="Nom du joueur 2" style="display:none">
+      <input id="nom1" maxlength="14" placeholder="Joueur 1" aria-label="Votre nom">
+      <input id="nom2" maxlength="14" placeholder="Joueur 2" aria-label="Nom du joueur 2" style="display:none">
     </div>
-    <p>Combien de lettres dans le mot à trouver ?</p>
-    <div class="boutons-choix">
-      <button class="btn-nb" data-n="5">5<small>lettres</small></button>
-      <button class="btn-nb" data-n="6">6<small>lettres</small></button>
-      <button class="btn-nb" data-n="7">7<small>lettres</small></button>
-      <button class="btn-nb" data-n="8">8<small>lettres</small></button>
+
+    <div data-pour="solo hote" class="bloc">
+      <p>Combien de lettres dans le mot à trouver ?</p>
+      <div class="boutons-choix">
+        <button class="btn-nb" data-n="5">5<small>lettres</small></button>
+        <button class="btn-nb" data-n="6">6<small>lettres</small></button>
+        <button class="btn-nb" data-n="7">7<small>lettres</small></button>
+        <button class="btn-nb" data-n="8">8<small>lettres</small></button>
+      </div>
+      <div data-pour="hote" class="aide-texte">Un code à 4 caractères sera créé : donnez-le à l'autre joueur.</div>
     </div>
+
+    <div data-pour="invite" class="bloc">
+      <p>Code de la partie</p>
+      <div class="rejoindre">
+        <input id="code-saisi" maxlength="4" placeholder="ABCD" aria-label="Code de la partie" autocomplete="off">
+        <button class="btn" id="btn-rejoindre">Rejoindre</button>
+      </div>
+    </div>
+
+    <div id="accueil-msg"></div>
+
     <div class="legende">
       <span><i class="mini" style="background:var(--rouge)"></i>Bien placée</span>
       <span><i class="mini" style="background:var(--jaune);border-radius:50%"></i>Mal placée</span>
@@ -180,6 +253,7 @@
   </section>
 
   <section id="jeu">
+    <div id="reseau-info" style="display:none"></div>
     <div id="entete">
       <div id="joueurs"></div>
       <div id="chrono" title="30 secondes par ligne">
@@ -197,7 +271,7 @@
         <span id="chrono-txt">30</span>
       </div>
     </div>
-    <div id="info"><span id="info-lettres"></span><span id="info-essais"></span></div>
+    <div id="info"><span id="info-lettres"></span><span id="info-essais"></span><span id="info-tour"></span></div>
     <div id="grille"></div>
     <div id="message"></div>
     <div id="clavier"></div>
@@ -220,107 +294,24 @@ const DICO = {};
 for (const n in DICO_BRUT) DICO[n] = new Set(DICO_BRUT[n].split(' '));
 
 const $ = id => document.getElementById(id);
-let N, cible, ligne, saisie, connues, fini, verrou, etatTouches;
-
-// --- Joueurs ---
-let nbJoueurs = 1, noms = ["Joueur 1", "Joueur 2"], scores = [0, 0], actif = 0, premierJoueur = 0;
-
-// --- Chrono ---
-const TEMPS = 30;
-let chronoDebut = 0, chronoActif = false, chronoRAF = null;
-
+const TEMPS = 30, DUREE_NOTE = 0.3, PAS = DUREE_NOTE * 1000;
 const RANGS = ["AZERTYUIOP", "QSDFGHJKLM", "WXCVBN"];
 
-function construireClavier() {
-  const c = $("clavier"); c.innerHTML = "";
-  RANGS.forEach((r, i) => {
-    const d = document.createElement("div"); d.className = "rang";
-    if (i === 2) d.appendChild(touche("⌫ EFFACER", "Retour", true, "effacer"));
-    [...r].forEach(l => d.appendChild(touche(l, l)));
-    if (i === 2) d.appendChild(touche("VALIDER ✓", "Entree", true, "valider"));
-    c.appendChild(d);
-  });
-}
-function touche(txt, val, large, extra) {
-  const b = document.createElement("button");
-  b.className = "touche" + (large ? " large" : "") + (extra ? " " + extra : "");
-  b.textContent = txt; b.dataset.k = val;
-  b.addEventListener("click", () => action(val));
-  return b;
-}
+/* ======================================================================
+   MODES : "solo" (1 ou 2 joueurs sur le même écran),
+           "hote" (réseau, joueur 1, fait tourner la partie),
+           "invite" (réseau, joueur 2, envoie ses actions à l'hôte)
+   L'état de la partie S est calculé par l'« autorité » (solo ou hôte)
+   et affiché par tout le monde. En réseau, l'hôte publie S dans sa
+   présence ; l'invité publie sa saisie et des compteurs d'actions.
+   ====================================================================== */
+let mode = "solo", nbSolo = 1;
+let S = null;            // état partagé
+let cible = null;        // mot secret (connu de l'autorité seulement)
+let premierJoueur = 0;
 
-// ---------- Écran d'accueil ----------
-document.querySelectorAll(".btn-joueurs").forEach(b => b.addEventListener("click", () => {
-  nbJoueurs = +b.dataset.j;
-  document.querySelectorAll(".btn-joueurs").forEach(x => x.classList.toggle("actif", x === b));
-  $("nom2").style.display = nbJoueurs === 2 ? "" : "none";
-}));
-
-function commencerPartie(n) {
-  initAudio();
-  noms = [($("nom1").value.trim() || "Joueur 1"), ($("nom2").value.trim() || "Joueur 2")];
-  scores = [0, 0]; premierJoueur = 0;
-  demarrer(n);
-}
-
-// ---------- Une manche ----------
-function demarrer(n) {
-  N = n;
-  const liste = MOTS[N];
-  cible = liste[Math.floor(Math.random() * liste.length)];
-  ligne = 0; fini = false; verrou = false; etatTouches = {};
-  connues = Array(N).fill(null); connues[0] = cible[0];
-  saisie = [cible[0]];
-  actif = nbJoueurs === 2 ? premierJoueur : 0;
-  $("choix").style.display = "none";
-  $("jeu").style.display = "flex";
-  message("");
-  $("info-lettres").textContent = N + " lettres";
-  const t = Math.min(62, Math.floor((Math.min(window.innerWidth, 560) - 40) / N) - 3);
-  const g = $("grille");
-  g.style.setProperty("--t", t + "px");
-  g.style.gridTemplateColumns = `repeat(${N}, ${t}px)`;
-  g.innerHTML = "";
-  for (let i = 0; i < N * N; i++) {
-    const c = document.createElement("div");
-    c.className = "case"; c.innerHTML = '<span class="l"></span>';
-    g.appendChild(c);
-  }
-  const cur = document.createElement("div"); cur.id = "curseur"; g.appendChild(cur);
-  construireClavier();
-  dessinerJoueurs(); majInfo(); dessinerLigne();
-  demarrerChrono();
-}
-
-function dessinerJoueurs() {
-  const z = $("joueurs"); z.innerHTML = "";
-  for (let j = 0; j < nbJoueurs; j++) {
-    const d = document.createElement("div");
-    d.className = "joueur" + (j === actif && !fini ? " actif" : "");
-    d.innerHTML = `<span class="nom"></span><span class="score">${scores[j]}</span>`;
-    d.querySelector(".nom").textContent = noms[j];
-    z.appendChild(d);
-  }
-}
-
-function cases(r) { return [...$("grille").children].slice(r * N, r * N + N); }
-function majInfo() { $("info-essais").textContent = "Essai " + Math.min(ligne + 1, N) + " / " + N; }
-
-function dessinerLigne() {
-  cases(ligne).forEach((c, i) => {
-    const l = c.querySelector(".l");
-    c.classList.remove("indice", "active", "rouge", "jaune");
-    if (i === 0) { l.textContent = cible[0]; c.classList.add("rouge"); return; }
-    if (i < saisie.length) { l.textContent = saisie[i]; }
-    else if (connues[i]) { l.textContent = connues[i]; c.classList.add("indice"); }
-    else { l.textContent = ""; }
-    if (i === saisie.length) c.classList.add("active");
-  });
-}
-
-// ---------- Sons : FA = bonne place, SOL = mal placée, LA = absente ----------
-const NOTES = { rouge: 349.23, jaune: 392.00, bleu: 440.00 };
-const DUREE_NOTE = 0.3;
+// ---------- Sons ----------
+const NOTES = { R: 349.23, J: 392.00, B: 440.00 };   // FA, SOL, LA
 let audio = null;
 function initAudio() {
   try {
@@ -341,211 +332,605 @@ function jouerNote(freq, duree = DUREE_NOTE, type = "triangle") {
     osc.start(t); osc.stop(t + duree + 0.02);
   } catch (e) {}
 }
+
+// ---------- Accueil ----------
+function choisirMode(m) {
+  mode = m;
+  document.querySelectorAll(".btn-mode").forEach(b => b.classList.toggle("actif", b.dataset.mode === m));
+  document.querySelectorAll("[data-pour]").forEach(el => {
+    el.style.display = el.dataset.pour.split(" ").includes(m) ? "" : "none";
+  });
+  $("nom2").style.display = (m === "solo" && nbSolo === 2) ? "" : "none";
+  $("nom1").placeholder = m === "solo" ? "Joueur 1" : "Votre nom";
+  $("accueil-msg").textContent = "";
+}
+document.querySelectorAll(".btn-mode").forEach(b => b.addEventListener("click", () => choisirMode(b.dataset.mode)));
+document.querySelectorAll(".btn-joueurs").forEach(b => b.addEventListener("click", () => {
+  nbSolo = +b.dataset.j;
+  document.querySelectorAll(".btn-joueurs").forEach(x => x.classList.toggle("actif", x === b));
+  $("nom2").style.display = nbSolo === 2 ? "" : "none";
+}));
+document.querySelectorAll(".btn-nb").forEach(b => b.addEventListener("click", () => {
+  initAudio();
+  const n = +b.dataset.n;
+  if (mode === "solo") lancerSolo(n);
+  else if (mode === "hote") lancerHote(n);
+}));
+$("btn-rejoindre").addEventListener("click", () => { initAudio(); lancerInvite(); });
+$("code-saisi").addEventListener("keydown", e => { if (e.key === "Enter") { initAudio(); lancerInvite(); } });
+
+function nomJoueur(i) {
+  const v = $(i === 1 ? "nom1" : "nom2").value.trim().slice(0, 14);
+  return v || (mode === "solo" ? "Joueur " + i : (mode === "hote" ? "Hôte" : "Invité"));
+}
+
+function afficherJeu() {
+  $("choix").style.display = "none";
+  $("jeu").style.display = "flex";
+}
+function retourMenu() {
+  arreterChronoLocal();
+  quitterReseau();
+  S = null; cible = null;
+  $("jeu").style.display = "none";
+  $("choix").style.display = "flex";
+}
+
+/* ======================================================================
+   AUTORITÉ (solo ou hôte)
+   ====================================================================== */
+function nouvelEtat(nbJ, noms) {
+  return { v: 0, manche: 0, N: 5, l0: "", connues: [], lignes: [], saisie: "",
+    actif: 0, nbJ, noms, scores: [0, 0], fini: false, cible: null, solLigne: false,
+    msg: "", cls: "", anim: false, erreur: 0, evt: { n: 0, t: "" },
+    chrono: { seq: 0, on: false, reste: TEMPS }, attente: false };
+}
+
+function nouvelleManche(n) {
+  const liste = MOTS[n];
+  cible = liste[Math.floor(Math.random() * liste.length)];
+  Object.assign(S, {
+    manche: S.manche + 1, N: n, l0: cible[0],
+    connues: Array.from({ length: n }, (_, i) => i === 0 ? cible[0] : null),
+    lignes: [], saisie: cible[0], actif: S.nbJ === 2 ? premierJoueur : 0,
+    fini: false, cible: null, solLigne: false, msg: "", cls: "", anim: false, attente: false,
+  });
+  if (S.nbJ === 2) S.msg = "À " + S.noms[S.actif] + " de commencer !";
+  relancerChrono();
+  publier();
+}
+
+function relancerChrono() { S.chrono = { seq: S.chrono.seq + 1, on: true, reste: TEMPS }; }
+function stopperChrono() { S.chrono = { seq: S.chrono.seq + 1, on: false, reste: Math.max(0, TEMPS - ecouleLocal()) }; }
+
+function publier() {
+  S.v++;
+  rendre(S);
+  if (mode === "hote" && salle) {
+    salle.presence({ jeu: "motus", code: codePartie, role: "hote", s: S }).catch(() => {});
+  }
+}
+
+function aTape(j, k) {          // j = numéro du joueur qui agit
+  if (!S || S.fini || S.anim || S.attente) return;
+  if (j !== S.actif) { pasTonTour(); return; }
+  if (k === "Entree") return valider(S.saisie);
+  if (k === "Retour") { if (S.saisie.length > 1) { S.saisie = S.saisie.slice(0, -1); publier(); } return; }
+  if (/^[A-Z]$/.test(k) && S.saisie.length < S.N) { S.saisie += k; publier(); }
+}
+function pasTonTour() {
+  messageLocal("C'est au tour de " + S.noms[S.actif] + ".");
+}
+
+function evaluer(mot) {
+  const N = S.N, res = Array(N).fill("B"), reste = {};
+  for (let i = 0; i < N; i++) {
+    if (mot[i] === cible[i]) res[i] = "R";
+    else reste[cible[i]] = (reste[cible[i]] || 0) + 1;
+  }
+  for (let i = 0; i < N; i++) {
+    if (res[i] === "R") continue;
+    if (reste[mot[i]] > 0) { res[i] = "J"; reste[mot[i]]--; }
+  }
+  return res.join("");
+}
+
+function valider(mot) {
+  if (!S || S.fini || S.anim || S.attente) return;
+  mot = (mot || "").toUpperCase();
+  if (mot.length < S.N) { S.msg = "Le mot doit contenir " + S.N + " lettres."; S.cls = ""; S.erreur++; return publier(); }
+  if (!DICO[S.N].has(mot)) { S.msg = "« " + mot + " » : mot qui n'existe pas !"; S.cls = "perdu"; S.erreur++; return publier(); }
+  const res = evaluer(mot);
+  for (let i = 0; i < S.N; i++) if (res[i] === "R") S.connues[i] = mot[i];
+  S.lignes.push({ m: mot, r: res });
+  S.saisie = ""; S.msg = ""; S.cls = ""; S.anim = true;
+  stopperChrono();
+  publier();
+  const manche = S.manche;
+  setTimeout(() => apresValidation(manche, mot), S.N * PAS + 150);
+}
+
+function apresValidation(manche, mot) {
+  if (!S || S.manche !== manche) return;
+  S.anim = false;
+  if (mot === cible) {
+    S.scores[S.actif]++;
+    S.msg = (S.nbJ === 2 ? S.noms[S.actif] + " a trouvé" : "Bravo ! Vous avez trouvé") +
+      " « " + cible + " » en " + S.lignes.length + " essai" + (S.lignes.length > 1 ? "s" : "") + " !";
+    S.cls = "gagne";
+    return finManche();
+  }
+  if (S.lignes.length >= S.N) { S.msg = "Perdu ! Le mot était « " + cible + " »."; S.cls = "perdu"; return finManche(); }
+  S.saisie = S.l0;
+  relancerChrono();
+  publier();
+}
+
+// Ligne perdue (aide ou temps écoulé) : ligne suivante, et la main passe à 2 joueurs.
+function passerLigne(texte) {
+  S.lignes.push({ p: 1, l: S.connues.map(x => x || ".").join("") });
+  if (S.lignes.length >= S.N) { S.msg = texte + " Perdu ! Le mot était « " + cible + " »."; S.cls = "perdu"; return finManche(); }
+  if (S.nbJ === 2) { S.actif = 1 - S.actif; texte += " Au tour de " + S.noms[S.actif] + "."; }
+  else texte += " Ligne suivante.";
+  S.msg = texte; S.cls = "";
+  S.saisie = S.l0;
+  relancerChrono();
+  publier();
+}
+
+function tempsEcoule() {
+  if (!S || S.fini || S.anim || S.attente) return;
+  S.evt = { n: S.evt.n + 1, t: "temps" };
+  passerLigne("Temps écoulé !");
+}
+
+function demanderAide(j) {
+  if (!S || S.fini || S.anim || S.attente) return;
+  if (j !== S.actif) return pasTonTour();
+  if (S.lignes.length >= S.N - 1) { S.msg = "Plus assez d'essais pour demander une aide."; S.cls = ""; return publier(); }
+  const i = S.connues.findIndex(x => !x);
+  if (i < 0) { S.msg = "Toutes les lettres sont déjà trouvées !"; S.cls = ""; return publier(); }
+  S.connues[i] = cible[i];
+  S.evt = { n: S.evt.n + 1, t: "aide" };
+  passerLigne("Aide : la lettre n°" + (i + 1) + " est « " + cible[i] + " ».");
+}
+
+function donnerSolution() {
+  if (!S || S.fini || S.anim || S.attente) return;
+  S.solLigne = S.lignes.length < S.N;
+  S.msg = "La solution était « " + cible + " »."; S.cls = "perdu";
+  finManche();
+}
+
+function finManche() {
+  S.fini = true; S.cible = cible;
+  S.chrono = { seq: S.chrono.seq + 1, on: false, reste: S.chrono.reste };
+  premierJoueur = S.nbJ === 2 ? 1 - premierJoueur : 0;
+  publier();
+}
+
+// ---------- Solo ----------
+function lancerSolo(n) {
+  S = nouvelEtat(nbSolo, [nomJoueur(1), nomJoueur(2)]);
+  premierJoueur = 0;
+  vueReset();
+  afficherJeu();
+  $("reseau-info").style.display = "none";
+  nouvelleManche(n);
+}
+
+/* ======================================================================
+   RÉSEAU
+   ====================================================================== */
+let salle = null, codePartie = "", desabonner = [];
+let invitePeer = null, compteursVus = null;     // côté hôte
+let hotePeer = null, monNom = "";               // côté invité
+let cpt = { valider: 0, aide: 0, solution: 0 }; // côté invité
+let saisieLoc = "";                              // côté invité
+
+async function obtenirSalle() {
+  try {
+    if (!window.claude || !window.claude.use) return null;
+    return await window.claude.use("room");
+  } catch (e) { return null; }
+}
+function genererCode() {
+  const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let c = ""; for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)];
+  return c;
+}
+function quitterReseau() {
+  desabonner.forEach(f => { try { f(); } catch (e) {} });
+  desabonner = [];
+  if (salle) salle.presence({ jeu: null, code: null, role: null, s: null, saisie: null, cpt: null, nom: null }).catch(() => {});
+  invitePeer = null; hotePeer = null; compteursVus = null;
+}
+function infoReseau(txt, ok) {
+  const el = $("reseau-info");
+  el.style.display = "";
+  el.innerHTML = "";
+  const s = document.createElement("span"); s.className = "pastille" + (ok ? " ok" : ""); el.appendChild(s);
+  el.appendChild(document.createTextNode(txt));
+}
+const HORS_LIGNE = "Le jeu en réseau n'est pas disponible ici : ouvrez la page sur claude.ai et partagez-la avec l'autre joueur.";
+
+// ---------- Hôte ----------
+async function lancerHote(n) {
+  $("accueil-msg").textContent = "Connexion…";
+  salle = await obtenirSalle();
+  if (!salle) { $("accueil-msg").textContent = HORS_LIGNE; return; }
+  $("accueil-msg").textContent = "";
+  codePartie = genererCode();
+  S = nouvelEtat(2, [nomJoueur(1), "En attente…"]);
+  S.N = n; S.attente = true;
+  S.msg = "Code de la partie : " + codePartie + " — donnez-le à l'autre joueur.";
+  premierJoueur = 0;
+  vueReset();
+  afficherJeu();
+  infoReseau("Partie " + codePartie + " · en attente d'un joueur…", false);
+  publier();
+  desabonner.push(salle.onPeers(ch => hoteVoitPairs(ch.peers), () => infoReseau(HORS_LIGNE, false)));
+}
+
+function hoteVoitPairs(pairs) {
+  if (mode !== "hote" || !S) return;
+  const invites = pairs.filter(p => !p.sameTab && p.presence && p.presence.jeu === "motus" &&
+    p.presence.code === codePartie && p.presence.role === "invite");
+  let g = invitePeer && invites.find(p => p.peer === invitePeer);
+  if (!g && invitePeer) {           // l'invité est parti
+    invitePeer = null;
+    infoReseau("Partie " + codePartie + " · l'autre joueur s'est déconnecté. En attente…", false);
+    S.noms[1] = "En attente…";
+    publier();
+  }
+  if (!g && invites.length) {       // nouvel invité
+    g = invites[0]; invitePeer = g.peer;
+    compteursVus = Object.assign({ valider: 0, aide: 0, solution: 0 }, g.presence.cpt || {});
+    S.noms[1] = String(g.presence.nom || "Invité").slice(0, 14);
+    infoReseau("Partie " + codePartie + " · " + S.noms[1] + " est connecté", true);
+    if (S.attente) { nouvelleManche(S.N); return; }
+    publier();
+    return;
+  }
+  if (!g) return;
+  const p = g.presence, nom = String(p.nom || "Invité").slice(0, 14);
+  if (nom !== S.noms[1]) { S.noms[1] = nom; publier(); }
+  // saisie de l'invité (uniquement à son tour)
+  const saisie = nettoyerSaisie(p.saisie);
+  const c = Object.assign({ valider: 0, aide: 0, solution: 0 }, p.cpt || {});
+  const memeLigne = p.li === S.lignes.length && p.manche === S.manche;
+  if (memeLigne && S.actif === 1 && !S.fini && !S.anim && saisie !== S.saisie && saisie.length >= 1) {
+    S.saisie = saisie; publier();
+  }
+  if (c.valider > compteursVus.valider) { compteursVus.valider = c.valider; if (memeLigne && S.actif === 1) valider(saisie); }
+  if (c.aide > compteursVus.aide) { compteursVus.aide = c.aide; demanderAide(1); }
+  if (c.solution > compteursVus.solution) { compteursVus.solution = c.solution; donnerSolution(); }
+}
+function nettoyerSaisie(x) {
+  if (!S || typeof x !== "string") return S ? S.l0 : "";
+  x = x.toUpperCase().replace(/[^A-Z]/g, "").slice(0, S.N);
+  if (x[0] !== S.l0) x = S.l0 + x.slice(1);
+  return x || S.l0;
+}
+
+// ---------- Invité ----------
+async function lancerInvite() {
+  const code = $("code-saisi").value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (code.length !== 4) { $("accueil-msg").textContent = "Entrez le code à 4 caractères donné par l'hôte."; return; }
+  $("accueil-msg").textContent = "Connexion…";
+  salle = await obtenirSalle();
+  if (!salle) { $("accueil-msg").textContent = HORS_LIGNE; return; }
+  $("accueil-msg").textContent = "";
+  codePartie = code; monNom = nomJoueur(1);
+  cpt = { valider: 0, aide: 0, solution: 0 }; saisieLoc = "";
+  S = null; hotePeer = null;
+  vueReset();
+  afficherJeu();
+  $("grille").innerHTML = ""; $("joueurs").innerHTML = "";
+  messageLocal("Recherche de la partie " + code + "…");
+  infoReseau("Partie " + code + " · recherche de l'hôte…", false);
+  envoyerInvite();
+  desabonner.push(salle.onPeers(ch => inviteVoitPairs(ch.peers), () => infoReseau(HORS_LIGNE, false)));
+  setTimeout(() => { if (mode === "invite" && !hotePeer && $("jeu").style.display === "flex")
+    messageLocal("Aucune partie « " + code + " » trouvée pour l'instant. Vérifiez le code ; la recherche continue…"); }, 6000);
+}
+function envoyerInvite() {
+  if (!salle) return;
+  salle.presence({ jeu: "motus", code: codePartie, role: "invite", nom: monNom, saisie: saisieLoc, cpt: { ...cpt },
+    li: S ? S.lignes.length : -1, manche: S ? S.manche : -1 }).catch(() => {});
+}
+function inviteVoitPairs(pairs) {
+  if (mode !== "invite") return;
+  const h = pairs.find(p => !p.sameTab && p.presence && p.presence.jeu === "motus" &&
+    p.presence.code === codePartie && p.presence.role === "hote" && p.presence.s);
+  if (!h) {
+    if (hotePeer) { hotePeer = null; infoReseau("Partie " + codePartie + " · l'hôte s'est déconnecté", false); messageLocal("L'hôte a quitté la partie."); arreterChronoLocal(); }
+    return;
+  }
+  if (hotePeer !== h.peer) { hotePeer = h.peer; infoReseau("Partie " + codePartie + " · connecté à " + (h.presence.s.noms && h.presence.s.noms[0] || "l'hôte"), true); }
+  const ns = h.presence.s;
+  if (S && ns.v === S.v && ns.manche === S.manche) return;
+  // Nouvelle ligne ou nouvelle manche : on repart de la première lettre
+  if (!S || ns.manche !== S.manche || ns.lignes.length !== S.lignes.length) { saisieLoc = ns.l0; envoyerInvite(); }
+  S = ns;
+  rendre(S);
+}
+function inviteTape(k) {
+  if (!S || S.fini || S.anim || S.attente) return;
+  if (S.actif !== 1) return pasTonTour();
+  if (!saisieLoc) saisieLoc = S.l0;
+  if (k === "Entree") { cpt.valider++; envoyerInvite(); return; }
+  if (k === "Retour") { if (saisieLoc.length > 1) saisieLoc = saisieLoc.slice(0, -1); }
+  else if (/^[A-Z]$/.test(k) && saisieLoc.length < S.N) saisieLoc += k;
+  else return;
+  envoyerInvite();
+  rendre(S);
+}
+
+/* ======================================================================
+   ENTRÉES
+   ====================================================================== */
+function monIndex() { return mode === "hote" ? 0 : mode === "invite" ? 1 : (S ? S.actif : 0); }
+function entree(k) {
+  initAudio();
+  if (vue.animEnCours) return;
+  if (mode === "invite") return inviteTape(k);
+  aTape(monIndex(), k);
+}
+
+document.addEventListener("keydown", e => {
+  if ($("jeu").style.display !== "flex" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+  if (e.key === "Enter") { e.preventDefault(); entree("Entree"); }
+  else if (e.key === "Backspace") { e.preventDefault(); entree("Retour"); }
+  else {
+    const k = e.key.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
+    if (/^[A-Z]$/.test(k)) entree(k);
+  }
+});
+
+$("aide").addEventListener("click", e => {
+  e.currentTarget.blur(); initAudio();
+  if (mode === "invite") { if (S && S.actif !== 1) return pasTonTour(); cpt.aide++; envoyerInvite(); }
+  else demanderAide(monIndex());
+});
+$("solution").addEventListener("click", e => {
+  e.currentTarget.blur(); initAudio();
+  if (mode === "invite") { cpt.solution++; envoyerInvite(); }
+  else donnerSolution();
+});
+$("rejouer").addEventListener("click", e => {
+  e.currentTarget.blur(); initAudio();
+  if (!S || mode === "invite") return;
+  if (S.attente) return;
+  if (mode === "hote" && !invitePeer) { messageLocal("En attente de l'autre joueur…"); return; }
+  nouvelleManche(S.N);
+});
+$("changer").addEventListener("click", retourMenu);
+
+/* ======================================================================
+   AFFICHAGE (commun à tous les modes)
+   ====================================================================== */
+const vue = { manche: -1, N: 0, lignesVues: 0, animEnCours: false, enAttente: null,
+  erreur: 0, evt: 0, chronoSeq: -1 };
+function vueReset() { Object.assign(vue, { manche: -1, N: 0, lignesVues: 0, animEnCours: false, enAttente: null, erreur: 0, evt: 0, chronoSeq: -1 }); }
+
+function construireClavier() {
+  const c = $("clavier"); c.innerHTML = "";
+  RANGS.forEach((r, i) => {
+    const d = document.createElement("div"); d.className = "rang";
+    if (i === 2) d.appendChild(touche("⌫ EFFACER", "Retour", "effacer"));
+    [...r].forEach(l => d.appendChild(touche(l, l)));
+    if (i === 2) d.appendChild(touche("VALIDER ✓", "Entree", "valider"));
+    c.appendChild(d);
+  });
+}
+function touche(txt, val, extra) {
+  const b = document.createElement("button");
+  b.className = "touche" + (extra ? " large " + extra : "");
+  b.textContent = txt; b.dataset.k = val;
+  b.addEventListener("click", () => entree(val));
+  return b;
+}
+
+function construireGrille(N) {
+  const t = Math.min(62, Math.floor((Math.min(window.innerWidth, 560) - 40) / N) - 3);
+  const g = $("grille");
+  g.style.setProperty("--t", t + "px");
+  g.style.gridTemplateColumns = `repeat(${N}, ${t}px)`;
+  g.innerHTML = "";
+  for (let i = 0; i < N * N; i++) {
+    const c = document.createElement("div");
+    c.className = "case"; c.innerHTML = '<span class="l"></span>';
+    g.appendChild(c);
+  }
+  const cur = document.createElement("div"); cur.id = "curseur"; g.appendChild(cur);
+}
+function cases(r) { return [...$("grille").children].slice(r * vue.N, r * vue.N + vue.N); }
+function poserCase(c, lettre, classe) {
+  c.classList.remove("rouge", "jaune", "indice", "active", "passee", "revele");
+  c.querySelector(".l").textContent = lettre || "";
+  if (classe) classe.split(" ").forEach(x => x && c.classList.add(x));
+}
+function messageLocal(txt, cls) { const m = $("message"); m.textContent = txt; m.className = cls || ""; }
+
+function rendre(s) {
+  if (!s) return;
+  if (vue.animEnCours) { vue.enAttente = s; return; }
+
+  // Nouvelle manche ?
+  if (s.manche !== vue.manche || s.N !== vue.N) {
+    vue.manche = s.manche; vue.N = s.N; vue.lignesVues = 0;
+    vue.erreur = s.erreur; vue.evt = s.evt.n;
+    construireGrille(s.N); construireClavier();
+  }
+
+  // Nouvelle ligne validée à animer ?
+  if (s.lignes.length > vue.lignesVues) {
+    for (let r = vue.lignesVues; r < s.lignes.length - 1; r++) dessinerLigneFinie(r, s.lignes[r]);
+    const der = s.lignes.length - 1, L = s.lignes[der];
+    vue.lignesVues = s.lignes.length;
+    if (L.m) { animerLigne(der, L, s); return; }
+    dessinerLigneFinie(der, L);
+  }
+
+  dessinerJoueurs(s);
+  $("info-lettres").textContent = s.N + " lettres";
+  $("info-essais").textContent = "Essai " + Math.min(s.lignes.length + 1, s.N) + " / " + s.N;
+
+  // Ligne en cours
+  const r = s.lignes.length;
+  if (r < s.N) {
+    if (s.fini) {
+      cases(r).forEach((c, i) => poserCase(c, s.solLigne && s.cible ? s.cible[i] : "", s.solLigne ? "rouge" : ""));
+    } else if (s.attente) {
+      cases(r).forEach(c => poserCase(c, "", ""));
+    } else {
+      const saisie = (mode === "invite" && s.actif === 1) ? (saisieLoc || s.l0) : s.saisie;
+      cases(r).forEach((c, i) => {
+        if (i === 0) return poserCase(c, s.l0, "rouge");
+        if (i < saisie.length) return poserCase(c, saisie[i], i === saisie.length ? "active" : "");
+        poserCase(c, s.connues[i] || "", (s.connues[i] ? "indice" : "") + (i === saisie.length ? " active" : ""));
+      });
+    }
+  }
+  for (let rr = r + 1; rr < s.N; rr++) cases(rr).forEach(c => poserCase(c, "", ""));
+
+  // Clavier coloré
+  majClavier(s);
+
+  // Message, secousse, sons d'événements
+  messageLocal(s.msg, s.cls);
+  if (s.erreur !== vue.erreur) {
+    vue.erreur = s.erreur;
+    if (r < s.N) cases(r).forEach(c => { c.classList.remove("ligne-erreur"); void c.offsetWidth; c.classList.add("ligne-erreur"); });
+  }
+  if (s.evt.n !== vue.evt) {
+    vue.evt = s.evt.n;
+    if (s.evt.t === "temps") jouerNote(196, 0.5, "sawtooth");
+    if (s.evt.t === "aide") jouerNote(NOTES.R);
+  }
+
+  // Boutons
+  const monTour = mode === "solo" || s.actif === monIndex();
+  $("aide").disabled = s.fini || s.attente || !monTour;
+  $("solution").disabled = s.fini || s.attente;
+  $("rejouer").style.display = mode === "invite" ? "none" : "";
+  $("clavier").classList.toggle("inactif", !monTour || s.fini || s.attente);
+
+  // Chrono
+  if (s.chrono.seq !== vue.chronoSeq) {
+    vue.chronoSeq = s.chrono.seq;
+    if (s.chrono.on && !s.fini && !s.attente) demarrerChronoLocal(s.chrono.reste);
+    else { arreterChronoLocal(); dessinerChrono(TEMPS - (s.fini || s.attente ? TEMPS : s.chrono.reste)); }
+  }
+  if (s.attente) dessinerChrono(0);
+}
+
+function dessinerJoueurs(s) {
+  const z = $("joueurs"); z.innerHTML = "";
+  for (let j = 0; j < s.nbJ; j++) {
+    const d = document.createElement("div");
+    d.className = "joueur" + (j === s.actif && !s.fini && !s.attente ? " actif" : "");
+    d.innerHTML = '<span class="nom"></span><span class="score"></span>';
+    const moi = mode !== "solo" && j === monIndex();
+    d.querySelector(".nom").textContent = s.noms[j] + (moi ? " (vous)" : "");
+    d.querySelector(".score").textContent = s.scores[j];
+    z.appendChild(d);
+  }
+}
+
+function dessinerLigneFinie(r, L) {
+  const row = cases(r);
+  if (L.m) row.forEach((c, i) => poserCase(c, L.m[i], L.r[i] === "R" ? "rouge" : L.r[i] === "J" ? "jaune" : ""));
+  else row.forEach((c, i) => { const x = L.l[i] !== "." ? L.l[i] : ""; poserCase(c, x, (x ? "rouge " : "") + "passee"); });
+}
+
+function animerLigne(r, L, s) {
+  vue.animEnCours = true;
+  arreterChronoLocal();
+  const row = cases(r);
+  row.forEach((c, i) => poserCase(c, L.m[i], ""));
+  for (let i = 0; i < s.N; i++) {
+    setTimeout(() => {
+      const c = row[i];
+      placerCurseur(c);
+      jouerNote(NOTES[L.r[i]]);
+      poserCase(c, L.m[i], L.r[i] === "R" ? "rouge" : L.r[i] === "J" ? "jaune" : "");
+      void c.offsetWidth; c.classList.add("revele");
+    }, i * PAS);
+  }
+  setTimeout(() => {
+    placerCurseur(null);
+    vue.animEnCours = false;
+    const suite = vue.enAttente || s; vue.enAttente = null;
+    rendre(suite);
+  }, s.N * PAS + 60);
+}
+
+function majClavier(s) {
+  const etat = {}, rang = { absente: 0, jaune: 1, rouge: 2 };
+  s.lignes.forEach(L => {
+    if (!L.m) return;
+    for (let i = 0; i < L.m.length; i++) {
+      const n = L.r[i] === "R" ? "rouge" : L.r[i] === "J" ? "jaune" : "absente";
+      if (!etat[L.m[i]] || rang[n] > rang[etat[L.m[i]]]) etat[L.m[i]] = n;
+    }
+  });
+  document.querySelectorAll(".touche").forEach(b => {
+    b.classList.remove("absente", "jaune", "rouge");
+    if (etat[b.dataset.k]) b.classList.add(etat[b.dataset.k]);
+  });
+}
+
 function placerCurseur(c) {
   const cur = $("curseur");
+  if (!cur) return;
   if (!c) { cur.style.display = "none"; return; }
   cur.style.width = c.offsetWidth + "px"; cur.style.height = c.offsetHeight + "px";
   cur.style.left = c.offsetLeft + "px"; cur.style.top = c.offsetTop + "px";
   cur.style.display = "block";
 }
 
-// ---------- Chrono 30 s ----------
-function demarrerChrono() {
-  chronoDebut = performance.now(); chronoActif = true;
+/* ======================================================================
+   CHRONO (affichage local ; seule l'autorité déclenche « temps écoulé »)
+   ====================================================================== */
+let chronoDebut = 0, chronoActif = false, chronoRAF = null, dernierTic = -1;
+function demarrerChronoLocal(reste) {
+  chronoDebut = performance.now() - (TEMPS - reste) * 1000;
+  chronoActif = true; dernierTic = -1;
   cancelAnimationFrame(chronoRAF);
   chronoRAF = requestAnimationFrame(boucleChrono);
 }
-function arreterChrono() { chronoActif = false; cancelAnimationFrame(chronoRAF); }
+function arreterChronoLocal() { chronoActif = false; cancelAnimationFrame(chronoRAF); $("chrono").classList.remove("urgent"); }
+function ecouleLocal() { return chronoActif ? (performance.now() - chronoDebut) / 1000 : 0; }
 function dessinerChrono(ecoule) {
-  const f = Math.min(ecoule / TEMPS, 1), ang = f * 360;
+  const f = Math.min(Math.max(ecoule, 0) / TEMPS, 1), ang = f * 360;
   $("aiguille").setAttribute("transform", `rotate(${ang} 50 50)`);
   const reste = Math.max(0, Math.ceil(TEMPS - ecoule));
   $("chrono-txt").textContent = reste;
-  // secteur écoulé
   const a = (ang - 90) * Math.PI / 180, x = 50 + 40 * Math.cos(a), y = 50 + 40 * Math.sin(a);
   $("secteur").setAttribute("d", f <= 0 ? "" : f >= 1
     ? "M50 10 A40 40 0 1 1 49.99 10 Z"
     : `M50 50 L50 10 A40 40 0 ${ang > 180 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`);
   $("chrono").classList.toggle("urgent", reste <= 5 && chronoActif);
 }
-let dernierTic = -1;
 function boucleChrono(now) {
   if (!chronoActif) return;
   const ecoule = (now - chronoDebut) / 1000;
   dessinerChrono(ecoule);
   const reste = Math.ceil(TEMPS - ecoule);
   if (reste <= 5 && reste > 0 && reste !== dernierTic) { dernierTic = reste; jouerNote(880, 0.06, "square"); }
-  if (ecoule >= TEMPS) { arreterChrono(); tempsEcoule(); return; }
+  if (ecoule >= TEMPS) {
+    arreterChronoLocal(); dessinerChrono(TEMPS);
+    if (mode !== "invite") tempsEcoule();
+    return;
+  }
   chronoRAF = requestAnimationFrame(boucleChrono);
 }
 
-// ---------- Actions ----------
-function action(k) {
-  initAudio();
-  if (fini || verrou) return;
-  if (k === "Entree") return valider();
-  if (k === "Retour") { if (saisie.length > 1) saisie.pop(); return dessinerLigne(); }
-  if (/^[A-Z]$/.test(k) && saisie.length < N) { saisie.push(k); dessinerLigne(); }
-}
-
-function evaluer(mot) {
-  const res = Array(N).fill("bleu"), reste = {};
-  for (let i = 0; i < N; i++) {
-    if (mot[i] === cible[i]) res[i] = "rouge";
-    else reste[cible[i]] = (reste[cible[i]] || 0) + 1;
-  }
-  for (let i = 0; i < N; i++) {
-    if (res[i] === "rouge") continue;
-    if (reste[mot[i]] > 0) { res[i] = "jaune"; reste[mot[i]]--; }
-  }
-  return res;
-}
-
-function message(txt, cls) { const m = $("message"); m.textContent = txt; m.className = cls || ""; }
-function secouer() {
-  cases(ligne).forEach(c => { c.classList.remove("ligne-erreur"); void c.offsetWidth; c.classList.add("ligne-erreur"); });
-}
-
-function valider() {
-  if (saisie.length < N) { message("Le mot doit contenir " + N + " lettres."); secouer(); return; }
-  const mot = saisie.join("");
-  if (!DICO[N].has(mot)) { message("« " + mot + " » : mot qui n'existe pas !", "perdu"); secouer(); return; }
-  message("");
-  arreterChrono(); $("chrono").classList.remove("urgent");
-  const res = evaluer(mot), row = cases(ligne);
-  verrou = true;
-  row.forEach(c => c.classList.remove("active", "indice"));
-  const PAS = DUREE_NOTE * 1000;
-  res.forEach((r, i) => {
-    setTimeout(() => {
-      const c = row[i];
-      placerCurseur(c);
-      jouerNote(NOTES[r]);
-      c.classList.remove("rouge", "jaune", "revele");
-      void c.offsetWidth;
-      if (r !== "bleu") c.classList.add(r);
-      c.classList.add("revele");
-      majTouche(mot[i], r);
-      if (r === "rouge") connues[i] = mot[i];
-    }, i * PAS);
-  });
-  setTimeout(() => {
-    placerCurseur(null);
-    verrou = false;
-    if (mot === cible) {
-      fini = true;
-      scores[actif]++;
-      const qui = nbJoueurs === 2 ? noms[actif] + " a trouvé" : "Bravo ! Vous avez trouvé";
-      message(qui + " « " + cible + " » en " + (ligne + 1) + " essai" + (ligne ? "s" : "") + " !", "gagne");
-      finManche();
-      return;
-    }
-    ligne++;
-    if (ligne >= N) { perdu(); return; }
-    saisie = [cible[0]];
-    majInfo(); dessinerLigne(); demarrerChrono();
-  }, N * PAS + 100);
-}
-
-// Ligne perdue (aide ou temps écoulé) : on passe à la ligne suivante,
-// et à 2 joueurs la main passe à l'autre joueur.
-function passerLigne(texte) {
-  arreterChrono();
-  cases(ligne).forEach((c, i) => {
-    c.classList.remove("active", "indice", "jaune", "rouge");
-    const l = c.querySelector(".l");
-    l.textContent = connues[i] || "";
-    if (connues[i]) c.classList.add("rouge");
-    c.classList.add("passee");
-  });
-  ligne++;
-  if (ligne >= N) { perdu(texte); return; }
-  if (nbJoueurs === 2) {
-    actif = 1 - actif;
-    texte += " Au tour de " + noms[actif] + ".";
-  } else {
-    texte += " Ligne suivante.";
-  }
-  message(texte);
-  saisie = [cible[0]];
-  dessinerJoueurs(); majInfo(); dessinerLigne(); demarrerChrono();
-}
-
-function tempsEcoule() {
-  if (fini) return;
-  jouerNote(196, 0.5, "sawtooth");
-  if (verrou) return;
-  passerLigne("Temps écoulé !");
-}
-
-function aide() {
-  if (fini || verrou) return;
-  initAudio();
-  if (ligne >= N - 1) { message("Plus assez d'essais pour demander une aide."); return; }
-  const i = connues.findIndex(x => !x);
-  if (i < 0) { message("Toutes les lettres sont déjà trouvées !"); return; }
-  connues[i] = cible[i];
-  jouerNote(NOTES.rouge);
-  passerLigne("Aide : la lettre n°" + (i + 1) + " est « " + cible[i] + " ».");
-}
-
-function solution() {
-  if (fini) return;
-  if (verrou) return;
-  arreterChrono();
-  fini = true;
-  if (ligne < N) cases(ligne).forEach((c, i) => {
-    c.classList.remove("active", "indice", "jaune");
-    c.classList.add("rouge");
-    c.querySelector(".l").textContent = cible[i];
-  });
-  message("La solution était « " + cible + " ».", "perdu");
-  finManche();
-}
-
-function perdu(prefixe) {
-  fini = true;
-  message((prefixe ? prefixe + " " : "") + "Perdu ! Le mot était « " + cible + " ».", "perdu");
-  finManche();
-}
-
-function finManche() {
-  arreterChrono();
-  $("chrono").classList.remove("urgent");
-  premierJoueur = nbJoueurs === 2 ? 1 - premierJoueur : 0;
-  dessinerJoueurs();
-}
-
-function majTouche(l, r) {
-  const rang = { absente: 0, jaune: 1, rouge: 2 };
-  const nouv = r === "bleu" ? "absente" : r;
-  if (etatTouches[l] && rang[etatTouches[l]] >= rang[nouv]) return;
-  etatTouches[l] = nouv;
-  const b = document.querySelector(`.touche[data-k="${l}"]`);
-  if (b) { b.classList.remove("absente", "jaune", "rouge"); b.classList.add(nouv); }
-}
-
-document.addEventListener("keydown", e => {
-  if ($("jeu").style.display !== "flex" || e.ctrlKey || e.metaKey || e.altKey) return;
-  if (document.activeElement && document.activeElement.tagName === "INPUT") return;
-  if (e.key === "Enter") { e.preventDefault(); action("Entree"); }
-  else if (e.key === "Backspace") { e.preventDefault(); action("Retour"); }
-  else {
-    const k = e.key.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase();
-    if (/^[A-Z]$/.test(k)) action(k);
-  }
-});
-
-document.querySelectorAll(".btn-nb").forEach(b => b.addEventListener("click", () => commencerPartie(+b.dataset.n)));
-$("aide").addEventListener("click", e => { e.currentTarget.blur(); aide(); });
-$("solution").addEventListener("click", e => { e.currentTarget.blur(); solution(); });
-$("rejouer").addEventListener("click", e => { e.currentTarget.blur(); demarrer(N); });
-$("changer").addEventListener("click", () => {
-  arreterChrono(); fini = true;
-  $("jeu").style.display = "none"; $("choix").style.display = "flex";
-});
+choisirMode("solo");
 dessinerChrono(0);
 </script>
 </body>
 </html>
-
