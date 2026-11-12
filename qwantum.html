@@ -102,7 +102,7 @@
   .menu{max-width:760px;margin:40px auto;text-align:center}
   .menu h2{font-size:30px;font-weight:600;margin:0 0 6px}
   .menu p.sub{color:#666;margin:0 0 26px}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
   @media(max-width:640px){.cards{grid-template-columns:1fr}}
   .card{background:#fff;border:3px solid transparent;border-radius:20px;padding:26px 22px;cursor:pointer;text-align:left;
         box-shadow:0 6px 20px rgba(0,0,0,.08);font-family:inherit;transition:transform .12s,border-color .12s}
@@ -130,11 +130,19 @@
   .setdice .die{width:52px;height:52px}
   .setdice .die .pip{width:38px;height:38px;font-size:22px}
   .setdice .die.white .pip{font-size:28px}
-  .cdot{width:22px;height:22px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer;padding:0}
   .dlabel{font-size:12px;color:#888;height:22px;line-height:22px}
   .sumr{display:flex;align-items:center;gap:8px}
   .ins{font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;padding:4px 9px;background:#fff;color:#333;cursor:pointer}
   .ins:hover{background:#fffbe0}
+
+  /* Réseau */
+  .netcode{font-size:52px;font-weight:700;letter-spacing:10px;color:#4d7a2e;text-align:center;margin:6px 0 4px}
+  .lobby ul{list-style:none;padding:0;margin:8px 0 18px}
+  .lobby li{padding:8px 12px;border-radius:10px;background:#f1f5ec;margin-bottom:6px;display:flex;justify-content:space-between}
+  .notice{background:#fff4d6;border:2px solid #f3b600;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:15px}
+  .netbadge{display:inline-block;background:#4d7a2e;color:#fff;border-radius:8px;padding:2px 8px;font-size:13px;margin-left:6px;vertical-align:middle}
+  .tab.gone{opacity:.45;text-decoration:line-through}
+  .card small{display:block;margin-top:8px;color:#4d7a2e;font-weight:500}
 </style>
 </head>
 <body>
@@ -165,72 +173,296 @@ const DICE_FACES = [
 const face = (die, f) => ({f, v:DICE_FACES[die][f].v, c:DICE_FACES[die][f].c});
 const MIN_SUM = 2;  // 1 + 1 au minimum
 const MAX_SUM = 6 + DICE_FACES.reduce((a,d)=>a+Math.max(...d.map(x=>x.v)),0); // 6 + plus grande face de chaque dé
+const MAX_PLAYERS = 5;
 
 let S = null;          // partie en cours
 let screen = 'menu';   // 'menu' | 'setup' | 'game'
-let setupMode = 'auto';
+let setupMode = 'solo';
 let editRow = null;    // mode feuille : ligne en cours de saisie
 let renaming = null;   // joueur en cours de renommage
-const cleanName = (x, i) => (x || '').replace(/[<>&"]/g, '').trim().slice(0, 20) || `Joueur ${i+1}`;
 let sheetErr = '';
 let lastRaw = '';
+const cleanText = x => String(x ?? '').replace(/[<>&"]/g, '').slice(0, 160);
+const cleanName = (x, i) => cleanText(x).trim().slice(0, 20) || `Joueur ${i+1}`;
 const $ = s => document.querySelector(s);
 const app = $('#app');
 
-function save(){ try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){} }
+function save(){
+  if (isNet()){ if (NET && NET.role === 'host') broadcast(); return; }
+  try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){}
+}
 function load(){ try{ return JSON.parse(localStorage.getItem('qwantum')); }catch(e){ return null; } }
+function rememberName(n){ try{ localStorage.setItem('qwantum-name', n); }catch(e){} }
+function lastName(){ try{ return localStorage.getItem('qwantum-name') || ''; }catch(e){ return ''; } }
+const emptyRows = () => [0,1,2,3].map(()=>Array(6).fill(null));
+function newGame(mode, names, extra){
+  S = Object.assign({ mode,
+        players: names.map(name=>({name, rows:emptyRows(), pen:0})),
+        cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], done:[], history:[],
+        over:false, msg:'', rollN:0 }, extra||{});
+  editRow = null; sheetErr = ''; renaming = null;
+}
+
+/* =================== Réseau (capacité « room » de la page claude.ai) =================== */
+let roomP = null;      // promesse de la salle principale
+let NET = null;        // {role:'host'|'guest', code, room, unsub:[], seen:{}, seq, myPeer, name}
+let netNotice = '';
+let localView = 0, lastCurSeen = null, shownRoll = null, netModalHidden = false;
+const isNet = () => !!(S && S.mode === 'net');
+
+function getRoom(){
+  if (!roomP){
+    roomP = (typeof claude !== 'undefined' && claude && typeof claude.use === 'function')
+      ? claude.use('room').catch(()=>null) : Promise.resolve(null);
+  }
+  return roomP;
+}
+function genCode(){
+  const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  return Array.from({length:4},()=>A[Math.floor(Math.random()*A.length)]).join('');
+}
+async function connectRoom(code){
+  const lobby = await getRoom();
+  if (!lobby) throw new Error('unavailable');
+  return lobby.join('qwantum-' + code.toLowerCase());
+}
+function myIndex(){
+  if (!isNet() || !NET) return -1;
+  if (NET.role === 'host') return 0;
+  return NET.myPeer ? S.players.findIndex(p=>p.peer===NET.myPeer) : -1;
+}
+function leaveNet(){
+  if (NET){
+    (NET.unsub||[]).forEach(u=>{ try{u();}catch(e){} });
+    try{ NET.room.leave(); }catch(e){}
+    clearTimeout(NET.timer);
+  }
+  NET = null; netNotice = ''; netModalHidden = false;
+  if (isNet()) S = null;
+}
+
+/* ----- Hôte : garde l'état de la partie et le partage dans sa présence ----- */
+function packState(){
+  return { code:S.code, mode:'net',
+    players:S.players.map(p=>({name:p.name, peer:p.peer, rows:p.rows, pen:p.pen, gone:!!p.gone})),
+    cur:S.cur, dice:S.dice, phase:S.phase, usedColor:S.usedColor, wrote:S.wrote, done:S.done,
+    over:S.over, msg:S.msg, rollN:S.rollN };
+}
+function broadcast(){
+  if (!NET || !NET.room) return;
+  NET.room.presence({role:'host', st:packState()}).catch(()=>{});
+}
+async function hostGame(name){
+  const code = genCode();
+  leaveNet();
+  let room;
+  try{ room = await connectRoom(code); }
+  catch(e){ netNotice = "Impossible d'ouvrir une partie en réseau ici."; render(); return; }
+  NET = {role:'host', code, room, unsub:[], seen:{}};
+  newGame('net', [name], {code, phase:'lobby'});
+  S.players[0].peer = 'host';
+  localView = 0; lastCurSeen = null;
+  NET.unsub.push(room.onPeers(hostOnPeers));
+  screen = 'game'; save(); render();
+}
+function hostOnPeers(ch){
+  if (!isNet() || !NET || NET.role !== 'host') return;
+  let changed = false;
+  for (const p of ch.peers){
+    if (p.sameTab || p.kind !== 'viewer') continue;
+    const pr = p.presence || {};
+    if (pr.role !== 'player') continue;
+    let i = S.players.findIndex(q=>q.peer===p.peer);
+    if (i === -1 && S.phase === 'lobby' && S.players.length < MAX_PLAYERS){
+      S.players.push({name:cleanName(pr.name, S.players.length), peer:p.peer, rows:emptyRows(), pen:0});
+      i = S.players.length - 1; changed = true;
+    }
+    if (i === -1) continue;
+    const nm = cleanName(pr.name, i);
+    if (nm !== S.players[i].name){ S.players[i].name = nm; changed = true; }
+    const a = pr.act;
+    if (a && typeof a === 'object' && Number.isInteger(a.n) && a.n > (NET.seen[p.peer]||0)){
+      NET.seen[p.peer] = a.n;
+      applyAction(i, a);
+    }
+  }
+  for (const p of ch.left){
+    const i = S.players.findIndex(q=>q.peer===p.peer);
+    if (i <= 0) continue;
+    if (S.phase === 'lobby') S.players.splice(i, 1);
+    else { S.players[i].gone = true; S.msg = `${S.players[i].name} a quitté la partie.`; handleGone(); }
+    changed = true;
+  }
+  if (changed){ save(); render(); }
+}
+function handleGone(){
+  if (S.phase === 'lobby' || S.over) return;
+  if (S.players[S.cur].gone && (S.phase === 'roll' || S.phase === 'active')) advanceTurn();
+  else checkAutoEnd();
+}
+
+/* ----- Invité : reçoit l'état de l'hôte et lui envoie ses actions ----- */
+async function joinGame(code, name){
+  leaveNet(); S = null;
+  let room;
+  try{ room = await connectRoom(code); }
+  catch(e){ netNotice = "Impossible de rejoindre une partie en réseau ici."; render(); return; }
+  NET = {role:'guest', code, room, unsub:[], seq:0, myPeer:null, name};
+  netNotice = ''; localView = 0; lastCurSeen = null;
+  room.presence({role:'player', name}).catch(()=>{});
+  NET.unsub.push(room.onPeers(guestOnPeers));
+  NET.timer = setTimeout(()=>{ if (NET && NET.role==='guest' && !S){ netNotice = `Aucune partie trouvée avec le code ${code}. Vérifie le code avec l'hôte.`; render(); } }, 7000);
+  screen = 'game'; render();
+}
+const int = (x, lo, hi, d) => Number.isInteger(x) && x >= lo && x <= hi ? x : d;
+function sanitize(st){
+  const players = (Array.isArray(st.players) ? st.players : []).slice(0, MAX_PLAYERS).map((p,i)=>({
+    name: cleanName(p && p.name, i), peer: String(p && p.peer || '').slice(0, 64), gone: !!(p && p.gone),
+    pen: int(p && p.pen, 0, 5, 0),
+    rows: [0,1,2,3].map(r=>[0,1,2,3,4,5].map(k=>{ const v = p && p.rows && p.rows[r] && p.rows[r][k]; return Number.isInteger(v) ? v : null; }))
+  }));
+  const d = st.dice;
+  const dice = d && typeof d === 'object' ? {
+    white: int(d.white, 1, 6, 1),
+    colored: [0,1,2,3,4,5].map(i=>{ const c = d.colored && d.colored[i]; return face(i, int(c && c.f, 0, 5, 0)); })
+  } : null;
+  const ints = a => Array.isArray(a) ? a.filter(x=>Number.isInteger(x)).slice(0, 10) : [];
+  return { mode:'net', code: cleanText(st.code).slice(0, 8), players,
+    cur: int(st.cur, 0, Math.max(0, players.length-1), 0), dice,
+    phase: ['lobby','roll','active','others'].includes(st.phase) ? st.phase : 'lobby',
+    usedColor: int(st.usedColor, 0, 3, null), wrote: ints(st.wrote), done: ints(st.done),
+    over: !!st.over, msg: cleanText(st.msg), rollN: int(st.rollN, 0, 1e9, 0), history: [], view: 0 };
+}
+function guestOnPeers(ch){
+  if (!NET || NET.role !== 'guest') return;
+  const me = ch.peers.find(p=>p.sameTab); if (me) NET.myPeer = me.peer;
+  const host = ch.peers.find(p=>!p.sameTab && p.presence && p.presence.role==='host' && p.presence.st);
+  if (!host){
+    if (S && !S.over){ netNotice = "L'hôte a quitté la partie : elle ne peut pas continuer."; render(); }
+    return;
+  }
+  const wasOver = S && S.over;
+  S = sanitize(host.presence.st);
+  if (S.over && !wasOver) netModalHidden = false;
+  if (S.phase !== 'lobby' && myIndex() === -1) netNotice = 'La partie a déjà commencé : tu la regardes sans jouer.';
+  else netNotice = '';
+  if (screen === 'game') render();
+}
+function sendAct(a){
+  NET.seq++;
+  NET.room.presence({act:Object.assign({}, a, {n:NET.seq})}).catch(()=>{});
+}
+
+/* =================== Actions de jeu (communes aux modes à dés) =================== */
+// pi : joueur qui agit (null = cet appareil joue pour tout le monde)
+function act(a){
+  if (isNet()){
+    if (myIndex() === -1) return;
+    if (NET.role === 'guest'){ sendAct(a); return; }
+    applyAction(0, a); return;
+  }
+  applyAction(null, a);
+}
+function applyAction(pi, a){
+  if (!S || S.over) return;
+  if (a.t === 'roll'){ if (pi === null || pi === S.cur) roll(); }
+  else if (a.t === 'write'){ const r = a.r; if (Number.isInteger(r) && r >= 0 && r < 4) write(pi === null ? S.view : pi, r); }
+  else if (a.t === 'pass'){
+    if (pi === null || pi === S.cur){ passActive(); return; }
+    if (S.phase === 'others' && !S.wrote.includes(pi) && !S.done.includes(pi)){
+      S.done.push(pi); S.msg = `${S.players[pi].name} n'inscrit rien ce tour-ci.`;
+      save(); render(); checkAutoEnd();
+    }
+  }
+  else if (a.t === 'next'){ if (pi === null || pi === S.cur) endTurn(); }
+}
+function othersPending(){
+  return S.players.map((p,i)=>i).filter(i=>i!==S.cur && !S.players[i].gone && !S.wrote.includes(i) && !S.done.includes(i));
+}
+function checkAutoEnd(){
+  if (isNet() && S.phase === 'others' && !othersPending().length) endTurn();
+}
 
 /* ---------- Menu ---------- */
 function renderMenu(){
-  const canResume = S && !S.over;
+  const canResume = (S && !S.over && S.mode !== 'net') || (NET && (S || NET.role==='guest'));
+  const resumeLabel = NET ? 'partie en réseau' : S && S.mode==='sheet' ? 'feuille de score' : 'jeu automatique';
+  const card = (mode, ico, title, txt, note) => `
+      <button class="card" data-mode="${mode}">
+        <div class="ico">${ico}</div><h3>${title}</h3><p>${txt}</p>${note?`<small>${note}</small>`:''}
+      </button>`;
   app.innerHTML = `
   <div class="menu">
     <h2>Comment veux-tu jouer ?</h2>
     <p class="sub">Choisis un mode pour commencer une partie.</p>
     <div class="cards">
-      <button class="card" data-mode="auto">
-        <div class="ico">🎲</div>
-        <h3>Jeu automatique</h3>
-        <p>La page lance les 7 dés au hasard, calcule les sommes par couleur et propose les cases possibles à chaque joueur.</p>
-      </button>
-      <button class="card" data-mode="sheet">
-        <div class="ico">📝</div>
-        <h3>Feuille de score</h3>
-        <p>Tu joues avec tes vrais dés et tu écris les chiffres que tu veux dans les cases. La feuille vérifie les règles et calcule le score.</p>
-      </button>
+      ${card('solo','👤','Solo','Tu joues seul : la page lance les dés et tu cherches le meilleur score.')}
+      ${card('local','👥','Même appareil','2 à 5 joueurs autour du même écran, chacun son tour.')}
+      ${card('host','📡','Réseau – héberger','Crée une partie et donne son code aux autres joueurs, chacun sur son appareil.')}
+      ${card('join','🔗','Réseau – rejoindre','Tape le code donné par l’hôte pour jouer depuis ton appareil.')}
+      ${card('sheet','📝','Feuille de score','Tu joues avec tes vrais dés et tu notes les chiffres. La feuille vérifie les règles.')}
     </div>
-    ${canResume ? `<div class="resume"><button class="btn light" id="resume">Reprendre la partie en cours (${S.mode==='sheet'?'feuille de score':'jeu automatique'})</button></div>` : ''}
+    ${canResume ? `<div class="resume"><button class="btn light" id="resume">Reprendre la ${resumeLabel}</button></div>` : ''}
   </div>`;
-  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ setupMode=b.dataset.mode; screen='setup'; render(); });
+  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ setupMode=b.dataset.mode; netNotice=''; screen='setup'; render(); });
   const r = $('#resume'); if (r) r.onclick = ()=>{ screen='game'; render(); };
 }
 
 /* ---------- Mise en place ---------- */
 function renderSetup(){
+  const m = setupMode;
+  const titles = {solo:'👤 Solo', local:'👥 Même appareil', sheet:'📝 Feuille de score',
+                  host:'📡 Réseau – héberger', join:'🔗 Réseau – rejoindre'};
+  const net = m === 'host' || m === 'join';
+  let body = '';
+  if (m === 'solo' || net){
+    body = `<label>Ton nom</label><input id="myName" maxlength="20" value="${cleanName(lastName(), 0)}">`;
+    if (m === 'join') body += `<label>Code de la partie</label><input id="code" maxlength="6" placeholder="ex. 7KQ2" autocomplete="off" style="text-transform:uppercase;letter-spacing:4px;font-size:22px">`;
+    if (net) body += `<div class="msg" id="netInfo" style="margin-top:12px">Vérification de la connexion…</div>`;
+  } else {
+    const opts = m === 'local' ? [2,3,4,5] : [1,2,3,4,5];
+    body = `<label>Nombre de joueurs</label>
+      <select id="np">${opts.map(n=>`<option ${n==2?'selected':''}>${n}</option>`).join('')}</select>
+      <div id="names"></div>`;
+  }
   app.innerHTML = `
   <div class="setup">
-    <h2>${setupMode==='sheet'?'📝 Feuille de score':'🎲 Jeu automatique'}</h2>
-    <label>Nombre de joueurs</label>
-    <select id="np">${[1,2,3,4,5].map(n=>`<option ${n==2?'selected':''}>${n}</option>`).join('')}</select>
-    <div id="names"></div>
+    <h2>${titles[m]}</h2>
+    ${netNotice ? `<div class="notice">${netNotice}</div>` : ''}
+    ${body}
     <div style="margin-top:20px;display:flex;gap:10px">
       <button class="btn light" id="back">◀ Retour</button>
-      <button class="btn" id="start">Commencer</button>
+      <button class="btn" id="start" ${net?'disabled':''}>${m==='host'?'Créer la partie':m==='join'?'Rejoindre':'Commencer'}</button>
     </div>
   </div>`;
-  const drawNames = () => {
-    const n = +$('#np').value;
-    $('#names').innerHTML = Array.from({length:n},(_,i)=>
-      `<label>Joueur ${i+1}</label><input value="Joueur ${i+1}" data-i="${i}">`).join('');
-  };
-  $('#np').onchange = drawNames; drawNames();
-  $('#back').onclick = ()=>{ screen='menu'; render(); };
+  if ($('#np')){
+    const drawNames = () => {
+      const n = +$('#np').value;
+      $('#names').innerHTML = Array.from({length:n},(_,i)=>
+        `<label>Joueur ${i+1}</label><input value="Joueur ${i+1}" maxlength="20" data-i="${i}">`).join('');
+    };
+    $('#np').onchange = drawNames; drawNames();
+  }
+  $('#back').onclick = ()=>{ netNotice=''; screen='menu'; render(); };
+  if (net){
+    getRoom().then(r=>{
+      const info = $('#netInfo'); if (!info) return;
+      if (r){ info.textContent = m==='host' ? 'Prêt : un code sera créé pour les autres joueurs.' : 'Prêt : tape le code de l’hôte.'; $('#start').disabled = false; }
+      else info.innerHTML = '<span class="msg err">Le jeu en réseau marche seulement sur la page Qwantum publiée sur claude.ai, ouverte par des personnes avec qui elle est partagée et connectées à leur compte.</span>';
+    });
+  }
   $('#start').onclick = () => {
+    if (m === 'solo' || net){
+      const name = cleanName($('#myName').value, 0); rememberName(name);
+      if (m === 'solo'){ leaveNet(); newGame('auto', [name]); screen='game'; save(); render(); return; }
+      if (m === 'host'){ $('#start').disabled = true; hostGame(name); return; }
+      const code = cleanText($('#code').value).toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if (code.length < 3){ $('#netInfo').innerHTML = '<span class="msg err">Tape le code donné par l’hôte.</span>'; return; }
+      $('#start').disabled = true; joinGame(code, name); return;
+    }
+    leaveNet();
     const names = [...document.querySelectorAll('#names input')].map((x,i)=>cleanName(x.value, i));
-    S = { mode:setupMode,
-          players: names.map(name=>({name, rows:[0,1,2,3].map(()=>Array(6).fill(null)), pen:0})),
-          cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], history:[], over:false, msg:'' };
-    editRow = null; sheetErr = '';
+    newGame(m === 'local' ? 'auto' : 'sheet', names);
     screen = 'game'; save(); render();
   };
 }
@@ -261,7 +493,7 @@ function isFinished(){
   return S.players.some(q => q.pen>=5 || [0,1,2,3,4,5].every(j=>columnValue(q,j)!==null));
 }
 
-/* ---------- Mode automatique ---------- */
+/* ---------- Jeu avec dés automatiques (solo, même appareil, réseau) ---------- */
 function colorSum(c){
   if (!S.dice) return null;
   const ds = S.dice.colored.filter(d=>d.c===c);
@@ -269,9 +501,9 @@ function colorSum(c){
   return { total: S.dice.white + ds.reduce((a,d)=>a+d.v,0), parts:[S.dice.white, ...ds.map(d=>d.v)] };
 }
 function candidate(pi, r){
-  if (!S.dice || S.over) return null;
+  if (!S.dice || S.over || pi < 0) return null;
   if (pi === S.cur){ if (S.phase !== 'active') return null; }
-  else if (S.phase !== 'others' || S.wrote.includes(pi) || r === S.usedColor) return null;
+  else if (S.phase !== 'others' || S.wrote.includes(pi) || S.done.includes(pi) || r === S.usedColor) return null;
   const p = S.players[pi];
   const sum = colorSum(r); if (!sum) return null;
   const row = p.rows[r];
@@ -283,13 +515,18 @@ function randomDice(){
   return { white: 1+Math.floor(Math.random()*6),
     colored: Array.from({length:6},(_,d)=>face(d, Math.floor(Math.random()*6))) };
 }
+function startTurnWith(dice){
+  S.dice = dice; S.phase = 'active'; S.usedColor = null; S.wrote = []; S.done = []; S.msg = '';
+  S.rollN = (S.rollN||0) + 1;
+}
 function roll(){
   if (S.phase !== 'roll' || S.over) return;
   const final = randomDice();
+  if (isNet()){ startTurnWith(final); save(); render(); return; }   // l'animation est jouée chez chacun
   let t = 0;
   const tick = setInterval(()=>{
     S.dice = randomDice(); renderDice(true);
-    if (++t > 6){ clearInterval(tick); S.dice = final; S.phase='active'; S.usedColor=null; S.wrote=[]; S.msg=''; save(); render(); }
+    if (++t > 6){ clearInterval(tick); startTurnWith(final); shownRoll = S.rollN; save(); render(); }
   }, 70);
 }
 function write(pi, r){
@@ -298,7 +535,7 @@ function write(pi, r){
   p.rows[r][c.k] = c.s; S.wrote.push(pi);
   S.msg = `${p.name} inscrit ${c.s} dans la ligne ${COLORS[r].name.toLowerCase()}.`;
   if (pi === S.cur){ S.usedColor = r; goOthers(); return; }
-  save(); render();
+  save(); render(); checkAutoEnd();
 }
 function passActive(){
   if (S.phase !== 'active') return;
@@ -308,16 +545,21 @@ function passActive(){
   goOthers();
 }
 function goOthers(){
-  if (S.players.length === 1){ endTurn(); return; }
+  if (S.players.length === 1 || (isNet() && !othersPending().length)){ endTurn(); return; }
   S.phase = 'others';
-  S.view = (S.cur+1) % S.players.length;
+  if (!isNet()) S.view = (S.cur+1) % S.players.length;
   save(); render();
 }
 function endTurn(){
   if (!S.dice) return;
+  advanceTurn();
+}
+function advanceTurn(){
   if (isFinished()){ S.over = true; save(); render(); return; }
-  S.cur = (S.cur+1) % S.players.length; S.view = S.cur;
-  S.dice = null; S.phase = 'roll'; S.usedColor = null; S.wrote = []; S.msg = '';
+  let n = S.cur;
+  for (let k=0; k<S.players.length; k++){ n = (n+1) % S.players.length; if (!S.players[n].gone) break; }
+  S.cur = n; S.view = n;
+  S.dice = null; S.phase = 'roll'; S.usedColor = null; S.wrote = []; S.done = [];
   save(); render();
 }
 
@@ -383,7 +625,7 @@ function dieHTML(v, colorHex, white, rolling){
 }
 function renderDice(rolling){
   const el = $('#dice'); if (!el) return;
-  if (!S.dice){ el.innerHTML = `<span class="placeholder">Lance les dés pour commencer le tour.</span>`; return; }
+  if (!S.dice){ el.innerHTML = `<span class="placeholder">${S.phase==='roll'?'Les dés n’ont pas encore été lancés.':''}</span>`; return; }
   el.innerHTML = dieHTML(S.dice.white,null,true,rolling) +
     S.dice.colored.map(d=>dieHTML(d.v, COLORS[d.c].hex, false, rolling)).join('');
 }
@@ -405,15 +647,18 @@ function sheetHTML(view, cellFn, readonly, extraCls){
       <div class="bottom">${bottomHTML}</div>
     </div>`;
 }
+function viewIndex(){ return isNet() ? localView : S.view; }
+function canRename(i){ return !isNet() || i === myIndex(); }
 function tabsHTML(markCur){
+  const vi = viewIndex(), me = myIndex();
   return `<div class="tabs">${S.players.map((p,i)=> renaming===i
     ? `<input class="tab rename" id="renameInput" maxlength="20" aria-label="Nouveau nom">`
-    : `<button class="tab ${i===S.view?'active':''} ${markCur&&i===S.cur?'cur':''}" data-view="${i}" title="Double-clic pour renommer">${p.name}${S.mode==='auto'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}
-    ${renaming===null?`<button class="tab pencil" id="renameBtn" title="Renommer ${S.players[S.view].name}">✎ Renommer</button>`:''}</div>`;
+    : `<button class="tab ${i===vi?'active':''} ${markCur&&i===S.cur?'cur':''} ${p.gone?'gone':''}" data-view="${i}" ${canRename(i)?'title="Double-clic pour renommer"':''}>${p.name}${isNet()&&i===me?' (toi)':''}${S.mode!=='sheet'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}
+    ${renaming===null && canRename(vi) ? `<button class="tab pencil" id="renameBtn">✎ Renommer</button>`:''}</div>`;
 }
 function scoresHTML(){
   return `<div class="scores" style="margin-top:14px"><h3>Scores</h3>
-    <table>${S.players.map(p=>`<tr><td>${p.name}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
+    <table>${S.players.map(p=>`<tr><td>${p.name}${p.gone?' (parti)':''}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
 }
 function rulesHTML(){
   const common = `
@@ -432,10 +677,43 @@ function rulesHTML(){
   return `<details class="rules"><summary>Rappel des règles</summary><ul>${S.mode==='sheet'?sheet:auto}${common}</ul></details>`;
 }
 
+function renderNetWaiting(){
+  app.innerHTML = `<div class="setup lobby">
+    <h2>🔗 Partie ${NET.code}</h2>
+    ${netNotice ? `<div class="notice">${netNotice}</div>` : '<p class="msg">Recherche de la partie…</p>'}
+    <button class="btn light" id="leaveNet">Quitter</button></div>`;
+  $('#leaveNet').onclick = ()=>{ leaveNet(); screen='menu'; render(); };
+}
+function renderLobby(){
+  const host = NET && NET.role === 'host', me = myIndex();
+  app.innerHTML = `<div class="setup lobby">
+    <h2>📡 Salle d'attente</h2>
+    ${netNotice ? `<div class="notice">${netNotice}</div>` : ''}
+    <div class="msg">Code de la partie</div>
+    <div class="netcode">${S.code}</div>
+    <p class="msg">Les autres joueurs ouvrent cette même page Qwantum, choisissent « Réseau – rejoindre » et tapent ce code.</p>
+    <h3>Joueurs (${S.players.length}/${MAX_PLAYERS})</h3>
+    <ul>${S.players.map((p,i)=>`<li><span>${p.name}${i===me?' (toi)':''}</span><span>${i===0?'hôte':''}</span></li>`).join('')}</ul>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn light" id="leaveNet">Quitter</button>
+      ${host ? `<button class="btn" id="startNet">Lancer la partie</button>` : '<span class="msg" style="align-self:center">En attente du lancement par l’hôte…</span>'}
+    </div></div>`;
+  $('#leaveNet').onclick = ()=>{ leaveNet(); screen='menu'; render(); };
+  const st = $('#startNet');
+  if (st) st.onclick = ()=>{ S.phase = 'roll'; S.cur = 0; S.msg = ''; save(); render(); };
+}
+
 function renderAuto(){
-  const cur = S.players[S.cur], view = S.players[S.view];
-  const canPlayView = (S.view === S.cur && S.phase === 'active') ||
-                      (S.view !== S.cur && S.phase === 'others' && !S.wrote.includes(S.view));
+  if (S.phase === 'lobby'){ renderLobby(); return; }
+  const net = isNet(), me = myIndex();
+  if (net && lastCurSeen !== S.cur){ lastCurSeen = S.cur; localView = me >= 0 ? me : S.cur; }
+  if (localView >= S.players.length) localView = 0;
+  const vi = viewIndex();
+  const cur = S.players[S.cur], view = S.players[vi];
+  const mine = i => !net || i === me;
+
+  const canPlayView = mine(vi) && ((vi === S.cur && S.phase === 'active') ||
+                      (vi !== S.cur && S.phase === 'others' && !S.wrote.includes(vi) && !S.done.includes(vi)));
 
   const sums = COLORS.map((c,i)=>{
     const s = colorSum(i);
@@ -444,53 +722,87 @@ function renderAuto(){
       <span>${c.name}${s?` : ${s.parts.join(' + ')}`:''}${taken?` — prise par ${cur.name}`:''}</span><b>${s?s.total:'–'}</b></div>`;
   }).join('');
 
-  const cands = [0,1,2,3].map(r=>candidate(S.view, r));
+  const cands = [0,1,2,3].map(r=>candidate(vi, r));
   const cellFn = (row,r,v,k)=>{
-    const cand = cands[r]; const isC = cand && cand.k===k;
+    const cand = cands[r]; const isC = canPlayView && cand && cand.k===k;
     return `<div class="cell ${isC?'cand':''}" ${isC?`data-write="${r}"`:''}>
       <div class="circle">${v!==null?v:(isC?cand.s:'')}</div></div>`;
   };
-
   const anyCand = cands.some(Boolean);
-  let endLabel = 'Tour suivant ▶', endCls = '', endDisabled = S.phase !== 'others' || S.over;
-  if (S.phase === 'active'){ endLabel = `Ne rien inscrire (pénalité −${Math.min(5,cur.pen+1)})`; endCls='danger'; endDisabled = S.over; }
+  const pending = S.phase === 'others' ? othersPending() : [];
 
-  let hint = S.msg ? S.msg + ' ' : '';
+  // Boutons
+  let rollOk = S.phase === 'roll' && !S.over && mine(S.cur);
+  let endLabel = 'Tour suivant ▶', endCls = '', endOk = false, endAct = 'next';
   if (S.phase === 'active'){
-    hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
-          : anyCand ? 'Clique sur une case en pointillés pour inscrire la somme.'
-          : 'Aucune case possible : tu dois prendre une pénalité.';
+    endLabel = `Ne rien inscrire (pénalité −${Math.min(5,cur.pen+1)})`; endCls = 'danger'; endAct = 'pass';
+    endOk = mine(S.cur) && !S.over;
   } else if (S.phase === 'others'){
-    const waiting = S.players.filter((p,i)=>i!==S.cur && !S.wrote.includes(i));
-    hint += `Les autres joueurs peuvent inscrire une combinaison restante (sans pénalité s'ils ne le font pas). `;
-    if (S.view === S.cur) hint += 'Choisis un autre joueur dans les onglets.';
-    else if (S.wrote.includes(S.view)) hint += `${view.name} a déjà inscrit ce tour-ci.`;
-    else if (!anyCand) hint += `Aucune case possible pour ${view.name}.`;
-    else hint += `${view.name} : clique sur une case en pointillés.`;
-    if (!waiting.length) hint += ' Tout le monde a joué : passe au tour suivant.';
+    if (!net) endOk = !S.over;
+    else if (me === S.cur){ endOk = !S.over; endLabel = pending.length ? 'Tour suivant ▶ (sans attendre)' : 'Tour suivant ▶'; }
+    else if (pending.includes(me)){ endOk = true; endLabel = 'Je n’inscris rien ce tour-ci'; endAct = 'pass'; endCls = 'light'; }
   }
+
+  // Message d'aide
+  let hint = S.msg ? S.msg + ' ' : '';
+  const names = ids => ids.map(i=>S.players[i].name).join(', ');
+  if (!net){
+    if (S.phase === 'roll') hint += `${cur.name}, lance les dés.`;
+    else if (S.phase === 'active'){
+      hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
+            : anyCand ? 'Clique sur une case en pointillés pour inscrire la somme.'
+            : 'Aucune case possible : tu dois prendre une pénalité.';
+    } else if (S.phase === 'others'){
+      hint += `Les autres joueurs peuvent inscrire une combinaison restante (sans pénalité s'ils ne le font pas). `;
+      if (S.view === S.cur) hint += 'Choisis un autre joueur dans les onglets.';
+      else if (S.wrote.includes(S.view)) hint += `${view.name} a déjà inscrit ce tour-ci.`;
+      else if (!anyCand) hint += `Aucune case possible pour ${view.name}.`;
+      else hint += `${view.name} : clique sur une case en pointillés.`;
+      if (!pending.length) hint += ' Tout le monde a joué : passe au tour suivant.';
+    }
+  } else {
+    const myCands = me >= 0 ? [0,1,2,3].some(r=>candidate(me, r)) : false;
+    if (S.phase === 'roll') hint += me === S.cur ? 'À toi : lance les dés !' : `${cur.name} va lancer les dés…`;
+    else if (S.phase === 'active'){
+      hint += me === S.cur ? (myCands ? 'Clique sur une case en pointillés de ta feuille pour inscrire la somme.' : 'Aucune case possible : tu dois prendre une pénalité.')
+                           : `${cur.name} choisit sa combinaison…`;
+    } else if (S.phase === 'others'){
+      if (me === S.cur) hint += `Les autres joueurs choisissent : ${names(pending) || 'personne'}.`;
+      else if (pending.includes(me)) hint += myCands ? 'Tu peux inscrire une combinaison restante sur ta feuille, ou ne rien inscrire.'
+                                                     : 'Aucune case possible pour toi : clique sur « Je n’inscris rien ».';
+      else hint += pending.length ? `En attente de : ${names(pending)}.` : '';
+    }
+    if (me >= 0 && vi !== me && canPlayView === false && (S.phase !== 'roll')) hint += ' (Tu regardes la feuille d’un autre joueur.)';
+  }
+
+  const rolling = S.dice && S.rollN !== shownRoll; shownRoll = S.rollN;
+  const hideModal = net ? netModalHidden : S.dismissed;
+  const title = net ? `Partie ${S.code}<span class="netbadge">réseau</span>` : (S.players.length === 1 ? 'Partie solo' : `Tour de ${cur.name}`);
 
   app.innerHTML = `
   <div class="game">
-    <section>${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
+    <section>${netNotice?`<div class="notice">${netNotice}</div>`:''}${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
     <aside class="panel">
-      <h3>Tour de ${cur.name}</h3>
+      <h3>${title}</h3>
+      ${net ? `<div class="msg">Tour de <b>${cur.name}</b>${S.cur===me?' (toi)':''}</div>` : ''}
       <div class="dice" id="dice"></div>
       <div class="sums">${sums}</div>
       <div class="turnbox">
-        <button class="btn" id="rollBtn" ${S.phase!=='roll'||S.over?'disabled':''}>🎲 Lancer les dés</button>
-        <button class="btn ${endCls}" id="endBtn" ${endDisabled?'disabled':''}>${endLabel}</button>
+        <button class="btn" id="rollBtn" ${rollOk?'':'disabled'}>🎲 Lancer les dés</button>
+        <button class="btn ${endCls}" id="endBtn" ${endOk?'':'disabled'}>${endLabel}</button>
         <div class="msg">${hint}</div>
       </div>
       ${scoresHTML()}
+      ${net ? `<div style="margin-top:12px"><button class="btn light" id="leaveNet">Quitter la partie</button></div>` : ''}
     </aside>
   </div>
-  ${S.over && !S.dismissed ? endModal() : ''}`;
+  ${S.over && !hideModal ? endModal() : ''}`;
 
-  renderDice(false);
-  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>write(S.view, +el.dataset.write));
-  $('#rollBtn').onclick = roll;
-  $('#endBtn').onclick = () => S.phase === 'active' ? passActive() : endTurn();
+  renderDice(rolling);
+  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>act({t:'write', r:+el.dataset.write}));
+  $('#rollBtn').onclick = ()=>act({t:'roll'});
+  $('#endBtn').onclick = ()=>act({t:endAct});
+  const ln = $('#leaveNet'); if (ln) ln.onclick = ()=>{ leaveNet(); screen='menu'; render(); };
 }
 
 function renderSheet(){
@@ -562,45 +874,73 @@ function renderSheet(){
 }
 
 function render(){
-  if (screen === 'menu' || !S && screen === 'game'){ screen='menu'; renderMenu(); return; }
   if (screen === 'setup'){ renderSetup(); return; }
+  if (screen === 'game' && !S && NET && NET.role === 'guest'){ renderNetWaiting(); return; }
+  if (screen === 'menu' || !S){ screen='menu'; renderMenu(); return; }
   if (S.mode === 'sheet') renderSheet(); else renderAuto();
+  if (S.phase === 'lobby') return;
   document.querySelectorAll('[data-view]').forEach(el=>{
-    el.onclick=()=>{ S.view=+el.dataset.view; S.msg=''; editRow=null; sheetErr=''; render(); };
-    el.ondblclick=()=>{ S.view=+el.dataset.view; startRename(); };
+    el.onclick=()=>{
+      const i = +el.dataset.view;
+      if (isNet()) localView = i; else { S.view = i; S.msg=''; }
+      editRow=null; sheetErr=''; render();
+    };
+    el.ondblclick=()=>{ const i = +el.dataset.view; if (!canRename(i)) return; if (isNet()) localView = i; else S.view = i; startRename(); };
   });
   const rb = $('#renameBtn'); if (rb) rb.onclick = startRename;
   const ri = $('#renameInput');
   if (ri){
     const i = renaming; ri.value = S.players[i].name; ri.focus(); ri.select();
-    const done = ok => { if (renaming!==i) return; if (ok) S.players[i].name = cleanName(ri.value, i); renaming=null; save(); render(); };
+    const done = ok => {
+      if (renaming!==i) return;
+      renaming = null;
+      if (ok){
+        const nm = cleanName(ri.value, i);
+        if (isNet() && NET.role === 'guest'){ NET.room.presence({name:nm}).catch(()=>{}); rememberName(nm); }
+        else { S.players[i].name = nm; if (isNet()) rememberName(nm); save(); }
+      }
+      render();
+    };
     ri.onkeydown = e=>{ if (e.key==='Enter'){ e.preventDefault(); done(true); } else if (e.key==='Escape') done(false); };
     ri.onblur = ()=>done(true);
   }
-  const again = $('#again'); if (again) again.onclick = ()=>{ setupMode=S.mode; S=null; save(); screen='setup'; render(); };
-  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ S=null; save(); screen='menu'; render(); };
-  const look = $('#look'); if (look) look.onclick = ()=>{ S.dismissed = true; save(); render(); };
+  const again = $('#again');
+  if (again) again.onclick = ()=>{
+    if (isNet()){            // l'hôte relance avec les mêmes joueurs
+      S.players = S.players.filter(p=>!p.gone);
+      S.players.forEach(p=>{ p.rows = emptyRows(); p.pen = 0; });
+      Object.assign(S, {cur:0, dice:null, phase:'roll', usedColor:null, wrote:[], done:[], over:false, msg:'Nouvelle partie !'});
+      save(); render(); return;
+    }
+    setupMode = S.mode === 'sheet' ? 'sheet' : (S.players.length === 1 ? 'solo' : 'local');
+    S = null; save(); screen = 'setup'; render();
+  };
+  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ if (isNet()) leaveNet(); else { S=null; save(); } screen='menu'; render(); };
+  const look = $('#look'); if (look) look.onclick = ()=>{ if (isNet()) netModalHidden = true; else { S.dismissed = true; save(); } render(); };
 }
-function startRename(){ editRow=null; sheetErr=''; renaming=S.view; render(); }
+function startRename(){ editRow=null; sheetErr=''; renaming = viewIndex(); render(); }
 function endModal(){
   const ranked = [...S.players].sort((a,b)=>score(b)-score(a));
+  const canAgain = !isNet() || (NET && NET.role === 'host');
   return `<div class="overlay"><div class="modal">
     <h2>🏆 Fin de partie</h2>
     <ol>${ranked.map(p=>`<li><b>${p.name}</b> — ${score(p)} points</li>`).join('')}</ol>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="btn light" id="look">Voir les feuilles</button>
-      <button class="btn light" id="toMenu">Menu</button>
-      <button class="btn" id="again">Rejouer</button>
+      <button class="btn light" id="toMenu">${isNet()?'Quitter':'Menu'}</button>
+      ${canAgain ? `<button class="btn" id="again">Rejouer</button>` : ''}
     </div>
+    ${isNet() && !canAgain ? '<p class="msg">L’hôte peut relancer une partie avec les mêmes joueurs.</p>' : ''}
   </div></div>`;
 }
 
-$('#menuBtn').onclick = ()=>{ editRow=null; sheetErr=''; screen='menu'; render(); };
+$('#menuBtn').onclick = ()=>{ editRow=null; sheetErr=''; renaming=null; screen='menu'; render(); };
 S = load();
-if (S && (!S.phase || !S.mode)){ S = null; } // ancienne sauvegarde incompatible
-if (S && !S.history) S.history = [];
+if (S && (!S.phase || !S.mode || S.mode === 'net')){ S = null; } // sauvegarde incompatible ou partie réseau
+if (S){ if (!S.history) S.history = []; if (!S.done) S.done = []; }
 screen = 'menu';
 render();
+getRoom();   // prépare la connexion réseau en arrière-plan
 </script>
 </body>
 </html>
