@@ -99,6 +99,21 @@
   .touch button{width:64px;height:56px;border-radius:14px;border:2px solid var(--line);background:var(--panel2);color:var(--ink);font-size:22px;touch-action:manipulation;user-select:none}
   .touch button:active{background:#3a3070}
   @media (hover:none),(max-width:600px){ .touch{display:flex} .keys{display:none} }
+  .field{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .field label{font-size:13px;color:var(--muted)}
+  .field input{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);font:500 18px 'Rubik',sans-serif;outline:none}
+  .field input:focus{border-color:var(--accent)}
+  .field input.code{font-family:'Bungee',cursive;letter-spacing:6px;text-transform:uppercase;font-size:24px}
+  .note{background:#2a1838;border:1px solid #5a2a55;color:#ffc2dd;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px;line-height:1.5}
+  .codebig{font-family:'Bungee',cursive;font-size:56px;letter-spacing:10px;color:var(--accent);text-align:center;margin:4px 0}
+  .plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .plist li{display:flex;justify-content:space-between;align-items:center;background:var(--panel2);border-radius:10px;padding:8px 12px;font-size:15px}
+  .plist li .tagp{font-size:11px;color:var(--muted);margin-left:6px}
+  .plist li.me{outline:2px solid var(--accent)}
+  .plist li.dead{opacity:.45}
+  .plist.small li{padding:5px 9px;font-size:13px}
+  .wait{color:var(--muted);text-align:center;font-size:14px;margin:12px 0 0}
+  .play:disabled{opacity:.45;cursor:not-allowed}
   .flash{animation:fl .35s}
   @keyframes fl{0%{transform:scale(1)}40%{transform:scale(1.18);color:#fff}100%{transform:scale(1)}}
 </style>
@@ -111,6 +126,21 @@
   <!-- ===== MENU ===== -->
   <section id="menu">
     <div class="card">
+      <h2>Mode</h2>
+      <div class="seg" id="segPlay">
+        <button data-v="solo" class="on">Solo<small>Seul contre la grille</small></button>
+        <button data-v="host">Réseau (hôte)<small>Tu crées la partie</small></button>
+        <button data-v="join">Réseau (rejoindre)<small>Tu rejoins un hôte</small></button>
+      </div>
+      <div id="netFields" class="hidden">
+        <div class="field"><label for="nick">Ton pseudo</label><input id="nick" maxlength="16" placeholder="ex. Jonathan" autocomplete="off"></div>
+        <div class="field hidden" id="codeField"><label for="code">Code de la partie (affiché chez l'hôte)</label><input id="code" class="code" maxlength="4" placeholder="ABCD" autocomplete="off"></div>
+        <p class="hint" id="netHint"></p>
+        <div class="note hidden" id="netNote"></div>
+      </div>
+    </div>
+
+    <div class="card" id="cardPieces">
       <h2>1 · Les briques</h2>
       <div class="seg" id="segPieces">
         <button data-v="standard" class="on">Standard<small>Les 7 briques classiques</small></button>
@@ -121,7 +151,7 @@
       <p class="hint" id="pieceHint"></p>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardMode">
       <h2>2 · Type de jeu</h2>
       <div class="seg" id="segMode">
         <button data-v="classique" class="on">Classique<small>Plateau vide au départ</small></button>
@@ -129,13 +159,31 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="cardLevel">
       <h2>3 · Niveau de départ (vitesse)</h2>
       <div class="levels" id="levels"></div>
     </div>
 
     <button class="play" id="playBtn">JOUER</button>
     <div class="err" id="err"></div>
+  </section>
+
+  <!-- ===== SALON RÉSEAU ===== -->
+  <section id="lobby" class="hidden">
+    <div class="card">
+      <h2 id="lobbyTitle">Partie réseau</h2>
+      <p class="hint" style="margin:0;text-align:center" id="codeLabel">Code de la partie</p>
+      <div class="codebig" id="lobbyCode">----</div>
+      <p class="hint" style="text-align:center;margin-top:0" id="lobbyHelp"></p>
+    </div>
+    <div class="card">
+      <h2 id="lobbyCount">Joueurs dans le salon</h2>
+      <ul class="plist" id="lobbyList"></ul>
+      <p class="wait" id="lobbyWait"></p>
+    </div>
+    <button class="play" id="lobbyStart">LANCER LA PARTIE</button>
+    <div class="err" id="lobbyErr"></div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="lobbyLeave">Quitter le salon</button></div>
   </section>
 
   <!-- ===== JEU ===== -->
@@ -159,11 +207,13 @@
         <div class="stat"><div class="k">Niveau</div><div class="v" id="sLevel">1</div></div>
         <div class="stat"><div class="k">Suivante</div><canvas id="next" width="100" height="100"></canvas></div>
         <div class="stat"><div class="k">Record</div><div class="v" id="sBest">0</div></div>
+        <div class="stat hidden" id="plBox"><div class="k">Joueurs</div><ul class="plist small" id="plList" style="margin-top:6px"></ul>
+          <div class="keys" style="margin-top:6px;display:block">2 lignes → 1 · 3 → 2 · 4 → 4</div></div>
         <div class="keys">
           <kbd>←</kbd> <kbd>→</kbd> déplacer<br>
           <kbd>↓</kbd> accélérer<br>
-          <kbd>↑</kbd> / <kbd>Espace</kbd> tourner<br>
-          <kbd>P</kbd> pause
+          <kbd>↑</kbd> / <kbd>Espace</kbd> tourner<span id="pauseKey"><br>
+          <kbd>P</kbd> pause</span>
         </div>
         <div class="row">
           <button class="btn" id="pauseBtn">Pause</button>
@@ -196,7 +246,7 @@
   const GARBAGE = '#5a5480';
 
   // ---------- État du menu ----------
-  const cfg = {pieceMode:'standard', gameMode:'classique', level:1,
+  const cfg = {play:'solo', pieceMode:'standard', gameMode:'classique', level:1,
                perso:new Set(STD), spec:new Set([...STD, ...EXTRA])};
 
   const $ = id => document.getElementById(id);
@@ -250,6 +300,7 @@
     });
   }
   bindSeg('segPieces','pieceMode',renderPieceGrid);
+  bindSeg('segPlay','play',renderPlayMode);
   bindSeg('segMode','gameMode');
 
   const lv=$('levels');
@@ -260,12 +311,236 @@
   }
   renderPieceGrid();
 
+  // ---------- Mode solo / réseau (menu) ----------
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  try{ $('nick').value = localStorage.getItem('ttris-nick')||''; }catch(e){}
+  $('code').addEventListener('input',()=>{ const v=$('code').value.toUpperCase().replace(/[^A-Z0-9]/g,''); $('code').value=v; });
+
+  function renderPlayMode(){
+    const p=cfg.play;
+    $('netFields').classList.toggle('hidden', p==='solo');
+    $('codeField').classList.toggle('hidden', p!=='join');
+    ['cardPieces','cardMode','cardLevel'].forEach(id=>$(id).classList.toggle('hidden', p==='join'));
+    $('playBtn').textContent = p==='solo' ? 'JOUER' : p==='host' ? 'CRÉER LA PARTIE' : 'REJOINDRE';
+    $('netHint').textContent = p==='host'
+      ? 'Tu choisis les briques, le type de jeu et le niveau pour tout le monde. Un code s\'affichera : donne-le aux autres joueurs.'
+      : p==='join' ? 'Les autres joueurs ouvrent cette même page T-Tris sur claude.ai et tapent le code de l\'hôte.' : '';
+    $('err').textContent='';
+    updateNetNote();
+  }
+
+  // ---------- Réseau (capacité « room » de la page) ----------
+  let roomApi = null, roomResolved = false;
+  const roomP = (window.claude && typeof window.claude.use === 'function')
+    ? Promise.resolve().then(()=>window.claude.use('room')).catch(()=>null)
+    : Promise.resolve(null);
+  roomP.then(r=>{ roomApi=r; roomResolved=true; updateNetNote(); });
+  function updateNetNote(){
+    const n=$('netNote');
+    if(cfg.play==='solo' || !roomResolved || roomApi){ n.classList.add('hidden'); return; }
+    n.classList.remove('hidden');
+    n.textContent='Le mode réseau ne marche que dans la page T-Tris ouverte sur claude.ai, par des personnes qui y ont accès et sont connectées. Ici, seul le mode Solo est disponible.';
+  }
+
+  const NET = { mode:'solo', room:null, code:'', nick:'', myPeer:null, gid:null, lastGameId:null,
+                players:[], seen:{}, sent:0, ended:false, winner:null, unsub:null };
+  const isNet = () => NET.mode!=='solo';
+  const pres = patch => { if(NET.room) NET.room.presence(patch).catch(()=>{}); };
+  const peersNow = () => NET.room ? NET.room.peers().filter(p=>p.kind==='viewer' && p.presence && p.presence.v===1) : [];
+  const findHost = () => peersNow().find(p=>p.presence.role==='host');
+
+  function randomCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=a[Math.random()*a.length|0]; return c; }
+  function cfgText(){
+    const b={standard:'Standard',perso:'Personnalisé',specifique:'Spécifique'}[cfg.pieceMode];
+    return 'Briques : '+b+' · '+(cfg.gameMode==='trou'?'Jeu à trou':'Classique')+' · Niveau '+cfg.level;
+  }
+
+  async function netEnter(role){
+    const nick = $('nick').value.trim().slice(0,16);
+    if(!nick){ $('err').textContent='Choisis un pseudo.'; $('nick').focus(); return; }
+    let code;
+    if(role==='host'){
+      if(!computePool().length){ $('err').textContent='Choisis au moins une brique pour jouer.'; return; }
+      code = randomCode();
+    } else {
+      code = $('code').value.trim().toUpperCase();
+      if(code.length!==4){ $('err').textContent='Tape le code à 4 caractères affiché chez l\'hôte.'; $('code').focus(); return; }
+    }
+    try{ localStorage.setItem('ttris-nick',nick); }catch(e){}
+    $('err').textContent='Connexion…';
+    const api = await roomP;
+    if(!api){ $('err').textContent='Le mode réseau n\'est pas disponible ici (voir la note ci-dessus).'; updateNetNote(); return; }
+    let room;
+    try{ room = await api.join('ttris-'+code.toLowerCase()); }
+    catch(e){
+      const c=e&&e.code;
+      $('err').textContent = c==='not_permitted' ? 'Tu n\'as pas le droit d\'utiliser le réseau sur cette page.'
+        : 'Connexion impossible pour le moment ('+(c||'erreur')+'). Réessaie.';
+      return;
+    }
+    if(role==='host'){
+      const others = room.peers().filter(p=>!p.sameTab && p.presence && p.presence.role==='host');
+      if(others.length){ room.leave().catch(()=>{}); return netEnter('host'); }
+    }
+    $('err').textContent='';
+    Object.assign(NET,{mode:role, room, code, nick, myPeer:null, gid:null, lastGameId:null, players:[], seen:{}, sent:0, ended:false, winner:null});
+    NET.unsub = room.onPeers(onPeers, ()=>{ $('lobbyErr').textContent='Connexion au salon perdue.'; });
+    pres({v:1, nick, role, st:'lobby', cfg: role==='host'?cfgText():null, game:null, gid:null, score:0, lines:0, alive:true, sent:0});
+    showLobby();
+  }
+
+  function netLeave(){
+    if(NET.unsub) NET.unsub();
+    if(NET.room) NET.room.leave().catch(()=>{});
+    Object.assign(NET,{mode:'solo', room:null, unsub:null, gid:null, players:[]});
+    $('plBox').classList.add('hidden');
+    toMenu();
+  }
+
+  function myPeerId(){
+    if(NET.myPeer) return NET.myPeer;
+    const me = NET.room && NET.room.peers().find(p=>p.sameTab);
+    if(me) NET.myPeer = me.peer;
+    return NET.myPeer;
+  }
+
+  function onPeers(){
+    myPeerId();
+    if(state==='lobby') renderLobby();
+    if(NET.mode==='player') maybeStartFromHost();
+    if(NET.gid){ checkGarbage(); checkEnd(); renderPlayers(); }
+  }
+
+  function showLobby(){
+    state='lobby'; cancelAnimationFrame(rafId);
+    ['menu','game'].forEach(id=>$(id).classList.add('hidden'));
+    $('lobby').classList.remove('hidden');
+    $('lobbyErr').textContent='';
+    pres({st:'lobby'});
+    renderLobby();
+  }
+
+  function renderLobby(){
+    const host = NET.mode==='host';
+    $('lobbyTitle').textContent = host ? 'Partie réseau · Hôte' : 'Partie réseau · Rejoindre';
+    $('lobbyCode').textContent = NET.code;
+    const h = findHost();
+    $('lobbyHelp').textContent = host
+      ? 'Donne ce code aux autres joueurs : ils ouvrent cette page T-Tris, choisissent « Réseau (rejoindre) » et tapent le code. '+cfgText()
+      : (h ? 'Réglages de l\'hôte : '+(h.presence.cfg||'') : '');
+    const ps = peersNow().slice().sort((a,b)=> (b.presence.role==='host') - (a.presence.role==='host'));
+    $('lobbyCount').textContent = 'Joueurs dans le salon ('+ps.length+')';
+    $('lobbyList').innerHTML = ps.map(p=>`<li class="${p.sameTab?'me':''}"><span>${esc(p.presence.nick||'?')}${p.sameTab?'<span class="tagp">toi</span>':''}${p.presence.role==='host'?'<span class="tagp">hôte</span>':''}</span><span class="tagp">${p.presence.st==='play'?'en jeu':'prêt'}</span></li>`).join('');
+    const btn=$('lobbyStart');
+    if(host){
+      btn.classList.remove('hidden');
+      btn.disabled = ps.length<2;
+      $('lobbyWait').textContent = ps.length<2 ? 'En attente d\'autres joueurs… (2 minimum, 8 maximum)' : '';
+    } else {
+      btn.classList.add('hidden');
+      $('lobbyWait').textContent = h ? 'En attente du lancement par l\'hôte…' : 'Aucun hôte avec ce code pour l\'instant. Vérifie le code, ou attends que l\'hôte crée la partie.';
+    }
+  }
+
+  function hostStart(){
+    const ps = peersNow().slice(0,8);
+    if(ps.length<2){ $('lobbyErr').textContent='Il faut au moins 2 joueurs.'; return; }
+    const me = myPeerId();
+    const players = ps.map(p=>({p:p.peer, n:String(p.presence.nick||'?').slice(0,16)}));
+    if(!players.some(x=>x.p===me)) return;
+    const g = {id: Math.random().toString(36).slice(2,10), seed:(Math.random()*2**31)|0,
+               gm: cfg.gameMode, lvl: cfg.level, pool: computePool(), players};
+    pres({game:g});
+    startNetGame(g);
+  }
+
+  function maybeStartFromHost(){
+    const h = findHost(); if(!h) return;
+    const g = h.presence.game;
+    if(!g || typeof g!=='object' || g.id===NET.lastGameId) return;
+    const me = myPeerId();
+    if(!Array.isArray(g.players) || !g.players.some(x=>x && x.p===me)) return;
+    startNetGame(g);
+  }
+
+  function startNetGame(g){
+    const pl = (Array.isArray(g.pool)?g.pool:[]).filter(k=>PIECES[k]);
+    Object.assign(NET,{lastGameId:g.id, gid:g.id, players:g.players.slice(0,8).map(x=>({p:String(x.p), n:String(x.n||'?').slice(0,16)})),
+                       seen:{}, sent:0, ended:false, winner:null});
+    pres({gid:g.id, st:'play', score:0, lines:0, alive:true, sent:0});
+    begin(+g.seed||1, g.gm==='trou'?'trou':'classique', Math.min(10,Math.max(1,+g.lvl||1)), pl.length?pl:[...STD]);
+  }
+
+  function pushState(){ if(isNet()) pres({score, lines, alive:myAlive, sent:NET.sent}); }
+
+  function checkGarbage(){
+    if(!NET.gid || NET.ended) return;
+    const ids = new Set(NET.players.map(x=>x.p));
+    for(const p of peersNow()){
+      if(p.sameTab || !ids.has(p.peer) || p.presence.gid!==NET.gid) continue;
+      const s = Math.max(0, +p.presence.sent||0), prev = NET.seen[p.peer]||0;
+      if(s>prev){ NET.seen[p.peer]=s; if(state==='play') addGarbage(Math.min(s-prev,12)); }
+    }
+  }
+
+  function checkEnd(){
+    if(!NET.gid || NET.ended) return;
+    const map = {}; peersNow().forEach(p=>map[p.peer]=p);
+    const me = myPeerId(), alive=[];
+    for(const pl of NET.players){
+      if(pl.p===me){ if(myAlive) alive.push(pl); continue; }
+      const pe = map[pl.p];
+      if(!pe) continue;                                  // parti du salon
+      if(pe.presence.gid===NET.gid && pe.presence.alive===false) continue;
+      alive.push(pl);
+    }
+    if(alive.length<=1){
+      NET.ended=true; NET.winner = alive[0]||null;
+      if(state==='play'||state==='pause') state='over';
+      if(score>best){ best=score; try{ localStorage.setItem('ttris-best',best); }catch(e){} }
+      updateHUD(); netOverlay();
+    }
+  }
+
+  function renderPlayers(){
+    const map={}; peersNow().forEach(p=>map[p.peer]=p);
+    const me=myPeerId();
+    $('plList').innerHTML = NET.players.map(pl=>{
+      const pe=map[pl.p], pr=pe&&pe.presence.gid===NET.gid?pe.presence:null;
+      const isMe = pl.p===me;
+      const sc = isMe?score:(pr?(+pr.score||0):0);
+      const dead = isMe ? !myAlive : (!pe || (pr && pr.alive===false));
+      return {pl,sc,dead,isMe};
+    }).sort((a,b)=>b.sc-a.sc).map(o=>`<li class="${o.isMe?'me':''} ${o.dead?'dead':''}"><span>${esc(o.pl.n)}${o.isMe?' <span class="tagp">toi</span>':''}${o.dead?' ✗':''}</span><b>${o.sc}</b></li>`).join('');
+  }
+
+  function netOverlay(){
+    let title, sub, btns;
+    if(!NET.ended){
+      title='ÉLIMINÉ'; sub='En attente de la fin de la partie…';
+      btns='<button class="btn" id="ovQuit">Quitter le réseau</button>';
+    } else {
+      const me=myPeerId();
+      if(NET.winner && NET.winner.p===me){ title='VICTOIRE !'; sub='Tu es le dernier en jeu.'; }
+      else if(NET.winner){ title='PERDU'; sub='Gagnant : '+esc(NET.winner.n); }
+      else { title='FIN'; sub='Personne n\'a survécu.'; }
+      btns='<div class="row"><button class="btn primary" id="ovLobby">Retour au salon</button><button class="btn" id="ovQuit">Quitter</button></div>';
+    }
+    showOv(`<h3>${title}</h3><p>${sub}</p><div class="big">${score}</div><p>${lines} ligne${lines>1?'s':''} · niveau ${level}</p>${btns}`);
+    $('ovQuit').onclick=netLeave;
+    if($('ovLobby')) $('ovLobby').onclick=()=>{ NET.gid=null; showLobby(); };
+  }
+
+  $('lobbyStart').onclick=hostStart;
+  $('lobbyLeave').onclick=netLeave;
+
   // ---------- Jeu ----------
   const COLS=10, ROWS=20, CS=30;
   const cv=$('board'), ctx=cv.getContext('2d');
   const nv=$('next'), nctx=nv.getContext('2d');
 
-  let grid, cur, next, bag, pool, score, lines, level, startLevel, dropAcc, lastT, state, rafId, best=0;
+  let grid, cur, next, bag, pool, score, lines, level, startLevel, dropAcc, lastT, state='menu', rafId, best=0, myAlive=true, rng=Math.random;
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
   try{ best = +localStorage.getItem('ttris-best')||0; }catch(e){}
 
   const speed = l => Math.max(70, 800 - (l-1)*75);   // ms par case
@@ -276,7 +551,7 @@
     return r;
   }
   function randomKey(){
-    if(!bag.length){ bag=[...pool]; for(let i=bag.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[bag[i],bag[j]]=[bag[j],bag[i]];} }
+    if(!bag.length){ bag=[...pool]; for(let i=bag.length-1;i>0;i--){const j=rng()*(i+1)|0;[bag[i],bag[j]]=[bag[j],bag[i]];} }
     return bag.pop();
   }
   function makePiece(key){
@@ -294,23 +569,48 @@
     return false;
   }
 
+  function computePool(){
+    return cfg.pieceMode==='standard' ? [...STD] : cfg.pieceMode==='perso' ? STD.filter(k=>cfg.perso.has(k)) : [...STD,...EXTRA].filter(k=>cfg.spec.has(k));
+  }
   function start(){
-    pool = cfg.pieceMode==='standard' ? [...STD] : cfg.pieceMode==='perso' ? STD.filter(k=>cfg.perso.has(k)) : [...STD,...EXTRA].filter(k=>cfg.spec.has(k));
-    if(!pool.length){ $('err').textContent='Choisis au moins une brique pour jouer.'; return; }
+    if(cfg.play!=='solo') return netEnter(cfg.play==='host'?'host':'player');
+    const pl = computePool();
+    if(!pl.length){ $('err').textContent='Choisis au moins une brique pour jouer.'; return; }
+    NET.mode='solo';
+    begin((Math.random()*2**31)|0, cfg.gameMode, cfg.level, pl);
+  }
+  function begin(seed, gm, lvl, pl){
+    rng = mulberry32(seed); pool = pl;
     grid = Array.from({length:ROWS},()=>Array(COLS).fill(null));
-    if(cfg.gameMode==='trou'){
+    if(gm==='trou'){
       for(let r=ROWS-8;r<ROWS;r++){
-        const holes=new Set(); const n=1+(Math.random()*3|0);
-        while(holes.size<n) holes.add(Math.random()*COLS|0);
+        const holes=new Set(); const n=1+(rng()*3|0);
+        while(holes.size<n) holes.add(rng()*COLS|0);
         for(let c=0;c<COLS;c++) if(!holes.has(c)) grid[r][c]=GARBAGE;
       }
     }
-    bag=[]; score=0; lines=0; startLevel=cfg.level; level=startLevel;
+    bag=[]; score=0; lines=0; startLevel=lvl; level=lvl; myAlive=true;
     cur=makePiece(randomKey()); next=makePiece(randomKey());
     dropAcc=0; lastT=performance.now(); state='play';
-    $('menu').classList.add('hidden'); $('game').classList.remove('hidden');
-    hideOv(); updateHUD(); drawNext();
+    ['menu','lobby'].forEach(id=>$(id).classList.add('hidden')); $('game').classList.remove('hidden');
+    if(document.activeElement) document.activeElement.blur();
+    $('plBox').classList.toggle('hidden', !isNet());
+    $('pauseBtn').classList.toggle('hidden', isNet()); $('pauseKey').classList.toggle('hidden', isNet());
+    $('menuBtn').textContent = isNet() ? 'Quitter' : 'Menu';
+    hideOv(); updateHUD(); drawNext(); if(isNet()) renderPlayers();
     cancelAnimationFrame(rafId); rafId=requestAnimationFrame(loop);
+  }
+
+  function addGarbage(n){
+    let top=false;
+    for(let i=0;i<n;i++){
+      if(grid[0].some(v=>v)) top=true;
+      grid.shift();
+      const hole=Math.random()*COLS|0;
+      grid.push(Array.from({length:COLS},(_,c)=>c===hole?null:GARBAGE));
+    }
+    for(let k=0;k<n && collide(cur.m,cur.x,cur.y);k++) cur.y--;
+    if(top) gameOver();
   }
 
   function lock(){
@@ -332,11 +632,12 @@
       const nl = startLevel + Math.floor(lines/10);
       if(nl!==level){ level=nl; pulse('sLevel'); }
       pulse('sLines');
+      if(isNet() && cleared>=2) NET.sent += cleared===2?1:cleared===3?2:4;
     }
     pulse('sScore');
     cur=next; next=makePiece(randomKey()); drawNext();
     if(collide(cur.m,cur.x,cur.y)) return gameOver();
-    updateHUD();
+    updateHUD(); pushState(); if(isNet()) renderPlayers();
   }
 
   function move(dx){ if(state!=='play')return; if(!collide(cur.m,cur.x+dx,cur.y)) cur.x+=dx; }
@@ -404,13 +705,19 @@
   function hideOv(){ $('ov').classList.add('hidden'); }
 
   function togglePause(){
+    if(isNet()) return;
     if(state==='play'){ state='pause'; $('pauseBtn').textContent='Reprendre';
       showOv('<h3>PAUSE</h3><p>Appuie sur P ou sur le bouton pour reprendre</p><button class="btn primary" id="resumeBtn">Reprendre</button>');
       $('resumeBtn').onclick=togglePause;
     } else if(state==='pause'){ state='play'; $('pauseBtn').textContent='Pause'; hideOv(); lastT=performance.now(); }
   }
   function gameOver(){
-    state='over'; updateHUD();
+    if(state==='over') return;
+    state='over'; myAlive=false; updateHUD();
+    if(isNet()){
+      if(score>best){ best=score; try{ localStorage.setItem('ttris-best',best); }catch(e){} }
+      pushState(); renderPlayers(); netOverlay(); checkEnd(); return;
+    }
     let rec=false;
     if(score>best){ best=score; rec=true; try{ localStorage.setItem('ttris-best',best); }catch(e){} }
     $('sBest').textContent=best;
@@ -421,20 +728,21 @@
   }
   function toMenu(){
     state='menu'; cancelAnimationFrame(rafId);
-    $('game').classList.add('hidden'); $('menu').classList.remove('hidden');
-    $('pauseBtn').textContent='Pause';
+    $('game').classList.add('hidden'); $('lobby').classList.add('hidden'); $('menu').classList.remove('hidden');
+    $('pauseBtn').textContent='Pause'; $('pauseBtn').classList.remove('hidden'); $('pauseKey').classList.remove('hidden');
+    $('plBox').classList.add('hidden'); $('menuBtn').textContent='Menu';
   }
 
   $('playBtn').onclick=start;
   $('pauseBtn').onclick=togglePause;
-  $('menuBtn').onclick=toMenu;
+  $('menuBtn').onclick=()=>{ if(isNet()) netLeave(); else toMenu(); };
 
   // ---------- Clavier ----------
   document.addEventListener('keydown',e=>{
     if(state!=='play' && state!=='pause') return;
     const k=e.key;
     if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(k)) e.preventDefault();
-    if(k==='p'||k==='P'||k==='Escape'){ togglePause(); return; }
+    if(k==='p'||k==='P'||k==='Escape'){ if(!isNet()) togglePause(); return; }
     if(state!=='play') return;
     if(k==='ArrowLeft') move(-1);
     else if(k==='ArrowRight') move(1);
@@ -454,4 +762,3 @@
 </script>
 </body>
 </html>
-
