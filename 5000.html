@@ -7,60 +7,55 @@
 <style>
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: Georgia, "Times New Roman", serif;
-    color: #f5efe0;
+    margin: 0; min-height: 100vh;
+    font-family: Georgia, "Times New Roman", serif; color: #f5efe0;
     background: radial-gradient(ellipse at center, #1f6b3f 0%, #134428 70%, #0c2e1b 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 32px 16px;
+    display: flex; flex-direction: column; align-items: center; padding: 32px 16px;
   }
   h1 { margin: 0 0 4px; font-size: 2.6rem; letter-spacing: 0.05em; text-shadow: 0 2px 6px rgba(0,0,0,.4); }
   .hidden { display: none !important; }
+  .net-status { font-size: .85rem; color: #ffcf8a; min-height: 1.2em; }
 
-  /* ---------- Écran de configuration ---------- */
+  /* ---------- Panneaux ---------- */
   .panel {
-    margin-top: 20px; width: 100%; max-width: 420px; padding: 24px 26px; border-radius: 20px;
+    margin-top: 20px; width: 100%; max-width: 520px; padding: 24px 26px; border-radius: 20px;
     background: rgba(0,0,0,.25); box-shadow: 0 4px 14px rgba(0,0,0,.25);
   }
-  .panel h2 { margin: 0 0 14px; font-size: 1.2rem; text-align: center; letter-spacing: .05em; }
-  .count-picker { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
-  .count-picker button {
-    width: 44px; height: 44px; border-radius: 12px; font-family: inherit; font-size: 1.2rem; font-weight: bold;
-    border: 2px solid #f5d76e; background: transparent; color: #f5d76e; cursor: pointer;
-  }
-  .count-picker button.on { background: #f5d76e; color: #2a1d05; }
+  .panel h2 { margin: 0 0 12px; font-size: 1.15rem; text-align: center; letter-spacing: .05em; }
   .mode-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+  .mode-picker.three { grid-template-columns: repeat(3, 1fr); }
   .mode-picker button {
-    font-family: inherit; text-align: center; padding: 12px 10px; border-radius: 14px; cursor: pointer;
+    font-family: inherit; text-align: center; padding: 12px 8px; border-radius: 14px; cursor: pointer;
     border: 2px solid rgba(245,215,110,.5); background: transparent; color: #f5efe0;
     display: flex; flex-direction: column; gap: 4px;
   }
   .mode-picker button b { font-size: 1rem; color: #f5d76e; }
   .mode-picker button small { font-size: .78rem; opacity: .8; }
   .mode-picker button.on { border-color: #f5d76e; background: rgba(245,215,110,.18); }
-
-  .palette { margin-top: 22px; text-align: center; }
-  .palette-label { font-size: .9rem; opacity: .85; margin-bottom: 10px; }
-  .palette-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-  .palette-row button {
-    width: 58px; height: 58px; padding: 0; border: none; background: none; cursor: pointer; transition: transform .1s;
+  .count-picker { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .count-picker button {
+    width: 44px; height: 44px; border-radius: 12px; font-family: inherit; font-size: 1.2rem; font-weight: bold;
+    border: 2px solid #f5d76e; background: transparent; color: #f5d76e; cursor: pointer;
   }
-  .palette-row button:hover { transform: translateY(-3px); }
-  .palette-row button:active { transform: scale(.92); }
-  .palette-row button svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
-  .die.pending-empty svg { opacity: .55; }
+  .count-picker button.on { background: #f5d76e; color: #2a1d05; }
   .names { display: flex; flex-direction: column; gap: 10px; }
   .names label { display: flex; align-items: center; gap: 10px; font-size: .95rem; }
-  .names label span { width: 22px; text-align: right; opacity: .7; }
+  .names label span { min-width: 22px; text-align: right; opacity: .75; }
   .names input {
-    flex: 1; font-family: inherit; font-size: 1rem; padding: 9px 12px; border-radius: 10px;
+    flex: 1; min-width: 0; font-family: inherit; font-size: 1rem; padding: 9px 12px; border-radius: 10px;
     border: 1px solid rgba(245,215,110,.5); background: rgba(255,255,255,.08); color: #f5efe0;
   }
   .names input:focus { outline: 2px solid #f5d76e; border-color: transparent; }
-  .panel .controls { margin-top: 22px; }
+  #joinCode { text-transform: uppercase; letter-spacing: .3em; font-weight: bold; }
+  .err { color: #ff9b8a; text-align: center; min-height: 1.2em; margin: 12px 0 0; font-size: .9rem; }
+
+  .code-box { text-align: center; margin: 4px 0 14px; }
+  .code-box .code { font-size: 2.6rem; font-weight: bold; letter-spacing: .3em; color: #f5d76e; padding-left: .3em; }
+  .code-box small { opacity: .75; }
+  .lobby-list { list-style: none; padding: 0; margin: 0; }
+  .lobby-list li { display: flex; justify-content: space-between; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .lobby-list li em { opacity: .65; font-size: .85rem; }
+  .lobby-info { text-align: center; opacity: .85; font-style: italic; margin: 14px 0 0; }
 
   /* ---------- Tableau des joueurs ---------- */
   .players { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 14px 0 6px; max-width: 760px; }
@@ -68,12 +63,15 @@
     min-width: 110px; padding: 8px 14px; border-radius: 14px; text-align: center;
     background: rgba(0,0,0,.2); border: 2px solid transparent; transition: all .2s;
   }
-  .player .pname { font-size: .95rem; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player .pname { font-size: .95rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .player .ptotal { font-size: 1.5rem; font-weight: bold; color: #f5d76e; }
   .player .pnote { font-size: .7rem; opacity: .65; }
   .player.current { border-color: #f5d76e; background: rgba(245,215,110,.15); transform: scale(1.06); }
+  .player.away { opacity: .5; }
+  .you-tag { font-size: .65rem; background: #f5d76e; color: #2a1d05; border-radius: 999px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
 
-  p.sub { margin: 10px 0 20px; opacity: .9; font-style: italic; text-align: center; min-height: 1.4em; max-width: 520px; }
+  .turn-banner { font-weight: bold; color: #a8f0b8; min-height: 1.3em; margin-top: 6px; font-size: 1.1rem; }
+  p.sub { margin: 8px 0 20px; opacity: .9; font-style: italic; text-align: center; min-height: 1.4em; max-width: 520px; }
   p.sub.lost { color: #ff9b8a; font-weight: bold; font-style: normal; }
   p.sub.good { color: #a8f0b8; font-weight: bold; font-style: normal; }
 
@@ -96,14 +94,23 @@
     60% { transform: rotate(280deg) scale(1.05); } 100% { transform: rotate(360deg) scale(1); }
   }
   .die.selected { transform: translateY(-6px); box-shadow: 0 0 0 4px #f5d76e, 0 0 22px 4px rgba(245,215,110,.6); }
-  .die.selected:hover { transform: translateY(-8px); }
+  .die.selected:hover:not(:disabled) { transform: translateY(-8px); }
   .die.kept { opacity: .45; transform: scale(.88); }
+  .die.pending-empty svg { opacity: .6; }
   .die .tag {
     position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%);
     font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
     background: #f5d76e; color: #2a1d05; padding: 2px 8px; border-radius: 999px; font-weight: bold; white-space: nowrap;
   }
   .die.kept .tag { background: #d8d0bf; }
+
+  .palette { margin-top: 22px; text-align: center; }
+  .palette-label { font-size: .9rem; opacity: .85; margin-bottom: 10px; }
+  .palette-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .palette-row button { width: 58px; height: 58px; padding: 0; border: none; background: none; cursor: pointer; transition: transform .1s; }
+  .palette-row button:hover { transform: translateY(-3px); }
+  .palette-row button:active { transform: scale(.92); }
+  .palette-row button svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
 
   /* ---------- Scores du tour ---------- */
   .scores { margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
@@ -134,38 +141,76 @@
   .ranking { list-style: none; padding: 0; margin: 0; }
   .ranking li { display: flex; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,.1); }
 
-  .rules { margin-top: 28px; max-width: 460px; font-size: .9rem; opacity: .8; line-height: 1.5; }
+  .rules { margin-top: 28px; max-width: 480px; font-size: .9rem; opacity: .8; line-height: 1.5; }
   .rules h2 { font-size: 1rem; margin: 0 0 6px; text-align: center; letter-spacing: .05em; }
   .rules ul { margin: 0; padding-left: 20px; }
 
-  @media (max-width: 480px) {
+  @media (max-width: 520px) {
     .table { gap: 18px; padding: 20px; }
     .die { width: 84px; height: 84px; }
     h1 { font-size: 2rem; }
+    .mode-picker.three { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
   <h1>Jeu du 5000</h1>
+  <div class="net-status" id="netStatus"></div>
 
-  <!-- Configuration -->
+  <!-- ================= Configuration ================= -->
   <section id="setup" class="panel">
-    <h2>Mode de jeu</h2>
-    <div class="mode-picker" id="modePicker">
-      <button type="button" data-mode="virtual"><b>Dés à l'écran</b><small>La page lance les dés</small></button>
-      <button type="button" data-mode="manual"><b>Vrais dés</b><small>Vous lancez vos dés et saisissez les valeurs</small></button>
+    <h2>Type de partie</h2>
+    <div class="mode-picker three" id="typePicker">
+      <button type="button" data-type="local"><b>Solo</b><small>Sur cet appareil, de 1 à 6 joueurs</small></button>
+      <button type="button" data-type="host"><b>Réseau – héberger</b><small>Créez une partie et donnez le code</small></button>
+      <button type="button" data-type="join"><b>Réseau – rejoindre</b><small>Entrez le code de l'hôte</small></button>
     </div>
-    <h2>Nombre de joueurs</h2>
-    <div class="count-picker" id="countPicker"></div>
-    <div class="names" id="names"></div>
+
+    <div id="diceBlock">
+      <h2>Dés</h2>
+      <div class="mode-picker" id="modePicker">
+        <button type="button" data-mode="virtual"><b>Dés à l'écran</b><small>La page lance les dés</small></button>
+        <button type="button" data-mode="manual"><b>Vrais dés</b><small>On lance ses dés et on saisit les valeurs</small></button>
+      </div>
+    </div>
+
+    <div id="localBlock">
+      <h2>Nombre de joueurs</h2>
+      <div class="count-picker" id="countPicker"></div>
+      <div class="names" id="names"></div>
+    </div>
+
+    <div id="netBlock" class="names">
+      <label><span>Nom</span><input type="text" id="myName" maxlength="20" placeholder="Votre nom"></label>
+      <label id="codeLabel"><span>Code</span><input type="text" id="joinCode" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
+    </div>
+
+    <p class="err" id="setupErr"></p>
     <div class="controls">
       <button class="action" id="startBtn">Commencer la partie</button>
     </div>
   </section>
 
-  <!-- Partie -->
+  <!-- ================= Salle d'attente ================= -->
+  <section id="lobby" class="panel hidden">
+    <h2 id="lobbyTitle">Partie en réseau</h2>
+    <div class="code-box">
+      <small>Code de la partie</small>
+      <div class="code" id="lobbyCode"></div>
+      <small id="lobbyCodeHint"></small>
+    </div>
+    <ul class="lobby-list" id="lobbyList"></ul>
+    <p class="lobby-info" id="lobbyInfo"></p>
+    <div class="controls">
+      <button class="action" id="lobbyStart">Lancer la partie</button>
+      <button class="action secondary" id="lobbyLeave">Quitter</button>
+    </div>
+  </section>
+
+  <!-- ================= Partie ================= -->
   <section id="game" class="hidden" style="display:flex;flex-direction:column;align-items:center;">
     <div class="players" id="players"></div>
+    <div class="turn-banner" id="turnBanner"></div>
     <p class="sub" id="message"></p>
 
     <div class="table" id="table"></div>
@@ -188,25 +233,27 @@
       </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="playControls">
       <button class="action" id="rollBtn">Lancer les dés</button>
       <button class="action stop hidden" id="stopBtn">S'arrêter</button>
+      <button class="action secondary hidden" id="skipBtn">Passer son tour</button>
     </div>
     <div class="stop-hint" id="stopHint"></div>
 
     <div class="controls">
-      <button class="action secondary small" id="quitBtn">Nouvelle partie</button>
+      <button class="action secondary small" id="quitBtn">Quitter la partie</button>
     </div>
   </section>
 
-  <!-- Victoire -->
+  <!-- ================= Victoire ================= -->
   <section id="victory" class="panel winner hidden">
     <div>Victoire !</div>
     <div class="big" id="winnerName"></div>
     <ol class="ranking" id="ranking"></ol>
+    <p class="lobby-info" id="victoryInfo"></p>
     <div class="controls">
       <button class="action" id="replayBtn">Rejouer avec les mêmes joueurs</button>
-      <button class="action secondary" id="backBtn">Changer les joueurs</button>
+      <button class="action secondary" id="backBtn">Retour au menu</button>
     </div>
   </section>
 
@@ -233,14 +280,16 @@
   const OPENING = 600;
   const TARGET = 5000;
 
-  // ---------- Dessin des dés ----------
+  // =====================================================================
+  // Dessin des dés
+  // =====================================================================
   const P = { tl:[28,28], tr:[72,28], ml:[28,50], mr:[72,50], bl:[28,72], br:[72,72], c:[50,50] };
   const FACES = {
     1: ['c'], 2: ['tl','br'], 3: ['tl','c','br'],
     4: ['tl','tr','bl','br'], 5: ['tl','tr','c','bl','br'], 6: ['tl','tr','ml','mr','bl','br']
   };
   function dieSVG(n) {
-    if (!n) {
+    if (!FACES[n]) {
       return `<svg viewBox="0 0 100 100" role="img" aria-label="Dé à saisir">
         <rect x="4" y="4" width="92" height="92" rx="18" fill="rgba(255,255,255,.12)" stroke="#f5d76e" stroke-width="2.5" stroke-dasharray="8 6"/>
         <text x="50" y="64" text-anchor="middle" font-size="44" font-family="Georgia, serif" fill="#f5d76e">?</text></svg>`;
@@ -257,9 +306,13 @@
       ${pips}</svg>`;
   }
   const rand = () => Math.floor(Math.random() * 6) + 1;
-  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const cleanName = s => (typeof s === 'string' ? s : '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯﻿]/g, '').trim().slice(0, 20);
+  const $ = id => document.getElementById(id);
 
-  // ---------- Calcul du score ----------
+  // =====================================================================
+  // Calcul du score
+  // =====================================================================
   function computeScore(values) {
     const counts = [0,0,0,0,0,0,0];
     values.forEach(v => counts[v]++);
@@ -286,337 +339,648 @@
     return best;
   }
 
-  // ---------- Configuration des joueurs ----------
-  let playerCount = 2;
-  let savedNames = [];
-  try { savedNames = JSON.parse(localStorage.getItem('5000-names') || '[]'); } catch (e) {}
-  try { playerCount = Math.min(6, Math.max(1, Number(localStorage.getItem('5000-count')) || 2)); } catch (e) {}
+  // =====================================================================
+  // Moteur du jeu (l'état G est un objet JSON, partageable en réseau)
+  // phase : 'start' | 'enter' (saisie vrais dés) | 'choose' | 'lost' | 'over'
+  // =====================================================================
+  function newGame(players, diceMode) {
+    const G = {
+      phase: 'start', diceMode,
+      players: players.map(p => ({ name: p.name, peer: p.peer || null, total: 0 })),
+      current: 0,
+      dice: Array.from({ length: 6 }, () => ({ value: rand(), kept: false, selected: false })),
+      pending: [], turnScore: 0, turnParts: [],
+      msg: { text: '', kind: '' },
+      anim: { id: 0, idx: [] },
+      winner: null
+    };
+    beginTurn(G);
+    return G;
+  }
+  const curP = G => G.players[G.current];
+  const setMsg = (G, text, kind = '') => { G.msg = { text, kind }; };
 
-  let gameMode = 'virtual';
-  try { if (localStorage.getItem('5000-mode') === 'manual') gameMode = 'manual'; } catch (e) {}
-  const modePicker = document.getElementById('modePicker');
-  modePicker.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { gameMode = b.dataset.mode; renderSetup(); }));
+  function beginTurn(G) {
+    G.dice.forEach(d => { d.kept = false; d.selected = false; });
+    G.turnScore = 0; G.turnParts = [];
+    G.phase = 'start';
+    setMsg(G, `À ${curP(G).name} de jouer !`);
+    if (G.diceMode === 'manual') startRoll(G, [0,1,2,3,4,5]);
+  }
+  function nextPlayer(G) {
+    G.current = (G.current + 1) % G.players.length;
+    beginTurn(G);
+  }
+  function startRoll(G, idx) {
+    if (G.diceMode === 'virtual') {
+      idx.forEach(i => { G.dice[i].value = rand(); });
+      G.anim = { id: G.anim.id + 1, idx };
+      afterRoll(G, idx);
+      return;
+    }
+    G.pending = idx;
+    idx.forEach(i => { G.dice[i].value = null; });
+    G.phase = 'enter';
+    const n = idx.length;
+    setMsg(G, `${curP(G).name} : lancez ${n} dé${n > 1 ? 's' : ''} et indiquez les faces obtenues`);
+  }
+  function afterRoll(G, idx) {
+    const r = computeScore(idx.map(i => G.dice[i].value));
+    if (r.score === 0) {
+      G.phase = 'lost';
+      setMsg(G, G.turnScore > 0
+        ? `Aucune combinaison… ${curP(G).name} perd ses ${G.turnScore} points du tour`
+        : `Aucune combinaison… tour perdu pour ${curP(G).name}`, 'lost');
+      G.turnScore = 0; G.turnParts = [];
+    } else {
+      G.phase = 'choose';
+      setMsg(G, `${curP(G).name} : sélectionnez vos dés gagnants (jusqu'à ${r.score} points sur ce lancer)`);
+    }
+  }
+  const selValues = G => G.dice.filter(d => d.selected).map(d => d.value);
+  function info(G) {
+    const sel = selValues(G);
+    const r = sel.length ? computeScore(sel) : null;
+    const selOk = !!(r && r.valid);
+    const potential = G.turnScore + (selOk ? r.score : 0);
+    const remaining = G.dice.filter(d => !d.kept && !d.selected).length;
+    const notOpened = curP(G).total === 0;
+    const fullHand = remaining === 0;
+    const canStop = G.phase === 'choose' && selOk && !fullHand && (!notOpened || potential >= OPENING);
+    return { sel, r, selOk, potential, remaining, notOpened, fullHand, canStop };
+  }
+  function bank(G) {
+    const r = computeScore(selValues(G));
+    if (!r.valid) return false;
+    G.turnScore += r.score;
+    G.turnParts.push(String(r.score));
+    G.dice.forEach(d => { if (d.selected) { d.selected = false; d.kept = true; } });
+    return true;
+  }
+  // Applique une action ; renvoie true si l'état a changé. Valide tout (actions réseau non fiables).
+  function act(G, a) {
+    if (!a || G.phase === 'over') return false;
+    switch (a.type) {
+      case 'roll':
+        if (G.phase === 'start') { startRoll(G, [0,1,2,3,4,5]); return true; }
+        if (G.phase === 'lost')  { nextPlayer(G); return true; }
+        if (G.phase === 'enter') {
+          if (G.pending.every(i => G.dice[i].value !== null)) { afterRoll(G, G.pending); return true; }
+          return false;
+        }
+        if (G.phase === 'choose') {
+          if (!bank(G)) return false;
+          if (G.dice.every(d => d.kept)) G.dice.forEach(d => { d.kept = false; }); // main pleine
+          startRoll(G, G.dice.map((d, i) => d.kept ? -1 : i).filter(i => i >= 0));
+          return true;
+        }
+        return false;
+      case 'toggle': {
+        const i = Number(a.i), d = G.dice[i];
+        if (!Number.isInteger(i) || !d) return false;
+        if (G.phase === 'enter' && G.pending.includes(i)) { d.value = null; return true; }
+        if (G.phase === 'choose' && !d.kept) { d.selected = !d.selected; return true; }
+        return false;
+      }
+      case 'face': {
+        const v = Number(a.v);
+        if (G.phase !== 'enter' || !Number.isInteger(v) || v < 1 || v > 6) return false;
+        const i = G.pending.find(i => G.dice[i].value === null);
+        if (i === undefined) return false;
+        G.dice[i].value = v;
+        return true;
+      }
+      case 'stop': {
+        if (!info(G).canStop) return false;
+        bank(G);
+        const p = curP(G);
+        p.total += G.turnScore;
+        const gained = G.turnScore;
+        if (p.total >= TARGET) {
+          G.phase = 'over'; G.winner = G.current;
+          setMsg(G, `${p.name} gagne avec ${p.total} points !`, 'good');
+          return true;
+        }
+        nextPlayer(G);
+        setMsg(G, `${p.name} ajoute ${gained} points. ` +
+          (G.phase === 'enter' ? G.msg.text : `À ${curP(G).name} de jouer !`), 'good');
+        return true;
+      }
+      case 'skip':
+        setMsg(G, `${curP(G).name} passe son tour.`);
+        nextPlayer(G);
+        return true;
+    }
+    return false;
+  }
 
-  const countPicker = document.getElementById('countPicker');
-  const namesBox = document.getElementById('names');
+  // =====================================================================
+  // Application : modes local / hôte / invité
+  // =====================================================================
+  let appMode = 'local';      // 'local' | 'host' | 'guest'
+  let G = null;               // état de la partie
+  let room = null;            // salle réseau (named room)
+  let myPeer = null;
+  let peersNow = [];
+  let roomCode = '';
+  let hostName = '';
+  let guestSeq = 0, guestActs = [];
+  const lastSeq = {};
+  let lastHostGame = null;
+  let hostSeen = false, hostMissingTimer = null;
+
+  // La salle réseau n'existe que sur la page publiée sur claude.ai
+  const lobbyRoomPromise = (async () => {
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') return null;
+      return await window.claude.use('room');
+    } catch (e) { return null; }
+  })();
+
+  // ---------- Préférences mémorisées ----------
+  const prefs = { type: 'local', mode: 'virtual', count: 2, names: [], myName: '' };
+  try { Object.assign(prefs, JSON.parse(localStorage.getItem('5000-prefs') || '{}')); } catch (e) {}
+  const savePrefs = () => { try { localStorage.setItem('5000-prefs', JSON.stringify(prefs)); } catch (e) {} };
+
+  const SECTIONS = ['setup', 'lobby', 'game', 'victory'];
+  const show = id => SECTIONS.forEach(s => $(s).classList.toggle('hidden', s !== id));
+
+  // =====================================================================
+  // Écran de configuration
+  // =====================================================================
+  const typePicker = $('typePicker'), modePicker = $('modePicker');
+  const countPicker = $('countPicker'), namesBox = $('names');
+  typePicker.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { saveSetupInputs(); prefs.type = b.dataset.type; renderSetup(); }));
+  modePicker.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { saveSetupInputs(); prefs.mode = b.dataset.mode; renderSetup(); }));
   for (let n = 1; n <= 6; n++) {
     const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = n;
-    b.addEventListener('click', () => { saveNameInputs(); playerCount = n; renderSetup(); });
+    b.type = 'button'; b.textContent = n;
+    b.addEventListener('click', () => { saveSetupInputs(); prefs.count = n; renderSetup(); });
     countPicker.appendChild(b);
   }
-  function saveNameInputs() {
-    namesBox.querySelectorAll('input').forEach((inp, i) => { savedNames[i] = inp.value; });
+  function saveSetupInputs() {
+    namesBox.querySelectorAll('input').forEach((inp, i) => { prefs.names[i] = inp.value; });
+    prefs.myName = $('myName').value;
   }
   function renderSetup() {
-    modePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === gameMode));
-    [...countPicker.children].forEach((b, i) => b.classList.toggle('on', i + 1 === playerCount));
+    typePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.type === prefs.type));
+    modePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === prefs.mode));
+    $('diceBlock').classList.toggle('hidden', prefs.type === 'join');
+    $('localBlock').classList.toggle('hidden', prefs.type !== 'local');
+    $('netBlock').classList.toggle('hidden', prefs.type === 'local');
+    $('codeLabel').classList.toggle('hidden', prefs.type !== 'join');
+    $('myName').value = prefs.myName || '';
+    $('startBtn').textContent = { local: 'Commencer la partie', host: 'Créer la partie', join: 'Rejoindre la partie' }[prefs.type];
+    $('setupErr').textContent = '';
+    [...countPicker.children].forEach((b, i) => b.classList.toggle('on', i + 1 === prefs.count));
     namesBox.innerHTML = '';
-    for (let i = 0; i < playerCount; i++) {
+    for (let i = 0; i < prefs.count; i++) {
       const label = document.createElement('label');
       label.innerHTML = `<span>${i + 1}</span>`;
       const inp = document.createElement('input');
-      inp.type = 'text';
-      inp.maxLength = 20;
-      inp.placeholder = `Joueur ${i + 1}`;
-      inp.value = savedNames[i] || '';
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+      inp.type = 'text'; inp.maxLength = 20; inp.placeholder = `Joueur ${i + 1}`;
+      inp.value = prefs.names[i] || '';
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
       label.appendChild(inp);
       namesBox.appendChild(label);
     }
   }
+  $('myName').addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
+  $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
+  $('startBtn').addEventListener('click', onStart);
 
-  // ---------- État du jeu ----------
-  // phase : 'start' (début du tour), 'enter' (saisie des vrais dés), 'choose', 'rolling', 'lost'
-  const state = {
-    mode: 'virtual',
-    pending: [],   // indices des dés à saisir (mode vrais dés)
-    players: [],
-    current: 0,
-    phase: 'start',
-    dice: Array.from({ length: 6 }, () => ({ value: rand(), kept: false, selected: false })),
-    turnScore: 0,
-    turnParts: []
-  };
-
-  const show = id => ['setup','game','victory'].forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
-
-  function startGame() {
-    saveNameInputs();
-    const names = [];
-    for (let i = 0; i < playerCount; i++) names.push((savedNames[i] || '').trim() || `Joueur ${i + 1}`);
+  async function onStart() {
+    saveSetupInputs();
+    savePrefs();
+    const err = $('setupErr');
+    err.textContent = '';
+    if (prefs.type === 'local') {
+      const players = [];
+      for (let i = 0; i < prefs.count; i++) players.push({ name: cleanName(prefs.names[i] || '') || `Joueur ${i + 1}` });
+      appMode = 'local';
+      G = newGame(players, prefs.mode);
+      lastAnim = null;
+      show('game');
+      renderGame();
+      return;
+    }
+    const name = cleanName(prefs.myName);
+    if (!name) { err.textContent = 'Entrez votre nom.'; return; }
+    let code = '';
+    if (prefs.type === 'join') {
+      code = $('joinCode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 4) { err.textContent = 'Le code de la partie fait 4 caractères.'; return; }
+    }
+    $('startBtn').disabled = true;
+    err.textContent = 'Connexion…';
+    const lobby = await lobbyRoomPromise;
+    if (!lobby) {
+      $('startBtn').disabled = false;
+      err.textContent = "Le mode réseau n'est disponible que sur la page publiée sur claude.ai.";
+      return;
+    }
+    if (prefs.type === 'host') code = makeCode();
     try {
-      localStorage.setItem('5000-names', JSON.stringify(savedNames.slice(0, 6)));
-      localStorage.setItem('5000-count', String(playerCount));
-      localStorage.setItem('5000-mode', gameMode);
-    } catch (e) {}
-    state.mode = gameMode;
-    state.players = names.map(name => ({ name, total: 0 }));
-    state.current = 0;
-    show('game');
-    beginTurn();
+      room = await lobby.join('g5000-' + code.toLowerCase());
+    } catch (e) {
+      $('startBtn').disabled = false;
+      err.textContent = "Impossible de se connecter à la partie. Réessayez dans un instant.";
+      return;
+    }
+    $('startBtn').disabled = false;
+    err.textContent = '';
+    roomCode = code;
+    peersNow = [];
+    G = null; lastAnim = null; lastHostGame = null;
+    room.onConnection(ok => { $('netStatus').textContent = ok ? '' : 'Connexion perdue… reconnexion en cours'; });
+    room.onPeers(onPeersChange);
+    if (prefs.type === 'host') {
+      appMode = 'host';
+      hostName = name;
+      Object.keys(lastSeq).forEach(k => delete lastSeq[k]);
+      room.presence({ role: 'host', name, game: null }).catch(() => {});
+    } else {
+      appMode = 'guest';
+      guestSeq = 0; guestActs = [];
+      hostSeen = false;
+      room.presence({ role: 'guest', name, joinedAt: Date.now(), acts: [] }).catch(() => {});
+      clearTimeout(hostMissingTimer);
+      hostMissingTimer = setTimeout(() => { if (!hostSeen && appMode === 'guest') renderLobby(); }, 5000);
+    }
+    show('lobby');
+    renderLobby();
   }
 
-  function beginTurn() {
-    state.dice.forEach(d => { d.kept = false; d.selected = false; });
-    state.turnScore = 0;
-    state.turnParts = [];
-    state.phase = 'start';
-    setMessage(`À ${cur().name} de jouer !`);
-    if (state.mode === 'manual') { startRoll([0,1,2,3,4,5]); return; }
-    render();
+  function makeCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
   }
 
-  // Lance les dés à l'écran, ou demande la saisie des vrais dés
-  function startRoll(indices) {
-    if (state.mode === 'virtual') { rollDice(indices); return; }
-    state.pending = indices;
-    indices.forEach(i => { state.dice[i].value = null; });
-    state.phase = 'enter';
-    const n = indices.length;
-    setMessage(`${cur().name} : lancez ${n} dé${n > 1 ? 's' : ''} et indiquez les faces obtenues`);
-    render();
+  // =====================================================================
+  // Réseau
+  // =====================================================================
+  const presenceOf = p => (p && p.presence) || {};
+  function guestsInRoom() {
+    return peersNow
+      .filter(p => !p.sameTab && p.kind === 'viewer' && presenceOf(p).role === 'guest' && cleanName(presenceOf(p).name))
+      .sort((a, b) => (Number(presenceOf(a).joinedAt) || 0) - (Number(presenceOf(b).joinedAt) || 0));
+  }
+  const findHost = () => peersNow.find(p => !p.sameTab && presenceOf(p).role === 'host');
+  const isPresent = peer => peersNow.some(p => p.peer === peer);
+
+  function onPeersChange(change) {
+    peersNow = change.peers;
+    const me = peersNow.find(p => p.sameTab);
+    if (me) myPeer = me.peer;
+    if (appMode === 'host') {
+      if (!G) { renderLobby(); return; }
+      processGuestActs();
+      if (!$('game').classList.contains('hidden')) renderGame();
+    } else if (appMode === 'guest') {
+      onHostState();
+    }
   }
 
-  // Palette de saisie
-  const paletteRow = document.getElementById('paletteRow');
-  for (let v = 1; v <= 6; v++) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.innerHTML = dieSVG(v);
-    b.setAttribute('aria-label', `Ajouter un ${v}`);
-    b.addEventListener('click', () => {
-      if (state.phase !== 'enter') return;
-      const i = state.pending.find(i => state.dice[i].value === null);
-      if (i === undefined) return;
-      state.dice[i].value = v;
-      render();
+  // --- Hôte : applique les actions des invités ---
+  function processGuestActs() {
+    let changed = false;
+    for (const p of peersNow) {
+      if (p.sameTab) continue;
+      const acts = presenceOf(p).acts;
+      if (!Array.isArray(acts)) continue;
+      for (const a of acts) {
+        if (!a || typeof a.n !== 'number') continue;
+        if (a.n <= (lastSeq[p.peer] || 0)) continue;
+        lastSeq[p.peer] = a.n;
+        if (!G || G.phase === 'over' || a.type === 'skip') continue;
+        const idx = G.players.findIndex(pl => pl.peer === p.peer);
+        if (idx !== G.current) continue;
+        if (act(G, a)) changed = true;
+      }
+    }
+    if (changed) publish();
+  }
+  function publish() {
+    if (appMode === 'host' && room) room.presence({ game: G }).catch(() => {});
+  }
+
+  // --- Invité : reçoit l'état de l'hôte ---
+  function onHostState() {
+    const h = findHost();
+    if (!h) {
+      if (hostSeen) {
+        $('netStatus').textContent = "L'hôte s'est déconnecté. La partie reprendra s'il revient.";
+      }
+      if (!G) renderLobby();
+      return;
+    }
+    hostSeen = true;
+    $('netStatus').textContent = '';
+    const g = presenceOf(h).game;
+    if (!g || typeof g !== 'object') {
+      G = null; lastHostGame = null;
+      show('lobby'); renderLobby();
+      return;
+    }
+    if (g === lastHostGame) return;
+    lastHostGame = g;
+    try {
+      const copy = JSON.parse(JSON.stringify(g));
+      if (!Array.isArray(copy.players) || !Array.isArray(copy.dice) || copy.dice.length !== 6) return;
+      copy.players.forEach(p => { p.name = cleanName(p.name) || 'Joueur'; });
+      G = copy;
+    } catch (e) { return; }
+    if (G.phase === 'over') { showVictory(); return; }
+    if ($('game').classList.contains('hidden')) { lastAnim = null; show('game'); }
+    renderGame();
+  }
+
+  // --- Salle d'attente ---
+  function renderLobby() {
+    $('lobbyCode').textContent = roomCode;
+    const list = $('lobbyList');
+    const info = $('lobbyInfo');
+    const startBtn = $('lobbyStart');
+    if (appMode === 'host') {
+      $('lobbyTitle').textContent = 'Votre partie en réseau';
+      $('lobbyCodeHint').textContent = 'Donnez ce code aux autres joueurs';
+      const guests = guestsInRoom();
+      const rows = [`<li><span>${esc(hostName)} <span class="you-tag">vous</span></span><em>hôte</em></li>`];
+      guests.forEach((p, i) => {
+        rows.push(`<li><span>${esc(cleanName(presenceOf(p).name))}</span><em>${i < 5 ? 'prêt' : 'partie complète'}</em></li>`);
+      });
+      list.innerHTML = rows.join('');
+      info.textContent = guests.length ? `${Math.min(guests.length, 5) + 1} joueur(s) — lancez la partie quand tout le monde est là.` : 'En attente des autres joueurs…';
+      startBtn.classList.remove('hidden');
+      startBtn.disabled = guests.length === 0;
+    } else {
+      $('lobbyTitle').textContent = 'Partie en réseau';
+      $('lobbyCodeHint').textContent = '';
+      const h = findHost();
+      const rows = [];
+      if (h) rows.push(`<li><span>${esc(cleanName(presenceOf(h).name) || 'Hôte')}</span><em>hôte</em></li>`);
+      guestsInRoom().forEach(p => rows.push(`<li><span>${esc(cleanName(presenceOf(p).name))}</span><em>prêt</em></li>`));
+      rows.push(`<li><span>${esc(cleanName(prefs.myName))} <span class="you-tag">vous</span></span><em>prêt</em></li>`);
+      list.innerHTML = rows.join('');
+      info.textContent = h ? "En attente que l'hôte lance la partie…"
+        : (hostSeen ? "L'hôte s'est déconnecté." : 'Recherche de la partie… Vérifiez le code si rien ne se passe.');
+      startBtn.classList.add('hidden');
+    }
+  }
+
+  $('lobbyStart').addEventListener('click', () => {
+    if (appMode !== 'host') return;
+    const me = peersNow.find(p => p.sameTab);
+    if (me) myPeer = me.peer;
+    const guests = guestsInRoom().slice(0, 5);
+    if (!guests.length) return;
+    // ignore les anciennes actions des invités
+    guests.forEach(p => {
+      const acts = presenceOf(p).acts;
+      lastSeq[p.peer] = Array.isArray(acts) ? acts.reduce((m, a) => Math.max(m, Number(a && a.n) || 0), 0) : 0;
     });
-    paletteRow.appendChild(b);
+    const players = [{ name: hostName, peer: myPeer }]
+      .concat(guests.map(p => ({ name: cleanName(presenceOf(p).name), peer: p.peer })));
+    G = newGame(players, prefs.mode);
+    lastAnim = null;
+    publish();
+    show('game');
+    renderGame();
+  });
+
+  $('lobbyLeave').addEventListener('click', leaveToMenu);
+
+  function leaveToMenu() {
+    clearTimeout(hostMissingTimer);
+    if (room) { room.leave().catch(() => {}); room = null; }
+    appMode = 'local';
+    G = null; peersNow = [];
+    $('netStatus').textContent = '';
+    renderSetup();
+    show('setup');
   }
 
-  const cur = () => state.players[state.current];
-  function nextPlayer() {
-    state.current = (state.current + 1) % state.players.length;
-    beginTurn();
+  // =====================================================================
+  // Actions du joueur
+  // =====================================================================
+  const myIndex = () => {
+    if (!G) return -1;
+    if (appMode === 'local') return G.current;
+    return G.players.findIndex(p => p.peer && p.peer === myPeer);
+  };
+  const canControl = () => !!G && (appMode === 'local' || myIndex() === G.current);
+
+  function dispatch(a) {
+    if (!G || animating) return;
+    if (appMode === 'guest') {
+      if (!canControl()) return;
+      guestActs.push(Object.assign({}, a, { n: ++guestSeq }));
+      guestActs = guestActs.slice(-12);
+      room.presence({ acts: guestActs }).catch(() => {});
+      return;
+    }
+    if (appMode === 'host' && a.type !== 'skip' && !canControl()) return;
+    if (act(G, a)) {
+      publish();
+      if (G.phase === 'over') { showVictory(); return; }
+      renderGame();
+    }
   }
 
-  const msg = document.getElementById('message');
-  function setMessage(text, kind) {
-    msg.textContent = text;
-    msg.className = 'sub' + (kind ? ' ' + kind : '');
-  }
-
-  // ---------- Dés ----------
-  const table = document.getElementById('table');
-  const rollBtn = document.getElementById('rollBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const stopHint = document.getElementById('stopHint');
-  const buttons = state.dice.map((d, i) => {
+  // =====================================================================
+  // Affichage de la partie
+  // =====================================================================
+  const table = $('table'), rollBtn = $('rollBtn'), stopBtn = $('stopBtn'), skipBtn = $('skipBtn'), stopHint = $('stopHint');
+  const buttons = Array.from({ length: 6 }, (_, i) => {
     const b = document.createElement('button');
-    b.className = 'die';
-    b.type = 'button';
-    b.addEventListener('click', () => toggle(i));
+    b.className = 'die'; b.type = 'button';
+    b.addEventListener('click', () => dispatch({ type: 'toggle', i }));
     table.appendChild(b);
     return b;
   });
+  const paletteRow = $('paletteRow');
+  for (let v = 1; v <= 6; v++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.innerHTML = dieSVG(v);
+    b.setAttribute('aria-label', `Ajouter un ${v}`);
+    b.addEventListener('click', () => dispatch({ type: 'face', v }));
+    paletteRow.appendChild(b);
+  }
+  rollBtn.addEventListener('click', () => dispatch({ type: 'roll' }));
+  stopBtn.addEventListener('click', () => dispatch({ type: 'stop' }));
+  skipBtn.addEventListener('click', () => dispatch({ type: 'skip' }));
 
-  const selection = () => state.dice.filter(d => d.selected).map(d => d.value);
+  let lastAnim = null, animating = false, animIdx = [];
 
-  function renderPlayers() {
-    document.getElementById('players').innerHTML = state.players.map((p, i) => `
-      <div class="player${i === state.current ? ' current' : ''}">
-        <div class="pname">${esc(p.name)}</div>
-        <div class="ptotal">${p.total}</div>
-        <div class="pnote">${p.total === 0 ? `ouvre à ${OPENING}` : '&nbsp;'}</div>
-      </div>`).join('');
+  function renderGame() {
+    if (!G) return;
+    if (G.phase === 'over') { showVictory(); return; }
+    if (animating) return; // l'animation en cours affichera le dernier état
+    const a = G.anim || { id: 0, idx: [] };
+    if (lastAnim !== null && a.id !== lastAnim && Array.isArray(a.idx) && a.idx.length) {
+      lastAnim = a.id;
+      animate(a.idx.filter(i => i >= 0 && i < 6));
+      return;
+    }
+    lastAnim = a.id;
+    draw();
   }
 
-  function render() {
-    renderPlayers();
+  function animate(idx) {
+    animating = true; animIdx = idx;
+    draw();
+    idx.forEach(i => { const b = buttons[i]; b.classList.remove('rolling'); void b.offsetWidth; b.classList.add('rolling'); });
+    let ticks = 0;
+    const t = setInterval(() => {
+      idx.forEach(i => { buttons[i].innerHTML = dieSVG(rand()); });
+      if (++ticks >= 6) {
+        clearInterval(t);
+        idx.forEach(i => buttons[i].classList.remove('rolling'));
+        animating = false; animIdx = [];
+        renderGame();
+      }
+    }, 80);
+  }
 
-    state.dice.forEach((d, i) => {
+  function draw() {
+    const control = canControl();
+    const mine = myIndex();
+
+    // Joueurs
+    $('players').innerHTML = G.players.map((p, i) => {
+      const away = appMode !== 'local' && p.peer && p.peer !== myPeer && !isPresent(p.peer);
+      const you = appMode !== 'local' && i === mine;
+      return `<div class="player${i === G.current ? ' current' : ''}${away ? ' away' : ''}">
+        <div class="pname">${esc(p.name)}${you ? '<span class="you-tag">vous</span>' : ''}</div>
+        <div class="ptotal">${Number(p.total) || 0}</div>
+        <div class="pnote">${away ? 'déconnecté' : (!p.total ? `ouvre à ${OPENING}` : '&nbsp;')}</div>
+      </div>`;
+    }).join('');
+
+    // Bandeau de tour
+    const banner = $('turnBanner');
+    if (appMode === 'local') banner.textContent = '';
+    else if (control) banner.textContent = 'À vous de jouer !';
+    else if (mine === -1) banner.textContent = 'Vous regardez la partie';
+    else banner.textContent = `Tour de ${curP(G).name}…`;
+
+    const m = $('message');
+    m.textContent = (G.msg && G.msg.text) || '';
+    m.className = 'sub' + (G.msg && G.msg.kind ? ' ' + G.msg.kind : '');
+
+    // Dés
+    G.dice.forEach((d, i) => {
       const b = buttons[i];
-      b.innerHTML = dieSVG(d.value);
-      b.classList.toggle('selected', d.selected);
-      b.classList.toggle('kept', d.kept);
-      const enterable = state.phase === 'enter' && state.pending.includes(i) && d.value !== null;
-      b.disabled = !(enterable || (state.phase === 'choose' && !d.kept));
-      b.classList.toggle('pending-empty', d.value === null);
+      b.innerHTML = animIdx.includes(i) ? dieSVG(rand()) : dieSVG(d.value);
+      b.classList.toggle('selected', !!d.selected);
+      b.classList.toggle('kept', !!d.kept);
+      b.classList.toggle('pending-empty', !FACES[d.value]);
+      const enterable = G.phase === 'enter' && G.pending.includes(i) && d.value !== null;
+      b.disabled = animating || !control || !(enterable || (G.phase === 'choose' && !d.kept));
       if (d.kept) b.insertAdjacentHTML('beforeend', '<span class="tag">Gardé</span>');
       else if (d.selected) b.insertAdjacentHTML('beforeend', '<span class="tag">Sélectionné</span>');
       b.setAttribute('aria-pressed', d.selected ? 'true' : 'false');
     });
 
-    const sel = selection();
-    const r = sel.length ? computeScore(sel) : null;
-    const selOk = !!(r && r.valid);
-    const selValue = document.getElementById('selValue');
-    const selDetail = document.getElementById('selDetail');
-    if (!r) {
+    $('palette').classList.toggle('hidden', !(G.phase === 'enter' && control));
+
+    // Scores
+    const I = info(G);
+    const selValue = $('selValue'), selDetail = $('selDetail');
+    if (!I.r) {
       selValue.textContent = 0;
-      selDetail.textContent = state.phase === 'choose' ? 'Cliquez sur des dés' : '';
+      selDetail.textContent = G.phase === 'choose' && control ? 'Cliquez sur des dés' : '';
       selDetail.classList.remove('bad');
     } else {
-      selValue.textContent = selOk ? r.score : 0;
-      selDetail.textContent = selOk ? r.detail : 'Sélection non valide : chaque dé doit compter';
-      selDetail.classList.toggle('bad', !selOk);
+      selValue.textContent = I.selOk ? I.r.score : 0;
+      selDetail.textContent = I.selOk ? I.r.detail : 'Sélection non valide : chaque dé doit compter';
+      selDetail.classList.toggle('bad', !I.selOk);
     }
+    $('turnValue').textContent = I.potential;
+    $('turnDetail').textContent = G.turnParts.concat(I.selOk ? [String(I.r.score)] : []).join(' + ');
 
-    const potential = state.turnScore + (selOk ? r.score : 0);
-    document.getElementById('turnValue').textContent = potential;
-    document.getElementById('turnDetail').textContent =
-      state.turnParts.concat(selOk ? [String(r.score)] : []).join(' + ');
-
-    const remaining = state.dice.filter(d => !d.kept && !d.selected).length;
-    stopBtn.classList.toggle('hidden', state.phase !== 'choose');
+    // Boutons
+    rollBtn.classList.toggle('hidden', !control);
+    stopBtn.classList.toggle('hidden', !control || G.phase !== 'choose');
     stopHint.textContent = '';
-
-    document.getElementById('palette').classList.toggle('hidden', state.phase !== 'enter');
-
-    if (state.phase === 'start') {
+    if (G.phase === 'start') {
       rollBtn.textContent = 'Lancer les dés';
-      rollBtn.disabled = false;
-    } else if (state.phase === 'enter') {
-      const missing = state.pending.filter(i => state.dice[i].value === null).length;
+      rollBtn.disabled = animating;
+    } else if (G.phase === 'enter') {
+      const missing = G.pending.filter(i => G.dice[i].value === null).length;
       rollBtn.textContent = missing ? `Encore ${missing} dé${missing > 1 ? 's' : ''} à saisir` : 'Valider le lancer';
       rollBtn.disabled = missing > 0;
-    } else if (state.phase === 'choose') {
-      rollBtn.textContent = remaining === 0
-        ? 'Relancer les 6 dés'
-        : `Relancer ${remaining} dé${remaining > 1 ? 's' : ''}`;
-      rollBtn.disabled = !selOk;
-      const notOpened = cur().total === 0;
-      const fullHand = remaining === 0; // les 6 dés comptent : relance obligatoire
-      const canStop = selOk && !fullHand && (!notOpened || potential >= OPENING);
-      stopBtn.disabled = !canStop;
-      stopBtn.textContent = selOk ? `S'arrêter (+${potential})` : "S'arrêter";
-      if (!selOk) stopHint.textContent = 'Sélectionnez au moins une combinaison gagnante';
-      else if (fullHand) stopHint.textContent = 'Les 6 dés comptent : vous devez relancer les 6 dés';
-      else if (notOpened && potential < OPENING) stopHint.textContent = `Il faut au moins ${OPENING} points pour entrer dans la partie (encore ${OPENING - potential})`;
-    } else if (state.phase === 'lost') {
-      rollBtn.textContent = `Au tour de ${state.players[(state.current + 1) % state.players.length].name}`;
-      rollBtn.disabled = false;
-    } else {
-      rollBtn.disabled = true;
-    }
-  }
-
-  function toggle(i) {
-    const d = state.dice[i];
-    if (state.phase === 'enter') {
-      if (state.pending.includes(i)) { d.value = null; render(); }
-      return;
-    }
-    if (state.phase !== 'choose' || d.kept) return;
-    d.selected = !d.selected;
-    render();
-  }
-
-  function rollDice(indices) {
-    state.phase = 'rolling';
-    render();
-    indices.forEach(i => {
-      const b = buttons[i];
-      b.classList.remove('rolling'); void b.offsetWidth; b.classList.add('rolling');
-      state.dice[i].value = rand();
-    });
-    let ticks = 0;
-    const t = setInterval(() => {
-      indices.forEach(i => { buttons[i].innerHTML = dieSVG(rand()); });
-      if (++ticks >= 6) {
-        clearInterval(t);
-        indices.forEach(i => buttons[i].classList.remove('rolling'));
-        afterRoll(indices);
+    } else if (G.phase === 'choose') {
+      rollBtn.textContent = I.remaining === 0 ? 'Relancer les 6 dés' : `Relancer ${I.remaining} dé${I.remaining > 1 ? 's' : ''}`;
+      rollBtn.disabled = animating || !I.selOk;
+      stopBtn.disabled = animating || !I.canStop;
+      stopBtn.textContent = I.selOk ? `S'arrêter (+${I.potential})` : "S'arrêter";
+      if (control) {
+        if (!I.selOk) stopHint.textContent = 'Sélectionnez au moins une combinaison gagnante';
+        else if (I.fullHand) stopHint.textContent = 'Les 6 dés comptent : vous devez relancer les 6 dés';
+        else if (I.notOpened && I.potential < OPENING) stopHint.textContent = `Il faut au moins ${OPENING} points pour entrer dans la partie (encore ${OPENING - I.potential})`;
       }
-    }, 80);
-  }
-
-  function afterRoll(indices) {
-    const r = computeScore(indices.map(i => state.dice[i].value));
-    if (r.score === 0) {
-      state.phase = 'lost';
-      setMessage(state.turnScore > 0
-        ? `Aucune combinaison… ${cur().name} perd ses ${state.turnScore} points du tour`
-        : `Aucune combinaison… tour perdu pour ${cur().name}`, 'lost');
-      state.turnScore = 0;
-      state.turnParts = [];
-    } else {
-      state.phase = 'choose';
-      setMessage(`${cur().name} : sélectionnez vos dés gagnants (jusqu'à ${r.score} points sur ce lancer)`);
+    } else if (G.phase === 'lost') {
+      rollBtn.textContent = `Au tour de ${G.players[(G.current + 1) % G.players.length].name}`;
+      rollBtn.disabled = false;
     }
-    render();
+
+    // L'hôte peut passer le tour d'un joueur déconnecté
+    const cp = curP(G);
+    const showSkip = appMode === 'host' && cp.peer && cp.peer !== myPeer && !isPresent(cp.peer);
+    skipBtn.classList.toggle('hidden', !showSkip);
+    if (showSkip) skipBtn.textContent = `Passer le tour de ${cp.name}`;
+
+    $('quitBtn').textContent = appMode === 'local' ? 'Nouvelle partie' : 'Quitter la partie';
   }
 
-  // Met de côté la sélection et l'ajoute aux points du tour
-  function bankSelection() {
-    const r = computeScore(selection());
-    if (!r.valid) return false;
-    state.turnScore += r.score;
-    state.turnParts.push(String(r.score));
-    state.dice.forEach(d => { if (d.selected) { d.selected = false; d.kept = true; } });
-    return true;
-  }
-
-  rollBtn.addEventListener('click', () => {
-    if (state.phase === 'start') { startRoll([0,1,2,3,4,5]); return; }
-    if (state.phase === 'enter') {
-      if (state.pending.every(i => state.dice[i].value !== null)) afterRoll(state.pending);
-      return;
-    }
-    if (state.phase === 'lost') { nextPlayer(); return; }
-    if (state.phase !== 'choose') return;
-    if (!bankSelection()) return;
-    if (state.dice.every(d => d.kept)) state.dice.forEach(d => d.kept = false); // main pleine
-    startRoll(state.dice.map((d, i) => d.kept ? -1 : i).filter(i => i >= 0));
-  });
-
-  stopBtn.addEventListener('click', () => {
-    if (state.phase !== 'choose' || stopBtn.disabled) return;
-    if (!bankSelection()) return;
-    const p = cur();
-    p.total += state.turnScore;
-    if (p.total >= TARGET) { showVictory(p); return; }
-    const gained = state.turnScore;
-    nextPlayer();
-    setMessage(`${p.name} ajoute ${gained} points. À ${cur().name} de jouer !`, 'good');
-  });
-
-  function showVictory(winner) {
-    document.getElementById('winnerName').textContent = `${winner.name} — ${winner.total} points`;
-    const sorted = [...state.players].sort((a, b) => b.total - a.total);
-    document.getElementById('ranking').innerHTML =
-      sorted.map(p => `<li><span>${esc(p.name)}</span><b>${p.total}</b></li>`).join('');
+  // =====================================================================
+  // Victoire
+  // =====================================================================
+  function showVictory() {
+    const w = G.players[G.winner] || curP(G);
+    $('winnerName').textContent = `${w.name} — ${w.total} points`;
+    const sorted = [...G.players].sort((a, b) => b.total - a.total);
+    $('ranking').innerHTML = sorted.map(p => `<li><span>${esc(p.name)}</span><b>${Number(p.total) || 0}</b></li>`).join('');
+    const canReplay = appMode !== 'guest';
+    $('replayBtn').classList.toggle('hidden', !canReplay);
+    $('victoryInfo').textContent = appMode === 'guest' ? "L'hôte peut relancer une nouvelle partie." : '';
+    $('backBtn').textContent = appMode === 'local' ? 'Retour au menu' : 'Quitter';
     show('victory');
   }
+  $('replayBtn').addEventListener('click', () => {
+    if (!G || appMode === 'guest') return;
+    let players = G.players;
+    if (appMode === 'host') players = players.filter(p => p.peer === myPeer || isPresent(p.peer));
+    G = newGame(players, G.diceMode);
+    lastAnim = null;
+    publish();
+    show('game');
+    renderGame();
+  });
+  $('backBtn').addEventListener('click', leaveToMenu);
 
-  // Nouvelle partie (avec confirmation en deux clics)
-  const quitBtn = document.getElementById('quitBtn');
+  // Quitter (confirmation en deux clics)
+  const quitBtn = $('quitBtn');
   let quitTimer = null;
   quitBtn.addEventListener('click', () => {
     if (quitBtn.dataset.confirm === '1') {
       clearTimeout(quitTimer);
-      quitBtn.dataset.confirm = ''; quitBtn.textContent = 'Nouvelle partie';
-      renderSetup(); show('setup');
+      quitBtn.dataset.confirm = '';
+      leaveToMenu();
       return;
     }
     quitBtn.dataset.confirm = '1';
     quitBtn.textContent = 'Cliquez encore pour confirmer';
-    quitTimer = setTimeout(() => { quitBtn.dataset.confirm = ''; quitBtn.textContent = 'Nouvelle partie'; }, 3000);
+    quitTimer = setTimeout(() => {
+      quitBtn.dataset.confirm = '';
+      quitBtn.textContent = appMode === 'local' ? 'Nouvelle partie' : 'Quitter la partie';
+    }, 3000);
   });
-
-  document.getElementById('startBtn').addEventListener('click', startGame);
-  document.getElementById('replayBtn').addEventListener('click', () => {
-    state.players.forEach(p => p.total = 0);
-    state.current = 0;
-    show('game');
-    beginTurn();
-  });
-  document.getElementById('backBtn').addEventListener('click', () => { renderSetup(); show('setup'); });
 
   renderSetup();
 </script>
 </body>
 </html>
-
