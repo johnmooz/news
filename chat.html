@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chat à deux</title>
+<title>Salon de chat</title>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +13,7 @@
     min-height: 100vh; display: flex; justify-content: center; align-items: flex-start;
     padding: 48px 16px;
   }
-  .card { width: 100%; max-width: 560px; }
+  .card { width: 100%; max-width: 600px; }
   h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
   p.sub { color: #555; margin-bottom: 28px; font-size: 15px; }
   label { display: block; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
@@ -33,10 +33,11 @@
   button.ghost:hover { background: #000; color: #fff; }
   button.icon { padding: 14px; width: 54px; font-size: 20px; line-height: 1; background: #fff; color: #000; }
   button.icon:hover { background: #000; color: #fff; }
+  button.icon:disabled { background: #fff; color: #000; }
   button.icon.rec { background: #b00000; border-color: #b00000; color: #fff; animation: pulse 1s infinite; }
   @keyframes pulse { 50% { opacity: .6; } }
   .row { display: flex; gap: 10px; margin-top: 14px; }
-  .row input { flex: 1; }
+  .row input { flex: 1; min-width: 0; }
   .hidden { display: none !important; }
   .me { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
   .idbox {
@@ -45,20 +46,30 @@
   }
   .mono { font-family: "SF Mono", Menlo, Consolas, monospace; }
   .idbox .id { font-size: 30px; font-weight: 700; letter-spacing: 4px; }
-  .status { font-size: 14px; color: #555; margin-top: 12px; min-height: 20px; }
+  .status { font-size: 14px; color: #555; margin-top: 10px; min-height: 20px; }
   .status.err { color: #b00000; }
   .tag { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: .8em; font-weight: 600; letter-spacing: 1px; border: 1.5px solid currentColor; padding: 1px 5px; margin-left: 6px; }
 
-  /* Chat */
-  .chat-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 2px solid #000; padding-bottom: 12px; }
-  .chat-head .who { font-size: 18px; font-weight: 700; display: flex; align-items: center; flex-wrap: wrap; }
-  .chat-head .self { font-size: 13px; color: #555; margin-top: 4px; display: flex; align-items: center; }
-  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #1a9c3a; margin-right: 8px; }
-  .dot.off { background: #bbb; }
-  .msgs { height: 55vh; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  /* Salon */
+  .room-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .room-title { font-size: 20px; font-weight: 700; }
+  .room-count { font-size: 13px; color: #555; margin-top: 2px; }
+  .members { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .chip { display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; border: 2px solid #000; padding: 4px 8px; }
+  .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #1a9c3a; margin-right: 6px; }
+  .chip.self { background: #000; color: #fff; }
+  .chip .tag { font-size: 11px; padding: 0 4px; margin-left: 6px; }
+  .add-row { display: flex; gap: 8px; }
+  .add-row input { font-size: 15px; padding: 9px 12px; letter-spacing: 2px; text-transform: uppercase; flex: 1; min-width: 0; }
+  .add-row button { font-size: 14px; padding: 9px 14px; }
+  .add-status { font-size: 13px; min-height: 18px; margin-top: 6px; color: #555; }
+  .add-status.err { color: #b00000; }
+
+  .msgs { height: 50vh; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; gap: 10px; border-top: 2px solid #000; margin-top: 8px; }
   .msg { max-width: 78%; padding: 10px 14px; font-size: 16px; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }
-  .msg .meta { font-size: 11px; opacity: .7; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; }
+  .msg .meta { font-size: 11px; opacity: .75; margin-bottom: 4px; display: flex; align-items: center; flex-wrap: wrap; font-weight: 600; }
   .msg .meta .tag { font-size: 10px; padding: 0 4px; margin: 0 6px 0 5px; }
+  .msg .meta .time { font-weight: 400; }
   .msg.mine { align-self: flex-end; background: #000; color: #fff; }
   .msg.theirs { align-self: flex-start; background: #fff; color: #000; border: 2px solid #000; }
   .msg img { display: block; max-width: 100%; max-height: 320px; cursor: zoom-in; margin-top: 2px; }
@@ -68,7 +79,6 @@
   .chat-form input { flex: 1; min-width: 0; }
   .rec-info { font-size: 13px; color: #b00000; margin-top: 8px; min-height: 18px; }
 
-  /* Visionneuse photo */
   .viewer { position: fixed; inset: 0; background: rgba(255,255,255,.96); display: flex; align-items: center; justify-content: center; cursor: zoom-out; padding: 20px; }
   .viewer img { max-width: 100%; max-height: 100%; border: 2px solid #000; }
 
@@ -84,7 +94,7 @@
 
   <!-- Étape 1 : pseudo -->
   <section id="step-name">
-    <h1>Chat à deux</h1>
+    <h1>Salon de chat</h1>
     <p class="sub">Choisis un pseudo pour obtenir ton identifiant de connexion.</p>
     <label for="name">Ton pseudo</label>
     <input id="name" maxlength="24" placeholder="ex. Jonathan" autocomplete="off">
@@ -100,29 +110,36 @@
       <span class="id mono" id="my-id">······</span>
       <button class="ghost" id="btn-copy">Copier</button>
     </div>
-    <label for="peer-id">Identifiant de l'autre personne</label>
+    <label for="peer-id">Identifiant d'une personne (ou d'un membre du salon)</label>
     <div class="row" style="margin-top:0">
       <input id="peer-id" class="mono" maxlength="6" placeholder="ABC123" autocomplete="off" style="text-transform:uppercase;letter-spacing:3px">
-      <button id="btn-connect">Se connecter</button>
+      <button id="btn-connect">Rejoindre</button>
     </div>
-    <div class="status" id="status-connect">Partage ton identifiant, ou entre celui de l'autre personne.</div>
+    <div class="status" id="status-connect">Partage ton identifiant, ou entre celui de quelqu'un pour le rejoindre.</div>
   </section>
 
-  <!-- Étape 3 : chat -->
+  <!-- Étape 3 : salon -->
   <section id="step-chat" class="hidden">
-    <div class="chat-head">
+    <div class="room-head">
       <div>
-        <div class="who"><span class="dot" id="dot"></span><span id="peer-name"></span><span class="tag" id="peer-tag"></span></div>
-        <div class="self">Toi : <span id="self-name" style="margin-left:4px"></span><span class="tag" id="self-tag"></span></div>
+        <div class="room-title">Salon</div>
+        <div class="room-count" id="room-count"></div>
       </div>
       <button class="ghost" id="btn-leave">Quitter</button>
     </div>
+    <div class="members" id="members"></div>
+    <div class="add-row">
+      <input id="add-id" class="mono" maxlength="6" placeholder="Ajouter : ABC123" autocomplete="off">
+      <button id="btn-add">Ajouter</button>
+    </div>
+    <div class="add-status" id="add-status"></div>
+
     <div class="msgs" id="msgs"></div>
     <form class="chat-form" id="chat-form">
       <button type="button" class="icon" id="btn-photo" title="Envoyer une photo">📷</button>
       <button type="button" class="icon" id="btn-rec" title="Enregistrer un message vocal">🎤</button>
       <input id="msg" placeholder="Écris un message…" autocomplete="off">
-      <button type="submit">Envoyer</button>
+      <button type="submit" id="btn-send">Envoyer</button>
       <input type="file" id="file" accept="image/*" class="hidden">
     </form>
     <div class="rec-info" id="rec-info"></div>
@@ -135,16 +152,19 @@
   const $ = id => document.getElementById(id);
   const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sans 0/O/1/I pour éviter les confusions
   const PREFIX = "chat2-";                             // évite les collisions sur le serveur PeerJS public
+  const ID_RE = /^[A-Z2-9]{6}$/;
   const MAX_REC_SECONDS = 120;
   const MAX_IMG_SIDE = 1600;
 
-  let myName = "", myId = "", peer = null, conn = null, peerName = "", peerId = "";
+  let myName = "", myId = "", peer = null, inRoom = false;
+  const members = new Map();  // id -> { conn, name }  (personnes connectées)
+  const pending = new Set();  // id en cours de connexion
+  const manual = new Map();   // id -> élément de statut, pour les connexions lancées à la main
 
   const genId = () => Array.from({length: 6}, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
   const show = id => ["step-name", "step-connect", "step-chat"].forEach(s => $(s).classList.toggle("hidden", s !== id));
   const setStatus = (el, text, err = false) => { $(el).textContent = text; $(el).classList.toggle("err", err); };
   const shortId = full => String(full || "").replace(PREFIX, "").toUpperCase();
-  const connected = () => conn && conn.open;
 
   // ---------- Étape 1 ----------
   $("name").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-start").click(); });
@@ -171,19 +191,23 @@
       $("peer-id").focus();
     });
 
-    peer.on("connection", c => {
-      if (connected()) { c.on("open", () => { c.send({type: "busy"}); setTimeout(() => c.close(), 300); }); return; }
-      setupConn(c);
-    });
+    peer.on("connection", c => setupConn(c, false));
 
     peer.on("error", err => {
       if (err.type === "unavailable-id" && tries < 5) { peer.destroy(); createPeer(tries + 1); return; }
       if (err.type === "peer-unavailable") {
-        setStatus("status-connect", "Identifiant introuvable : vérifie-le, et que l'autre page est bien ouverte.", true);
-        $("btn-connect").disabled = false;
+        const m = /chat2-([A-Z2-9]{6})/i.exec(err.message || "");
+        const id = m ? m[1].toUpperCase() : null;
+        if (id) pending.delete(id);
+        const el = id && manual.get(id);
+        if (el) {
+          manual.delete(id);
+          setStatus(el, "Identifiant " + id + " introuvable : vérifie-le, et que sa page est bien ouverte.", true);
+          $("btn-connect").disabled = false;
+        }
         return;
       }
-      const target = $("step-name").classList.contains("hidden") ? "status-connect" : "status-name";
+      const target = $("step-name").classList.contains("hidden") ? (inRoom ? "add-status" : "status-connect") : "status-name";
       setStatus(target, "Erreur de connexion (" + err.type + "). Réessaie.", true);
       $("btn-start").disabled = false;
       $("btn-connect").disabled = false;
@@ -200,84 +224,160 @@
   });
 
   $("peer-id").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-connect").click(); });
-
   $("btn-connect").addEventListener("click", () => {
-    const other = $("peer-id").value.trim().toUpperCase();
-    if (other.length !== 6) { setStatus("status-connect", "L'identifiant fait 6 caractères.", true); return; }
-    if (other === myId) { setStatus("status-connect", "C'est ton propre identifiant 🙂", true); return; }
-    $("btn-connect").disabled = true;
-    setStatus("status-connect", "Connexion en cours…");
-    setupConn(peer.connect(PREFIX + other, { reliable: true, metadata: { name: myName } }));
+    if (manualConnect($("peer-id").value, "status-connect")) $("btn-connect").disabled = true;
   });
 
-  // ---------- Connexion ----------
-  function setupConn(c) {
-    conn = c;
-    peerId = shortId(c.peer);
-    c.on("open", () => c.send({ type: "hello", name: myName, id: myId }));
+  $("add-id").addEventListener("keydown", e => { if (e.key === "Enter") $("btn-add").click(); });
+  $("btn-add").addEventListener("click", () => {
+    if (manualConnect($("add-id").value, "add-status")) $("add-id").value = "";
+  });
+
+  function manualConnect(raw, statusEl) {
+    const id = raw.trim().toUpperCase();
+    if (!ID_RE.test(id)) { setStatus(statusEl, "Un identifiant fait 6 caractères.", true); return false; }
+    if (id === myId) { setStatus(statusEl, "C'est ton propre identifiant 🙂", true); return false; }
+    if (members.has(id)) { setStatus(statusEl, members.get(id).name + " est déjà dans le salon.", true); return false; }
+    manual.set(id, statusEl);
+    setStatus(statusEl, "Connexion à " + id + "…");
+    connectTo(id);
+    return true;
+  }
+
+  // ---------- Réseau du salon ----------
+  // Chaque participant est relié directement à tous les autres.
+  // Quand deux personnes se connectent, chacune envoie à l'autre la liste de ses membres,
+  // et chacun se connecte aux membres qu'il ne connaît pas encore : les salons fusionnent.
+  function connectTo(id) {
+    if (id === myId || members.has(id) || pending.has(id)) return;
+    pending.add(id);
+    setupConn(peer.connect(PREFIX + id, { reliable: true }), true);
+  }
+
+  function broadcast(obj) {
+    members.forEach(m => { if (m.conn.open) m.conn.send(obj); });
+  }
+
+  function setupConn(c, outgoing) {
+    const id = shortId(c.peer);
+    c._outgoing = outgoing;
+    if (!ID_RE.test(id)) { c.close(); return; }
+
+    c.on("open", () => c.send({ type: "hello", name: myName }));
 
     c.on("data", d => {
       if (!d || typeof d !== "object") return;
+
       if (d.type === "hello") {
-        peerName = String(d.name || "Anonyme").slice(0, 24);
-        openChat();
+        pending.delete(id);
+        const name = String(d.name || "Anonyme").slice(0, 24);
+        const existing = members.get(id);
+
+        if (existing && existing.conn !== c) {
+          // Deux connexions vers la même personne (connexions croisées) :
+          // on garde celle lancée par le plus petit identifiant, des deux côtés.
+          const initiator = x => x._outgoing ? myId : id;
+          if (initiator(c) < initiator(existing.conn)) {
+            existing.conn._dropped = true; existing.conn.close();
+            members.set(id, { conn: c, name });
+          } else {
+            c._dropped = true; c.close();
+            return;
+          }
+        } else if (!existing) {
+          members.set(id, { conn: c, name });
+          const el = manual.get(id);
+          if (el) { manual.delete(id); setStatus(el, ""); $("btn-connect").disabled = false; }
+          enterRoom();
+          sys(name + " (" + id + ") a rejoint le salon.");
+        }
+        c.send({ type: "peers", ids: [...members.keys()].filter(x => x !== id) });
+        renderMembers();
+        return;
+      }
+
+      const m = members.get(id);
+      if (!m || m.conn !== c) return; // connexion non reconnue : on ignore
+
+      if (d.type === "peers" && Array.isArray(d.ids)) {
+        d.ids.slice(0, 50).forEach(x => { x = String(x).toUpperCase(); if (ID_RE.test(x)) connectTo(x); });
       } else if (d.type === "msg") {
-        addMsg({ text: String(d.text).slice(0, 4000) }, "theirs");
-      } else if (d.type === "img" && /^data:image\//.test(d.data)) {
-        addMsg({ img: d.data }, "theirs");
-      } else if (d.type === "audio" && /^data:audio\//.test(d.data)) {
-        addMsg({ audio: d.data }, "theirs");
-      } else if (d.type === "busy") {
-        setStatus("status-connect", "Cette personne est déjà en conversation.", true);
-        $("btn-connect").disabled = false;
-        conn = null;
+        addMsg({ text: String(d.text).slice(0, 4000) }, m.name, id, false);
+      } else if (d.type === "img" && typeof d.data === "string" && /^data:image\//.test(d.data)) {
+        addMsg({ img: d.data }, m.name, id, false);
+      } else if (d.type === "audio" && typeof d.data === "string" && /^data:audio\//.test(d.data)) {
+        addMsg({ audio: d.data }, m.name, id, false);
       }
     });
 
     c.on("close", () => {
-      if (conn !== c) return;
-      if (!$("step-chat").classList.contains("hidden")) {
-        sys(peerName + " (" + peerId + ") s'est déconnecté(e).");
-        $("dot").classList.add("off");
-        ["msg", "btn-photo", "btn-rec"].forEach(id => $(id).disabled = true);
-        stopRecording(true);
+      pending.delete(id);
+      if (c._dropped) return;
+      const m = members.get(id);
+      if (m && m.conn === c) {
+        members.delete(id);
+        if (inRoom) { sys(m.name + " (" + id + ") a quitté le salon."); renderMembers(); }
       }
-      conn = null;
     });
 
-    c.on("error", () => { setStatus("status-connect", "La connexion a échoué. Réessaie.", true); $("btn-connect").disabled = false; });
+    c.on("error", () => {
+      pending.delete(id);
+      const el = manual.get(id);
+      if (el) { manual.delete(id); setStatus(el, "La connexion à " + id + " a échoué. Réessaie.", true); $("btn-connect").disabled = false; }
+    });
   }
 
-  // ---------- Étape 3 ----------
-  function openChat() {
-    if (!$("step-chat").classList.contains("hidden")) return;
-    $("peer-name").textContent = peerName;
-    $("peer-tag").textContent = peerId;
-    $("self-name").textContent = myName;
-    $("self-tag").textContent = myId;
+  // ---------- Étape 3 : salon ----------
+  function enterRoom() {
+    if (inRoom) return;
+    inRoom = true;
     $("msgs").innerHTML = "";
-    $("dot").classList.remove("off");
-    ["msg", "btn-photo", "btn-rec"].forEach(id => $(id).disabled = false);
-    sys("Connecté(e) avec " + peerName + " (" + peerId + "). Dites bonjour !");
+    setStatus("add-status", "");
     show("step-chat");
+    sys("Salon ouvert. Pour faire venir quelqu'un, ajoute son identifiant, ou donne-lui le tien : " + myId + ".");
     $("msg").focus();
+  }
+
+  function renderMembers() {
+    const box = $("members");
+    box.innerHTML = "";
+    const chip = (name, id, self) => {
+      const c = document.createElement("span");
+      c.className = "chip" + (self ? " self" : "");
+      if (!self) { const dot = document.createElement("span"); dot.className = "dot"; c.append(dot); }
+      const n = document.createElement("span"); n.textContent = self ? name + " (toi)" : name;
+      const t = document.createElement("span"); t.className = "tag"; t.textContent = id;
+      c.append(n, t);
+      box.append(c);
+    };
+    chip(myName, myId, true);
+    members.forEach((m, id) => chip(m.name, id, false));
+
+    const n = members.size + 1;
+    $("room-count").textContent = n + " participant" + (n > 1 ? "s" : "");
+    const alone = members.size === 0;
+    ["msg", "btn-photo", "btn-rec", "btn-send"].forEach(id => $(id).disabled = alone);
+    $("msg").placeholder = alone ? "Tu es seul(e) dans le salon…" : "Écris un message…";
+    if (alone) stopRecording(true);
   }
 
   $("chat-form").addEventListener("submit", e => {
     e.preventDefault();
     const text = $("msg").value.trim();
-    if (!text || !connected()) return;
-    conn.send({ type: "msg", text });
-    addMsg({ text }, "mine");
+    if (!text || !members.size) return;
+    broadcast({ type: "msg", text });
+    addMsg({ text }, myName, myId, true);
     $("msg").value = "";
   });
 
   $("btn-leave").addEventListener("click", () => {
     stopRecording(true);
-    if (conn) { const c = conn; conn = null; c.close(); }
+    members.forEach(m => { m.conn._dropped = true; m.conn.close(); });
+    members.clear(); pending.clear(); manual.clear();
+    inRoom = false;
     $("btn-connect").disabled = false;
     $("peer-id").value = "";
-    setStatus("status-connect", "Partage ton identifiant, ou entre celui de l'autre personne.");
+    setStatus("status-connect", "Partage ton identifiant, ou entre celui de quelqu'un pour le rejoindre.");
     show("step-connect");
   });
 
@@ -287,12 +387,12 @@
   $("file").addEventListener("change", async () => {
     const f = $("file").files[0];
     $("file").value = "";
-    if (!f || !connected()) return;
+    if (!f || !members.size) return;
     if (!f.type.startsWith("image/")) { sys("Ce fichier n'est pas une image."); return; }
     try {
       const data = await compressImage(f);
-      conn.send({ type: "img", data });
-      addMsg({ img: data }, "mine");
+      broadcast({ type: "img", data });
+      addMsg({ img: data }, myName, myId, true);
     } catch {
       sys("Impossible de lire cette image.");
     }
@@ -324,7 +424,7 @@
 
   $("btn-rec").addEventListener("click", async () => {
     if (recorder) { stopRecording(false); return; }
-    if (!connected()) return;
+    if (!members.size) return;
     if (!navigator.mediaDevices || !window.MediaRecorder) {
       sys("L'enregistrement audio n'est pas disponible dans ce navigateur (ou la page n'est pas en https).");
       return;
@@ -345,16 +445,16 @@
       clearInterval(recTimer);
       $("btn-rec").classList.remove("rec");
       $("btn-rec").textContent = "🎤";
+      $("btn-rec").title = "Enregistrer un message vocal";
       $("rec-info").textContent = "";
-      if (recCancel || !recChunks.length || !connected()) return;
-      const blob = new Blob(recChunks, { type });
+      if (recCancel || !recChunks.length || !members.size) return;
       const fr = new FileReader();
       fr.onload = () => {
-        if (!connected()) return;
-        conn.send({ type: "audio", data: fr.result });
-        addMsg({ audio: fr.result }, "mine");
+        if (!members.size) return;
+        broadcast({ type: "audio", data: fr.result });
+        addMsg({ audio: fr.result }, myName, myId, true);
       };
-      fr.readAsDataURL(blob);
+      fr.readAsDataURL(new Blob(recChunks, { type }));
     };
     recorder.start();
     recStart = Date.now();
@@ -373,22 +473,20 @@
   function stopRecording(cancel) {
     if (!recorder) return;
     recCancel = cancel;
-    $("btn-rec").title = "Enregistrer un message vocal";
     recorder.stop();
   }
 
   // ---------- Affichage ----------
-  function addMsg(content, who) {
-    const name = who === "mine" ? myName : peerName;
-    const id = who === "mine" ? myId : peerId;
+  function addMsg(content, name, id, mine) {
     const div = document.createElement("div");
-    div.className = "msg " + who;
+    div.className = "msg " + (mine ? "mine" : "theirs");
 
     const meta = document.createElement("div");
     meta.className = "meta";
     const n = document.createElement("span"); n.textContent = name;
     const t = document.createElement("span"); t.className = "tag"; t.textContent = id;
-    const h = document.createElement("span"); h.textContent = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    const h = document.createElement("span"); h.className = "time";
+    h.textContent = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
     meta.append(n, t, h);
     div.append(meta);
 
