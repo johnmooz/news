@@ -9,8 +9,7 @@
 <style>
 :root{
   --gold:#e8b75a; --gold2:#f6d28b; --ink:#f3e7cf; --muted:#b9a88a;
-  --night1:#070b1c; --night2:#141b3a; --ember:#ff7a1a;
-  --village:#3f6b3a; --loups:#8e1c1c; --ambigu:#5b2f7a;
+  --night1:#070b1c; --night2:#141b3a;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -31,15 +30,25 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:700;margin:0}
 button{font-family:'Cinzel',serif;cursor:pointer}
 .hidden{display:none!important}
 
-/* ---------- SETUP ---------- */
-#setup{position:relative;z-index:2;max-width:760px;margin:0 auto;padding:36px 18px 80px}
+/* ---------- ÉCRANS ---------- */
+.screen{position:relative;z-index:2;max-width:760px;margin:0 auto;padding:36px 18px 80px}
 .title{font-family:'Cinzel Decorative',serif;font-weight:900;text-align:center;
   font-size:clamp(2.4rem,8vw,4.4rem);letter-spacing:.04em;color:var(--gold2);
   text-shadow:0 0 18px rgba(255,140,40,.55),0 3px 0 #3a1d08}
+.title.sm{font-size:clamp(1.8rem,6vw,2.6rem);margin-bottom:18px}
 .subtitle{text-align:center;font-style:italic;color:var(--muted);margin:4px 0 28px;font-size:1.1rem}
 .panel{background:rgba(14,12,24,.78);border:1px solid rgba(232,183,90,.35);border-radius:16px;
   padding:20px 22px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(3px)}
 .panel h2{font-size:1.15rem;color:var(--gold);margin-bottom:12px;letter-spacing:.06em}
+.modes{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.mode{display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px;border-radius:18px;
+  border:1px solid rgba(232,183,90,.45);background:rgba(14,12,24,.8);color:var(--ink);transition:.2s;text-align:center}
+.mode:hover:not(:disabled){transform:translateY(-4px);box-shadow:0 0 26px rgba(255,150,50,.45);border-color:var(--gold)}
+.mode .mi{font-size:2.6rem;line-height:1}
+.mode b{font-size:1.3rem;color:var(--gold2)}
+.mode small{font-family:'Alegreya',serif;font-size:.98rem;color:var(--muted)}
+.mode:disabled{opacity:.4;cursor:not-allowed}
+.netstatus{text-align:center;margin-top:20px;color:var(--muted);font-size:.95rem;line-height:1.4}
 .count-row{display:flex;flex-wrap:wrap;gap:8px}
 .count-row button{width:46px;height:46px;border-radius:50%;border:1px solid rgba(232,183,90,.5);
   background:rgba(255,255,255,.04);color:var(--ink);font-size:1.05rem;transition:.15s}
@@ -48,9 +57,9 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
 .names label{display:flex;align-items:center;gap:8px;font-family:'Cinzel',serif;font-size:.85rem;color:var(--muted)}
 .names label span{width:22px;text-align:right}
-.names input{flex:1;min-width:0;background:#fff;color:#000;border:2px solid #fff;border-radius:8px;
+.names input,.white{flex:1;min-width:0;background:#fff;color:#000;border:2px solid #fff;border-radius:8px;
   padding:9px 10px;font-family:'Alegreya',serif;font-size:1.05rem;outline:none}
-.names input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,183,90,.35)}
+.names input:focus,.white:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,183,90,.35)}
 .roles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;cursor:pointer;
   border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.03);user-select:none;transition:.15s;font-size:.98rem}
@@ -59,12 +68,13 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .chip.on.loups{border-color:#e05050;background:rgba(160,30,30,.28)}
 .chip.on.ambigu{border-color:#b07ce0;background:rgba(110,50,150,.28)}
 .camp-label{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;color:var(--muted);margin:14px 0 6px;text-transform:uppercase}
+.camp-label:first-child{margin-top:0}
 .stepper{display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid #e05050;background:rgba(160,30,30,.22)}
 .stepper button{width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:var(--ink);font-size:1.1rem}
 .stepper b{min-width:18px;text-align:center;font-size:1.15rem}
 .summary{margin-top:14px;font-size:.98rem;color:var(--muted);line-height:1.45}
 .summary .err{color:#ff8a7a;font-weight:600}
-.big-btn{display:block;width:100%;padding:16px;border-radius:14px;border:none;font-size:1.25rem;letter-spacing:.08em;
+.big-btn{display:block;width:100%;padding:16px;border-radius:14px;border:none;font-size:1.2rem;letter-spacing:.08em;
   background:linear-gradient(180deg,#f6c56a,#c9822b);color:#2a1606;font-weight:700;
   box-shadow:0 6px 0 #6b3a10,0 10px 30px rgba(255,140,40,.35);transition:.12s}
 .big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #6b3a10}
@@ -73,12 +83,27 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .btn:hover{background:rgba(232,183,90,.25)}
 .btn.solid{background:var(--gold);color:#2a1606;font-weight:700}
 .btn.red{border-color:#e05050;color:#ffb3a8;background:rgba(160,30,30,.25)}
+.back{margin:18px auto 0;display:block}
+.code{font-family:'Cinzel Decorative',serif;font-size:2.8rem;letter-spacing:.3em;color:var(--gold2);text-align:center;text-shadow:0 0 14px rgba(255,140,40,.5)}
+.code.sm{font-family:'Cinzel',serif;font-size:.85rem;letter-spacing:.15em;display:inline-block;padding:2px 8px;border:1px solid var(--gold);border-radius:20px;text-shadow:none;margin-left:6px}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(232,183,90,.3)}
+.pchip.me{border-color:var(--gold);color:var(--gold2)}
+#gList{flex-direction:column}
+.game-row{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)}
+.game-row small{color:var(--muted)}
+.check{display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--gold)}
+.hint{font-size:.88rem;color:var(--muted);font-style:italic;text-align:center;line-height:1.4}
+.panel .hint{text-align:left}
+.dots::after{content:"";animation:dots 1.5s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 
-/* ---------- GAME ---------- */
+/* ---------- JEU ---------- */
 #game{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:10px 10px 0}
 .topbar{width:100%;max-width:900px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .topbar .small-title{font-family:'Cinzel Decorative',serif;color:var(--gold2);font-size:1.3rem;text-shadow:0 0 10px rgba(255,140,40,.5)}
-.topbar .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.topbar .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
 .topbar .btn{padding:7px 11px;font-size:.8rem}
 #stage{position:relative;margin:6px auto 0;flex-shrink:0}
 .ground{position:absolute;inset:6%;border-radius:50%;
@@ -106,7 +131,7 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 @keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),-140%);opacity:0}}
 .center-cards{position:absolute;left:50%;top:50%;display:flex;gap:4px;transform:translate(-50%,0)}
 
-.seat{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);transition:filter .3s}
+.seat{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);transition:filter .3s,opacity .3s}
 .mini{position:relative;border-radius:9px;overflow:hidden;box-shadow:0 6px 14px rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.4);transition:.35s;cursor:default;background:#111}
 .mini svg{display:block;width:100%;height:100%}
 .seat.clickable .mini{cursor:pointer}
@@ -116,8 +141,10 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .seat.seen .mini::after{content:"✓";position:absolute;top:3px;right:5px;font-size:.75rem;color:var(--gold2);text-shadow:0 0 4px #000}
 .seat.dead{filter:grayscale(1) brightness(.55)}
 .seat.dead .mini::before{content:"💀";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8em;z-index:2;filter:grayscale(0)}
+.seat.gone{opacity:.45}
 .pname{margin-top:6px;padding:2px 9px;border-radius:20px;background:rgba(0,0,0,.65);font-family:'Cinzel',serif;font-size:.78rem;
   max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(232,183,90,.25)}
+.seat.me .pname{border-color:var(--gold);color:var(--gold2)}
 .seat.active .pname{background:var(--gold);color:#2a1606;font-weight:700}
 .minif{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3px;border:2px solid rgba(255,255,255,.35);border-radius:9px}
 .minif .e{font-size:1.9em;line-height:1}
@@ -131,15 +158,17 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 #panel .panel{padding:16px 18px}
 #panel h3{font-size:1.25rem;color:var(--gold2)}
 #panel p{margin:6px 0 12px;color:var(--muted)}
-.steps{text-align:left;margin:8px 0 12px;padding:0;list-style:none;counter-reset:s}
+#panel p.step{color:var(--ink);font-size:1.12rem}
+.steps{text-align:left;margin:8px 0 12px;padding:0;list-style:none}
 .steps li{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px dashed rgba(255,255,255,.1);cursor:pointer}
 .steps li:last-child{border:none}
 .steps li input{margin-top:5px;accent-color:var(--gold)}
 .steps li.done{opacity:.45;text-decoration:line-through}
 .steps .e{font-size:1.2rem}
+.steps small{display:block;color:var(--muted);font-style:italic}
 .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
-/* ---------- MODAL ---------- */
+/* ---------- MODALE ---------- */
 .modal{position:fixed;inset:0;z-index:20;background:rgba(3,3,10,.88);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px);overflow:auto}
 .modal-inner{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:420px;width:100%}
 .who{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--muted)}
@@ -160,13 +189,12 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .thief{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .thief .opt{display:flex;flex-direction:column;align-items:center;gap:6px}
 .thief .minif{width:84px;height:118px;font-size:16px;border-radius:10px}
-.hint{font-size:.85rem;color:var(--muted);font-style:italic;text-align:center}
 
 #menu{position:fixed;z-index:15;background:#16121f;border:1px solid var(--gold);border-radius:12px;padding:6px;display:flex;flex-direction:column;min-width:200px;box-shadow:0 10px 30px rgba(0,0,0,.7)}
 #menu .mh{font-family:'Cinzel',serif;color:var(--gold2);padding:6px 10px 8px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:4px}
 #menu button{background:none;border:none;color:var(--ink);text-align:left;padding:9px 10px;border-radius:8px;font-family:'Alegreya',serif;font-size:1rem}
 #menu button:hover{background:rgba(232,183,90,.15)}
-#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;z-index:30;background:#1d1626;border:1px solid var(--gold);color:var(--gold2);padding:10px 18px;border-radius:30px;transition:.35s;font-family:'Cinzel',serif;font-size:.92rem;text-align:center;max-width:90vw}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;z-index:30;background:#1d1626;border:1px solid var(--gold);color:var(--gold2);padding:10px 18px;border-radius:30px;transition:.35s;font-family:'Cinzel',serif;font-size:.92rem;text-align:center;max-width:90vw;pointer-events:none}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 .win h2{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,7vw,2.6rem);color:var(--gold2);text-align:center;text-shadow:0 0 20px rgba(255,140,40,.6)}
 .win .emo{font-size:4rem;text-align:center}
@@ -177,40 +205,87 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 <div id="moon"></div>
 <svg id="trees" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true"><path fill="#05070f" d="M0 300V190l30-60 25 55 20-80 30 85 25-50 30 60 20-95 35 100 25-45 30 50 25-90 30 95 20-40 30 45 25-110 35 115 25-55 30 60 20-85 30 90 25-45 30 50 25-100 35 105 25-50 30 55 20-80 30 85 25-40 30 45 25-95 35 100 25-60 30 65 20-85 30 90 25-45 30 50 25-105 35 110 25-55 30 60 20-80 30 85 25-50 30 55 25-90 35 95 25-45 30 50 V300Z"/></svg>
 
-<!-- ============ SETUP ============ -->
-<section id="setup">
+<!-- ============ ACCUEIL ============ -->
+<section id="home" class="screen">
   <div class="title">Loup-Garou</div>
   <div class="subtitle">La nuit tombe sur le village… Qui se cache parmi vous ?</div>
+  <div class="modes">
+    <button class="mode" id="mSolo"><span class="mi">🔥</span><b>Solo</b><small>Un seul appareil, que l'on se passe autour du feu</small></button>
+    <button class="mode" id="mHost" disabled><span class="mi">📡</span><b>Hôte</b><small>Tu es le meneur : les autres joueurs rejoignent depuis leur appareil</small></button>
+    <button class="mode" id="mFind" disabled><span class="mi">🔍</span><b>Chercher une partie</b><small>Rejoindre la partie d'un hôte</small></button>
+  </div>
+  <div class="netstatus" id="netStatus"><span class="dots">Connexion au réseau</span></div>
+</section>
 
+<!-- ============ SOLO : RÉGLAGES ============ -->
+<section id="setup" class="screen hidden">
+  <div class="title sm">Partie solo</div>
   <div class="panel">
     <h2>Nombre de joueurs</h2>
     <div class="count-row" id="countRow"></div>
   </div>
-
   <div class="panel">
     <h2>Noms des joueurs</h2>
     <div class="names" id="names"></div>
   </div>
-
   <div class="panel">
     <h2>Composition des cartes</h2>
-    <div class="camp-label">Camp des Loups-Garous</div>
-    <div class="roles-grid" id="wolfRoles"></div>
-    <div class="camp-label">Camp des Villageois</div>
-    <div class="roles-grid" id="villageRoles"></div>
-    <div class="camp-label">Personnages solitaires / ambigus</div>
-    <div class="roles-grid" id="ambiguRoles"></div>
-    <div class="summary" id="summary"></div>
+    <div class="comp" id="sComp"></div>
   </div>
-
   <button class="big-btn" id="startBtn">🔥 Allumer le feu de camp</button>
+  <button class="btn back" data-home>← Retour</button>
 </section>
 
-<!-- ============ GAME ============ -->
+<!-- ============ HÔTE : SALON ============ -->
+<section id="hostLobby" class="screen hidden">
+  <div class="title sm">Héberger une partie</div>
+  <div class="panel">
+    <h2>Code de la partie</h2>
+    <div class="code" id="hCode">····</div>
+    <p class="hint">Tes amis ouvrent cette même page sur leur appareil, choisissent « Chercher une partie », puis rejoignent la partie portant ce code.<br>
+    Pour qu'ils y aient accès, invite-les avec le bouton « Partager » de Claude : ils doivent être connectés à leur compte Claude (un lien public ne suffit pas pour jouer en réseau).</p>
+  </div>
+  <div class="panel">
+    <h2>Meneur de jeu</h2>
+    <input class="white" id="hName" maxlength="18" placeholder="Ton nom" style="width:100%">
+    <label class="check"><input type="checkbox" id="hPlay" checked> Je joue aussi (je reçois une carte)</label>
+    <p class="hint">L'appareil de l'hôte connaît toutes les cartes : décoche si tu veux seulement animer la partie.</p>
+  </div>
+  <div class="panel">
+    <h2>Joueurs connectés (<span id="hCount">0</span>/12)</h2>
+    <div class="plist" id="hList"></div>
+  </div>
+  <div class="panel">
+    <h2>Composition des cartes</h2>
+    <div class="comp" id="hComp"></div>
+  </div>
+  <button class="big-btn" id="hStart" disabled>🃏 Distribuer les cartes</button>
+  <button class="btn back" data-home>← Fermer le salon</button>
+</section>
+
+<!-- ============ CHERCHER UNE PARTIE ============ -->
+<section id="search" class="screen hidden">
+  <div class="title sm">Rejoindre une partie</div>
+  <div id="sJoin">
+    <div class="panel">
+      <h2>Ton nom</h2>
+      <input class="white" id="gName" maxlength="18" placeholder="Ton nom" style="width:100%">
+    </div>
+    <div class="panel">
+      <h2>Parties disponibles</h2>
+      <div class="plist" id="gList"></div>
+    </div>
+  </div>
+  <div id="sWait" class="hidden"><div class="panel" id="sWaitBox"></div></div>
+  <button class="btn back" data-home>← Retour</button>
+</section>
+
+<!-- ============ JEU ============ -->
 <section id="game" class="hidden">
   <div class="topbar">
     <div class="small-title">Loup-Garou</div>
     <div class="btns">
+      <span class="code sm hidden" id="codeChip"></span>
       <button class="btn hidden" id="viewBtn">👁 Vue meneur</button>
       <button class="btn" id="newBtn">↺ Nouvelle partie</button>
     </div>
@@ -224,15 +299,14 @@ button{font-family:'Cinzel',serif;cursor:pointer}
   <div id="panel"></div>
 </section>
 
-<!-- ============ MODAL ============ -->
-<div class="modal hidden" id="modal">
-  <div class="modal-inner" id="modalInner"></div>
-</div>
+<div class="modal hidden" id="modal"><div class="modal-inner" id="modalInner"></div></div>
 <div id="menu" class="hidden"></div>
 <div id="toast"></div>
 
 <script>
-/* ------------------ DONNÉES ------------------ */
+/* =============================================================
+   DONNÉES DU JEU
+   ============================================================= */
 const ROLES = {
   villageois:{name:"Simple Villageois",icon:"🧑‍🌾",camp:"village",
     desc:"Tu n'as aucun pouvoir particulier : ta seule arme est le débat et le vote."},
@@ -265,53 +339,51 @@ const CAMP = {
   ambigu:{label:"Personnage ambigu",goal:"Tu joues avec le village : démasquer et éliminer tous les Loups-Garous."}
 };
 const SPECIALS = {loups:["gml"],village:["voyante","sorciere","chasseur","salvateur","ancien","bouc","idiot"],ambigu:["cupidon","voleur"]};
-const isWolf = r => ROLES[r].camp==="loups";
+const WINS = {
+  v:{e:"🧑‍🌾",t:"Les Villageois gagnent !",s:"Tous les Loups-Garous ont été démasqués."},
+  l:{e:"🐺",t:"Les Loups-Garous gagnent !",s:"Il n'y a plus aucun villageois pour leur résister."},
+  a:{e:"💞",t:"Les Amoureux gagnent !",s:"Ils sont les deux derniers survivants."},
+  n:{e:"🌫️",t:"Personne ne survit…",s:"Le village de Thiercelieux est désert."}
+};
+const roleOk = r => typeof r==="string" && Object.prototype.hasOwnProperty.call(ROLES,r);
+const isWolf = r => roleOk(r) && ROLES[r].camp==="loups";
 
-/* ------------------ ÉTAT ------------------ */
-let N = 6;
-let names = Array.from({length:12},(_,i)=>"");
-let wolves = 2;
-let picked = new Set();
-let S = null; // état de partie
+/* =============================================================
+   OUTILS
+   ============================================================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clean=s=>String(s||"").replace(/[\u0000-\u001f\u007f-\u009f­​‌‎‏
+-‮⁠-⁯﻿]/g,"").trim().slice(0,18);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),4000);}
+const SCREENS=["home","setup","hostLobby","search","game"];
+function show(id){SCREENS.forEach(s=>$(s).classList.toggle("hidden",s!==id));window.scrollTo(0,0);}
 
-function defaults(n){
-  wolves = n<=3?1 : n<=8?2 : 3;
-  picked = new Set();
-  if(n>=3) picked.add("voyante");
-  if(n>=5) picked.add("sorciere");
-  if(n>=6) picked.add("chasseur");
-  if(n>=7) picked.add("cupidon");
-  if(n>=9) picked.add("salvateur");
-  if(n>=11) picked.add("ancien");
-  if(n<=2){ wolves=1; picked.clear(); }
-}
-
-/* ------------------ DÉCOR ------------------ */
+/* =============================================================
+   DÉCOR
+   ============================================================= */
 (function stars(){
-  const el=document.getElementById("stars"), sh=[];
+  const sh=[];
   for(let i=0;i<160;i++){
-    const x=Math.random()*100, y=Math.random()*70, a=(Math.random()*.7+.2).toFixed(2), s=Math.random()<.1?1:0;
+    const x=Math.random()*100,y=Math.random()*70,a=(Math.random()*.7+.2).toFixed(2),s=Math.random()<.1?1:0;
     sh.push(`${x}vw ${y}vh 0 ${s}px rgba(255,255,240,${a})`);
   }
-  el.style.boxShadow=sh.join(",");
+  $("stars").style.boxShadow=sh.join(",");
 })();
 function buildFire(size){
-  const f=document.getElementById("fire");
+  const f=$("fire");
   f.style.width=f.style.height=size+"px";
   let h="";
-  const st=11;
-  for(let i=0;i<st;i++){
-    const a=i/st*Math.PI*2, r=size*.46, w=size*(.15+Math.random()*.05);
+  for(let i=0;i<11;i++){
+    const a=i/11*Math.PI*2,r=size*.46,w=size*(.15+Math.random()*.05);
     h+=`<div class="stone" style="width:${w}px;height:${w*.75}px;left:${size/2+Math.cos(a)*r-w/2}px;top:${size/2+Math.sin(a)*r*.62+size*.12-w*.37}px"></div>`;
   }
   h+=`<div class="log a"></div><div class="log b"></div>`;
   h+=`<div class="fl f1"><i></i></div><div class="fl f5"><i></i></div><div class="fl f6"><i></i></div><div class="fl f2"><i></i></div><div class="fl f3"><i></i></div><div class="fl f4"><i></i></div>`;
-  for(let i=0;i<9;i++){
-    h+=`<span class="spark" style="left:${35+Math.random()*30}%;--dx:${(Math.random()*60-30).toFixed(0)}px;animation-duration:${(1.6+Math.random()*1.8).toFixed(2)}s;animation-delay:${(Math.random()*3).toFixed(2)}s"></span>`;
-  }
+  for(let i=0;i<9;i++) h+=`<span class="spark" style="left:${35+Math.random()*30}%;--dx:${(Math.random()*60-30).toFixed(0)}px;animation-duration:${(1.6+Math.random()*1.8).toFixed(2)}s;animation-delay:${(Math.random()*3).toFixed(2)}s"></span>`;
   f.innerHTML=h;
 }
-
 const BACK_SVG = `<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
 <defs><radialGradient id="bg" cx="50%" cy="35%" r="75%"><stop offset="0" stop-color="#2b2a5c"/><stop offset="1" stop-color="#0b0a1f"/></radialGradient>
 <radialGradient id="mn" cx="40%" cy="40%"><stop offset="0" stop-color="#fffbe6"/><stop offset="1" stop-color="#d9c88e"/></radialGradient></defs>
@@ -326,75 +398,143 @@ const BACK_SVG = `<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" 
 <g fill="#000"><ellipse cx="44" cy="114" rx=".6" ry="1.1"/><ellipse cx="56" cy="114" rx=".6" ry="1.1"/></g>
 </svg>`;
 
-/* ------------------ SETUP UI ------------------ */
-const $=id=>document.getElementById(id);
-function renderSetup(){
-  $("countRow").innerHTML=Array.from({length:12},(_,i)=>`<button class="${i+1===N?"on":""}" data-n="${i+1}">${i+1}</button>`).join("");
-  $("names").innerHTML=Array.from({length:N},(_,i)=>`<label><span>${i+1}</span><input data-i="${i}" maxlength="18" placeholder="Joueur ${i+1}" value="${esc(names[i])}"></label>`).join("");
-  const chip=r=>`<div class="chip ${ROLES[r].camp} ${picked.has(r)?"on":""}" data-r="${r}"><span class="ic">${ROLES[r].icon}</span>${ROLES[r].name}</div>`;
-  $("wolfRoles").innerHTML=`<div class="stepper"><span class="ic">🐺</span><span>Loups-Garous</span><button data-w="-1">−</button><b>${wolves}</b><button data-w="1">+</button></div>`+SPECIALS.loups.map(chip).join("");
-  $("villageRoles").innerHTML=SPECIALS.village.map(chip).join("");
-  $("ambiguRoles").innerHTML=SPECIALS.ambigu.map(chip).join("");
-  renderSummary();
+/* =============================================================
+   COMPOSITION DES CARTES (partagée solo / hôte)
+   ============================================================= */
+let compN=6, wolves=2, picked=new Set(), touched=false;
+function defaults(n){
+  wolves = n<=3?1 : n<=8?2 : 3;
+  picked = new Set();
+  if(n>=3) picked.add("voyante");
+  if(n>=5) picked.add("sorciere");
+  if(n>=6) picked.add("chasseur");
+  if(n>=7) picked.add("cupidon");
+  if(n>=9) picked.add("salvateur");
+  if(n>=11) picked.add("ancien");
 }
 function deckInfo(){
   const cards=[];
   for(let i=0;i<wolves;i++) cards.push("loup");
   [...SPECIALS.loups,...SPECIALS.village,...SPECIALS.ambigu].forEach(r=>{if(picked.has(r)) cards.push(r)});
-  const total=N+(picked.has("voleur")?2:0);
-  const err = cards.length>total ? `Trop de rôles spéciaux : ${cards.length} rôles pour ${total} cartes.` :
-              cards.filter(isWolf).length===0 ? "Il faut au moins un Loup-Garou." : null;
+  const total=compN+(picked.has("voleur")?2:0);
+  const err = compN<1 ? "Il faut au moins un joueur." :
+              cards.length>total ? `Trop de rôles : ${cards.length} rôles pour ${total} cartes.` :
+              !cards.some(isWolf) ? "Il faut au moins un Loup-Garou." : null;
   while(cards.length<total) cards.push("villageois");
   return {cards,total,err};
 }
-function renderSummary(){
+function renderComp(el){
+  const chip=r=>`<div class="chip ${ROLES[r].camp} ${picked.has(r)?"on":""}" data-r="${r}"><span class="ic">${ROLES[r].icon}</span>${ROLES[r].name}</div>`;
   const {cards,total,err}=deckInfo();
   const count={}; cards.forEach(c=>count[c]=(count[c]||0)+1);
   const parts=Object.entries(count).map(([r,k])=>`${ROLES[r].icon} ${k>1?k+" × ":""}${ROLES[r].name}`);
-  $("summary").innerHTML=`<b>${total} cartes</b>${picked.has("voleur")?" (dont 2 au centre pour le Voleur)":""} : ${parts.join(" · ")}`+(err?`<br><span class="err">⚠ ${err}</span>`:"");
+  el.innerHTML=`<div class="camp-label">Camp des Loups-Garous</div>
+    <div class="roles-grid"><div class="stepper"><span>🐺 Loups</span><button data-w="-1">−</button><b>${wolves}</b><button data-w="1">+</button></div>${SPECIALS.loups.map(chip).join("")}</div>
+    <div class="camp-label">Camp des Villageois</div><div class="roles-grid">${SPECIALS.village.map(chip).join("")}</div>
+    <div class="camp-label">Personnages solitaires / ambigus</div><div class="roles-grid">${SPECIALS.ambigu.map(chip).join("")}</div>
+    <div class="summary"><b>${total} carte${total>1?"s":""}</b>${picked.has("voleur")?" (dont 2 au centre pour le Voleur)":""}${parts.length?" : "+parts.join(" · "):""}${err?`<br><span class="err">⚠ ${err}</span>`:""}</div>`;
   $("startBtn").disabled=!!err;
+  $("hStart").disabled=!!err;
 }
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-
-$("countRow").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;N=+b.dataset.n;defaults(N);renderSetup();});
-$("names").addEventListener("input",e=>{if(e.target.dataset.i!=null) names[+e.target.dataset.i]=e.target.value;});
-$("setup").addEventListener("click",e=>{
-  const w=e.target.closest("[data-w]");
-  if(w){wolves=Math.max(0,Math.min(N,wolves+ +w.dataset.w));renderSetup();return;}
-  const c=e.target.closest(".chip");
-  if(c){const r=c.dataset.r;picked.has(r)?picked.delete(r):picked.add(r);renderSetup();}
+document.addEventListener("click",e=>{
+  const comp=e.target.closest(".comp"); if(!comp) return;
+  const w=e.target.closest("[data-w]"), c=e.target.closest(".chip");
+  if(w) wolves=Math.max(0,Math.min(Math.max(compN,1),wolves+ +w.dataset.w));
+  else if(c){const r=c.dataset.r;picked.has(r)?picked.delete(r):picked.add(r);}
+  else return;
+  touched=true; renderComp(comp);
 });
-$("startBtn").addEventListener("click",startGame);
 
-/* ------------------ PARTIE ------------------ */
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function startGame(){
+/* =============================================================
+   ÉTAT GLOBAL
+   MODE : home | solo | host | find | guest
+   S    : partie jouée sur cet appareil (solo ou hôte)
+   ============================================================= */
+let MODE="home", S=null, H=null, GU=null;
+
+/* =============================================================
+   ACCUEIL
+   ============================================================= */
+$("mSolo").onclick=()=>{MODE="solo";compN=6;touched=false;defaults(6);renderSetup();show("setup");};
+$("mHost").onclick=hostOpen;
+$("mFind").onclick=findOpen;
+document.querySelectorAll("[data-home]").forEach(b=>b.onclick=leaveAll);
+$("newBtn").onclick=()=>{ if(MODE==="solo") {S=null;closeModal();document.body.classList.remove("day");MODE="solo";renderSetup();show("setup");} else leaveAll(); };
+function leaveAll(){
+  setP(null);
+  S=null;H=null;GU=null;MODE="home";
+  closeModal();$("menu").classList.add("hidden");
+  document.body.classList.remove("day");
+  show("home"); updateNetStatus();
+}
+
+/* =============================================================
+   SOLO : RÉGLAGES
+   ============================================================= */
+let names=Array(12).fill("");
+function renderSetup(){
+  $("countRow").innerHTML=Array.from({length:12},(_,i)=>`<button class="${i+1===compN?"on":""}" data-n="${i+1}">${i+1}</button>`).join("");
+  $("names").innerHTML=Array.from({length:compN},(_,i)=>`<label><span>${i+1}</span><input data-i="${i}" maxlength="18" placeholder="Joueur ${i+1}" value="${esc(names[i])}"></label>`).join("");
+  renderComp($("sComp"));
+}
+$("countRow").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;compN=+b.dataset.n;touched=false;defaults(compN);renderSetup();});
+$("names").addEventListener("input",e=>{if(e.target.dataset.i!=null) names[+e.target.dataset.i]=e.target.value;});
+$("startBtn").onclick=()=>{
   const {cards,err}=deckInfo(); if(err) return;
   shuffle(cards);
-  S={
-    players:Array.from({length:N},(_,i)=>({name:(names[i]||"").trim()||`Joueur ${i+1}`,role:cards[i],dead:false,seen:false,lover:false})),
-    center:cards.slice(N),
-    turn:0, phase:"reveal", view:false, night:1, isDay:false, done:{}
-  };
-  $("setup").classList.add("hidden"); $("game").classList.remove("hidden");
-  document.body.classList.remove("day");
-  window.scrollTo(0,0);
+  S={players:Array.from({length:compN},(_,i)=>({name:clean(names[i])||`Joueur ${i+1}`,role:cards[i],dead:false,seen:false,lover:false})),
+     center:cards.slice(compN),turn:0,phase:"reveal",view:false,night:1,isDay:false,done:{},winner:null};
+  MODE="solo"; enterGame();
+};
+
+/* =============================================================
+   ÉCRAN DE JEU (commun)
+   ============================================================= */
+function enterGame(){
+  show("game"); document.body.classList.remove("day");
+  $("codeChip").classList.toggle("hidden",MODE==="solo");
+  $("codeChip").textContent=MODE==="host"?H.code:MODE==="guest"?GU.code:"";
+  $("newBtn").textContent=MODE==="solo"?"↺ Nouvelle partie":"✕ Quitter";
   layout(); renderPanel();
 }
+function changed(){ renderSeats(); renderPanel(); pubHost(); }
+
 let geom={};
+function seatsVM(){
+  if(MODE==="guest"){
+    const hs=GU&&GU.hs; if(!hs||!Array.isArray(hs.pl)) return [];
+    const reveal=hs.ph==="reveal";
+    return hs.pl.map((s,i)=>{
+      const me=s.p===myPeer;
+      return {name:clean(s.n)+(me?" (toi)":""), face:roleOk(s.x)?s.x:null, dead:!!s.d, gone:!!s.g, lover:false, me,
+        active:reveal&&hs.t===i, seen:reveal&&!!s.s,
+        clickable: me && !!GU.role && (!reveal || GU.sentSeen)};
+    });
+  }
+  if(!S) return [];
+  return S.players.map((p,i)=>({name:p.name+(p.me?" (toi)":""), face:(S.view||S.phase==="over"||(S.net&&p.dead))?p.role:null,
+    dead:p.dead, gone:!!p.gone, lover:p.lover, me:!!p.me,
+    active:S.phase==="reveal"&&i===S.turn, seen:S.phase==="reveal"&&p.seen, clickable:S.phase!=="reveal"}));
+}
+function centerVM(){
+  if(MODE==="guest"){const hs=GU&&GU.hs; if(!hs) return []; const n=Math.min(2,Number(hs.cc)||0);
+    return Array.from({length:n},(_,k)=>(Array.isArray(hs.xc)&&roleOk(hs.xc[k]))?hs.xc[k]:null);}
+  if(!S) return [];
+  return S.center.map(r=>(S.phase==="over"||S.view)?r:null);
+}
 function layout(){
-  if(!S) return;
-  const n=S.players.length;
+  if($("game").classList.contains("hidden")) return;
+  const n=Math.max(1,seatsVM().length);
   const vw=window.innerWidth, vh=window.innerHeight;
-  const size=Math.max(280,Math.min(vw-20, vh-230, 720));
+  const size=Math.max(280,Math.min(vw-20,vh-230,720));
   const stage=$("stage"); stage.style.width=stage.style.height=size+"px";
-  const cw=Math.round(Math.min(104, size*(n<=4?.2:n<=7?.16:n<=9?.135:.12)));
+  const cw=Math.round(Math.min(104,size*(n<=4?.2:n<=7?.16:n<=9?.135:.12)));
   const ch=Math.round(cw*1.4);
-  const R=size/2-ch/2-16;
-  geom={size,cw,ch,R};
+  geom={size,cw,ch,R:size/2-ch/2-16};
   buildFire(Math.round(size*.3));
   renderSeats();
 }
+window.addEventListener("resize",()=>{clearTimeout(window._rt);window._rt=setTimeout(layout,120)});
 function miniFace(r,w,h){
   const R=ROLES[r];
   return `<div class="minif camp-${R.camp}" style="width:${w}px;height:${h}px;font-size:${Math.max(9,w/5.2)}px"><span class="e">${R.icon}</span><span class="n">${R.name}</span></div>`;
@@ -402,172 +542,208 @@ function miniFace(r,w,h){
 function renderSeats(){
   const stage=$("stage");
   stage.querySelectorAll(".seat").forEach(s=>s.remove());
-  const n=S.players.length,{size,cw,ch,R}=geom;
-  S.players.forEach((p,i)=>{
+  const vm=seatsVM(), n=vm.length; if(!n||!geom.size) return;
+  const {size,cw,ch,R}=geom;
+  vm.forEach((v,i)=>{
     const a=(-90+360*i/n)*Math.PI/180;
-    const x=size/2+Math.cos(a)*R, y=size/2+Math.sin(a)*R;
     const d=document.createElement("div");
-    const showFace=S.view||S.phase==="over";
-    d.className="seat"+(S.phase==="reveal"&&i===S.turn?" active":"")+(p.seen&&S.phase==="reveal"?" seen":"")+(p.dead?" dead":"")+(S.phase!=="reveal"?" clickable":"");
-    d.style.left=x+"px"; d.style.top=(y+10)+"px"; d.dataset.i=i;
-    d.innerHTML=`<div class="mini" style="width:${cw}px;height:${ch}px">${p.lover?'<span class="lover">❤️</span>':""}${showFace?miniFace(p.role,cw,ch):BACK_SVG}</div><div class="pname">${esc(p.name)}</div>`;
+    d.className="seat"+(v.active?" active":"")+(v.seen?" seen":"")+(v.dead?" dead":"")+(v.gone?" gone":"")+(v.me?" me":"")+(v.clickable?" clickable":"");
+    d.style.left=(size/2+Math.cos(a)*R)+"px"; d.style.top=(size/2+Math.sin(a)*R+10)+"px"; d.dataset.i=i;
+    d.innerHTML=`<div class="mini" style="width:${cw}px;height:${ch}px">${v.lover?'<span class="lover">❤️</span>':""}${v.face?miniFace(v.face,cw,ch):BACK_SVG}</div><div class="pname">${v.gone?"📵 ":""}${esc(v.name)}</div>`;
     stage.appendChild(d);
   });
-  const cc=$("centerCards");
-  const sw=Math.round(cw*.55), sh=Math.round(sw*1.4);
-  cc.style.marginTop=(geom.size*.15)+"px";
-  cc.innerHTML=S.center.map(r=>`<div class="mini" style="width:${sw}px;height:${sh}px">${S.phase==="over"||S.view?miniFace(r,sw,sh):BACK_SVG}</div>`).join("");
+  const cc=$("centerCards"), sw=Math.round(cw*.55), sh=Math.round(sw*1.4);
+  cc.style.marginTop=(size*.15)+"px";
+  cc.innerHTML=centerVM().map(r=>`<div class="mini" style="width:${sw}px;height:${sh}px">${r?miniFace(r,sw,sh):BACK_SVG}</div>`).join("");
 }
-window.addEventListener("resize",()=>{clearTimeout(window._rt);window._rt=setTimeout(layout,120)});
 
-/* ------------------ PANNEAU ------------------ */
+/* =============================================================
+   ÉTAPES DU MENEUR
+   ============================================================= */
+function getSteps(){
+  const has=r=>S.players.some(p=>p.role===r&&!p.dead);
+  const st=[];
+  if(!S.isDay){
+    if(S.night===1){
+      if(has("voleur")) st.push(["🎭","Le Voleur se réveille et peut échanger sa carte.","Déjà fait lors de la révélation des cartes."]);
+      if(has("cupidon")){ st.push(["💘","Cupidon se réveille et désigne deux amoureux.","Touchez leurs cartes → « Lier par Cupidon »."]); st.push(["❤️","Les Amoureux se réveillent et se reconnaissent.",""]); }
+    }
+    if(has("voyante")) st.push(["🔮","La Voyante se réveille et désigne un joueur dont elle veut voir la carte.",""]);
+    if(has("salvateur")) st.push(["🛡️","Le Salvateur se réveille et protège un joueur.",""]);
+    st.push(["🐺","Les Loups-Garous se réveillent et choisissent une victime.",""]);
+    if(has("gml")) st.push(["👹","Le Grand Méchant Loup peut dévorer une seconde victime.","Seulement si aucun loup n'est encore mort."]);
+    if(has("sorciere")) st.push(["🧪","La Sorcière se réveille : potion de guérison ? potion d'empoisonnement ?",""]);
+  } else {
+    st.push(["☀️","Le village se réveille et découvre les victimes de la nuit.","Touchez leur carte → « Éliminer »."]);
+    st.push(["🗣️","Débat : chacun accuse, se défend, bluffe…",""]);
+    st.push(["🗳️","Vote du village.","En cas d'égalité, le Bouc Émissaire est éliminé."+(has("idiot")?" L'Idiot du Village condamné est épargné.":"")]);
+    if(has("chasseur")) st.push(["🏹","Si le Chasseur meurt, il tire sur le joueur de son choix.",""]);
+  }
+  return st;
+}
+function stepKey(){return (S.isDay?"j":"n")+S.night;}
+function stepLine(){
+  if(!S) return "";
+  if(S.phase==="reveal") return "Distribution des cartes…";
+  if(S.phase==="ready") return "Tout le monde connaît son rôle. La nuit va tomber…";
+  if(S.phase==="over") return "Fin de la partie : toutes les cartes sont révélées.";
+  const done=S.done[stepKey()]||{};
+  const st=getSteps(), i=st.findIndex((s,k)=>!done[k]);
+  if(i<0) return S.isDay?"Le soleil se couche sur le village…":"Le jour va bientôt se lever…";
+  return st[i][0]+" "+st[i][1];
+}
+
+/* =============================================================
+   PANNEAU DU BAS
+   ============================================================= */
 function renderPanel(){
+  if(MODE==="guest") return renderGuestPanel();
+  if(!S) return;
   const P=$("panel");
-  $("viewBtn").classList.toggle("hidden",S.phase==="reveal");
+  $("viewBtn").classList.toggle("hidden",S.phase==="reveal"||S.phase==="over");
   $("viewBtn").textContent=S.view?"🙈 Cacher les rôles":"👁 Vue meneur";
   if(S.phase==="reveal"){
     const p=S.players[S.turn];
-    P.innerHTML=`<div class="panel"><h3>C'est au tour de ${esc(p.name)}</h3>
-      <p>Passe l'appareil à <b>${esc(p.name)}</b>. Les autres joueurs détournent les yeux…</p>
+    if(S.net && !p.me){
+      P.innerHTML=`<div class="panel"><h3>C'est au tour de ${esc(p.name)}</h3>
+        <p>${p.gone?"📵 Ce joueur semble déconnecté.":`<span class="dots">${esc(p.name)} découvre sa carte sur son appareil</span>`}</p>
+        ${p.gone?`<div class="row"><button class="btn" id="skipBtn">Passer ce joueur</button></div>`:""}
+        <p class="hint" style="text-align:center">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
+      if(p.gone) $("skipBtn").onclick=()=>{p.seen=true;advanceTurn();changed();};
+      return;
+    }
+    P.innerHTML=`<div class="panel"><h3>${p.me?"C'est ton tour !":"C'est au tour de "+esc(p.name)}</h3>
+      <p>${p.me?"Découvre ta carte en toute discrétion.":`Passe l'appareil à <b>${esc(p.name)}</b>. Les autres joueurs détournent les yeux…`}</p>
       <div class="row"><button class="big-btn" style="max-width:360px" id="seeBtn">🃏 Révéler ma carte</button></div>
-      <p class="hint" style="margin-top:10px">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
+      <p class="hint" style="text-align:center;margin-top:10px">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
     $("seeBtn").onclick=()=>openCard(S.turn,"turn");
     return;
   }
   if(S.phase==="ready"){
     P.innerHTML=`<div class="panel"><h3>🌙 Tout le monde connaît son rôle</h3>
-      <p>Les cartes sont retournées face cachée autour du feu. Le meneur de jeu peut maintenant ouvrir la première nuit.</p>
+      <p>Les cartes sont face cachée autour du feu. Le meneur de jeu peut ouvrir la première nuit.</p>
       <div class="row"><button class="btn solid" id="goBtn">Commencer la partie</button></div></div>`;
-    $("goBtn").onclick=()=>{S.phase="play";renderSeats();renderPanel();};
+    $("goBtn").onclick=()=>{S.phase="play";changed();};
     return;
   }
   if(S.phase==="play"){
-    const has=r=>S.players.some(p=>p.role===r&&!p.dead);
-    let steps;
-    if(!S.isDay){
-      steps=[];
-      if(S.night===1){
-        if(has("voleur")) steps.push(["🎭","Le Voleur se réveille et peut échanger sa carte (déjà fait lors de la révélation)."]);
-        if(has("cupidon")) steps.push(["💘","Cupidon se réveille et désigne deux amoureux. Touchez leurs cartes → « Lier par Cupidon »."]);
-        if(has("cupidon")) steps.push(["❤️","Les Amoureux se réveillent et se reconnaissent."]);
-      }
-      if(has("voyante")) steps.push(["🔮","La Voyante se réveille et désigne un joueur dont elle veut voir la carte."]);
-      if(has("salvateur")) steps.push(["🛡️","Le Salvateur se réveille et protège un joueur."]);
-      steps.push(["🐺","Les Loups-Garous se réveillent, se reconnaissent et choisissent une victime."]);
-      if(has("gml")) steps.push(["👹","Le Grand Méchant Loup peut dévorer une seconde victime (si aucun loup n'est mort)."]);
-      if(has("sorciere")) steps.push(["🧪","La Sorcière se réveille : potion de guérison ? potion d'empoisonnement ?"]);
-    } else {
-      steps=[["☀️","Le village se réveille. Annoncez les victimes de la nuit (touchez leur carte → « Éliminer »)."],
-             ["🗣️","Débat : chacun accuse, se défend, bluffe…"],
-             ["🗳️","Vote du village. En cas d'égalité, le Bouc Émissaire est éliminé."+(has("idiot")?" L'Idiot du Village condamné est épargné.":"")]];
-      if(has("chasseur")) steps.push(["🏹","Si le Chasseur meurt, il tire sur le joueur de son choix."]);
-    }
-    const key=(S.isDay?"j":"n")+S.night;
+    const steps=getSteps(), key=stepKey();
     S.done[key]=S.done[key]||{};
     P.innerHTML=`<div class="panel"><h3>${S.isDay?"☀️ Jour "+S.night:"🌙 Nuit "+S.night}</h3>
-      <ol class="steps">${steps.map((s,i)=>`<li class="${S.done[key][i]?"done":""}" data-k="${i}"><input type="checkbox" ${S.done[key][i]?"checked":""}><span class="e">${s[0]}</span><span>${s[1]}</span></li>`).join("")}</ol>
-      <p class="hint">Touchez la carte d'un joueur pour revoir son rôle, l'éliminer ou le lier par Cupidon.</p>
+      <ol class="steps">${steps.map((s,i)=>`<li class="${S.done[key][i]?"done":""}" data-k="${i}"><input type="checkbox" ${S.done[key][i]?"checked":""}><span class="e">${s[0]}</span><span>${s[1]}${s[2]?`<small>${s[2]}</small>`:""}</span></li>`).join("")}</ol>
+      <p class="hint">Touchez la carte d'un joueur pour revoir son rôle, l'éliminer ou le lier par Cupidon.${S.net?" Les joueurs voient l'étape en cours sur leur appareil.":""}</p>
       <div class="row"><button class="btn solid" id="nextBtn">${S.isDay?"🌙 La nuit tombe":"☀️ Le jour se lève"}</button><button class="btn red" id="endBtn">Révéler toutes les cartes</button></div></div>`;
-    P.querySelectorAll(".steps li").forEach(li=>li.onclick=()=>{const k=li.dataset.k;S.done[key][k]=!S.done[key][k];renderPanel();});
-    $("nextBtn").onclick=()=>{if(S.isDay){S.isDay=false;S.night++;}else S.isDay=true;document.body.classList.toggle("day",S.isDay);renderPanel();};
-    $("endBtn").onclick=()=>{S.phase="over";renderSeats();renderPanel();};
+    P.querySelectorAll(".steps li").forEach(li=>li.onclick=ev=>{ev.preventDefault();const k=li.dataset.k;S.done[key][k]=!S.done[key][k];renderPanel();pubHost();});
+    $("nextBtn").onclick=()=>{if(S.isDay){S.isDay=false;S.night++;}else S.isDay=true;document.body.classList.toggle("day",S.isDay);changed();};
+    $("endBtn").onclick=()=>{S.phase="over";S.view=false;document.body.classList.remove("day");changed();};
     return;
   }
   if(S.phase==="over"){
     P.innerHTML=`<div class="panel"><h3>Toutes les cartes sont révélées</h3><p>Merci d'avoir joué à Loup-Garou !</p>
-      <div class="row"><button class="btn solid" id="againBtn">Rejouer avec les mêmes joueurs</button><button class="btn" id="setupBtn">Changer les réglages</button></div></div>`;
-    $("againBtn").onclick=startGame; $("setupBtn").onclick=backToSetup;
+      <div class="row">${S.net
+        ?`<button class="btn solid" id="againBtn">Nouvelle manche (même salon)</button><button class="btn" id="quitBtn">Quitter</button>`
+        :`<button class="btn solid" id="againBtn">Rejouer avec les mêmes joueurs</button><button class="btn" id="quitBtn">Changer les réglages</button>`}</div></div>`;
+    if(S.net){ $("againBtn").onclick=hostRelobby; $("quitBtn").onclick=leaveAll; }
+    else { $("againBtn").onclick=()=>$("startBtn").click(); $("quitBtn").onclick=()=>{S=null;renderSetup();show("setup");}; }
   }
 }
+function advanceTurn(){ if(S.turn>=S.players.length-1) S.phase="ready"; else S.turn++; }
 
-/* ------------------ CARTE EN GRAND ------------------ */
+/* =============================================================
+   CARTE EN GRAND
+   ============================================================= */
 function frontHTML(r){
   const R=ROLES[r],C=CAMP[R.camp];
   return `<div class="face front camp-${R.camp}"><span class="badge">${C.label}</span><div class="emo">${R.icon}</div><h2>${R.name}</h2><div class="desc">${R.desc}</div><div class="goal">${C.goal}</div></div>`;
 }
-function openCard(i,mode){
-  const p=S.players[i];
-  const M=$("modalInner");
-  M.innerHTML=`<div class="who">Carte de <b>${esc(p.name)}</b></div>
-    <div class="bigcard" id="bigcard"><div class="inner"><div class="face back">${BACK_SVG}</div><div id="frontSlot"></div></div></div>
-    <div class="extra" id="extra"></div>
-    <div class="row" id="mActions"></div>`;
-  $("frontSlot").outerHTML=frontHTML(p.role);
+function setFront(r){ $("bigcard").querySelector(".front").outerHTML=frontHTML(r); }
+function openCardFor(o){
+  $("modalInner").innerHTML=`<div class="who">Carte de <b>${esc(o.name)}</b></div>
+    <div class="bigcard" id="bigcard"><div class="inner"><div class="face back">${BACK_SVG}</div>${frontHTML(o.role)}</div></div>
+    <div class="extra" id="extra"></div><div class="row" id="mActions"></div>`;
   $("modal").classList.remove("hidden");
   const A=$("mActions");
-  A.innerHTML=`<button class="big-btn" style="min-width:240px" id="flipBtn">👁 Révéler ma carte</button>`+(mode==="review"?`<button class="btn" id="cancelBtn">Annuler</button>`:"");
-  if(mode==="review") $("cancelBtn").onclick=closeModal;
-  $("flipBtn").onclick=()=>{
-    $("bigcard").classList.add("flipped");
-    p.seen=true;
-    setTimeout(()=>afterFlip(i,mode),650);
-    A.innerHTML="";
-  };
+  A.innerHTML=`<button class="big-btn" style="min-width:240px" id="flipBtn">👁 Révéler ma carte</button>`+(o.mode==="review"?`<button class="btn" id="cancelBtn">Annuler</button>`:"");
+  if(o.mode==="review") $("cancelBtn").onclick=closeModal;
+  $("flipBtn").onclick=()=>{ $("bigcard").classList.add("flipped"); A.innerHTML=""; setTimeout(()=>afterFlip(o),650); };
 }
-function afterFlip(i,mode){
-  const p=S.players[i], A=$("mActions"), X=$("extra");
-  if(p.role==="voleur" && !p.thiefDone && S.center.length===2){
-    const both=S.center.every(isWolf);
+function afterFlip(o){
+  const X=$("extra"), A=$("mActions");
+  if(o.thief && o.thief.length===2){
+    const both=o.thief.every(isWolf);
     X.innerHTML=`<p>Voici les deux cartes du centre. Prends-en une${both?" (les deux sont des Loups : tu dois en prendre une)":", ou garde ta carte"}.</p>
-      <div class="thief">${S.center.map((r,k)=>`<div class="opt">${miniFace(r,84,118)}<button class="btn" data-k="${k}">Prendre</button></div>`).join("")}</div>`;
+      <div class="thief">${o.thief.map((r,k)=>`<div class="opt">${miniFace(r,84,118)}<button class="btn" data-k="${k}">Prendre</button></div>`).join("")}</div>`;
     X.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{
-      const k=+b.dataset.k; const nr=S.center[k]; S.center[k]="voleur"; p.role=nr; p.thiefDone=true;
-      const bc=$("bigcard"); bc.querySelector(".front").outerHTML=frontHTML(nr);
-      X.innerHTML=`<p>Tu es désormais <b>${ROLES[nr].name}</b>.</p>`;
-      renderSeats(); showHide(i,mode);
+      const nr=o.onSwap(+b.dataset.k); setFront(nr);
+      X.innerHTML=`<p>Tu es désormais <b>${ROLES[nr].name}</b>.</p>`; showHide(o);
     });
-    if(!both){A.innerHTML=`<button class="btn" id="keepBtn">Garder ma carte de Voleur</button>`;
-      $("keepBtn").onclick=()=>{p.thiefDone=true;p.role="villageois";X.innerHTML=`<p>Tu gardes ta carte : tu joues désormais comme un <b>Simple Villageois</b>.</p>`;
-        $("bigcard").querySelector(".front").outerHTML=frontHTML("villageois");renderSeats();showHide(i,mode);};}
+    if(!both){
+      A.innerHTML=`<button class="btn" id="keepBtn">Garder ma carte de Voleur</button>`;
+      $("keepBtn").onclick=()=>{const nr=o.onKeep(); setFront(nr);
+        X.innerHTML=`<p>Tu gardes ta carte : tu joues désormais comme un <b>Simple Villageois</b>.</p>`; showHide(o);};
+    }
     return;
   }
-  if(isWolf(p.role) && mode==="turn"){
-    X.innerHTML=`<p class="hint">Tu découvriras tes complices pendant la première nuit.</p>`;
-  }
-  showHide(i,mode);
+  if(isWolf(o.role)&&o.mode==="turn") X.innerHTML=`<p class="hint">Tu découvriras tes complices pendant la première nuit.</p>`;
+  showHide(o);
 }
-function showHide(i,mode){
+function showHide(o){
   const A=$("mActions");
-  const last=i===S.players.length-1;
-  A.innerHTML=`<button class="big-btn" style="min-width:240px" id="hideBtn">🙈 Cacher ma carte${mode==="turn"?(last?" et terminer":" et passer"):""}</button>`;
+  A.innerHTML=`<button class="big-btn" style="min-width:240px" id="hideBtn">🙈 Cacher ma carte${o.suffix||""}</button>`;
   $("hideBtn").onclick=()=>{
     $("bigcard").classList.remove("flipped");
-    setTimeout(()=>{
-      closeModal();
-      if(mode==="turn"){
-        if(last){S.phase="ready";} else S.turn++;
-        renderSeats(); renderPanel();
-      }
-    },500);
+    setTimeout(()=>{closeModal(); o.onHide&&o.onHide();},500);
   };
 }
 function closeModal(){$("modal").classList.add("hidden");$("modalInner").innerHTML="";}
 
-/* ------------------ MENU JOUEUR ------------------ */
+/* Carte d'un joueur de cet appareil (solo / hôte) */
+function openCard(i,mode){
+  const p=S.players[i];
+  openCardFor({name:p.name, role:p.role, mode,
+    suffix: mode==="turn"&&!S.net ? (i===S.players.length-1?" et terminer":" et passer") : "",
+    thief: (mode==="turn"&&p.role==="voleur"&&!p.thiefDone&&S.center.length===2)?S.center.slice():null,
+    onSwap:k=>{const nr=S.center[k]; S.center[k]="voleur"; p.role=nr; p.thiefDone=true; renderSeats(); return nr;},
+    onKeep:()=>{p.thiefDone=true; p.role="villageois"; renderSeats(); return "villageois";},
+    onHide:()=>{ if(mode==="turn"){p.seen=true; advanceTurn();} changed(); }
+  });
+}
+
+/* =============================================================
+   MENU JOUEUR (solo / hôte) et clic sur une carte
+   ============================================================= */
 $("stage").addEventListener("click",e=>{
-  const seat=e.target.closest(".seat"); if(!seat||S.phase==="reveal") return;
+  const seat=e.target.closest(".seat"); if(!seat) return;
+  const i=+seat.dataset.i;
+  if(MODE==="guest"){
+    const v=seatsVM()[i];
+    if(v&&v.me&&v.clickable) openCardFor({name:GU.name,role:GU.role,mode:"review"});
+    return;
+  }
+  if(!S||S.phase==="reveal") return;
   e.stopPropagation();
-  const i=+seat.dataset.i, p=S.players[i], m=$("menu");
   if(S.phase==="over"){openCard(i,"review");return;}
+  const p=S.players[i], m=$("menu");
   const lovers=S.players.filter(q=>q.lover).length;
   m.innerHTML=`<div class="mh">${esc(p.name)}</div>
     <button data-a="see">🃏 Revoir sa carte (en privé)</button>
     <button data-a="kill">${p.dead?"✨ Ramener à la vie":"💀 Éliminer"}</button>
     ${p.lover?`<button data-a="love">💔 Délier</button>`:(lovers<2&&S.players.some(q=>q.role==="cupidon")?`<button data-a="love">❤️ Lier par Cupidon</button>`:"")}`;
   m.classList.remove("hidden");
-  const r=seat.getBoundingClientRect();
-  const mw=210, x=Math.min(window.innerWidth-mw-8,Math.max(8,r.left+r.width/2-mw/2));
+  const r=seat.getBoundingClientRect(), mw=210;
+  const x=Math.min(window.innerWidth-mw-8,Math.max(8,r.left+r.width/2-mw/2));
   let y=r.bottom+6; if(y+180>window.innerHeight) y=Math.max(8,r.top-180);
   m.style.left=x+"px"; m.style.top=y+"px";
   m.onclick=ev=>{
-    const a=ev.target.closest("button")?.dataset.a; if(!a) return;
+    const b=ev.target.closest("button"); if(!b) return;
     m.classList.add("hidden");
-    if(a==="see") openCard(i,"review");
-    if(a==="love"){p.lover=!p.lover;renderSeats();}
-    if(a==="kill") toggleDead(i);
+    if(b.dataset.a==="see") openCard(i,"review");
+    if(b.dataset.a==="love"){p.lover=!p.lover;renderSeats();}
+    if(b.dataset.a==="kill") toggleDead(i);
   };
 });
 document.addEventListener("click",e=>{if(!e.target.closest("#menu")) $("menu").classList.add("hidden");});
+$("viewBtn").onclick=()=>{S.view=!S.view;renderSeats();renderPanel();};
 
 function toggleDead(i){
   const p=S.players[i];
@@ -577,37 +753,304 @@ function toggleDead(i){
     msgs.push(`${p.name} est éliminé(e)… C'était : ${ROLES[p.role].icon} ${ROLES[p.role].name}`);
     if(p.lover){const o=S.players.find(q=>q.lover&&q!==p);if(o&&!o.dead){o.dead=true;msgs.push(`💔 ${o.name} meurt de chagrin.`);}}
     if(p.role==="chasseur") msgs.push("🏹 Le Chasseur tire une dernière fois !");
-  }
-  renderSeats(); renderPanel(); toast(msgs.join(" — ")||`${p.name} revient à la vie.`);
+  } else S.winner=null;
+  changed(); toast(msgs.join(" — ")||`${p.name} revient à la vie.`);
   if(p.dead) setTimeout(checkWin,700);
 }
 function checkWin(){
   const alive=S.players.filter(p=>!p.dead);
-  let res=null;
-  const lovers=alive.filter(p=>p.lover);
-  if(alive.length===0) res={e:"🌫️",t:"Personne ne survit…",s:"Le village de Thiercelieux est désert."};
-  else if(alive.length===2&&lovers.length===2) res={e:"💞",t:"Les Amoureux gagnent !",s:"Ils sont les deux derniers survivants."};
-  else if(!alive.some(p=>isWolf(p.role))) res={e:"🧑‍🌾",t:"Les Villageois gagnent !",s:"Tous les Loups-Garous ont été démasqués."};
-  else if(alive.every(p=>isWolf(p.role))) res={e:"🐺",t:"Les Loups-Garous gagnent !",s:"Il n'y a plus aucun villageois pour leur résister."};
-  if(!res) return;
+  let w=null;
+  if(alive.length===0) w="n";
+  else if(alive.length===2&&alive.every(p=>p.lover)) w="a";
+  else if(!alive.some(p=>isWolf(p.role))) w="v";
+  else if(alive.every(p=>isWolf(p.role))) w="l";
+  if(!w) return;
+  S.winner=w; pubHost();
+  showWin(w,true);
+}
+function showWin(w,meneur){
+  const res=WINS[w]; if(!res) return;
   $("modalInner").innerHTML=`<div class="win"><div class="emo">${res.e}</div><h2>${res.t}</h2></div><p class="hint" style="font-size:1.05rem">${res.s}</p>
-    <div class="row"><button class="btn solid" id="wReveal">Révéler toutes les cartes</button><button class="btn" id="wCont">Continuer</button></div>`;
+    <div class="row">${meneur?`<button class="btn solid" id="wReveal">Révéler toutes les cartes</button><button class="btn" id="wCont">Continuer</button>`:`<button class="btn solid" id="wCont">Fermer</button>`}</div>`;
   $("modal").classList.remove("hidden");
-  $("wReveal").onclick=()=>{closeModal();S.phase="over";document.body.classList.remove("day");renderSeats();renderPanel();};
+  if(meneur) $("wReveal").onclick=()=>{closeModal();S.phase="over";S.view=false;document.body.classList.remove("day");changed();};
   $("wCont").onclick=closeModal;
 }
-function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),3800);}
 
-$("viewBtn").onclick=()=>{S.view=!S.view;renderSeats();renderPanel();};
-$("newBtn").onclick=backToSetup;
-function backToSetup(){
-  S=null; closeModal(); $("menu").classList.add("hidden");
-  document.body.classList.remove("day");
-  $("game").classList.add("hidden"); $("setup").classList.remove("hidden"); renderSetup();
+/* =============================================================
+   RÉSEAU : salle en direct + chiffrement des rôles
+   ============================================================= */
+let room=null, myPeer=null, netState="wait", lastP="";
+function setP(obj){
+  if(!room) return;
+  const s=JSON.stringify(obj); if(s===lastP) return; lastP=s;
+  room.presence({lg:obj}).catch(()=>{lastP="";});
+}
+function updateNetStatus(){
+  const el=$("netStatus"), noCrypto=!(window.crypto&&crypto.subtle), ok=netState!=="off" && !!room && !noCrypto;
+  $("mHost").disabled=!ok; $("mFind").disabled=!ok;
+  if(!ok && (netState==="off"||(room&&noCrypto))) el.innerHTML="⚠ Le jeu en réseau n'est pas disponible ici : seul le mode Solo fonctionne.<br><small>Pour jouer en réseau, ouvre la page depuis Claude en étant connecté à ton compte.</small>";
+  else if(!room || !room.connected()) el.innerHTML=`<span class="dots">Connexion au réseau</span>`;
+  else { const n=room.peers().filter(p=>!p.sameTab&&p.kind==="viewer").length;
+    el.textContent=`✓ Réseau prêt — ${n} autre${n>1?"s":""} personne${n>1?"s":""} sur cette page en ce moment`; }
+}
+(async()=>{
+  try{ room = (window.claude && typeof claude.use==="function") ? await claude.use("room") : null; }catch(e){ room=null; }
+  if(!room){ netState="off"; updateNetStatus(); return; }
+  netState="on";
+  room.onPeers(ch=>{
+    const me=ch.peers.find(p=>p.sameTab); if(me) myPeer=me.peer;
+    onNet();
+  },()=>{ netState="off"; updateNetStatus(); });
+  room.onConnection(()=>updateNetStatus(),()=>{ netState="off"; updateNetStatus(); });
+  updateNetStatus();
+})();
+setTimeout(()=>{ if(!room){ netState="off"; updateNetStatus(); } },11000);
+
+function onNet(){
+  updateNetStatus();
+  if(MODE==="find") renderGames();
+  else if(MODE==="guest") guestSync();
+  else if(MODE==="host"){ if(S) hostSync(); else hostLobbyUpdate(); }
 }
 
-defaults(N); renderSetup();
+/* --- Chiffrement : chaque joueur ne peut lire que SA carte --- */
+const b64=buf=>{let s="";new Uint8Array(buf).forEach(b=>s+=String.fromCharCode(b));return btoa(s);};
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function genKeys(){
+  const kp=await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},false,["deriveKey"]);
+  return {priv:kp.privateKey,pub:b64(await crypto.subtle.exportKey("raw",kp.publicKey))};
+}
+async function sharedKey(priv,pubB64){
+  const pk=await crypto.subtle.importKey("raw",unb64(pubB64),{name:"ECDH",namedCurve:"P-256"},false,[]);
+  return crypto.subtle.deriveKey({name:"ECDH",public:pk},priv,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function encrypt(key,obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(JSON.stringify(obj)));
+  return {i:b64(iv),d:b64(ct)};
+}
+async function decrypt(key,e){
+  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(e.i)},key,unb64(e.d));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+/* =============================================================
+   HÔTE
+   ============================================================= */
+function randCode(){const A="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
+function hostName(){return clean($("hName").value)||"Meneur";}
+async function hostOpen(){
+  if(!room) return;
+  MODE="host"; S=null;
+  H={code:randCode(), keys:await genKeys(), sk:{}};
+  compN=-1; touched=false;
+  $("hCode").textContent=H.code;
+  show("hostLobby");
+  hostLobbyUpdate();
+}
+$("hName").addEventListener("input",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
+$("hPlay").addEventListener("change",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
+function lobbyGuests(){
+  if(!room||!H) return [];
+  return room.peers().filter(p=>!p.sameTab&&p.kind==="viewer"&&p.presence&&p.presence.lg&&!p.presence.lg.h
+      &&p.presence.lg.c===H.code&&typeof p.presence.lg.k==="string")
+    .slice(0,$("hPlay").checked?11:12);
+}
+function hostLobbyUpdate(){
+  if(!H||S) return;
+  const g=lobbyGuests(), play=$("hPlay").checked;
+  const list=(play?[{n:hostName()+" (toi)",me:1}]:[]).concat(g.map(p=>({n:clean(p.presence.lg.n)||"Joueur"})));
+  $("hList").innerHTML=list.length?list.map(x=>`<span class="pchip ${x.me?"me":""}">${esc(x.n)}</span>`).join(""):`<p class="hint">En attente de joueurs…</p>`;
+  if(!g.length) $("hList").innerHTML+=`<p class="hint" style="width:100%">Aucun joueur connecté pour l'instant<span class="dots"></span></p>`;
+  $("hCount").textContent=list.length;
+  if(list.length!==compN){
+    compN=list.length;
+    if(!touched) defaults(compN); else wolves=Math.min(wolves,Math.max(compN,1));
+    renderComp($("hComp"));
+  }
+  setP({h:1,c:H.code,n:hostName(),ph:"lobby",pl:g.map(p=>({p:p.peer,n:clean(p.presence.lg.n)||"Joueur"}))});
+}
+$("hStart").onclick=async()=>{
+  const g=lobbyGuests(), play=$("hPlay").checked;
+  compN=g.length+(play?1:0);
+  const {cards,err}=deckInfo(); if(err) {renderComp($("hComp")); return;}
+  $("hStart").disabled=true;
+  shuffle(cards);
+  const seats=[]; if(play) seats.push({peer:myPeer,name:hostName(),me:true});
+  g.forEach(p=>seats.push({peer:p.peer,name:clean(p.presence.lg.n)||"Joueur",k:p.presence.lg.k}));
+  S={net:"host",players:seats.map((s,i)=>({...s,role:cards[i],dead:false,seen:false,lover:false,gone:false})),
+     center:cards.slice(compN),turn:0,phase:"reveal",view:false,night:1,isDay:false,done:{},winner:null};
+  try{ for(const p of S.players) if(!p.me) await encFor(p); }
+  catch(e){ toast("Erreur de chiffrement : impossible de distribuer les cartes."); S=null; $("hStart").disabled=false; return; }
+  enterGame(); pubHost();
+};
+async function encFor(p){
+  if(!H.sk[p.peer]) H.sk[p.peer]=await sharedKey(H.keys.priv,p.k);
+  const payload={r:p.role};
+  if(p.role==="voleur"&&!p.thiefDone&&S.center.length===2) payload.c=S.center.slice();
+  p.e=await encrypt(H.sk[p.peer],payload);
+}
+function pubHost(){
+  if(MODE!=="host"||!S||!H) return;
+  setP({h:1,c:H.code,n:hostName(),ph:S.phase,pk:H.keys.pub,t:S.turn,cc:S.center.length,ni:S.night,dy:S.isDay?1:0,
+    st:stepLine(),w:S.winner||null,
+    pl:S.players.map(p=>({p:p.peer,n:p.name,d:p.dead?1:0,s:p.seen?1:0,g:p.gone?1:0,
+      x:(p.dead||S.phase==="over")?p.role:null,e:p.me?null:(p.e||null)})),
+    xc:S.phase==="over"?S.center:null});
+}
+function hostSync(){
+  if(MODE!=="host"||!S) return;
+  const peers=room.peers(); let ch=false;
+  S.players.forEach((p,i)=>{
+    if(p.me) return;
+    const q=peers.find(x=>x.peer===p.peer), lg=q&&q.presence&&q.presence.lg;
+    const gone=!(lg&&lg.c===H.code);
+    if(gone!==p.gone){p.gone=gone;ch=true;}
+    if(gone) return;
+    if(S.phase==="reveal"&&i===S.turn){
+      if(p.role==="voleur"&&!p.thiefDone&&typeof lg.th==="number"){
+        if(lg.th>=0&&lg.th<S.center.length){const k=lg.th,nr=S.center[k];S.center[k]="voleur";p.role=nr;}
+        else p.role="villageois";
+        p.thiefDone=true; ch=true;
+        encFor(p).then(pubHost).catch(()=>{});
+      }
+      if(lg.s===1&&!p.seen){p.seen=true;advanceTurn();ch=true;}
+    }
+  });
+  if(ch){renderSeats();renderPanel();pubHost();}
+}
+function hostRelobby(){
+  S=null; closeModal(); document.body.classList.remove("day");
+  compN=-1; show("hostLobby"); $("hStart").disabled=false; hostLobbyUpdate();
+}
+
+/* =============================================================
+   INVITÉ (Chercher une partie)
+   ============================================================= */
+function findOpen(){
+  if(!room) return;
+  MODE="find"; GU=null;
+  $("sJoin").classList.remove("hidden"); $("sWait").classList.add("hidden");
+  show("search"); renderGames();
+}
+function hostsList(){
+  return room.peers().filter(p=>!p.sameTab&&p.kind==="viewer"&&p.presence&&p.presence.lg&&p.presence.lg.h===1&&typeof p.presence.lg.c==="string");
+}
+function renderGames(){
+  const hs=hostsList();
+  $("gList").innerHTML=hs.length?hs.map(p=>{
+    const lg=p.presence.lg, n=Array.isArray(lg.pl)?lg.pl.length:0, open=lg.ph==="lobby";
+    return `<div class="game-row"><div><b>${esc(clean(lg.n))}</b><span class="code sm">${esc(String(lg.c).slice(0,6))}</span><br>
+      <small>${open?`${n} joueur${n>1?"s":""} déjà inscrit${n>1?"s":""}`:"Partie en cours"}</small></div>
+      ${open?`<button class="btn solid" data-join="${esc(String(lg.c).slice(0,6))}">Rejoindre</button>`:""}</div>`;
+  }).join(""):`<p class="hint">Aucune partie pour l'instant<span class="dots"></span><br>Demande à l'hôte d'ouvrir cette page et de choisir « Hôte ».</p>`;
+}
+$("gList").addEventListener("click",e=>{const b=e.target.closest("[data-join]"); if(b) joinGame(b.dataset.join);});
+async function joinGame(code){
+  const name=clean($("gName").value);
+  if(!name){ $("gName").focus(); toast("Entre d'abord ton nom"); return; }
+  const keys=await genKeys();
+  GU={code,name,keys,p:{c:code,n:name,k:keys.pub},role:null,center:null,iv:null,sk:null,skFor:null,
+      lastW:null,dead:{},inGame:false,sentSeen:false,thiefDone:false,hs:null,lostTimer:null};
+  MODE="guest";
+  $("sJoin").classList.add("hidden"); $("sWait").classList.remove("hidden");
+  setP(GU.p); guestSync();
+}
+function guestReset(){
+  Object.assign(GU,{role:null,center:null,iv:null,dead:{},inGame:false,sentSeen:false,thiefDone:false,lastW:null});
+  GU.p={c:GU.code,n:GU.name,k:GU.keys.pub}; setP(GU.p);
+}
+function waitBox(html){
+  if(GU.inGame){ GU.inGame=false; closeModal(); document.body.classList.remove("day"); }
+  if($("search").classList.contains("hidden")) show("search");
+  $("sJoin").classList.add("hidden"); $("sWait").classList.remove("hidden");
+  $("sWaitBox").innerHTML=html;
+}
+async function guestSync(){
+  if(MODE!=="guest"||!GU) return;
+  const hp=room.peers().find(p=>!p.sameTab&&p.presence&&p.presence.lg&&p.presence.lg.h===1&&p.presence.lg.c===GU.code);
+  if(!hp){
+    GU.hs=null;
+    if(GU.inGame){ renderGuestPanel(); }
+    else waitBox(`<h2>Partie introuvable</h2><p class="hint">L'hôte a fermé la partie ou s'est déconnecté.</p>`);
+    return;
+  }
+  const hs=hp.presence.lg; GU.hs=hs;
+  const pl=Array.isArray(hs.pl)?hs.pl:[];
+  const idx=pl.findIndex(s=>s&&s.p===myPeer);
+  if(hs.ph==="lobby"){
+    if(GU.inGame||GU.role) guestReset();
+    waitBox(`<h2>Partie de ${esc(clean(hs.n))} <span class="code sm">${esc(GU.code)}</span></h2>
+      <p style="margin:10px 0">${idx>=0?`✓ Tu es inscrit(e) sous le nom <b>${esc(GU.name)}</b>.<br><span class="dots">En attente que le meneur distribue les cartes</span>`
+        :`<span class="dots">Connexion à la partie</span><br><small class="hint">Si rien ne se passe, la partie est peut-être complète (12 joueurs).</small>`}</p>
+      <div class="plist">${pl.map(s=>`<span class="pchip ${s.p===myPeer?"me":""}">${esc(clean(s.n))}</span>`).join("")}</div>`);
+    return;
+  }
+  if(idx<0){
+    waitBox(`<h2>Partie déjà commencée</h2><p class="hint">La partie de ${esc(clean(hs.n))} a commencé sans toi. Attends la prochaine manche ou choisis une autre partie.</p>`);
+    return;
+  }
+  const me=pl[idx];
+  if(me.e&&typeof me.e.i==="string"&&me.e.i!==GU.iv&&typeof hs.pk==="string"){
+    try{
+      if(!GU.sk||GU.skFor!==hs.pk){GU.sk=await sharedKey(GU.keys.priv,hs.pk);GU.skFor=hs.pk;}
+      const data=await decrypt(GU.sk,me.e);
+      if(roleOk(data.r)){
+        GU.iv=me.e.i; GU.role=data.r;
+        GU.center=(Array.isArray(data.c)&&data.c.length===2&&data.c.every(roleOk))?data.c:null;
+      }
+    }catch(e){}
+  }
+  pl.forEach(s=>{
+    if(s.d&&!GU.dead[s.p]){ GU.dead[s.p]=1;
+      if(GU.inGame) toast(`${clean(s.n)} est éliminé(e)${roleOk(s.x)?` — c'était ${ROLES[s.x].icon} ${ROLES[s.x].name}`:""}`); }
+    if(!s.d) delete GU.dead[s.p];
+  });
+  if(!GU.inGame){ GU.inGame=true; pl.forEach(s=>{if(s.d)GU.dead[s.p]=1;}); enterGame(); }
+  document.body.classList.toggle("day",!!hs.dy);
+  renderSeats(); renderGuestPanel();
+  if(hs.w&&WINS[hs.w]&&hs.w!==GU.lastW){GU.lastW=hs.w;showWin(hs.w,false);}
+  if(!hs.w) GU.lastW=null;
+}
+function renderGuestPanel(){
+  const P=$("panel"); $("viewBtn").classList.add("hidden");
+  const hs=GU&&GU.hs;
+  if(!hs){ P.innerHTML=`<div class="panel"><h3>📵 Le meneur s'est déconnecté</h3><p class="dots">En attente de son retour</p></div>`; return; }
+  const pl=hs.pl||[], idx=pl.findIndex(s=>s.p===myPeer), me=pl[idx]||{};
+  if(hs.ph==="reveal"){
+    const cur=pl[hs.t]||{};
+    if(hs.t===idx&&!GU.sentSeen){
+      P.innerHTML=`<div class="panel"><h3>C'est ton tour, ${esc(GU.name)} !</h3><p>Découvre ta carte en toute discrétion.</p>
+        <div class="row"><button class="big-btn" style="max-width:360px" id="seeBtn" ${GU.role?"":"disabled"}>${GU.role?"🃏 Révéler ma carte":"Réception de ta carte…"}</button></div></div>`;
+      if(GU.role) $("seeBtn").onclick=guestTurnCard;
+    } else if(hs.t===idx){
+      P.innerHTML=`<div class="panel"><h3>Carte vue ✓</h3><p class="dots">Le meneur passe au joueur suivant</p></div>`;
+    } else {
+      P.innerHTML=`<div class="panel"><h3>C'est au tour de ${esc(clean(cur.n))}</h3>
+        <p>${GU.sentSeen?"Tu connais déjà ton rôle : touche ta carte pour le revoir.":`<span class="dots">Ton tour va venir</span>`}</p>
+        <p class="hint" style="text-align:center">Joueur ${Number(hs.t)+1} sur ${pl.length}</p></div>`;
+    }
+    return;
+  }
+  const head=hs.ph==="play"?(hs.dy?"☀️ Jour ":"🌙 Nuit ")+(Number(hs.ni)||1):hs.ph==="over"?"🃏 Fin de la partie":"🌙 Tout le monde connaît son rôle";
+  P.innerHTML=`<div class="panel"><h3>${head}</h3><p class="step">${esc(String(hs.st||"").slice(0,200))}</p>
+    <p>${me.d?"💀 Tu as été éliminé(e). Tu peux suivre la partie en silence.":hs.ph==="over"?"Toutes les cartes sont révélées.":"Touche ta carte pour revoir ton rôle."}</p>
+    ${hs.ph==="over"?`<div class="row"><button class="btn" id="qBtn">Quitter</button></div><p class="hint" style="text-align:center">Le meneur peut lancer une nouvelle manche.</p>`:""}</div>`;
+  if(hs.ph==="over") $("qBtn").onclick=leaveAll;
+}
+function guestTurnCard(){
+  if(!GU.role) return;
+  openCardFor({name:GU.name, role:GU.role, mode:"turn",
+    thief:(GU.role==="voleur"&&GU.center&&!GU.thiefDone)?GU.center.slice():null,
+    onSwap:k=>{GU.thiefDone=true; const nr=GU.center[k]; GU.role=nr; GU.p={...GU.p,th:k}; setP(GU.p); return nr;},
+    onKeep:()=>{GU.thiefDone=true; GU.role="villageois"; GU.p={...GU.p,th:-1}; setP(GU.p); return "villageois";},
+    onHide:()=>{GU.sentSeen=true; GU.p={...GU.p,s:1}; setP(GU.p); renderSeats(); renderGuestPanel();}
+  });
+}
+
+/* ============================================================= */
+updateNetStatus();
 </script>
 </body>
 </html>
-
