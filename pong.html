@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -11,17 +10,14 @@
   :root { --ink:#111; --paper:#fafaf7; --muted:#8a8a85; --line:#d9d9d2; --red:#e0262b; }
   * { box-sizing: border-box; }
   html { color-scheme: light; }
-  input[type=text] { color:#111 !important; -webkit-text-fill-color:#111; caret-color:#111; }
-  input[type=text]::placeholder { color:#999; -webkit-text-fill-color:#999; }
-  .pname { color:#111 !important; }
-  html, body { margin:0; height:100%; background:#ecece6; color:var(--ink); font-family:Inter, system-ui, sans-serif; }
+  html, body { margin:0; min-height:100%; background:#ecece6; color:var(--ink); font-family:Inter, system-ui, sans-serif; }
   body { display:flex; flex-direction:column; align-items:center; padding:18px 12px 24px; }
   h1 { font-family:"Press Start 2P", monospace; font-size:34px; letter-spacing:6px; margin:6px 0 14px; }
   .wrap { width:100%; max-width:960px; }
   .hud { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:8px; min-height:52px; }
   .side { display:flex; flex-direction:column; gap:4px; }
   .side.right { align-items:flex-end; text-align:right; }
-  .pname { font-family:"Press Start 2P", monospace; font-size:12px; }
+  .pname { font-family:"Press Start 2P", monospace; font-size:12px; color:#111 !important; }
   .keys { font-size:11px; color:var(--muted); }
   .hearts { font-size:22px; line-height:1; letter-spacing:2px; }
   .hearts .on { color:var(--red); }
@@ -29,29 +25,40 @@
   .mid { text-align:center; font-size:11px; color:var(--muted); line-height:1.5; }
   .stage { position:relative; width:100%; aspect-ratio: 900 / 540; background:var(--paper); border:4px solid var(--ink); }
   canvas { display:block; width:100%; height:100%; }
-  .overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(250,250,247,.94); padding:16px; overflow:auto; }
+  .overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(250,250,247,.95); padding:16px; overflow:auto; }
   .overlay.hidden { display:none; }
-  .panel { width:100%; max-width:520px; }
-  .panel h2 { font-family:"Press Start 2P", monospace; font-size:16px; text-align:center; margin:0 0 18px; line-height:1.6; }
-  .row { margin-bottom:14px; }
+  .panel { width:100%; max-width:520px; margin:auto; }
+  .panel h2 { font-family:"Press Start 2P", monospace; font-size:16px; text-align:center; margin:0 0 16px; line-height:1.6; }
+  .row { margin-bottom:12px; }
+  .row.hidden { display:none; }
   .lbl { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:block; }
   .seg { display:flex; border:2px solid var(--ink); }
-  .seg button { flex:1; padding:9px 6px; border:0; background:transparent; font:600 14px Inter, sans-serif; cursor:pointer; color:var(--ink); }
+  .seg button { flex:1; padding:9px 6px; border:0; background:var(--paper); font:600 14px Inter, sans-serif; cursor:pointer; color:var(--ink); }
   .seg button + button { border-left:2px solid var(--ink); }
+  .seg.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--ink); }
+  .seg.grid2 button + button { border-left:0; }
   .seg button.sel { background:var(--ink); color:var(--paper); }
   .names { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .names.one { grid-template-columns:1fr; }
-  input[type=text] { width:100%; padding:9px 10px; border:2px solid var(--ink); background:#fff; font:14px Inter, sans-serif; }
+  input[type=text] { width:100%; padding:9px 10px; border:2px solid var(--ink); background:#fff; font:14px Inter, sans-serif;
+    color:#111 !important; -webkit-text-fill-color:#111; caret-color:#111; }
+  input[type=text]::placeholder { color:#999; -webkit-text-fill-color:#999; }
   .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+  .warn { font-size:12px; color:var(--red); margin-top:6px; }
   .lvl { display:flex; align-items:center; gap:12px; }
   input[type=range] { flex:1; accent-color:#111; }
   .lvlnum { font-family:"Press Start 2P", monospace; font-size:16px; min-width:44px; text-align:right; }
   .btn { display:block; width:100%; padding:13px; margin-top:6px; border:0; background:var(--ink); color:var(--paper); font-family:"Press Start 2P", monospace; font-size:13px; cursor:pointer; }
   .btn.ghost { background:transparent; color:var(--ink); border:2px solid var(--ink); }
   .btn:hover { opacity:.88; }
+  .btn:disabled { opacity:.35; cursor:not-allowed; }
+  .btn.hidden { display:none; }
   .center { text-align:center; }
-  .big { font-family:"Press Start 2P", monospace; font-size:14px; line-height:1.8; margin-bottom:16px; }
-  .ai-only.hidden { display:none; }
+  .big { font-family:"Press Start 2P", monospace; font-size:14px; line-height:1.8; margin-bottom:14px; }
+  .sub { font-size:14px; line-height:1.6; margin-bottom:14px; }
+  .ip { font-family:"Press Start 2P", monospace; font-size:15px; background:#fff; border:2px solid var(--ink); padding:12px; margin:6px 0 4px; user-select:all; }
+  .dots::after { content:''; animation:dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
   .foot { margin-top:10px; font-size:12px; color:var(--muted); text-align:center; }
 </style>
 </head>
@@ -80,18 +87,21 @@
       <div class="panel">
         <h2>Nouvelle partie</h2>
         <div class="row">
-          <span class="lbl">Joueurs</span>
-          <div class="seg" id="segPlayers">
-            <button data-v="1" class="sel">1 joueur</button>
-            <button data-v="2">2 joueurs</button>
+          <span class="lbl">Mode</span>
+          <div class="seg grid2" id="segMode">
+            <button data-v="solo" class="sel">Solo</button>
+            <button data-v="local">2 joueurs</button>
+            <button data-v="host">Réseau (hôte)</button>
+            <button data-v="guest">Réseau (rejoindre)</button>
           </div>
+          <div class="warn" id="netNote" style="display:none">Le mode réseau fonctionne uniquement dans PONG.exe.</div>
         </div>
         <div class="row">
-          <span class="lbl">Noms</span>
+          <span class="lbl" id="lblNames">Ton nom</span>
           <div class="names one" id="namesBox">
             <div>
               <input type="text" id="inP1" maxlength="14" placeholder="Joueur 1" value="Joueur 1">
-              <div class="hint">À droite — flèches ↑ ↓</div>
+              <div class="hint" id="hintP1">À droite — flèches ↑ ↓</div>
             </div>
             <div id="p2Box" style="display:none">
               <input type="text" id="inP2" maxlength="14" placeholder="Joueur 2" value="Joueur 2">
@@ -99,7 +109,12 @@
             </div>
           </div>
         </div>
-        <div class="row ai-only" id="aiRow">
+        <div class="row hidden" id="addrRow">
+          <span class="lbl">Adresse de l'hôte</span>
+          <input type="text" id="inAddr" maxlength="60" placeholder="ex. 192.168.1.23">
+          <div class="hint">L'adresse s'affiche sur l'écran de l'hôte après « Créer la partie ».</div>
+        </div>
+        <div class="row" id="aiRow">
           <span class="lbl">Niveau de l'ordinateur</span>
           <div class="seg" id="segAI">
             <button data-v="easy">Facile</button>
@@ -107,7 +122,7 @@
             <button data-v="hard">Difficile</button>
           </div>
         </div>
-        <div class="row">
+        <div class="row" id="lvlRow">
           <span class="lbl">Difficulté du niveau (obstacles)</span>
           <div class="lvl">
             <input type="range" id="inLvl" min="1" max="99" value="1">
@@ -117,6 +132,15 @@
         </div>
         <button class="btn" id="btnStart">Jouer</button>
         <div class="foot">Espace ou Échap : pause</div>
+      </div>
+    </div>
+
+    <!-- ATTENTE RÉSEAU -->
+    <div class="overlay hidden" id="wait">
+      <div class="panel center">
+        <div class="big" id="waitTitle">Réseau</div>
+        <div class="sub" id="waitText"></div>
+        <button class="btn ghost" id="btnWaitCancel">Annuler</button>
       </div>
     </div>
 
@@ -133,6 +157,7 @@
     <div class="overlay hidden" id="over">
       <div class="panel center">
         <div class="big" id="overText"></div>
+        <div class="sub" id="overSub"></div>
         <button class="btn" id="btnAgain">Rejouer</button>
         <button class="btn ghost" id="btnMenu">Menu</button>
       </div>
@@ -154,8 +179,10 @@
   const AI_SPEED = { easy: 210, medium: 340, hard: 540 };
   const AI_LABEL = { easy: 'facile', medium: 'moyen', hard: 'difficile' };
   const LIVES = 5;
+  const NET_PORT = 47777;
 
-  const cfg = { players: 1, ai: 'medium', level: 1, n1: 'Joueur 1', n2: 'Joueur 2' };
+  const cfg = { mode: 'solo', ai: 'medium', level: 1 };
+  let IS_APP = false;      // vrai quand la page est servie par PONG.exe
 
   // ---------- Menu ----------
   function segment(id, onPick) {
@@ -166,12 +193,25 @@
       onPick(b.dataset.v);
     });
   }
-  segment('segPlayers', v => {
-    cfg.players = +v;
-    $('p2Box').style.display = cfg.players === 2 ? '' : 'none';
-    $('namesBox').classList.toggle('one', cfg.players === 1);
-    $('aiRow').classList.toggle('hidden', cfg.players === 2);
-  });
+  function applyMode() {
+    const m = cfg.mode, net = m === 'host' || m === 'guest';
+    $('p2Box').style.display = m === 'local' ? '' : 'none';
+    $('namesBox').classList.toggle('one', m !== 'local');
+    $('lblNames').textContent = m === 'local' ? 'Noms' : 'Ton nom';
+    $('hintP1').textContent = {
+      solo: 'À droite — flèches ↑ ↓',
+      local: 'À droite — flèches ↑ ↓',
+      host: 'Tu joues à droite — flèches ↑ ↓',
+      guest: 'Tu joues à gauche — flèches ↑ ↓ (ou Z / S)'
+    }[m];
+    $('aiRow').classList.toggle('hidden', m !== 'solo');
+    $('addrRow').classList.toggle('hidden', m !== 'guest');
+    $('lvlRow').classList.toggle('hidden', m === 'guest');
+    $('btnStart').textContent = { solo: 'Jouer', local: 'Jouer', host: 'Créer la partie', guest: 'Rejoindre' }[m];
+    $('netNote').style.display = net && !IS_APP ? '' : 'none';
+    $('btnStart').disabled = net && !IS_APP;
+  }
+  segment('segMode', v => { cfg.mode = v; applyMode(); });
   segment('segAI', v => cfg.ai = v);
 
   function pairsForLevel(l) { return l <= 1 ? 0 : Math.min(14, Math.ceil((l - 1) / 7)); }
@@ -197,6 +237,14 @@
       o.start(); o.stop(actx.currentTime + dur);
     } catch (e) {}
   }
+  let sndQueue = [];
+  function sfx(freq, dur, vol) {
+    beep(freq, dur, vol);
+    if (cfg.mode === 'host') sndQueue.push([freq, dur || 0.05, vol || 0.05]);
+  }
+  function unlockAudio() {
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (e) {}
+  }
 
   // ---------- Obstacles (symétriques gauche/droite) ----------
   function rng(seed) {
@@ -214,9 +262,9 @@
     const pairs = pairsForLevel(level);
     const r = rng(level * 9973 + 17);
     const list = [];
-    const minX = W * 0.17, maxX = W / 2 - 34;           // moitié gauche, loin des raquettes
+    const minX = W * 0.17, maxX = W / 2 - 34;
     const maxH = 40 + Math.min(70, level * 0.9);
-    const safe = { x: W / 2 - 60, y: H / 2 - 50, w: 120, h: 100 }; // zone de service libre
+    const safe = { x: W / 2 - 60, y: H / 2 - 50, w: 120, h: 100 };
     let tries = 0;
     while (list.length < pairs * 2 && tries < 3000) {
       tries++;
@@ -225,7 +273,7 @@
       const x = Math.round(minX + r() * (maxX - minX - w));
       const y = Math.round(14 + r() * (H - 28 - h));
       const a = { x, y, w, h };
-      const b = { x: W - x - w, y, w, h };                // miroir à droite
+      const b = { x: W - x - w, y, w, h };
       if (overlaps(a, safe, 0) || overlaps(b, safe, 0)) continue;
       if (list.some(o => overlaps(o, a, 26) || overlaps(o, b, 26))) continue;
       list.push(a, b);
@@ -237,22 +285,32 @@
   let S = null;
   const keys = {};
 
-  function newGame() {
-    cfg.n1 = ($('inP1').value.trim() || 'Joueur 1');
-    cfg.n2 = ($('inP2').value.trim() || 'Joueur 2');
-    S = {
-      right: { y: H / 2 - PADDLE_H / 2, lives: LIVES, name: cfg.n1, human: true },
-      left:  { y: H / 2 - PADDLE_H / 2, lives: LIVES,
-               name: cfg.players === 2 ? cfg.n2 : 'Ordinateur', human: cfg.players === 2 },
+  function makeState(leftName, rightName, obstacles) {
+    return {
+      right: { y: H / 2 - PADDLE_H / 2, lives: LIVES, name: rightName },
+      left:  { y: H / 2 - PADDLE_H / 2, lives: LIVES, name: leftName },
       ball: { x: W / 2 - BALL / 2, y: H / 2 - BALL / 2, vx: 0, vy: 0, speed: 0 },
       baseSpeed: 340 + cfg.level * 3.2,
-      obstacles: buildObstacles(cfg.level),
+      obstacles,
       serveIn: 1.0, serveDir: Math.random() < 0.5 ? -1 : 1,
       running: true, paused: false, flash: null
     };
+  }
+  function myName(def) { return $('inP1').value.trim() || def; }
+
+  // Démarre une partie gérée localement (solo, 2 joueurs, hôte réseau)
+  function newGame() {
+    const m = cfg.mode;
+    const right = myName('Joueur 1');
+    const left = m === 'solo' ? 'Ordinateur' : m === 'local' ? ($('inP2').value.trim() || 'Joueur 2') : NET.peerName;
+    S = makeState(left, right, buildObstacles(cfg.level));
     resetBall();
     renderHud();
-    hide('menu'); hide('over'); hide('pause');
+    hideAll();
+    if (m === 'host') {
+      remoteDir = 0;
+      sendNet({ t: 'start', level: cfg.level, obstacles: S.obstacles, ln: left, rn: right });
+    }
   }
 
   function resetBall() {
@@ -274,59 +332,210 @@
     for (let i = 0; i < LIVES; i++) s += `<span class="${i < n ? 'on' : 'off'}">♥</span>`;
     return s;
   }
-  function esc(t) { return t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function renderHud() {
     if (!S) return;
+    const m = cfg.mode;
     $('nameL').innerHTML = esc(S.left.name);
     $('nameR').innerHTML = esc(S.right.name);
     $('heartsL').innerHTML = hearts(S.left.lives);
     $('heartsR').innerHTML = hearts(S.right.lives);
-    $('keysL').textContent = S.left.human ? 'Z / S' : `IA ${AI_LABEL[cfg.ai]}`;
-    $('keysR').textContent = '↑ / ↓';
+    $('keysL').textContent = { solo: `IA ${AI_LABEL[cfg.ai]}`, local: 'Z / S', host: 'en réseau', guest: '↑ / ↓ (toi)' }[m];
+    $('keysR').textContent = { solo: '↑ / ↓', local: '↑ / ↓', host: '↑ / ↓ (toi)', guest: 'en réseau' }[m];
     $('midInfo').innerHTML = `Niveau ${cfg.level}<br>${S.obstacles.length} obstacle${S.obstacles.length > 1 ? 's' : ''}`;
   }
 
   // ---------- Overlays ----------
   function show(id) { $(id).classList.remove('hidden'); }
   function hide(id) { $(id).classList.add('hidden'); }
+  function hideAll() { ['menu', 'wait', 'pause', 'over'].forEach(hide); }
   function togglePause() {
     if (!S || !S.running) return;
     S.paused = !S.paused;
     S.paused ? show('pause') : hide('pause');
   }
+  function showOver(title, sub, canReplay) {
+    $('overText').innerHTML = title;
+    $('overSub').textContent = sub || '';
+    $('btnAgain').classList.toggle('hidden', !canReplay);
+    hide('pause'); hide('wait');
+    show('over');
+  }
+  function showWait(title, text, btnLabel) {
+    hideAll();
+    $('waitTitle').textContent = title;
+    $('waitText').innerHTML = text;
+    $('btnWaitCancel').textContent = btnLabel || 'Annuler';
+    show('wait');
+  }
+  function toMenu() {
+    closeNet();
+    if (S) S.running = false;
+    hideAll(); show('menu');
+  }
+
+  // ---------- Réseau ----------
+  // L'hôte fait tourner la partie ; l'invité envoie ses touches et affiche l'état reçu.
+  let ws = null;
+  const NET = { peerName: '', connected: false };
+  let remoteDir = 0, lastSentDir = 0;
+
+  function sendNet(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  function closeNet() {
+    if (ws) { ws.onclose = null; ws.onerror = null; ws.onmessage = null; try { ws.close(); } catch (e) {} }
+    ws = null; NET.connected = false; NET.peerName = '';
+  }
+
+  async function startHost() {
+    showWait('Hôte', '<span class="dots">Ouverture de la partie</span>');
+    let info;
+    try { info = await (await fetch('/api/host', { cache: 'no-store' })).json(); } catch (e) { info = { ok: false, err: String(e) }; }
+    if (!info.ok) {
+      showWait('Erreur', `Impossible d'ouvrir le port ${NET_PORT}.<br><small>${esc(info.err || '')}</small>`, 'Retour');
+      return;
+    }
+    closeNet();
+    ws = new WebSocket(`ws://${location.host}/ws?role=host`);
+    const ips = (info.ips && info.ips.length ? info.ips : ['(adresse introuvable)']);
+    const ipHtml = ips.map(ip => `<div class="ip">${esc(ip)}</div>`).join('');
+    ws.onopen = () => showWait('Partie créée',
+      `Donne cette adresse à l'autre joueur :${ipHtml}
+       <div class="hint">Vous devez être sur le même réseau (même box / Wi-Fi).</div><br>
+       <span class="dots">En attente d'un joueur</span>`);
+    ws.onmessage = e => onHostMsg(JSON.parse(e.data));
+    ws.onclose = () => { ws = null; if (cfg.mode === 'host') netLost('La connexion réseau a été fermée.'); };
+  }
+  function onHostMsg(m) {
+    if (m.t === 'hello') {
+      NET.peerName = String(m.name || 'Invité').slice(0, 14);
+      NET.connected = true;
+      newGame();
+    } else if (m.t === 'in') {
+      remoteDir = Math.max(-1, Math.min(1, m.d | 0));
+    } else if (m.t === 'pause') {
+      togglePause();
+    } else if (m.t === 'peer-left') {
+      const was = NET.connected;
+      NET.connected = false;
+      if (was) {
+        if (S) S.running = false;
+        showOver('Partie terminée', `${NET.peerName || "L'autre joueur"} a quitté la partie.`, false);
+      }
+    }
+  }
+
+  function startGuest() {
+    let addr = $('inAddr').value.trim().replace(/^ws:\/\//, '').replace(/\/.*$/, '');
+    if (!addr) { $('inAddr').focus(); return; }
+    if (!/:\d+$/.test(addr)) addr += ':' + NET_PORT;
+    showWait('Connexion', `<span class="dots">Connexion à ${esc(addr)}</span>`);
+    closeNet();
+    let opened = false;
+    try { ws = new WebSocket(`ws://${addr}/ws?role=guest`); }
+    catch (e) { showWait('Erreur', 'Adresse invalide.', 'Retour'); return; }
+    const timer = setTimeout(() => {
+      if (!opened) { closeNet(); showWait('Erreur', `Impossible de joindre ${esc(addr)}.<br>Vérifie l'adresse, que l'hôte a bien créé la partie et que le pare-feu de son PC autorise PONG.`, 'Retour'); }
+    }, 6000);
+    ws.onopen = () => {
+      opened = true; clearTimeout(timer);
+      sendNet({ t: 'hello', name: myName('Invité') });
+      showWait('Connecté', '<span class="dots">La partie va commencer</span>');
+    };
+    ws.onmessage = e => onGuestMsg(JSON.parse(e.data));
+    ws.onclose = () => {
+      clearTimeout(timer);
+      ws = null;
+      if (!opened) showWait('Erreur', `Impossible de joindre ${esc(addr)}.<br>Vérifie l'adresse, que l'hôte a bien créé la partie et que le pare-feu de son PC autorise PONG.`, 'Retour');
+      else netLost("La connexion avec l'hôte a été perdue.");
+    };
+  }
+  function onGuestMsg(m) {
+    if (m.t === 'nohost') { closeNet(); showWait('Erreur', "Aucune partie n'a été créée à cette adresse.", 'Retour'); }
+    else if (m.t === 'full') { closeNet(); showWait('Erreur', 'Cette partie a déjà deux joueurs.', 'Retour'); }
+    else if (m.t === 'start') {
+      NET.connected = true;
+      cfg.level = m.level | 0;
+      S = makeState(m.ln, m.rn, m.obstacles || []);
+      lastSentDir = 0;
+      renderHud(); hideAll();
+    } else if (m.t === 's' && S) {
+      S.left.y = m.l; S.right.y = m.r; S.ball.x = m.bx; S.ball.y = m.by;
+      S.serveIn = m.sv ? 1 : 0; S.serveDir = m.sv || 1;
+      S.flash = m.f ? { side: m.f[0] ? 'right' : 'left', t: m.f[1] } : null;
+      if (m.ll !== S.left.lives || m.rl !== S.right.lives) { S.left.lives = m.ll; S.right.lives = m.rl; renderHud(); }
+      if (m.snd) for (const s of m.snd) beep(s[0], s[1], s[2]);
+      if (S.running && !!m.p !== S.paused) { S.paused = !!m.p; S.paused ? show('pause') : hide('pause'); }
+    } else if (m.t === 'over' && S) {
+      S.running = false;
+      showOver(`${esc(m.w)}<br>gagne !`, "En attente de l'hôte pour rejouer…", false);
+    } else if (m.t === 'peer-left') {
+      netLost("L'hôte a quitté la partie.");
+    }
+  }
+  function netLost(msg) {
+    const wasMode = cfg.mode;
+    closeNet();
+    if (S) S.running = false;
+    if (wasMode === 'host' || wasMode === 'guest') showOver('Partie terminée', msg, false);
+  }
+
+  function sendState() {
+    const r1 = v => Math.round(v * 10) / 10;
+    sendNet({
+      t: 's', l: r1(S.left.y), r: r1(S.right.y), bx: r1(S.ball.x), by: r1(S.ball.y),
+      ll: S.left.lives, rl: S.right.lives,
+      sv: S.serveIn > 0 ? S.serveDir : 0,
+      f: S.flash ? [S.flash.side === 'right' ? 1 : 0, r1(S.flash.t)] : 0,
+      p: S.paused ? 1 : 0,
+      snd: sndQueue.length ? sndQueue : undefined
+    });
+    sndQueue = [];
+  }
 
   // ---------- Entrées ----------
   window.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
-    if (['arrowup', 'arrowdown', ' '].includes(k) && document.activeElement.tagName !== 'INPUT') e.preventDefault();
-    if ((k === ' ' || k === 'escape') && S && S.running && $('menu').classList.contains('hidden')) { togglePause(); return; }
+    const typing = document.activeElement && document.activeElement.tagName === 'INPUT';
+    if (typing) {
+      if (k === 'enter' && !$('menu').classList.contains('hidden')) $('btnStart').click();
+      return;
+    }
+    if (['arrowup', 'arrowdown', ' '].includes(k)) e.preventDefault();
+    if ((k === ' ' || k === 'escape') && S && S.running && $('menu').classList.contains('hidden')) {
+      if (cfg.mode === 'guest') sendNet({ t: 'pause' }); else togglePause();
+      return;
+    }
     keys[k] = true;
   });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
   $('btnStart').addEventListener('click', () => {
-    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (e) {}
+    unlockAudio();
+    if (cfg.mode === 'host') startHost();
+    else if (cfg.mode === 'guest') startGuest();
+    else newGame();
+  });
+  $('btnResume').addEventListener('click', () => { if (cfg.mode === 'guest') sendNet({ t: 'pause' }); else togglePause(); });
+  $('btnAgain').addEventListener('click', () => {
+    if (cfg.mode === 'host' && !NET.connected) return;
     newGame();
   });
-  $('btnResume').addEventListener('click', togglePause);
-  $('btnAgain').addEventListener('click', newGame);
-  const toMenu = () => { if (S) S.running = false; hide('pause'); hide('over'); show('menu'); };
   $('btnQuit').addEventListener('click', toMenu);
   $('btnMenu').addEventListener('click', toMenu);
+  $('btnWaitCancel').addEventListener('click', toMenu);
 
   // ---------- Physique ----------
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const dirOf = (up, down) => (keys[down] ? 1 : 0) - (keys[up] ? 1 : 0);
 
   function movePaddles(dt) {
-    // Joueur 1 (droite) : flèches
-    let d = (keys['arrowdown'] ? 1 : 0) - (keys['arrowup'] ? 1 : 0);
-    S.right.y = clamp(S.right.y + d * PLAYER_SPEED * dt, 0, H - PADDLE_H);
+    S.right.y = clamp(S.right.y + dirOf('arrowup', 'arrowdown') * PLAYER_SPEED * dt, 0, H - PADDLE_H);
 
-    if (S.left.human) {
-      // Joueur 2 (gauche) : Z / S
-      d = (keys['s'] ? 1 : 0) - (keys['z'] ? 1 : 0);
-      S.left.y = clamp(S.left.y + d * PLAYER_SPEED * dt, 0, H - PADDLE_H);
+    if (cfg.mode === 'local') {
+      S.left.y = clamp(S.left.y + dirOf('z', 's') * PLAYER_SPEED * dt, 0, H - PADDLE_H);
+    } else if (cfg.mode === 'host') {
+      S.left.y = clamp(S.left.y + remoteDir * PLAYER_SPEED * dt, 0, H - PADDLE_H);
     } else {
       // IA : suit la hauteur de la balle, vitesse limitée selon la difficulté
       const target = S.ball.y + BALL / 2 - PADDLE_H / 2;
@@ -342,14 +551,12 @@
     b.vy = Math.sin(ang) * b.speed;
   }
   function jitter(b) {
-    // léger changement de trajectoire à chaque rebond
     const ang = Math.atan2(b.vy, b.vx) + (Math.random() - 0.5) * 0.12;
     const sp = Math.hypot(b.vx, b.vy);
     b.vx = Math.cos(ang) * sp; b.vy = Math.sin(ang) * sp;
     enforceHorizontal(b);
   }
   function enforceHorizontal(b) {
-    // évite les trajectoires presque verticales
     const sp = Math.hypot(b.vx, b.vy), minVx = sp * 0.38;
     if (Math.abs(b.vx) < minVx) {
       const sx = Math.sign(b.vx) || 1;
@@ -362,12 +569,12 @@
     const p = side === 'left' ? S.left : S.right;
     const px = side === 'left' ? PADDLE_GAP : W - PADDLE_GAP - PADDLE_W;
     if (b.x < px + PADDLE_W && b.x + BALL > px && b.y < p.y + PADDLE_H && b.y + BALL > p.y) {
-      const rel = ((b.y + BALL / 2) - (p.y + PADDLE_H / 2)) / (PADDLE_H / 2); // -1..1
+      const rel = ((b.y + BALL / 2) - (p.y + PADDLE_H / 2)) / (PADDLE_H / 2);
       const ang = clamp(rel, -1, 1) * (58 * Math.PI / 180);
       b.speed = Math.min(b.speed * 1.045, S.baseSpeed * 2.1);
       if (side === 'left') { b.x = px + PADDLE_W; setAngle(b, ang, 1); }
       else { b.x = px - BALL; setAngle(b, ang, -1); }
-      beep(side === 'left' ? 440 : 520);
+      sfx(side === 'left' ? 440 : 520);
       return true;
     }
     return false;
@@ -385,7 +592,7 @@
         else { b.y = o.y + o.h; b.vy = Math.abs(b.vy); }
         jitter(b);
         o.flash = 0.15;
-        beep(300, 0.04, 0.04);
+        sfx(300, 0.04, 0.04);
         return;
       }
     }
@@ -394,16 +601,16 @@
   function loseLife(side) {
     S[side].lives--;
     S.flash = { side, t: 0.35 };
-    beep(140, 0.25, 0.06);
+    sfx(140, 0.25, 0.06);
     renderHud();
     if (S[side].lives <= 0) {
       S.running = false;
       const winner = side === 'left' ? S.right : S.left;
-      $('overText').innerHTML = `${esc(winner.name)}<br>gagne !`;
-      show('over');
+      if (cfg.mode === 'host') { sendState(); sendNet({ t: 'over', w: winner.name }); }
+      showOver(`${esc(winner.name)}<br>gagne !`, '', cfg.mode !== 'host' || NET.connected);
       return;
     }
-    S.serveDir = side === 'left' ? -1 : 1;   // la balle repart vers celui qui vient de perdre
+    S.serveDir = side === 'left' ? -1 : 1;
     resetBall();
   }
 
@@ -425,14 +632,12 @@
       b.x += b.vx * dt / steps;
       b.y += b.vy * dt / steps;
 
-      // bords haut / bas
-      if (b.y <= 0) { b.y = 0; b.vy = Math.abs(b.vy); jitter(b); beep(620, 0.03, 0.03); }
-      else if (b.y + BALL >= H) { b.y = H - BALL; b.vy = -Math.abs(b.vy); jitter(b); beep(620, 0.03, 0.03); }
+      if (b.y <= 0) { b.y = 0; b.vy = Math.abs(b.vy); jitter(b); sfx(620, 0.03, 0.03); }
+      else if (b.y + BALL >= H) { b.y = H - BALL; b.vy = -Math.abs(b.vy); jitter(b); sfx(620, 0.03, 0.03); }
 
       if (b.vx < 0) hitPaddle(b, 'left'); else hitPaddle(b, 'right');
       hitObstacles(b);
 
-      // bord derrière la raquette
       if (b.x <= 0) { loseLife('left'); return; }
       if (b.x + BALL >= W) { loseLife('right'); return; }
     }
@@ -444,31 +649,25 @@
     ctx.fillRect(0, 0, W, H);
 
     if (S && S.flash) {
-      ctx.fillStyle = `rgba(224,38,43,${0.25 * S.flash.t / 0.35})`;
+      ctx.fillStyle = `rgba(224,38,43,${Math.max(0, 0.25 * S.flash.t / 0.35)})`;
       ctx.fillRect(S.flash.side === 'left' ? 0 : W - 60, 0, 60, H);
     }
 
-    // ligne centrale
     ctx.fillStyle = '#d4d4cc';
     for (let y = 8; y < H; y += 28) ctx.fillRect(W / 2 - 2, y, 4, 14);
 
     if (!S) return;
 
-    // obstacles
     for (const o of S.obstacles) {
       ctx.fillStyle = o.flash ? '#555' : '#9a9a92';
       ctx.fillRect(o.x, o.y, o.w, o.h);
     }
 
-    // raquettes
     ctx.fillStyle = '#111';
     ctx.fillRect(PADDLE_GAP, S.left.y, PADDLE_W, PADDLE_H);
     ctx.fillRect(W - PADDLE_GAP - PADDLE_W, S.right.y, PADDLE_W, PADDLE_H);
-
-    // balle
     ctx.fillRect(Math.round(S.ball.x), Math.round(S.ball.y), BALL, BALL);
 
-    // compte à rebours de service
     if (S.running && S.serveIn > 0) {
       ctx.fillStyle = 'rgba(17,17,17,.35)';
       ctx.font = '12px "Press Start 2P", monospace';
@@ -482,17 +681,40 @@
   function loop(now) {
     const dt = Math.min(0.033, (now - last) / 1000);
     last = now;
-    if (S && S.running && !S.paused) update(dt);
+    if (S && S.running) {
+      if (cfg.mode === 'guest') {
+        // l'invité n'envoie que ses touches
+        const d = clamp(dirOf('arrowup', 'arrowdown') + dirOf('z', 's'), -1, 1);
+        if (d !== lastSentDir) { lastSentDir = d; sendNet({ t: 'in', d }); }
+      } else {
+        if (!S.paused) update(dt);
+        if (cfg.mode === 'host' && S.running) sendState();
+      }
+    }
     draw();
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 
-  // HUD initial
+  // ---------- Démarrage ----------
   $('nameL').textContent = 'Ordinateur';
   $('nameR').textContent = 'Joueur 1';
   $('heartsL').innerHTML = hearts(LIVES);
   $('heartsR').innerHTML = hearts(LIVES);
+  applyMode();
+
+  // Détecte si la page tourne dans PONG.exe (le mode réseau n'existe que là)
+  if (location.protocol === 'http:') {
+    fetch('/api/ping', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => {
+        if (j && j.pong) {
+          IS_APP = true; applyMode();
+          try { new WebSocket(`ws://${location.host}/ws?role=life`); } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  }
 })();
 </script>
 </body>
