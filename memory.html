@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Memory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';document.head.appendChild(s)"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -26,7 +27,29 @@
   .nm{color:#1c7ed6;font-weight:600}
 
   /* ---------- Écran de configuration ---------- */
-  #setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  h1.t2{font-size:36px;text-align:center;margin:0 0 4px}
+  .modes{display:grid;gap:14px;margin-top:8px}
+  .modeBtn{display:flex;align-items:center;gap:16px;text-align:left;border:3px solid #ece7ff;background:#f7f5ff;border-radius:20px;padding:16px 18px;color:var(--ink);transition:.15s}
+  .modeBtn:hover{border-color:var(--card-back2);transform:translateY(-2px)}
+  .modeBtn .ic{font-size:34px;line-height:1}
+  .modeBtn b{display:block;font-size:21px}
+  .modeBtn small{color:var(--muted);font-size:15px}
+  .back{background:none;border:none;color:var(--muted);font-size:16px;padding:0;margin-bottom:8px}
+  .back:hover{color:var(--ink)}
+  .code{font-size:44px;font-weight:700;letter-spacing:8px;text-align:center;color:var(--card-back);background:#f7f5ff;border-radius:18px;padding:10px;margin:4px 0 0}
+  .name-row input.codeIn{text-transform:uppercase;letter-spacing:6px;text-align:center;font-size:24px}
+  .plist{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+  .plist li{display:flex;align-items:center;gap:10px;background:#f7f5ff;border-radius:14px;padding:10px 14px;font-size:18px}
+  .plist .tag{margin-left:auto;color:var(--muted);font-size:14px}
+  .wait{text-align:center;color:var(--muted);margin:18px 0 0}
+  .chip.gone{opacity:.45}
+  .chip.gone .nm{text-decoration:line-through}
+  .chip .me{font-size:13px;color:var(--muted)}
+  #board.wait .card{cursor:not-allowed}
+  #board.wait .card:not(.flipped):hover .back{filter:none}
+  .modal{position:fixed;inset:0;background:rgba(43,35,80,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+  .modal .panel{text-align:center;animation:rise .4s ease}
   .panel{
     background:#fff;border-radius:28px;padding:32px 32px 28px;width:100%;max-width:520px;
     box-shadow:0 10px 0 #e9dcc8, 0 20px 50px rgba(43,35,80,.12);
@@ -120,12 +143,25 @@
 </head>
 <body>
 
-<!-- Configuration -->
-<section id="setup">
+<!-- Choix du mode -->
+<section id="mode" class="screen">
   <div class="panel">
     <div class="logo" id="logo"></div>
     <h1 style="text-align:center">Memory</h1>
     <p class="subtitle">Retrouve les paires d'animaux !</p>
+    <div class="modes">
+      <button class="modeBtn" data-go="setup"><span class="ic">🏠</span><span><b>Jeu local</b><small>1 à 4 joueurs sur le même écran</small></span></button>
+      <button class="modeBtn" data-go="hostSetup"><span class="ic">📡</span><span><b>Jeu en réseau (hôte)</b><small>Crée une partie et donne son code aux autres</small></span></button>
+      <button class="modeBtn" data-go="joinSetup"><span class="ic">🔗</span><span><b>Jeu en réseau (rejoindre)</b><small>Entre le code donné par l'hôte</small></span></button>
+    </div>
+  </div>
+</section>
+
+<!-- Jeu local : configuration -->
+<section id="setup" class="screen hidden">
+  <div class="panel">
+    <button class="back" data-back>← Retour</button>
+    <h1 class="t2">Jeu local</h1>
 
     <h2>Nombre de joueurs</h2>
     <div class="seg" id="nbPlayers">
@@ -147,6 +183,56 @@
   </div>
 </section>
 
+<!-- Réseau : hôte -->
+<section id="hostSetup" class="screen hidden">
+  <div class="panel">
+    <button class="back" data-back>← Retour</button>
+    <h1 class="t2">Créer une partie</h1>
+    <h2>Ton nom</h2>
+    <div class="name-row"><span class="dot" style="background:var(--p0)"></span><input id="hostName" maxlength="16" value="Joueur 1"></div>
+    <h2>Taille de la grille</h2>
+    <div class="dims">
+      <label>Largeur<select id="hw"></select></label>
+      <span class="x">×</span>
+      <label>Hauteur<select id="hh"></select></label>
+    </div>
+    <div class="info" id="hinfo"></div>
+    <button class="start" id="hostBtn">Créer la partie</button>
+    <div class="info err" id="hostMsg"></div>
+  </div>
+</section>
+
+<!-- Réseau : rejoindre -->
+<section id="joinSetup" class="screen hidden">
+  <div class="panel">
+    <button class="back" data-back>← Retour</button>
+    <h1 class="t2">Rejoindre une partie</h1>
+    <h2>Ton nom</h2>
+    <div class="name-row"><span class="dot" style="background:var(--p1)"></span><input id="joinName" maxlength="16" value="Joueur 2"></div>
+    <h2>Code de la partie</h2>
+    <div class="name-row"><input id="joinCode" class="codeIn" maxlength="5" placeholder="ABCDE" autocomplete="off"></div>
+    <button class="start" id="joinBtn">Rejoindre</button>
+    <div class="info err" id="joinMsg"></div>
+  </div>
+</section>
+
+<!-- Réseau : salle d'attente -->
+<section id="lobby" class="screen hidden">
+  <div class="panel">
+    <h1 class="t2">Salle d'attente</h1>
+    <div id="codeBox">
+      <p class="subtitle" style="margin:8px 0 0">Code à donner aux autres joueurs :</p>
+      <div class="code" id="lobbyCode"></div>
+    </div>
+    <h2>Joueurs (<span id="lobbyCount">1</span>/4)</h2>
+    <ul class="plist" id="lobbyList"></ul>
+    <div class="info" id="lobbyInfo"></div>
+    <button class="start" id="launchBtn">Lancer la partie</button>
+    <p class="wait" id="lobbyWait">En attente que l'hôte lance la partie…</p>
+    <div style="text-align:center;margin-top:14px"><button class="back" id="lobbyQuit">Quitter</button></div>
+  </div>
+</section>
+
 <!-- Jeu -->
 <section id="game" class="hidden">
   <header>
@@ -154,7 +240,7 @@
     <div class="players" id="players"></div>
     <div class="tools">
       <button class="tool" id="soundBtn" title="Son">🔊</button>
-      <button class="tool" id="quitBtn">Nouvelle partie</button>
+      <button class="tool" id="quitBtn">Menu</button>
     </div>
   </header>
   <div class="status" id="status"></div>
@@ -162,16 +248,26 @@
 </section>
 
 <!-- Fin -->
-<div id="end" class="hidden">
+<div id="end" class="modal hidden">
   <div class="panel">
     <div class="trophy">🏆</div>
     <h2 id="winTitle"></h2>
     <p id="winSub"></p>
     <ul class="rank" id="rank"></ul>
+    <p class="wait hidden" id="endWait">En attente de l'hôte pour rejouer…</p>
     <div class="btns">
       <button class="start" id="againBtn">Rejouer</button>
-      <button class="start alt" id="configBtn">Réglages</button>
+      <button class="start alt" id="configBtn">Menu</button>
     </div>
+  </div>
+</div>
+
+<!-- Message -->
+<div id="msgBox" class="modal hidden">
+  <div class="panel">
+    <h2 id="msgTitle" style="font-size:28px;margin:0 0 8px"></h2>
+    <p id="msgText" style="color:var(--muted);font-size:17px"></p>
+    <button class="start" id="msgOk">OK</button>
   </div>
 </div>
 
@@ -246,14 +342,49 @@ function playMatch(){ [0,4,7,12].forEach((s,i)=>tone(freq(12+s),i*.08,.35,'trian
 function playMiss(){ tone(freq(-5),0,.25,'sine',.18); tone(freq(-8),.14,.35,'sine',.18); }
 function playWin(){ [0,4,7,12,7,12,16,19].forEach((s,i)=>tone(freq(12+s),i*.12,.4,'square',.07)); }
 
-/* ================= Configuration ================= */
+/* ================= Outils ================= */
 const $=id=>document.getElementById(id);
-let nbPlayers=2;
-let savedNames=['Joueur 1','Joueur 2','Joueur 3','Joueur 4'];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const N=n=>`<span class="nm">${esc(n)}</span>`;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const cleanName=(n,d)=>String(n||'').trim().slice(0,16)||d;
+const SCREENS=['mode','setup','hostSetup','joinSetup','lobby','game'];
+function show(id){ SCREENS.forEach(s=>$(s).classList.toggle('hidden',s!==id)); $('end').classList.add('hidden'); }
+function showMsg(title,text){ $('msgTitle').textContent=title; $('msgText').textContent=text; $('msgBox').classList.remove('hidden'); }
+$('msgOk').addEventListener('click',()=>{ $('msgBox').classList.add('hidden'); leaveNet(); show('mode'); });
 
+let MODE='local';   // 'local' | 'host' | 'client'
+let NET={};
+let S={};
+
+/* ================= Menu ================= */
 $('logo').innerHTML=[0,4,9].map(a=>cardSVG(a,COLORS[a%10])).join('');
 $('logo').querySelectorAll('svg').forEach((s,i)=>{s.style.borderRadius='12px';s.style.transform=`rotate(${[-10,0,10][i]}deg)`});
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{
+  show(b.dataset.go); ['hostMsg','joinMsg'].forEach(m=>$(m).textContent='');
+  if(b.dataset.go==='joinSetup') $('joinCode').focus();
+}));
+document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>{ leaveNet(); show('mode'); }));
 
+function setupDims(w,h,info,btn){
+  const check=()=>{
+    const W=+$(w).value,H=+$(h).value,n=W*H,ok=n%2===0;
+    $(info).className='info'+(ok?'':' err');
+    $(info).textContent= ok ? `${n} cartes · ${n/2} paires d'animaux` : `${W} × ${H} = ${n} : le nombre de cartes doit être pair.`;
+    $(btn).disabled=!ok;
+  };
+  for(const id of [w,h]){
+    const s=$(id); for(let i=2;i<=20;i++){const o=document.createElement('option');o.value=i;o.textContent=i;s.appendChild(o)}
+    s.value=4; s.addEventListener('change',check);
+  }
+  check();
+}
+setupDims('w','h','info','startBtn');
+setupDims('hw','hh','hinfo','hostBtn');
+
+/* ================= Jeu local : configuration ================= */
+let nbPlayers=2;
+let savedNames=['Joueur 1','Joueur 2','Joueur 3','Joueur 4'];
 function renderNames(){
   const box=$('names');
   box.querySelectorAll('input').forEach((inp,i)=>savedNames[i]=inp.value);
@@ -271,27 +402,20 @@ $('nbPlayers').addEventListener('click',e=>{
   $('nbPlayers').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
   renderNames();
 });
-for(const id of ['w','h']){
-  const s=$(id); for(let i=2;i<=20;i++){const o=document.createElement('option');o.value=i;o.textContent=i;s.appendChild(o)}
-  s.value=4; s.addEventListener('change',checkDims);
-}
-function checkDims(){
-  const n=$('w').value*$('h').value, ok=n%2===0;
-  $('info').className='info'+(ok?'':' err');
-  $('info').textContent= ok ? `${n} cartes · ${n/2} paires d'animaux` : `${$('w').value} × ${$('h').value} = ${n} : le nombre de cartes doit être pair.`;
-  $('startBtn').disabled=!ok;
-}
-renderNames(); checkDims();
+renderNames();
 
-/* ================= Jeu ================= */
-let S={};
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function startLocal(){
+  MODE='local';
+  const names=[...$('names').querySelectorAll('input')].map((inp,i)=>cleanName(inp.value,'Joueur '+(i+1)));
+  const W=+$('w').value, H=+$('h').value;
+  beginGame({names,W,H,deck:makeDeck(W,H)});
+}
+$('startBtn').addEventListener('click',()=>{ ac(); startLocal(); });
 
-function startGame(){
-  ac();
-  const players=[...$('names').querySelectorAll('input')].map((inp,i)=>({name:inp.value.trim()||('Joueur '+(i+1)),score:0,tries:0,pairs:0}));
-  const W=+$('w').value, H=+$('h').value, nPairs=W*H/2;
-  // choix des paires : animaux différents d'abord, puis variantes de couleur
+/* ================= Partie ================= */
+function makeDeck(W,H){
+  const nPairs=W*H/2;
+  // animaux différents d'abord, puis variantes de couleur
   const aOrder=shuffle([...Array(ANIMALS.length).keys()]);
   const cOrder=ANIMALS.map(()=>shuffle([...Array(COLORS.length).keys()]));
   const deck=[];
@@ -299,23 +423,30 @@ function startGame(){
     const a=aOrder[p%ANIMALS.length], c=COLORS[cOrder[a][Math.floor(p/ANIMALS.length)]];
     deck.push({pair:p,a,c},{pair:p,a,c});
   }
-  shuffle(deck);
-  S={players,cur:0,W,H,nPairs,found:0,first:null,lock:false,cards:[]};
+  return shuffle(deck);
+}
 
+const isMe=i=>MODE==='local'||i===NET.seat;
+
+function beginGame(cfg){
+  ac();
+  S={players:cfg.names.map(n=>({name:n,score:0,tries:0,pairs:0,gone:false})),cur:0,W:cfg.W,H:cfg.H,
+     nPairs:cfg.deck.length/2,found:0,first:null,lock:false,over:false,cards:[]};
   const board=$('board'); board.innerHTML='';
-  board.style.gridTemplateColumns=`repeat(${W},var(--cs))`;
-  board.style.gridTemplateRows=`repeat(${H},var(--cs))`;
-  deck.forEach(d=>{
+  board.style.gridTemplateColumns=`repeat(${S.W},var(--cs))`;
+  board.style.gridTemplateRows=`repeat(${S.H},var(--cs))`;
+  cfg.deck.forEach((d,idx)=>{
     const el=document.createElement('button'); el.className='card';
     el.setAttribute('aria-label','Carte cachée');
     el.innerHTML=`<div class="inner"><div class="face back">?</div><div class="face front">${cardSVG(d.a,d.c)}</div></div>`;
-    const card={...d,el,flipped:false,matched:false};
-    el.addEventListener('click',()=>onCard(card));
-    S.cards.push(card); board.appendChild(el);
+    el.addEventListener('click',()=>userClick(idx));
+    S.cards.push({pair:d.pair,el,flipped:false,matched:false});
+    board.appendChild(el);
   });
-
-  $('setup').classList.add('hidden'); $('end').classList.add('hidden'); $('game').classList.remove('hidden');
-  renderPlayers(); setStatus(`À ${N(S.players[0].name)} de commencer !`); fit();
+  show('game');
+  renderPlayers();
+  setStatus(MODE!=='local'&&isMe(0) ? 'Tu commences !' : `À ${N(S.players[0].name)} de commencer !`);
+  fit(); updateWait();
 }
 
 function fit(){
@@ -333,49 +464,77 @@ window.addEventListener('resize',fit);
 function renderPlayers(){
   const box=$('players'); box.innerHTML='';
   S.players.forEach((p,i)=>{
-    const c=document.createElement('div'); c.className='chip'+(i===S.cur?' active':'');
+    const c=document.createElement('div'); c.className='chip'+(i===S.cur?' active':'')+(p.gone?' gone':'');
     if(i===S.cur) c.style.borderColor=PCOLORS[i];
-    c.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span><span class="nm"></span><span class="sc">${p.score}</span>`;
-    c.querySelector('.nm').textContent=p.name;
+    c.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>${N(p.name)}${MODE!=='local'&&i===NET.seat?'<span class="me">(toi)</span>':''}<span class="sc">${p.score}</span>`;
     box.appendChild(c);
   });
 }
-const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
-const N=n=>`<span class="nm">${esc(n)}</span>`;
 function setStatus(t){ $('status').innerHTML=t; }
+function updateWait(){ $('board').classList.toggle('wait', MODE!=='local' && !isMe(S.cur)); }
+function turnLine(){ return MODE!=='local'&&isMe(S.cur) ? "C'est ton tour !" : `Au tour de ${N(S.players[S.cur].name)}.`; }
+function nextPlayer(){
+  const n=S.players.length;
+  for(let k=0;k<n;k++){ S.cur=(S.cur+1)%n; if(!S.players[S.cur].gone) break; }
+}
 
-function onCard(card){
-  if(S.lock||card.flipped||card.matched) return;
+function canFlip(i,seat){
+  const c=S.cards&&S.cards[i];
+  return !!c && !S.over && !S.lock && S.cur===seat && !c.flipped && !c.matched && !S.players[seat].gone;
+}
+// clic sur une carte par le joueur de cet écran
+function userClick(i){
+  if(MODE==='local'){ if(canFlip(i,S.cur)) applyFlip(i); }
+  else if(MODE==='host'){ if(canFlip(i,0)){ broadcast({t:'flip',i}); applyFlip(i); } }
+  else if(MODE==='client'){ if(canFlip(i,NET.seat) && NET.conn) NET.conn.send({t:'click',i}); }
+}
+// retournement validé (appliqué de la même façon sur tous les écrans)
+function applyFlip(i){
+  const card=S.cards[i];
+  if(!card||card.flipped||card.matched||S.over) return;
   card.flipped=true; card.el.classList.add('flipped'); card.el.setAttribute('aria-label','Carte retournée');
   playFlip(card.pair);
   if(!S.first){ S.first=card; return; }
   const a=S.first, b=card, p=S.players[S.cur];
   S.first=null; S.lock=true; p.tries++;
   if(a.pair===b.pair){
+    S.found++; if(S.found===S.nPairs) S.over=true;
     setTimeout(()=>{
       [a,b].forEach(c=>{c.matched=true;c.el.classList.add('matched');c.el.style.setProperty('--mc',PCOLORS[S.cur])});
-      p.score+=10; p.pairs++; S.found++; playMatch(); renderPlayers();
-      if(S.found===S.nPairs){ setStatus('Toutes les paires sont trouvées !'); setTimeout(endGame,800); return; }
-      setStatus(`Bravo ${N(p.name)} ! +10 points, tu rejoues.`);
+      p.score+=10; p.pairs++; playMatch();
+      if(S.over){ renderPlayers(); setStatus('Toutes les paires sont trouvées !'); setTimeout(endGame,800); return; }
+      if(p.gone){ nextPlayer(); setStatus(turnLine()); }
+      else setStatus(`Bravo ${N(p.name)} ! +10 points et ${MODE!=='local'&&isMe(S.cur)?'tu rejoues':'nouveau tour'}.`);
+      renderPlayers(); updateWait();
       S.lock=false;
     },420);
   } else {
-    setTimeout(()=>{
-      [a,b].forEach(c=>c.el.classList.add('shake'));
-    },500);
+    setTimeout(()=>[a,b].forEach(c=>c.el.classList.add('shake')),500);
     setTimeout(()=>{
       [a,b].forEach(c=>{c.flipped=false;c.el.classList.remove('flipped','shake');c.el.setAttribute('aria-label','Carte cachée')});
       playMiss();
-      S.cur=(S.cur+1)%S.players.length; renderPlayers();
-      const n=S.players[S.cur].name;
-      setStatus(S.players.length>1 ? `Raté ! Au tour de ${N(n)}.` : 'Raté ! Essaie encore.');
+      nextPlayer(); renderPlayers(); updateWait();
+      setStatus(S.players.length>1 ? 'Raté ! '+turnLine() : 'Raté ! Essaie encore.');
       S.lock=false;
     },1150);
   }
 }
 
+function playerLeft(seat){
+  if(!S.players) return;
+  const p=S.players[seat]; if(!p||p.gone) return;
+  p.gone=true;
+  let msg=`${N(p.name)} a quitté la partie.`;
+  if(!S.over && S.cur===seat && !S.lock){
+    if(S.first){ const c=S.first; c.flipped=false; c.el.classList.remove('flipped'); S.first=null; }
+    nextPlayer(); msg+=' '+turnLine();
+  }
+  renderPlayers(); updateWait(); setStatus(msg);
+}
+
 function endGame(){
   playWin(); confetti();
+  if(MODE==='host') NET.phase='end';
   const ps=S.players, max=Math.max(...ps.map(p=>p.score));
   const winners=ps.filter(p=>p.score===max);
   if(ps.length===1){
@@ -391,10 +550,11 @@ function endGame(){
   const rank=$('rank'); rank.innerHTML='';
   ps.map((p,i)=>({...p,i})).sort((x,y)=>y.score-x.score).forEach((p,k)=>{
     const li=document.createElement('li');
-    li.innerHTML=`<span>${['🥇','🥈','🥉','4.'][k]}</span><span class="dot" style="background:${PCOLORS[p.i]}"></span><span class="nm"></span><b>${p.score} pts</b>`;
-    li.querySelector('.nm').textContent=p.name;
+    li.innerHTML=`<span>${['🥇','🥈','🥉','4.'][k]}</span><span class="dot" style="background:${PCOLORS[p.i]}"></span>${N(p.name)}<b>${p.score} pts</b>`;
     rank.appendChild(li);
   });
+  $('againBtn').classList.toggle('hidden',MODE==='client');
+  $('endWait').classList.toggle('hidden',MODE!=='client');
   $('end').classList.remove('hidden');
 }
 
@@ -409,12 +569,173 @@ function confetti(){
   }
 }
 
-$('startBtn').addEventListener('click',startGame);
-$('againBtn').addEventListener('click',startGame);
-function toSetup(){ $('end').classList.add('hidden'); $('game').classList.add('hidden'); $('setup').classList.remove('hidden'); S={}; }
-$('configBtn').addEventListener('click',toSetup);
-$('quitBtn').addEventListener('click',toSetup);
+$('againBtn').addEventListener('click',()=>{ if(MODE==='host') hostStartGame(); else startLocal(); });
+$('configBtn').addEventListener('click',()=>{ leaveNet(); show('mode'); });
+$('quitBtn').addEventListener('click',()=>{ leaveNet(); show('mode'); });
 $('soundBtn').addEventListener('click',()=>{ soundOn=!soundOn; $('soundBtn').textContent=soundOn?'🔊':'🔇'; });
+
+/* ================= Réseau (PeerJS / WebRTC) ================= */
+const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789', PREFIX='memory-animaux-jeu-';
+const NET_HELP="Le jeu en réseau a besoin d'une connexion Internet, et la page doit être ouverte depuis memory.html ou Memory.exe (il ne fonctionne pas dans l'aperçu Claude).";
+const peerReady=()=>typeof Peer!=='undefined';
+
+function leaveNet(){
+  const p=NET.peer; NET={}; MODE='local';
+  if(p){ try{p.destroy()}catch(e){} }
+}
+
+function renderLobby(names){
+  const list=$('lobbyList'); list.innerHTML='';
+  names.forEach((n,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>${N(n)}<span class="tag">${[i===0?'hôte':'',i===NET.seat?'toi':''].filter(Boolean).join(' · ')}</span>`;
+    list.appendChild(li);
+  });
+  $('lobbyCount').textContent=names.length;
+  const host=MODE==='host';
+  $('codeBox').classList.toggle('hidden',!host);
+  $('launchBtn').classList.toggle('hidden',!host);
+  $('lobbyWait').classList.toggle('hidden',host);
+  $('launchBtn').disabled=names.length<2;
+  $('lobbyInfo').textContent=`Grille ${NET.W} × ${NET.H} · ${NET.W*NET.H/2} paires`+(host&&names.length<2?' — en attente d’au moins un autre joueur…':'');
+}
+$('lobbyQuit').addEventListener('click',()=>{ leaveNet(); show('mode'); });
+
+/* ----- Hôte ----- */
+$('hostBtn').addEventListener('click',()=>{
+  ac();
+  if(!peerReady()){ $('hostMsg').textContent=NET_HELP; return; }
+  $('hostMsg').className='info'; $('hostMsg').textContent='Création de la partie…';
+  $('hostBtn').disabled=true;
+  createHost(cleanName($('hostName').value,'Hôte'),+$('hw').value,+$('hh').value);
+});
+function hostFail(t){ leaveNet(); $('hostBtn').disabled=false; $('hostMsg').className='info err'; $('hostMsg').textContent=t; }
+function createHost(name,W,H){
+  const code=Array.from({length:5},()=>CODE_CHARS[Math.random()*CODE_CHARS.length|0]).join('');
+  let peer;
+  try{ peer=new Peer(PREFIX+code,{debug:0}); }catch(e){ hostFail(NET_HELP); return; }
+  MODE='host';
+  NET={peer,code,seat:0,members:[{name,conn:null}],phase:'creating',W,H};
+  const me=NET;
+  const to=setTimeout(()=>{ if(NET===me&&me.phase==='creating') hostFail('Le serveur ne répond pas. '+NET_HELP); },12000);
+  peer.on('open',()=>{
+    if(NET!==me) return;
+    clearTimeout(to); me.phase='lobby';
+    $('hostBtn').disabled=false; $('hostMsg').textContent='';
+    $('lobbyCode').textContent=code;
+    show('lobby'); sendLobby();
+  });
+  peer.on('error',err=>{
+    if(NET!==me) return;
+    if(me.phase==='creating'){
+      clearTimeout(to);
+      if(err.type==='unavailable-id'){ try{peer.destroy()}catch(e){} createHost(name,W,H); return; }
+      hostFail('Impossible de créer la partie. '+NET_HELP);
+    }
+  });
+  peer.on('disconnected',()=>{ if(NET===me){ try{peer.reconnect()}catch(e){} } });
+  peer.on('connection',conn=>{
+    conn.on('data',d=>{ if(NET===me) hostData(conn,d); });
+    conn.on('close',()=>{ if(NET===me) hostClose(conn); });
+    conn.on('error',()=>{ if(NET===me) hostClose(conn); });
+  });
+}
+function sendLobby(){
+  const names=NET.members.map(m=>m.name);
+  NET.members.forEach((m,i)=>{ if(m.conn&&m.conn.open) m.conn.send({t:'lobby',names,you:i,W:NET.W,H:NET.H}); });
+  renderLobby(names);
+}
+function broadcast(msg){
+  if(MODE!=='host'||!NET.members) return;
+  NET.members.forEach(m=>{ if(m.conn&&!m.gone&&m.conn.open) m.conn.send(msg); });
+}
+function hostData(conn,d){
+  if(!d||typeof d!=='object') return;
+  if(d.t==='hello'){
+    if(NET.members.some(m=>m.conn===conn)) return;
+    if(NET.phase!=='lobby'){ conn.send({t:'busy'}); setTimeout(()=>conn.close(),400); return; }
+    if(NET.members.length>=4){ conn.send({t:'full'}); setTimeout(()=>conn.close(),400); return; }
+    NET.members.push({name:cleanName(d.name,'Joueur '+(NET.members.length+1)),conn});
+    tone(freq(19),0,.25,'triangle',.15); tone(freq(24),.1,.3,'triangle',.15);
+    sendLobby();
+  } else if(d.t==='click'){
+    const seat=NET.members.findIndex(m=>m.conn===conn);
+    if(NET.phase==='game' && seat>0 && canFlip(d.i,seat)){ broadcast({t:'flip',i:d.i}); applyFlip(d.i); }
+  }
+}
+function hostClose(conn){
+  const seat=NET.members?NET.members.findIndex(m=>m.conn===conn):-1;
+  if(seat<=0) return;
+  if(NET.phase==='lobby'){ NET.members.splice(seat,1); sendLobby(); return; }
+  const m=NET.members[seat]; if(m.gone) return;
+  m.gone=true; broadcast({t:'left',seat}); playerLeft(seat);
+}
+function hostStartGame(){
+  NET.members=NET.members.filter(m=>!m.gone);
+  if(NET.members.length<2){ NET.phase='lobby'; show('lobby'); sendLobby(); return; }
+  const deck=makeDeck(NET.W,NET.H), names=NET.members.map(m=>m.name);
+  NET.members.forEach((m,i)=>{ if(m.conn&&m.conn.open) m.conn.send({t:'start',names,W:NET.W,H:NET.H,deck,you:i}); });
+  NET.phase='game';
+  beginGame({names,W:NET.W,H:NET.H,deck});
+}
+$('launchBtn').addEventListener('click',()=>{ if(MODE==='host'&&NET.members.length>=2) hostStartGame(); });
+
+/* ----- Rejoindre ----- */
+$('joinCode').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+$('joinCode').addEventListener('keydown',e=>{ if(e.key==='Enter') $('joinBtn').click(); });
+$('joinBtn').addEventListener('click',()=>{
+  ac();
+  if(!peerReady()){ $('joinMsg').textContent=NET_HELP; return; }
+  const code=$('joinCode').value.trim().toUpperCase();
+  if(code.length!==5){ $('joinMsg').className='info err'; $('joinMsg').textContent='Le code doit contenir 5 caractères.'; return; }
+  $('joinMsg').className='info'; $('joinMsg').textContent='Connexion…';
+  $('joinBtn').disabled=true;
+  joinGame(cleanName($('joinName').value,'Joueur'),code);
+});
+function joinFail(t){ leaveNet(); $('joinBtn').disabled=false; $('joinMsg').className='info err'; $('joinMsg').textContent=t; show('joinSetup'); }
+function joinGame(name,code){
+  let peer;
+  try{ peer=new Peer({debug:0}); }catch(e){ joinFail(NET_HELP); return; }
+  MODE='client';
+  NET={peer,seat:-1,phase:'connecting'};
+  const me=NET;
+  me.to=setTimeout(()=>{ if(NET===me&&me.phase==='connecting') joinFail("Pas de réponse de l'hôte. Vérifie le code et ta connexion Internet."); },15000);
+  peer.on('open',()=>{
+    if(NET!==me) return;
+    const conn=peer.connect(PREFIX+code,{reliable:true});
+    me.conn=conn;
+    conn.on('open',()=>conn.send({t:'hello',name}));
+    conn.on('data',d=>{ if(NET===me) clientData(d); });
+    conn.on('close',()=>{
+      if(NET!==me) return;
+      if(me.phase==='connecting') joinFail("Connexion refusée par l'hôte.");
+      else showMsg('Connexion perdue',"L'hôte a quitté la partie ou la connexion a été coupée.");
+    });
+  });
+  peer.on('error',err=>{
+    if(NET!==me) return;
+    if(me.phase==='connecting'){
+      clearTimeout(me.to);
+      joinFail(err.type==='peer-unavailable' ? 'Aucune partie trouvée avec ce code.' : 'Connexion impossible. '+NET_HELP);
+    }
+  });
+}
+function clientData(d){
+  if(!d||typeof d!=='object') return;
+  switch(d.t){
+    case 'lobby':
+      clearTimeout(NET.to); NET.phase='lobby'; NET.seat=d.you; NET.W=d.W; NET.H=d.H;
+      $('joinBtn').disabled=false; $('joinMsg').textContent='';
+      show('lobby'); renderLobby(d.names); break;
+    case 'full': joinFail('La partie est complète (4 joueurs maximum).'); break;
+    case 'busy': joinFail('La partie a déjà commencé.'); break;
+    case 'start':
+      NET.phase='game'; NET.seat=d.you; NET.W=d.W; NET.H=d.H;
+      beginGame({names:d.names,W:d.W,H:d.H,deck:d.deck}); break;
+    case 'flip': applyFlip(d.i); break;
+    case 'left': playerLeft(d.seat); break;
+  }
+}
 </script>
 </body>
 </html>
