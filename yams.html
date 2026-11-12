@@ -17,7 +17,6 @@
     display:grid;grid-template-columns:1fr;gap:18px}
   @media(min-width:900px){.wrap{grid-template-columns:380px 1fr;align-items:start}}
   h1{margin:0;font-size:22px;letter-spacing:.5px}
-  h1 span{color:var(--muted);font-weight:500;font-size:15px}
   .card{background:var(--paper);border-radius:14px;padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08),0 6px 20px rgba(0,0,0,.05)}
   .panel{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
@@ -25,10 +24,13 @@
 
   .turn{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
   .who{font-weight:800;font-size:19px}
+  .who.mine{color:var(--accent)}
   .who.flash{animation:flash 1s}
   @keyframes flash{0%{color:var(--accent);transform:scale(1.15)}100%{transform:scale(1)}}
   .tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
     border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+  .netline{font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .netline .warn{color:var(--zero);font-weight:700}
 
   .rolls{display:flex;gap:8px}
   .pill{flex:1;text-align:center;padding:7px 4px;border-radius:999px;border:1.5px solid var(--line);
@@ -45,7 +47,6 @@
   .die.blank{background:#f1f3f5}
   .die.blank::before{content:"?";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     font-size:24px;font-weight:800;color:#c4c9cf}
-  .auto .die.blank{cursor:default}
   .auto .die.blank::before{content:""}
   .die.locked{cursor:default}
   .die.locked:hover{transform:none}
@@ -59,7 +60,7 @@
   .dice-gap{height:16px}
   .manual .dice-gap{height:0}
 
-  .btns{display:flex;gap:8px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
   button{font:inherit;cursor:pointer;border-radius:10px;border:none;padding:11px 14px;font-weight:700}
   button:disabled{opacity:.4;cursor:not-allowed}
   .primary{background:var(--accent);color:#fff;flex:1}
@@ -73,6 +74,8 @@
   th{font-weight:600;color:#555;font-size:14px;padding:4px 2px;max-width:90px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   th.cur{color:var(--accent);font-weight:800}
+  th .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;background:var(--ok)}
+  th .dot.off{background:#ccc}
   td.lbl{font-weight:700;font-size:12.5px;padding:0 6px;white-space:nowrap;letter-spacing:.2px}
   td.lbl .mini{display:inline-grid;grid-template-columns:repeat(3,4px);grid-template-rows:repeat(3,4px);gap:1px;
     width:22px;height:22px;padding:2px;border-radius:4px;background:#ccc;vertical-align:middle;margin-left:6px;float:right}
@@ -80,8 +83,9 @@
   td.c{height:32px;min-width:48px;border:1px solid var(--line);border-radius:3px;text-align:center;
     font-weight:700;font-size:15px;background:#fff;transition:background .12s}
   td.c.cur{border-color:#9ec0f7}
-  td.c.can{cursor:pointer;color:#9aa3ad;font-weight:600;font-style:italic}
-  td.c.can:hover{background:var(--accent-soft)}
+  td.c.can{color:#9aa3ad;font-weight:600;font-style:italic}
+  td.c.can.click{cursor:pointer}
+  td.c.can.click:hover{background:var(--accent-soft)}
   td.c.can.zero{color:#e0a0a0}
   td.c.sel{background:var(--accent);color:#fff !important;font-style:normal;border-color:var(--accent)}
   td.c.z{color:var(--zero)}
@@ -102,23 +106,35 @@
   .setup{position:fixed;inset:0;background:rgba(244,241,234,.97);display:none;align-items:flex-start;
     justify-content:center;z-index:8;overflow:auto;padding:30px 14px}
   .setup.show{display:flex}
-  .setup .card{max-width:460px;width:100%;display:flex;flex-direction:column;gap:16px}
+  .setup .card{max-width:480px;width:100%;display:flex;flex-direction:column;gap:16px}
   .setup h2{margin:0;font-size:24px}
   .setup h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
   .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modes.col{grid-template-columns:1fr}
   .mode{border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff;text-align:left;
-    font-weight:400;display:flex;flex-direction:column;gap:4px}
+    font-weight:400;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
   .mode strong{font-size:15px}
   .mode span{font-size:12.5px;color:var(--muted);line-height:1.35}
   .mode.on{border-color:var(--accent);background:var(--accent-soft)}
+  .mode:hover:not(:disabled){border-color:var(--accent)}
   .count{display:flex;gap:6px}
   .count button{flex:1;padding:9px 0;background:#fff;border:2px solid var(--line);color:var(--ink)}
   .count button.on{border-color:var(--accent);background:var(--accent);color:#fff}
   .names{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .names label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
-  .names input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--ink);font-weight:600;
-    padding:7px 9px;border:1px solid var(--line);border-radius:8px}
-  .names input:focus{outline:none;border-color:var(--accent)}
+  .names label,.field{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
+  .field{flex-direction:column;align-items:stretch;gap:4px}
+  input[type=text]{flex:1;min-width:0;font:inherit;font-size:15px;color:var(--ink);font-weight:600;
+    padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+  input[type=text]:focus{outline:none;border-color:var(--accent)}
+  input.code{text-transform:uppercase;letter-spacing:6px;font-size:22px;text-align:center}
+  .bigcode{font-size:42px;font-weight:900;letter-spacing:10px;text-align:center;color:var(--accent);
+    background:var(--accent-soft);border-radius:12px;padding:10px 0}
+  .plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .plist li{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;font-weight:600}
+  .plist li small{color:var(--muted);font-weight:500}
+  .msg{font-size:13px;color:var(--muted);line-height:1.4}
+  .msg.err{color:var(--zero)}
+  .back{align-self:flex-start;padding:4px 0;background:none;color:var(--muted);font-weight:600}
 
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:9}
   .modal.show{display:flex}
@@ -128,33 +144,7 @@
 </head>
 <body class="auto">
 
-<!-- Écran de départ -->
-<div class="setup" id="setup">
-  <div class="card">
-    <h2>🎲 Nouvelle partie de Yams</h2>
-    <div>
-      <h3>Mode de jeu</h3>
-      <div class="modes">
-        <button class="mode" data-mode="auto"><strong>Jeu automatique</strong>
-          <span>La page lance les dés. 3 lancers par tour, tu gardes les dés que tu veux.</span></button>
-        <button class="mode" data-mode="manual"><strong>Feuille de score</strong>
-          <span>Vous jouez avec de vrais dés. Tu indiques les 5 valeurs, la page calcule et note le score.</span></button>
-      </div>
-    </div>
-    <div>
-      <h3>Nombre de joueurs</h3>
-      <div class="count" id="count"></div>
-    </div>
-    <div>
-      <h3>Noms des joueurs</h3>
-      <div class="names" id="names"></div>
-    </div>
-    <div class="btns">
-      <button class="ghost" id="setupCancel">Reprendre la partie</button>
-      <button class="primary" id="start">Commencer la partie</button>
-    </div>
-  </div>
-</div>
+<div class="setup" id="setup"><div class="card" id="setupCard"></div></div>
 
 <div class="wrap">
   <div class="panel">
@@ -163,6 +153,7 @@
         <h1>YAMS</h1>
         <span class="tag" id="modeTag"></span>
       </div>
+      <div class="netline" id="netline"></div>
       <div class="who" id="who"></div>
 
       <div class="rolls auto-only">
@@ -182,6 +173,7 @@
       <div class="hint" id="hint"></div>
       <div class="banner" id="banner"></div>
       <div class="btns">
+        <button class="primary" id="replay" style="display:none">Rejouer avec les mêmes joueurs</button>
         <button class="ghost" id="newgame" style="flex:1">Nouvelle partie</button>
       </div>
     </div>
@@ -198,7 +190,7 @@
 
 <div class="modal" id="modal">
   <div class="box">
-    <p>Une partie est en cours. La remplacer par une nouvelle ? Les scores seront effacés.</p>
+    <p id="modalText"></p>
     <div class="btns">
       <button class="ghost" id="mNo" style="flex:1">Annuler</button>
       <button class="primary" id="mYes">Confirmer</button>
@@ -207,6 +199,7 @@
 </div>
 
 <script>
+const $ = id => document.getElementById(id);
 const MAXP = 6;
 const UPPER = [
   {id:'as', label:'AS', face:1},{id:'deux', label:'DEUX', face:2},{id:'trois', label:'TROIS', face:3},
@@ -218,20 +211,32 @@ const LOWER = [
   {id:'chance', label:'CHANCE'}
 ];
 const ALL = [...UPPER, ...LOWER];
+const IDS = new Set(ALL.map(r=>r.id));
 const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const defNames = ()=>Array.from({length:MAXP},(_,i)=>`Joueur ${i+1}`);
+const cleanName = s => String(s==null?'':s).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,16);
+const esc = s => String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
-let S;
+/* ---------- stockage local (protégé) ---------- */
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)) }catch(e){ return null } }
+function store(k,v){ try{ v==null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+
+/* ---------- état ---------- */
 function fresh(cfg){
   return {started:false, mode:cfg.mode||'auto', nb:cfg.nb||2, names:cfg.names||defNames(),
     cur:0, rolls:0, dice:[0,0,0,0,0], held:[false,false,false,false,false], sel:null,
-    scores:Array.from({length:MAXP},()=>({}))};
+    rid:0, shk:[], v:0, seats:[], scores:Array.from({length:MAXP},()=>({}))};
 }
-try{ S = JSON.parse(localStorage.getItem('yams-state-v2')) }catch(e){}
-if(!S || !S.scores) S = fresh({});
-function save(){ try{ localStorage.setItem('yams-state-v2', JSON.stringify(S)) }catch(e){} }
-const pname = p => (S.names[p]||'').trim() || `Joueur ${p+1}`;
-const esc = s => String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+let S = fresh({});
+// NET.role : 'solo' | 'host' | 'guest'
+let NET = {role:'solo', code:'', name:'', room:null, seen:{}, n:0, myPeer:null, hostHere:false, lastSt:null};
+
+const pname = p => cleanName(S.names[p]) || `Joueur ${p+1}`;
+
+function save(){
+  if(NET.role==='solo') store('yams-state-v2', S);
+  else if(NET.role==='host') store('yams-host', S);
+}
 
 /* ---------- calcul des combinaisons ---------- */
 function counts(d){ const c=[0,0,0,0,0,0,0]; d.forEach(v=>c[v]++); return c; }
@@ -267,54 +272,381 @@ function totals(p){
   return {t, bonus, t1, t2, score:t1+t2, any};
 }
 const playerDone = p => ALL.every(r=>S.scores[p][r.id]!=null);
-function gameOver(){ for(let p=0;p<S.nb;p++) if(!playerDone(p)) return false; return true; }
+function gameOver(){ if(!S.started) return false; for(let p=0;p<S.nb;p++) if(!playerDone(p)) return false; return true; }
 const isAuto = () => S.mode==='auto';
-// les dés sont-ils prêts à être notés ?
-const ready = () => !gameOver() && (isAuto() ? S.rolls>0 : S.dice.every(v=>v>0));
+const ready = () => S.started && !gameOver() && (isAuto() ? S.rolls>0 : S.dice.every(v=>v>0));
 
-/* ---------- écran de départ ---------- */
-let draft;
-function openSetup(){
-  draft = {mode:S.mode, nb:S.nb, names:[...S.names]};
-  document.getElementById('setupCancel').style.display = S.started ? '' : 'none';
-  renderSetup();
-  document.getElementById('setup').classList.add('show');
+/* ---------- réseau : qui peut jouer ? ---------- */
+const roomPeers = () => { try{ return NET.room ? NET.room.peers() : [] }catch(e){ return [] } };
+function seatPresent(seat){
+  if(NET.role==='solo') return true;
+  if(seat===0) return NET.role==='host' ? true : NET.hostHere;
+  const pr = S.seats[seat]; if(!pr) return false;
+  return roomPeers().some(p=>p.peer===pr);
 }
-function renderSetup(){
-  document.querySelectorAll('.mode').forEach(b=>{
-    b.classList.toggle('on', b.dataset.mode===draft.mode);
-    b.onclick = ()=>{ draft.mode=b.dataset.mode; renderSetup(); };
+function mySeat(){
+  if(NET.role==='solo') return null;
+  if(NET.role==='host') return 0;
+  const i = S.seats.indexOf(NET.myPeer); return i>0 ? i : -1;
+}
+function canAct(){
+  if(!S.started || gameOver()) return false;
+  if(NET.role==='solo') return true;
+  if(NET.role==='host') return S.cur===0 || !seatPresent(S.cur);
+  return mySeat()===S.cur && NET.hostHere;
+}
+
+/* ---------- actions ---------- */
+function act(t, x={}){
+  if(!canAct()) return;
+  if(NET.role==='guest'){
+    NET.n++;
+    NET.room.presence({a:{n:NET.n, t, ...x}}).catch(()=>{});
+    return;
+  }
+  apply(t, x);
+}
+function apply(t, x){
+  if(!S.started || gameOver()) return;
+  switch(t){
+    case 'roll':
+      if(!isAuto() || S.rolls>=3) return;
+      if(S.rolls>0 && S.held.every(Boolean)) return;
+      const idx = [];
+      S.dice = S.dice.map((v,i)=>{ if(S.held[i] && S.rolls>0) return v; idx.push(i); return 1+Math.floor(Math.random()*6); });
+      S.rolls++; S.sel=null; S.rid++; S.shk=idx;
+      break;
+    case 'hold': {
+      const i = x.i|0;
+      if(!isAuto() || S.rolls===0 || S.rolls>=3 || i<0 || i>4) return;
+      S.held[i] = !S.held[i]; break;
+    }
+    case 'set': {
+      const i = x.i|0;
+      if(isAuto() || i<0 || i>4) return;
+      S.dice[i] = S.dice[i]%6 + 1; S.sel=null; break;
+    }
+    case 'type': {
+      const i = S.dice.indexOf(0), v = x.v|0;
+      if(isAuto() || i<0 || v<1 || v>6) return;
+      S.dice[i]=v; S.sel=null; break;
+    }
+    case 'back': {
+      if(isAuto()) return;
+      let i = S.dice.indexOf(0); i = i<0 ? 4 : i-1; if(i<0) return;
+      S.dice[i]=0; S.sel=null; break;
+    }
+    case 'clear':
+      if(isAuto()) return;
+      S.dice=[0,0,0,0,0]; S.sel=null; break;
+    case 'sel':
+      if(!ready() || !IDS.has(x.id) || S.scores[S.cur][x.id]!=null) return;
+      S.sel = (S.sel===x.id && !x.force) ? null : x.id;
+      if(!x.go) break;
+      // double-clic : on enchaîne sur la validation
+    case 'val':
+      if(!S.sel || !ready()) return;
+      S.scores[S.cur][S.sel] = scoreFor(S.sel, S.dice);
+      S.rolls=0; S.dice=[0,0,0,0,0]; S.held=[false,false,false,false,false]; S.sel=null; S.shk=[];
+      for(let k=1;k<=S.nb;k++){ const n=(S.cur+k)%S.nb; if(!playerDone(n)){ S.cur=n; break; } }
+      break;
+    default: return;
+  }
+  commit();
+}
+function commit(){ S.v++; save(); publish(); renderAll(); }
+
+/* ---------- réseau : salle ---------- */
+let roomApi = null, roomTried = false;
+async function getRoom(){
+  if(roomTried) return roomApi;
+  roomTried = true;
+  try{ if(window.claude && typeof window.claude.use==='function') roomApi = await window.claude.use('room'); }catch(e){ roomApi=null; }
+  return roomApi;
+}
+function genCode(){
+  const ch='abcdefghjkmnpqrstuvwxyz23456789'; let s='';
+  for(let i=0;i<4;i++) s += ch[Math.floor(Math.random()*ch.length)];
+  return s;
+}
+async function enterRoom(role, code, name){
+  const api = await getRoom();
+  if(!api) throw new Error('no-room');
+  const room = await api.join('yams-'+code);
+  NET = {role, code, name, room, seen:{}, n:0, myPeer:null, hostHere:false, lastSt:null};
+  store('yams-net', {role, code, name});
+  room.onPeers(onPeers, ()=>{ renderAll(); });
+  room.onConnection(()=>renderAll());
+  if(role==='host') publish();
+  else room.presence({r:'g', name, a:{n:0}}).catch(()=>{});
+}
+function publish(){
+  if(NET.role!=='host' || !NET.room) return;
+  const st = S.started ? {...S, scores:S.scores.slice(0,S.nb)} : null;
+  NET.room.presence({r:'h', name:NET.name, st}).catch(()=>{});
+}
+async function leaveRoom(){
+  const r = NET.room;
+  NET = {role:'solo', code:'', name:'', room:null, seen:{}, n:0, myPeer:null, hostHere:false, lastSt:null};
+  store('yams-net', null); store('yams-host', null);
+  if(r){ try{ await r.leave() }catch(e){} }
+}
+
+// un invité reçoit l'état de l'hôte : on le nettoie avant de l'utiliser
+function adopt(st){
+  if(!st || typeof st!=='object' || !Array.isArray(st.scores) || !Array.isArray(st.dice)) return false;
+  const nb = Math.min(MAXP, Math.max(1, st.nb|0));
+  const scores = Array.from({length:MAXP},(_,i)=>{
+    const o = {}, src = st.scores[i];
+    if(src && typeof src==='object') for(const k of IDS) if(Number.isFinite(src[k])) o[k]=src[k];
+    return o;
   });
-  const cnt = document.getElementById('count'); cnt.innerHTML='';
-  for(let n=1;n<=MAXP;n++){
-    const b=document.createElement('button'); b.textContent=n; b.className = n===draft.nb?'on':'';
-    b.onclick=()=>{ draft.nb=n; renderSetup(); }; cnt.appendChild(b);
-  }
-  const box = document.getElementById('names'); box.innerHTML='';
-  for(let p=0;p<draft.nb;p++){
-    const l = document.createElement('label'); l.textContent = `#${p+1}`;
-    const inp = document.createElement('input');
-    inp.value = draft.names[p]; inp.maxLength = 16; inp.placeholder = `Joueur ${p+1}`;
-    inp.onfocus = ()=>inp.select();
-    inp.oninput = ()=>{ draft.names[p] = inp.value; };
-    inp.onkeydown = e=>{ e.stopPropagation(); if(e.key==='Enter') startGame(); };
-    l.appendChild(inp); box.appendChild(l);
-  }
+  const names = defNames().map((d,i)=> Array.isArray(st.names) && cleanName(st.names[i]) || d);
+  S = {
+    started: !!st.started, mode:'auto', nb, names, scores,
+    cur: Math.min(nb-1, Math.max(0, st.cur|0)),
+    rolls: Math.min(3, Math.max(0, st.rolls|0)),
+    dice: [0,1,2,3,4].map(i=>{ const v=st.dice[i]|0; return v>=0&&v<=6?v:0; }),
+    held: [0,1,2,3,4].map(i=>!!(Array.isArray(st.held)&&st.held[i])),
+    sel: IDS.has(st.sel) ? st.sel : null,
+    rid: st.rid|0, shk: Array.isArray(st.shk) ? st.shk.filter(i=>Number.isInteger(i)&&i>=0&&i<5) : [],
+    v: st.v|0, seats: Array.isArray(st.seats) ? st.seats.map(x=>typeof x==='string'?x:null) : []
+  };
+  return true;
 }
-function startGame(){
-  const inProgress = S.started && !gameOver() && S.scores.some(sc=>Object.keys(sc).length);
-  if(inProgress && !confirmed){ document.getElementById('modal').classList.add('show'); return; }
-  confirmed = false;
-  S = fresh(draft); S.started = true; save();
-  document.getElementById('setup').classList.remove('show');
+
+function onPeers(ch){
+  const peers = ch.peers;
+  const me = peers.find(p=>p.sameTab); if(me) NET.myPeer = me.peer;
+
+  if(NET.role==='host'){
+    let changed = false;
+    for(const p of [...ch.joined, ...ch.updated]){
+      if(p.isMe) continue;
+      const pr = p.presence || {}; if(pr.r!=='g') continue;
+      // un joueur revenu (même nom) récupère sa place si elle est libre
+      if(S.started && S.seats.indexOf(p.peer)<0){
+        const nm = cleanName(pr.name).toLowerCase();
+        const i = S.seats.findIndex((pe,k)=> k>0 && k<S.nb && !peers.some(q=>q.peer===pe) && pname(k).toLowerCase()===nm);
+        if(nm && i>0){ S.seats[i]=p.peer; changed = true; }
+      }
+      const a = pr.a, n = a && Number.isFinite(a.n) ? a.n : 0;
+      if(NET.seen[p.peer]===undefined){ NET.seen[p.peer]=n; continue; } // ne rejoue jamais une ancienne action
+      if(n > NET.seen[p.peer]){
+        NET.seen[p.peer] = n;
+        if(S.started && S.seats.indexOf(p.peer)===S.cur && S.cur>0){
+          apply(String(a.t), {i:a.i, id:a.id, v:a.v, go:!!a.go, force:!!a.force});
+        }
+      }
+    }
+    if(changed) commit();
+    if(ch.joined.length) publish();
+  } else if(NET.role==='guest'){
+    const h = peers.find(p=>!p.isMe && p.presence && p.presence.r==='h');
+    NET.hostHere = !!h;
+    if(h){
+      NET.hostName = cleanName(h.presence.name);
+      const st = h.presence.st;
+      if(st !== NET.lastSt){
+        NET.lastSt = st;
+        if(st && adopt(st)){ if(S.started) hideSetup(); }
+      }
+    }
+  }
+  if($('setup').classList.contains('show') && (view==='lobbyHost'||view==='lobbyGuest')) renderSetup();
   renderAll();
 }
-let confirmed = false;
-document.getElementById('start').onclick = startGame;
-document.getElementById('setupCancel').onclick = ()=>document.getElementById('setup').classList.remove('show');
-document.getElementById('mNo').onclick = ()=>document.getElementById('modal').classList.remove('show');
-document.getElementById('mYes').onclick = ()=>{ document.getElementById('modal').classList.remove('show'); confirmed=true; startGame(); };
-document.getElementById('newgame').onclick = openSetup;
+
+/* ---------- écran de départ ---------- */
+let view = 'home', draft = null, setupMsg = '', setupErr = false, busy = false;
+function showSetup(v){
+  view = v; setupMsg=''; setupErr=false;
+  if(v==='solo') draft = {mode:S.mode||'auto', nb:NET.role==='solo'?S.nb:2, names:[...(load('yams-state-v2')||S).names||defNames()]};
+  renderSetup(); $('setup').classList.add('show');
+}
+function hideSetup(){ $('setup').classList.remove('show'); }
+function lobbyPlayers(){
+  const out = [];
+  for(const p of roomPeers()){
+    const pr = p.presence||{};
+    if(pr.r==='h') out.unshift({name:cleanName(pr.name)||'Hôte', host:true, me:p.sameTab});
+    else if(pr.r==='g') out.push({name:cleanName(pr.name)||'Joueur', me:p.sameTab});
+  }
+  if(NET.role==='host' && !out.some(x=>x.host)) out.unshift({name:NET.name, host:true, me:true});
+  return out;
+}
+function renderSetup(){
+  const c = $('setupCard');
+  const msg = setupMsg ? `<div class="msg${setupErr?' err':''}">${setupMsg}</div>` : '';
+  const savedSolo = load('yams-state-v2');
+  if(view==='home'){
+    const canResume = NET.role==='solo' && savedSolo && savedSolo.started;
+    c.innerHTML = `
+      <h2>🎲 Yams</h2>
+      <div><h3>Type de partie</h3>
+        <div class="modes col">
+          <button class="mode" data-go="solo"><strong>Solo</strong>
+            <span>Sur cet appareil : de 1 à 6 joueurs qui se passent l'écran. Dés automatiques ou feuille de score.</span></button>
+          <button class="mode" data-go="host"><strong>Réseau · Héberger</strong>
+            <span>Crée une salle et donne son code aux autres joueurs. Chacun joue sur son appareil.</span></button>
+          <button class="mode" data-go="join"><strong>Réseau · Rejoindre</strong>
+            <span>Entre le code de la salle créée par l'hôte.</span></button>
+        </div></div>
+      ${msg}
+      ${canResume?'<div class="btns"><button class="ghost" id="resume" style="flex:1">Reprendre la partie solo</button></div>':''}`;
+    c.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=> showSetup(b.dataset.go));
+    if(canResume) $('resume').onclick = ()=>{ S = normalizeSolo(savedSolo); hideSetup(); renderAll(); };
+    return;
+  }
+  if(view==='solo'){
+    let h = `<button class="back" id="back">← Retour</button><h2>Partie solo</h2>
+      <div><h3>Mode de jeu</h3><div class="modes">
+        <button class="mode${draft.mode==='auto'?' on':''}" data-mode="auto"><strong>Jeu automatique</strong>
+          <span>La page lance les dés. 3 lancers par tour, tu gardes les dés que tu veux.</span></button>
+        <button class="mode${draft.mode==='manual'?' on':''}" data-mode="manual"><strong>Feuille de score</strong>
+          <span>Vous jouez avec de vrais dés. Tu indiques les 5 valeurs, la page note le score.</span></button>
+      </div></div>
+      <div><h3>Nombre de joueurs</h3><div class="count" id="count"></div></div>
+      <div><h3>Noms des joueurs</h3><div class="names" id="names"></div></div>
+      ${msg}
+      <div class="btns"><button class="primary" id="start">Commencer la partie</button></div>`;
+    c.innerHTML = h;
+    c.querySelectorAll('[data-mode]').forEach(b=> b.onclick = ()=>{ draft.mode=b.dataset.mode; renderSetup(); });
+    const cnt = $('count');
+    for(let n=1;n<=MAXP;n++){
+      const b=document.createElement('button'); b.textContent=n; b.className = n===draft.nb?'on':'';
+      b.onclick=()=>{ draft.nb=n; renderSetup(); }; cnt.appendChild(b);
+    }
+    const box = $('names');
+    for(let p=0;p<draft.nb;p++){
+      const l = document.createElement('label'); l.textContent = `#${p+1}`;
+      const inp = document.createElement('input'); inp.type='text';
+      inp.value = draft.names[p]; inp.maxLength = 16; inp.placeholder = `Joueur ${p+1}`;
+      inp.onfocus = ()=>inp.select();
+      inp.oninput = ()=>{ draft.names[p] = inp.value; };
+      inp.onkeydown = e=>{ if(e.key==='Enter') startSolo(); };
+      l.appendChild(inp); box.appendChild(l);
+    }
+    $('back').onclick = ()=>showSetup('home');
+    $('start').onclick = startSolo;
+    return;
+  }
+  if(view==='host' || view==='join'){
+    const last = load('yams-lastname') || '';
+    c.innerHTML = `<button class="back" id="back">← Retour</button>
+      <h2>${view==='host'?'Héberger une partie':'Rejoindre une partie'}</h2>
+      <label class="field">Ton nom<input type="text" id="myname" maxlength="16" value="${esc(last)}" placeholder="Ton prénom"></label>
+      ${view==='join'?'<label class="field">Code de la salle<input type="text" class="code" id="code" maxlength="4" placeholder="ABCD" autocomplete="off"></label>':''}
+      <div class="msg">Le jeu en réseau marche quand chaque joueur ouvre cette page sur claude.ai, connecté à son compte, et y a accès (partage de la page).</div>
+      ${msg}
+      <div class="btns"><button class="primary" id="go"${busy?' disabled':''}>${busy?'Connexion…':(view==='host'?'Créer la salle':'Rejoindre')}</button></div>`;
+    $('back').onclick = ()=>showSetup('home');
+    const go = ()=> view==='host' ? doHost() : doJoin();
+    $('go').onclick = go;
+    c.querySelectorAll('input').forEach(i=> i.onkeydown = e=>{ if(e.key==='Enter') go(); });
+    ($(view==='join' && last ? 'code' : 'myname')).focus();
+    return;
+  }
+  if(view==='lobbyHost'){
+    const pl = lobbyPlayers();
+    c.innerHTML = `<h2>Salle créée</h2>
+      <div><h3>Code à donner aux joueurs</h3><div class="bigcode">${esc(NET.code.toUpperCase())}</div></div>
+      <div><h3>Joueurs connectés (${Math.min(pl.length,MAXP)}/${MAXP})</h3><ul class="plist">
+        ${pl.map((p,i)=>`<li>${esc(p.name)} <small>${p.host?'hôte':''}${i>=MAXP?'spectateur':''}</small></li>`).join('')}
+      </ul></div>
+      <div class="msg">${pl.length<2?'En attente des autres joueurs… Tu peux aussi démarrer seul.':'Démarre quand tout le monde est là.'}</div>
+      <div class="btns"><button class="ghost" id="cancel">Fermer la salle</button>
+        <button class="primary" id="start">Démarrer la partie</button></div>`;
+    $('cancel').onclick = async ()=>{ await leaveRoom(); S=fresh({}); showSetup('home'); renderAll(); };
+    $('start').onclick = hostStart;
+    return;
+  }
+  if(view==='lobbyGuest'){
+    const pl = lobbyPlayers();
+    c.innerHTML = `<h2>Salle ${esc(NET.code.toUpperCase())}</h2>
+      <div class="msg">${NET.hostHere?'Connecté ! En attente que l\'hôte démarre la partie…':'Connexion à la salle… L\'hôte n\'est pas encore là. Vérifie le code avec lui.'}</div>
+      <div><h3>Joueurs connectés</h3><ul class="plist">
+        ${pl.map(p=>`<li>${esc(p.name)} <small>${p.host?'hôte':''}${p.me?' (toi)':''}</small></li>`).join('')}
+      </ul></div>
+      <div class="btns"><button class="ghost" id="cancel" style="flex:1">Quitter la salle</button></div>`;
+    $('cancel').onclick = async ()=>{ await leaveRoom(); S=fresh({}); showSetup('home'); renderAll(); };
+  }
+}
+function normalizeSolo(st){
+  const s = {...fresh({}), ...st};
+  while(s.scores.length<MAXP) s.scores.push({});
+  if(!Array.isArray(s.seats)) s.seats=[];
+  return s;
+}
+function startSolo(){
+  const inProgress = S.started && NET.role==='solo' && !gameOver() && S.scores.some(sc=>Object.keys(sc).length);
+  const go = async ()=>{
+    if(NET.role!=='solo') await leaveRoom();
+    S = fresh({mode:draft.mode, nb:draft.nb, names:draft.names.map((n,i)=>cleanName(n)||`Joueur ${i+1}`)});
+    S.started = true; save(); hideSetup(); renderAll();
+  };
+  if(inProgress) ask('Une partie solo est en cours. La remplacer ? Ses scores seront effacés.', go); else go();
+}
+async function doHost(){
+  const name = cleanName($('myname').value);
+  if(!name){ setupMsg='Indique ton nom.'; setupErr=true; renderSetup(); return; }
+  store('yams-lastname', name);
+  busy=true; setupMsg=''; renderSetup();
+  try{
+    if(NET.role!=='solo') await leaveRoom();
+    S = fresh({mode:'auto'});
+    await enterRoom('host', genCode(), name);
+    busy=false; showSetup('lobbyHost'); renderAll();
+  }catch(e){
+    busy=false; setupErr=true;
+    setupMsg = e && e.message==='no-room'
+      ? 'Le jeu en réseau n\'est pas disponible ici. Ouvre la page sur claude.ai, connecté à ton compte.'
+      : 'Impossible de créer la salle pour le moment. Réessaie dans un instant.';
+    renderSetup();
+  }
+}
+async function doJoin(){
+  const name = cleanName($('myname').value);
+  const code = String($('code').value||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(!name){ setupMsg='Indique ton nom.'; setupErr=true; renderSetup(); return; }
+  if(code.length!==4){ setupMsg='Le code fait 4 caractères.'; setupErr=true; renderSetup(); $('myname').value=name; return; }
+  store('yams-lastname', name);
+  busy=true; setupMsg=''; renderSetup();
+  try{
+    if(NET.role!=='solo') await leaveRoom();
+    S = fresh({mode:'auto'});
+    await enterRoom('guest', code, name);
+    busy=false; showSetup('lobbyGuest'); renderAll();
+  }catch(e){
+    busy=false; setupErr=true;
+    setupMsg = e && e.message==='no-room'
+      ? 'Le jeu en réseau n\'est pas disponible ici. Ouvre la page sur claude.ai, connecté à ton compte.'
+      : 'Impossible de rejoindre la salle pour le moment. Réessaie dans un instant.';
+    renderSetup();
+  }
+}
+function hostStart(){
+  const guests = roomPeers().filter(p=>!p.isMe && p.presence && p.presence.r==='g').slice(0, MAXP-1);
+  const names = [NET.name, ...guests.map(p=>cleanName(p.presence.name)||'Joueur')];
+  // noms en double : on les numérote
+  names.forEach((n,i)=>{ let k=2; while(names.slice(0,i).includes(names[i])) names[i]=`${n} ${k++}`; });
+  S = fresh({mode:'auto', nb:names.length, names:[...names, ...defNames().slice(names.length)]});
+  S.seats = [null, ...guests.map(p=>p.peer)];
+  S.started = true;
+  guests.forEach(p=>{ const a=p.presence.a; NET.seen[p.peer] = a && Number.isFinite(a.n) ? a.n : 0; });
+  hideSetup(); commit();
+}
+function hostReplay(){
+  const seats = S.seats, names = S.names, nb = S.nb;
+  S = fresh({mode:'auto', nb, names}); S.seats = seats; S.started = true;
+  commit();
+}
+
+/* ---------- confirmation ---------- */
+let pendingFn = null;
+function ask(text, fn){ $('modalText').textContent = text; pendingFn = fn; $('modal').classList.add('show'); }
+$('mNo').onclick = ()=>{ $('modal').classList.remove('show'); pendingFn=null; };
+$('mYes').onclick = ()=>{ $('modal').classList.remove('show'); const f=pendingFn; pendingFn=null; if(f) f(); };
 
 /* ---------- rendu ---------- */
 function dieHTML(v){
@@ -324,40 +656,40 @@ function dieHTML(v){
 function miniDie(v){
   let h='<span class="mini">'; for(let i=0;i<9;i++) h += PIPS[v].includes(i)?'<i></i>':'<span></span>'; return h+'</span>';
 }
+let shownRid = null, shownCur = null;
 function renderDice(shakeIdx){
-  const box = document.getElementById('dice'); box.innerHTML='';
-  const over = gameOver();
+  const box = $('dice'); box.innerHTML='';
+  const can = canAct();
   S.dice.forEach((v,i)=>{
     const el = document.createElement('div');
-    const locked = over || (isAuto() && (S.rolls===0 || S.rolls>=3));
+    const locked = !can || (isAuto() && (S.rolls===0 || S.rolls>=3));
     el.className = 'die' + (v===0?' blank':'') + (isAuto()&&S.held[i]?' held':'') +
       (locked?' locked':'') + (shakeIdx&&shakeIdx.includes(i)?' shake':'');
     el.innerHTML = v ? dieHTML(v) : '';
-    el.title = isAuto() ? (v?'Cliquer pour garder / relâcher':'') : 'Cliquer pour changer la valeur';
-    el.onclick = ()=>{
-      if(locked) return;
-      if(isAuto()) S.held[i] = !S.held[i];
-      else { S.dice[i] = S.dice[i]%6 + 1; S.sel = null; }
-      save(); isAuto() ? (renderDice(), renderHint()) : renderAll();
-    };
+    if(!locked) el.title = isAuto() ? 'Cliquer pour garder / relâcher' : 'Cliquer pour changer la valeur';
+    el.onclick = ()=>{ if(!locked) act(isAuto()?'hold':'set', {i}); };
     box.appendChild(el);
   });
 }
 function renderSheet(){
-  const tb = document.getElementById('sheet');
-  const N = S.nb, over = gameOver(), can = ready();
+  const tb = $('sheet');
+  const N = S.nb, over = gameOver(), rdy = ready(), can = canAct(), net = NET.role!=='solo';
   let h = '<tr><th style="text-align:left;color:#bbb;font-size:13px;font-weight:700">Le YAMS</th>';
-  for(let c=0;c<N;c++) h += `<th class="${c===S.cur && !over?'cur':''}" title="${esc(pname(c))}">${esc(pname(c))}</th>`;
+  for(let c=0;c<N;c++){
+    const dot = net ? `<span class="dot${seatPresent(c)?'':' off'}"></span>` : '';
+    const me = net && c===mySeat() ? ' (toi)' : '';
+    h += `<th class="${c===S.cur && !over && S.started?'cur':''}" title="${esc(pname(c)+me)}">${dot}${esc(pname(c))}</th>`;
+  }
   h += '</tr>';
   const row = (r, isUpper)=>{
     let x = `<tr><td class="lbl">${r.label}${isUpper?miniDie(r.face):''}</td>`;
     for(let c=0;c<N;c++){
       const v = S.scores[c][r.id];
-      if(v!=null){ x += `<td class="c${v===0?' z':''}">${v}</td>`; continue; }
-      if(c===S.cur && can){
+      if(v!=null){ x += `<td class="c${v===0?' z':''}">${v|0}</td>`; continue; }
+      if(c===S.cur && rdy){
         const p = scoreFor(r.id, S.dice);
-        x += `<td class="c cur can${p===0?' zero':''}${S.sel===r.id?' sel':''}" data-id="${r.id}">${p}</td>`;
-      } else x += `<td class="c${c===S.cur && !over?' cur':''}"></td>`;
+        x += `<td class="c cur can${can?' click':''}${p===0?' zero':''}${S.sel===r.id?' sel':''}" data-id="${r.id}">${p}</td>`;
+      } else x += `<td class="c${c===S.cur && !over && S.started?' cur':''}"></td>`;
     }
     return x+'</tr>';
   };
@@ -381,86 +713,130 @@ function renderSheet(){
   h += totRow('TOTAL 2','t2');
   h += totRow('SCORE','score','score');
   tb.innerHTML = h;
-  tb.querySelectorAll('td.can').forEach(td=>{
-    td.onclick = ()=>{ S.sel = (S.sel===td.dataset.id)?null:td.dataset.id; save(); renderAll(); };
-    td.ondblclick = ()=>{ S.sel = td.dataset.id; validate(); };
+  if(can) tb.querySelectorAll('td.can').forEach(td=>{
+    td.onclick = ()=> act('sel', {id:td.dataset.id});
+    td.ondblclick = ()=> act('sel', {id:td.dataset.id, force:true, go:true});
   });
 }
 function renderHint(){
-  const hint = document.getElementById('hint');
+  const hint = $('hint');
   const who = `<b>${esc(pname(S.cur))}</b>`;
+  if(!S.started){ hint.innerHTML = NET.role==='guest' ? 'En attente que l\'hôte démarre la partie…' : ''; return; }
   if(gameOver()){ hint.innerHTML = 'Partie terminée !'; return; }
-  if(S.sel){
-    const r = ALL.find(x=>x.id===S.sel), p = scoreFor(S.sel,S.dice);
-    hint.innerHTML = `<b>${r.label}</b> sélectionné → <b>${p} pt${p>1?'s':''}</b>. Clique sur <b>Valider</b>.`;
+  if(NET.role==='guest' && !NET.hostHere){ hint.innerHTML = '<b>L\'hôte est déconnecté.</b> La partie reprendra dès son retour.'; return; }
+  if(NET.role!=='solo' && !canAct()){
+    hint.innerHTML = mySeat()===-1 ? `Tu regardes la partie. Au tour de ${who}.` : `Au tour de ${who}… patiente, tu suis son jeu en direct.`;
     return;
   }
+  const pre = (NET.role==='host' && S.cur!==0) ? `${who} est déconnecté : tu peux jouer à sa place. ` : '';
+  if(S.sel){
+    const r = ALL.find(x=>x.id===S.sel), p = scoreFor(S.sel,S.dice);
+    hint.innerHTML = pre + `<b>${r.label}</b> sélectionné → <b>${p} pt${p>1?'s':''}</b>. Clique sur <b>Valider</b>.`;
+    return;
+  }
+  const you = NET.role==='solo' ? `Au tour de ${who} : ` : 'À toi ! ';
   if(isAuto()){
-    if(S.rolls===0) hint.innerHTML = `Au tour de ${who} : clique sur <b>Lancer les dés</b>.`;
-    else if(S.rolls<3) hint.innerHTML = `Clique sur les dés à <b>garder</b>, puis relance (${3-S.rolls} lancer${3-S.rolls>1?'s':''} restant${3-S.rolls>1?'s':''}), ou choisis une ligne dans la feuille.`;
-    else hint.innerHTML = 'Plus de lancer : choisis une ligne dans la feuille puis <b>Valider</b>.';
+    if(S.rolls===0) hint.innerHTML = pre + you + 'clique sur <b>Lancer les dés</b>.';
+    else if(S.rolls<3) hint.innerHTML = pre + `Clique sur les dés à <b>garder</b>, puis relance (${3-S.rolls} lancer${3-S.rolls>1?'s':''} restant${3-S.rolls>1?'s':''}), ou choisis une ligne dans la feuille.`;
+    else hint.innerHTML = pre + 'Plus de lancer : choisis une ligne dans la feuille puis <b>Valider</b>.';
   } else {
     const missing = S.dice.filter(v=>!v).length;
-    if(missing) hint.innerHTML = `Au tour de ${who} : touche chaque dé pour indiquer sa valeur (${missing} à remplir).`;
+    if(missing) hint.innerHTML = you + `touche chaque dé pour indiquer sa valeur (${missing} à remplir).`;
     else hint.innerHTML = 'Choisis la ligne où noter ce résultat, puis <b>Valider</b>.';
   }
 }
-function renderAll(shake){
-  const over = gameOver();
+function renderAll(){
+  const over = gameOver(), can = canAct(), net = NET.role!=='solo';
   document.body.className = isAuto() ? 'auto' : 'manual';
-  document.getElementById('modeTag').textContent = isAuto() ? 'Jeu automatique' : 'Feuille de score';
-  document.getElementById('who').textContent = over ? '🏁 Fin de partie' : `🎲 ${pname(S.cur)}`;
+  $('modeTag').textContent = NET.role==='host' ? 'Réseau · Hôte' : NET.role==='guest' ? 'Réseau' : (isAuto()?'Solo · Automatique':'Solo · Feuille de score');
+
+  // ligne réseau
+  if(net){
+    const n = lobbyPlayers().length;
+    let t = `Salle <b>${esc(NET.code.toUpperCase())}</b> · ${n} connecté${n>1?'s':''}`;
+    if(NET.room && !NET.room.connected()) t += ' · <span class="warn">connexion perdue…</span>';
+    else if(NET.role==='guest' && !NET.hostHere) t += ' · <span class="warn">hôte absent</span>';
+    $('netline').innerHTML = t; $('netline').style.display='';
+  } else $('netline').style.display='none';
+
+  const w = $('who');
+  w.textContent = !S.started ? '' : over ? '🏁 Fin de partie' : (net && S.cur===mySeat() ? `🎲 À toi, ${pname(S.cur)} !` : `🎲 ${pname(S.cur)}`);
+  w.classList.toggle('mine', net && S.cur===mySeat() && !over);
+  if(S.started && shownCur!==null && S.cur!==shownCur){ w.classList.remove('flash'); void w.offsetWidth; w.classList.add('flash'); }
+  shownCur = S.cur;
+  document.title = (net && can && S.cur===mySeat()) ? '▶ À toi – Yams' : 'Yams – Feuille de score';
+
   for(let i=1;i<=3;i++){
-    document.getElementById('p'+i).className = 'pill' + (i<=S.rolls?' done':'') + (i===S.rolls+1 && !over?' next':'');
+    $('p'+i).className = 'pill' + (i<=S.rolls?' done':'') + (i===S.rolls+1 && !over && S.started?' next':'');
   }
-  document.getElementById('roll').disabled = over || S.rolls>=3 || (S.rolls>0 && S.held.every(Boolean));
-  document.getElementById('clear').disabled = over || S.dice.every(v=>!v);
-  document.getElementById('validate').disabled = !S.sel || !ready();
+  $('roll').disabled = !can || S.rolls>=3 || (S.rolls>0 && S.held.every(Boolean));
+  $('clear').disabled = !can || S.dice.every(v=>!v);
+  $('validate').disabled = !can || !S.sel || !ready();
+
+  const shake = (S.rid!==shownRid && shownRid!==null) ? S.shk : null;
+  shownRid = S.rid;
   renderDice(shake); renderSheet(); renderHint();
-  const b = document.getElementById('banner');
+
+  $('newgame').textContent = net ? 'Quitter la salle' : 'Nouvelle partie';
+  $('replay').style.display = (NET.role==='host' && over) ? '' : 'none';
+
+  const b = $('banner');
   if(over){
     let best=-1, win=[];
     for(let p=0;p<S.nb;p++){ const s=totals(p).score; if(s>best){best=s;win=[p]} else if(s===best) win.push(p); }
     const nm = win.map(w=>esc(pname(w)));
     b.innerHTML = S.nb===1 ? `🏁 Score final : ${best} points` :
       `🏆 ${nm.length>1?'Égalité entre '+nm.join(' et '):'Victoire de '+nm[0]} avec ${best} points !`;
+    if(NET.role==='guest') b.innerHTML += '<div class="msg" style="margin-top:6px">L\'hôte peut relancer une partie avec les mêmes joueurs.</div>';
     b.classList.add('show');
   } else b.classList.remove('show');
 }
 
-/* ---------- actions ---------- */
-function roll(){
-  if(!isAuto() || S.rolls>=3 || gameOver()) return;
-  const idx = [];
-  S.dice = S.dice.map((v,i)=>{ if(S.held[i] && S.rolls>0) return v; idx.push(i); return 1+Math.floor(Math.random()*6); });
-  S.rolls++; S.sel=null; save(); renderAll(idx);
-}
-function validate(){
-  if(!S.sel || !ready()) return;
-  S.scores[S.cur][S.sel] = scoreFor(S.sel, S.dice);
-  S.rolls=0; S.dice=[0,0,0,0,0]; S.held=[false,false,false,false,false]; S.sel=null;
-  for(let k=1;k<=S.nb;k++){ const n=(S.cur+k)%S.nb; if(!playerDone(n)){ S.cur=n; break; } }
-  save(); renderAll();
-  const w = document.getElementById('who'); w.classList.remove('flash'); void w.offsetWidth; w.classList.add('flash');
-}
-document.getElementById('roll').onclick = roll;
-document.getElementById('validate').onclick = validate;
-document.getElementById('clear').onclick = ()=>{ S.dice=[0,0,0,0,0]; S.sel=null; save(); renderAll(); };
+/* ---------- boutons & clavier ---------- */
+$('roll').onclick = ()=>act('roll');
+$('validate').onclick = ()=>act('val');
+$('clear').onclick = ()=>act('clear');
+$('replay').onclick = hostReplay;
+$('newgame').onclick = ()=>{
+  if(NET.role==='solo'){ showSetup('home'); return; }
+  const txt = NET.role==='host' ? 'Quitter la salle ? La partie s\'arrêtera pour tous les joueurs.' : 'Quitter la salle ? Tu pourras revenir avec le même code et le même nom.';
+  ask(txt, async ()=>{ await leaveRoom(); S = fresh({}); renderAll(); showSetup('home'); });
+};
 document.addEventListener('keydown', e=>{
   if(document.querySelector('.setup.show, .modal.show')) return;
-  if(e.code==='Space'){ e.preventDefault(); roll(); }
-  if(e.key==='Enter') validate();
-  if(!isAuto() && /^[1-6]$/.test(e.key)){ // saisie clavier des dés en mode feuille
-    const i = S.dice.indexOf(0); if(i>=0){ S.dice[i]=+e.key; S.sel=null; save(); renderAll(); }
-  }
-  if(!isAuto() && e.key==='Backspace'){
-    let i = S.dice.indexOf(0); i = i<0 ? 4 : i-1; if(i>=0){ S.dice[i]=0; S.sel=null; save(); renderAll(); }
-  }
+  if(e.target && e.target.tagName==='INPUT') return;
+  if(e.code==='Space'){ e.preventDefault(); act('roll'); }
+  else if(e.key==='Enter') act('val');
+  else if(!isAuto() && /^[1-6]$/.test(e.key)) act('type', {v:+e.key});
+  else if(!isAuto() && e.key==='Backspace') act('back');
 });
 
-renderAll();
-if(!S.started) openSetup();
+/* ---------- démarrage ---------- */
+(async function init(){
+  const net = load('yams-net');
+  if(net && (net.role==='host' || net.role==='guest') && net.code){
+    // reprise automatique de la salle après un rechargement
+    if(net.role==='host'){ const hs = load('yams-host'); S = hs ? normalizeSolo(hs) : fresh({}); }
+    renderAll();
+    try{
+      await enterRoom(net.role, net.code, net.name);
+      if(net.role==='host'){ if(S.started) hideSetup(); else showSetup('lobbyHost'); }
+      else if(!S.started) showSetup('lobbyGuest');
+      renderAll();
+      return;
+    }catch(e){
+      store('yams-net', null);
+      NET.role='solo'; S = fresh({});
+      setupMsg = 'Impossible de revenir dans la salle précédente.'; setupErr = true;
+      view='home'; renderSetup(); $('setup').classList.add('show'); renderAll();
+      return;
+    }
+  }
+  const solo = load('yams-state-v2');
+  if(solo && solo.scores) S = normalizeSolo(solo);
+  renderAll();
+  if(!S.started) showSetup('home');
+})();
 </script>
 </body>
 </html>
-
