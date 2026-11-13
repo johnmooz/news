@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>T-Tris</title>
+<title>T-Tris (réseau)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Bibliothèque réseau (connexion directe entre navigateurs) -->
+<script src="https://unpkg.com/peerjs@1/dist/peerjs.min.js"></script>
 <style>
   :root{
     --bg:#0e0b1f; --panel:#1a1533; --panel2:#241d47; --line:#3a3070;
@@ -324,22 +326,72 @@
     $('playBtn').textContent = p==='solo' ? 'JOUER' : p==='host' ? 'CRÉER LA PARTIE' : 'REJOINDRE';
     $('netHint').textContent = p==='host'
       ? 'Tu choisis les briques, le type de jeu et le niveau pour tout le monde. Un code s\'affichera : donne-le aux autres joueurs.'
-      : p==='join' ? 'Les autres joueurs ouvrent cette même page T-Tris sur claude.ai et tapent le code de l\'hôte.' : '';
+      : p==='join' ? 'Ouvre ce fichier T-Tris (le même que l\'hôte), tape ton pseudo et le code affiché chez l\'hôte. Il faut une connexion Internet.' : '';
     $('err').textContent='';
     updateNetNote();
   }
 
-  // ---------- Réseau (capacité « room » de la page) ----------
-  let roomApi = null, roomResolved = false;
-  const roomP = (window.claude && typeof window.claude.use === 'function')
-    ? Promise.resolve().then(()=>window.claude.use('room')).catch(()=>null)
-    : Promise.resolve(null);
-  roomP.then(r=>{ roomApi=r; roomResolved=true; updateNetNote(); });
+  // ---------- Réseau : connexion directe entre navigateurs (PeerJS) ----------
+  // L'hôte est le centre : chaque joueur lui envoie son état, l'hôte renvoie l'état de tous.
+  const PeerCls = () => window.Peer || (window.peerjs && window.peerjs.Peer) || null;
   function updateNetNote(){
     const n=$('netNote');
-    if(cfg.play==='solo' || !roomResolved || roomApi){ n.classList.add('hidden'); return; }
+    if(cfg.play==='solo' || PeerCls()){ n.classList.add('hidden'); return; }
     n.classList.remove('hidden');
-    n.textContent='Le mode réseau ne marche que dans la page T-Tris ouverte sur claude.ai, par des personnes qui y ont accès et sont connectées. Ici, seul le mode Solo est disponible.';
+    n.textContent='La bibliothèque réseau ne s\'est pas chargée : vérifie ta connexion Internet, puis recharge la page. Le mode Solo marche sans Internet.';
+  }
+  window.addEventListener('load', updateNetNote);
+
+  function netError(e){
+    const t = e && (e.type||e.code);
+    return t==='peer-unavailable' ? 'Aucune partie avec ce code. Vérifie le code, et que l\'hôte a bien créé la partie.'
+      : t==='timeout' ? 'L\'hôte ne répond pas. Vérifie le code et réessaie.'
+      : (t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed') ? 'Serveur de connexion injoignable. Vérifie ta connexion Internet.'
+      : t==='browser-incompatible' ? 'Ce navigateur ne permet pas le jeu en réseau. Essaie Chrome, Edge ou Firefox.'
+      : 'Connexion impossible ('+(t||'erreur')+'). Réessaie.';
+  }
+
+  // Crée un « salon » : peers(), onPeers(), presence(), leave()
+  function joinPeer(code, role){
+    return new Promise((resolve,reject)=>{
+      const P = PeerCls(); if(!P) return reject({type:'nolib'});
+      const hostId = 'ttris-v1-'+code.toLowerCase();
+      const peer = role==='host' ? new P(hostId) : new P();
+      let mine={}, pres={}, myId=null, snap=[], done=false, closed=false;
+      const handlers=[], conns={}; let hostConn=null;
+      const fire=()=>{ snap = Object.entries(pres).map(([id,pr])=>({peer:id, presence:pr, sameTab:id===myId, isMe:id===myId, kind:'viewer'})); handlers.forEach(h=>{ try{h({peers:snap});}catch(e){console.error(e);} }); };
+      const broadcast=()=>{ const msg={t:'all', pres}; Object.values(conns).forEach(c=>{ try{ if(c.open) c.send(msg); }catch(e){} }); };
+      const api = {
+        peers:()=>snap,
+        onPeers(h, onErr){ handlers.push(h); api._onErr=onErr; setTimeout(fire,0); return ()=>{ const i=handlers.indexOf(h); if(i>=0) handlers.splice(i,1); }; },
+        presence(patch){
+          mine={...mine,...patch}; for(const k in patch) if(patch[k]===null) delete mine[k];
+          if(myId){ pres[myId]=mine; }
+          if(role==='host') broadcast(); else if(hostConn && hostConn.open) hostConn.send({t:'pres', pr:mine});
+          fire(); return Promise.resolve();
+        },
+        leave(){ closed=true; try{ peer.destroy(); }catch(e){} return Promise.resolve(); }
+      };
+      const fail = e => { if(!done){ done=true; try{ peer.destroy(); }catch(_){} reject(e); } else if(!closed && api._onErr) api._onErr(e); };
+      const timer = setTimeout(()=>fail({type:'timeout'}), 12000);
+      peer.on('error', fail);
+      peer.on('open', id=>{
+        myId=id; pres[myId]=mine;
+        if(role==='host'){
+          peer.on('connection', c=>{
+            c.on('open', ()=>{ if(Object.keys(conns).length>=7){ c.close(); return; } conns[c.peer]=c; c.send({t:'all', pres}); });
+            c.on('data', d=>{ if(d && d.t==='pres' && d.pr && typeof d.pr==='object'){ pres[c.peer]=d.pr; broadcast(); fire(); } });
+            c.on('close', ()=>{ delete conns[c.peer]; delete pres[c.peer]; broadcast(); fire(); });
+          });
+          clearTimeout(timer); done=true; resolve(api);
+        } else {
+          hostConn = peer.connect(hostId, {reliable:true});
+          hostConn.on('open', ()=>{ clearTimeout(timer); done=true; hostConn.send({t:'pres', pr:mine}); resolve(api); });
+          hostConn.on('data', d=>{ if(d && d.t==='all' && d.pres && typeof d.pres==='object'){ pres={...d.pres, [myId]:mine}; fire(); } });
+          hostConn.on('close', ()=>{ if(closed) return; pres={[myId]:mine}; fire(); if(api._onErr) api._onErr({type:'host-left'}); });
+        }
+      });
+    });
   }
 
   const NET = { mode:'solo', room:null, code:'', nick:'', myPeer:null, gid:null, lastGameId:null,
@@ -368,23 +420,21 @@
     }
     try{ localStorage.setItem('ttris-nick',nick); }catch(e){}
     $('err').textContent='Connexion…';
-    const api = await roomP;
-    if(!api){ $('err').textContent='Le mode réseau n\'est pas disponible ici (voir la note ci-dessus).'; updateNetNote(); return; }
     let room;
-    try{ room = await api.join('ttris-'+code.toLowerCase()); }
+    try{ room = await joinPeer(code, role); }
     catch(e){
-      const c=e&&e.code;
-      $('err').textContent = c==='not_permitted' ? 'Tu n\'as pas le droit d\'utiliser le réseau sur cette page.'
-        : 'Connexion impossible pour le moment ('+(c||'erreur')+'). Réessaie.';
-      return;
-    }
-    if(role==='host'){
-      const others = room.peers().filter(p=>!p.sameTab && p.presence && p.presence.role==='host');
-      if(others.length){ room.leave().catch(()=>{}); return netEnter('host'); }
+      if(role==='host' && e && e.type==='unavailable-id') return netEnter('host');   // code déjà pris : on en tire un autre
+      $('err').textContent = e && e.type==='nolib' ? 'La bibliothèque réseau ne s\'est pas chargée (pas d\'Internet ?).' : netError(e);
+      updateNetNote(); return;
     }
     $('err').textContent='';
     Object.assign(NET,{mode:role, room, code, nick, myPeer:null, gid:null, lastGameId:null, players:[], seen:{}, sent:0, ended:false, winner:null});
-    NET.unsub = room.onPeers(onPeers, ()=>{ $('lobbyErr').textContent='Connexion au salon perdue.'; });
+    NET.unsub = room.onPeers(onPeers, e=>{
+      const msg = e && e.type==='host-left' ? 'L\'hôte a quitté la partie.' : 'Connexion au salon perdue.';
+      $('lobbyErr').textContent=msg;
+      if(state==='play'||state==='over'){ if(state==='play'){ state='over'; } NET.ended=true; NET.winner=null;
+        showOv('<h3>CONNEXION PERDUE</h3><p>'+msg+'</p><button class="btn" id="ovQuit">Retour au menu</button>'); $('ovQuit').onclick=netLeave; }
+    });
     pres({v:1, nick, role, st:'lobby', cfg: role==='host'?cfgText():null, game:null, gid:null, score:0, lines:0, alive:true, sent:0});
     showLobby();
   }
@@ -426,7 +476,7 @@
     $('lobbyCode').textContent = NET.code;
     const h = findHost();
     $('lobbyHelp').textContent = host
-      ? 'Donne ce code aux autres joueurs : ils ouvrent cette page T-Tris, choisissent « Réseau (rejoindre) » et tapent le code. '+cfgText()
+      ? 'Donne ce code aux autres joueurs : ils ouvrent ce même fichier T-Tris, choisissent « Réseau (rejoindre) » et tapent le code. '+cfgText()
       : (h ? 'Réglages de l\'hôte : '+(h.presence.cfg||'') : '');
     const ps = peersNow().slice().sort((a,b)=> (b.presence.role==='host') - (a.presence.role==='host'));
     $('lobbyCount').textContent = 'Joueurs dans le salon ('+ps.length+')';
