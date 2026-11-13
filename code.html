@@ -1,1 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trouve le code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1b1f2e; --board:#2a3045; --row:#323953; --row-active:#3d4670;
+    --hole:#1a1e2c; --text:#eef0f7; --muted:#9aa3c0; --accent:#ffc94a;
+    --good:#2ecc71; --misplaced:#f5f5f5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0%,#2c3352,var(--bg) 70%);
+    color:var(--text);font-family:'Fredoka',system-ui,sans-serif;display:flex;justify-content:center;padding:24px 12px}
+  .app{width:100%;max-width:760px}
+  h1{text-align:center;font-size:clamp(2rem,6vw,3rem);margin:0 0 6px;letter-spacing:1px}
+  h1 span{color:var(--accent)}
+  .sub{text-align:center;color:var(--muted);margin:0 0 22px}
+  .card{background:var(--board);border-radius:18px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+  .hidden{display:none!important}
+
+  /* Setup */
+  .setting{margin-bottom:22px}
+  .setting label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:10px}
+  .setting label b{color:var(--accent);font-size:1.2rem}
+  input[type=range]{width:100%;accent-color:var(--accent);height:28px}
+  .preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;min-height:26px}
+  .preview .peg{width:22px;height:22px}
+  .check{display:flex;gap:10px;align-items:center;cursor:pointer;color:var(--text);font-weight:500}
+  .check input{width:20px;height:20px;accent-color:var(--accent)}
+  .note{color:var(--muted);font-size:.9rem;margin-top:6px}
+  button{font-family:inherit;font-size:1.05rem;font-weight:600;border:0;border-radius:12px;padding:12px 22px;cursor:pointer;transition:transform .1s,filter .15s}
+  button:active{transform:scale(.97)}
+  .btn-main{background:var(--accent);color:#2a2000;width:100%;font-size:1.2rem;padding:14px}
+  .btn-main:hover{filter:brightness(1.08)}
+  .btn-sec{background:#454d6b;color:var(--text)}
+  .btn-sec:hover{filter:brightness(1.15)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+
+  /* Pegs */
+  .peg{width:var(--size,38px);height:var(--size,38px);border-radius:50%;flex:0 0 auto;
+    box-shadow:inset -3px -4px 6px rgba(0,0,0,.35),inset 3px 3px 5px rgba(255,255,255,.35),0 2px 4px rgba(0,0,0,.3)}
+  .hole{width:var(--size,38px);height:var(--size,38px);border-radius:50%;background:var(--hole);flex:0 0 auto;
+    box-shadow:inset 0 3px 6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center}
+  .hole.filled{box-shadow:inset -3px -4px 6px rgba(0,0,0,.35),inset 3px 3px 5px rgba(255,255,255,.35),0 2px 4px rgba(0,0,0,.3)}
+  .row.active .hole{cursor:pointer}
+  .row.active .hole:hover{outline:2px dashed rgba(255,255,255,.35);outline-offset:2px}
+  .hole.selected{outline:3px solid var(--accent)!important;outline-offset:2px}
+  .c0{background:#e74c3c}.c1{background:#3498db}.c2{background:#2ecc71}.c3{background:#f1c40f}
+  .c4{background:#9b59b6}.c5{background:#e67e22}.c6{background:#ff7eb6}.c7{background:#1abc9c}
+
+  /* Game */
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .topbar .info{color:var(--muted)}
+  .topbar .info b{color:var(--text)}
+  .secret{display:flex;align-items:center;gap:var(--gap,8px);background:#141826;border-radius:14px;padding:12px 14px;margin-bottom:14px;justify-content:center}
+  .secret .hole{background:#2b3148;color:var(--muted);font-weight:700}
+  .board{display:flex;flex-direction:column;gap:8px;max-height:58vh;overflow-y:auto;padding:2px 4px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--row);border-radius:14px;padding:8px 12px;transition:background .2s}
+  .row.active{background:var(--row-active);box-shadow:0 0 0 2px var(--accent)}
+  .row.future{opacity:.45}
+  .num{width:24px;text-align:right;color:var(--muted);font-weight:600;flex:0 0 auto}
+  .holes{display:flex;gap:var(--gap,8px);flex:1;justify-content:center;flex-wrap:nowrap}
+  .fb{flex:0 0 auto;min-width:96px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:.92rem}
+  .fb .line{display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .dot{width:13px;height:13px;border-radius:50%;display:inline-block}
+  .dot.good{background:var(--good)}
+  .dot.mis{background:var(--misplaced);border:1px solid #bbb}
+  .controls{margin-top:16px}
+  .palette{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  .palette .peg{--size:46px;cursor:pointer;border:3px solid transparent;transition:transform .12s}
+  .palette .peg:hover{transform:translateY(-3px)}
+  .palette .peg.sel{border-color:#fff;transform:translateY(-3px) scale(1.06)}
+  .actions{display:flex;gap:10px}
+  .actions .btn-main{flex:1}
+  .legend{display:flex;gap:18px;justify-content:center;color:var(--muted);font-size:.9rem;margin-top:12px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(8,10,18,.7);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+  .modal{background:var(--board);border-radius:20px;padding:28px;text-align:center;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:pop .25s ease-out}
+  .modal h2{margin:0 0 8px;font-size:2rem}
+  .modal p{color:var(--muted);margin:0 0 16px}
+  .modal .secret{margin:0 auto 20px;width:fit-content}
+  .modal .actions{flex-direction:column}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  @media (max-width:520px){
+    .card{padding:14px}
+    .row{gap:8px;padding:6px 8px}
+    .fb{min-width:70px;font-size:.8rem}
+    .num{width:18px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Trouve le <span>code</span></h1>
+  <p class="sub">Devine la combinaison secrète de couleurs, dans le bon ordre.</p>
+
+  <!-- ÉCRAN DE RÉGLAGES -->
+  <div id="setup" class="card">
+    <div class="setting">
+      <label>Nombre de ronds dans le code <b id="vPegs">4</b></label>
+      <input type="range" id="pegs" min="3" max="10" value="4">
+    </div>
+    <div class="setting">
+      <label>Nombre de couleurs <b id="vColors">6</b></label>
+      <input type="range" id="colors" min="1" max="8" value="6">
+      <div class="preview" id="colorPreview"></div>
+    </div>
+    <div class="setting">
+      <label>Nombre de lignes (essais) <b id="vRows">10</b></label>
+      <input type="range" id="rows" min="4" max="15" value="10">
+    </div>
+    <div class="setting">
+      <label class="check"><input type="checkbox" id="dups" checked> Une couleur peut apparaître plusieurs fois</label>
+      <div class="note" id="dupsNote"></div>
+    </div>
+    <button class="btn-main" id="startBtn">Commencer la partie</button>
+  </div>
+
+  <!-- ÉCRAN DE JEU -->
+  <div id="game" class="card hidden">
+    <div class="topbar">
+      <div class="info">Essai <b id="turnInfo">1</b> / <b id="maxInfo">10</b></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sec" id="restartBtn">Rejouer</button>
+        <button class="btn-sec" id="menuBtn">Réglages</button>
+      </div>
+    </div>
+    <div class="secret" id="secretRow"></div>
+    <div class="board" id="board"></div>
+    <div class="controls">
+      <div class="palette" id="palette"></div>
+      <div class="actions">
+        <button class="btn-sec" id="clearBtn">Effacer</button>
+        <button class="btn-main" id="validateBtn" disabled>Valider</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot good"></i> bonne couleur, bon emplacement</span>
+        <span><i class="dot mis"></i> bonne couleur, mauvais emplacement</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="secret" id="mSecret"></div>
+    <div class="actions">
+      <button class="btn-main" id="mAgain">Rejouer</button>
+      <button class="btn-sec" id="mMenu">Changer les réglages</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLOR_NAMES = ['Rouge','Bleu','Vert','Jaune','Violet','Orange','Rose','Turquoise'];
+const $ = id => document.getElementById(id);
+
+const cfg = { pegs:4, colors:6, rows:10, dups:true };
+let secret = [], guesses = [], current = [], turn = 0, selColor = 0, selHole = null, over = false;
+
+/* ---------- Réglages ---------- */
+function updateSetup(){
+  cfg.pegs = +$('pegs').value; cfg.colors = +$('colors').value; cfg.rows = +$('rows').value;
+  $('vPegs').textContent = cfg.pegs; $('vColors').textContent = cfg.colors; $('vRows').textContent = cfg.rows;
+  $('colorPreview').innerHTML = Array.from({length:cfg.colors},(_,i)=>`<div class="peg c${i}" title="${COLOR_NAMES[i]}"></div>`).join('');
+  const forced = cfg.colors < cfg.pegs;
+  $('dups').disabled = forced;
+  if (forced) $('dups').checked = true;
+  $('dupsNote').textContent = forced ? 'Obligatoire : il y a moins de couleurs que de ronds.' : '';
+  cfg.dups = $('dups').checked;
+}
+['pegs','colors','rows','dups'].forEach(id => $(id).addEventListener('input', updateSetup));
+updateSetup();
+
+/* ---------- Partie ---------- */
+function newGame(){
+  updateSetup();
+  if (cfg.dups){
+    secret = Array.from({length:cfg.pegs},()=>Math.floor(Math.random()*cfg.colors));
+  } else {
+    const pool = [...Array(cfg.colors).keys()];
+    for (let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    secret = pool.slice(0,cfg.pegs);
+  }
+  guesses = []; turn = 0; over = false; selColor = 0; selHole = null;
+  current = Array(cfg.pegs).fill(null);
+  sizeVars();
+  $('setup').classList.add('hidden'); $('game').classList.remove('hidden'); $('overlay').classList.add('hidden');
+  $('maxInfo').textContent = cfg.rows;
+  renderPalette(); render();
+}
+
+function sizeVars(){
+  const w = Math.min(window.innerWidth, 760) - 230;
+  const size = Math.max(20, Math.min(40, Math.floor((w - (cfg.pegs-1)*6) / cfg.pegs)));
+  const gap = size < 28 ? 4 : 8;
+  document.documentElement.style.setProperty('--size', size+'px');
+  document.documentElement.style.setProperty('--gap', gap+'px');
+}
+window.addEventListener('resize', () => { if (!$('game').classList.contains('hidden')) { sizeVars(); } });
+
+function evaluate(guess){
+  let good = 0; const sCount = {}, gCount = {};
+  guess.forEach((c,i) => {
+    if (c === secret[i]) good++;
+    else { sCount[secret[i]] = (sCount[secret[i]]||0)+1; gCount[c] = (gCount[c]||0)+1; }
+  });
+  let mis = 0;
+  for (const c in gCount) mis += Math.min(gCount[c], sCount[c]||0);
+  return { good, mis };
+}
+
+function renderPalette(){
+  $('palette').innerHTML = Array.from({length:cfg.colors},(_,i)=>
+    `<div class="peg c${i} ${i===selColor?'sel':''}" data-c="${i}" title="${COLOR_NAMES[i]}"></div>`).join('');
+}
+$('palette').addEventListener('click', e => {
+  const p = e.target.closest('[data-c]'); if (!p || over) return;
+  selColor = +p.dataset.c;
+  // Place la couleur : dans le rond sélectionné, sinon dans le premier rond vide
+  let idx = selHole !== null ? selHole : current.indexOf(null);
+  if (idx !== -1) {
+    current[idx] = selColor;
+    const next = current.indexOf(null);
+    selHole = null;
+    if (next === -1) selHole = null;
+  }
+  renderPalette(); render();
+});
+
+function render(){
+  // Code secret (caché)
+  $('secretRow').innerHTML = secret.map(()=>`<div class="hole">?</div>`).join('');
+  const board = $('board'); let html = '';
+  for (let r = 0; r < cfg.rows; r++){
+    const isPast = r < guesses.length, isActive = r === turn && !over;
+    const cls = isActive ? 'active' : (isPast ? '' : 'future');
+    const row = isPast ? guesses[r].guess : (isActive ? current : Array(cfg.pegs).fill(null));
+    const holes = row.map((c,i) => c === null
+      ? `<div class="hole ${isActive && selHole===i?'selected':''}" data-i="${i}"></div>`
+      : `<div class="hole filled c${c} ${isActive && selHole===i?'selected':''}" data-i="${i}"></div>`).join('');
+    let fb = '';
+    if (isPast){
+      const {good, mis} = guesses[r].res;
+      fb = `<div class="line">${good} <i class="dot good"></i></div><div class="line">${mis} <i class="dot mis"></i></div>`;
+    }
+    html += `<div class="row ${cls}" data-r="${r}"><div class="num">${r+1}</div><div class="holes">${holes}</div><div class="fb">${fb}</div></div>`;
+  }
+  board.innerHTML = html;
+  $('turnInfo').textContent = Math.min(turn+1, cfg.rows);
+  $('validateBtn').disabled = over || current.includes(null);
+  const act = board.querySelector('.row.active');
+  if (act) act.scrollIntoView({block:'nearest'});
+}
+
+$('board').addEventListener('click', e => {
+  const h = e.target.closest('.row.active .hole'); if (!h || over) return;
+  const i = +h.dataset.i;
+  if (current[i] !== null && selHole === i){ current[i] = null; selHole = null; }   // 2e clic : vide le rond
+  else if (current[i] === null){ current[i] = selColor; selHole = null; }          // rond vide : pose la couleur choisie
+  else { selHole = i; }                                                              // rond plein : le sélectionne pour le changer
+  render();
+});
+
+$('clearBtn').addEventListener('click', () => { if (over) return; current = Array(cfg.pegs).fill(null); selHole = null; render(); });
+
+$('validateBtn').addEventListener('click', () => {
+  if (over || current.includes(null)) return;
+  const res = evaluate(current);
+  guesses.push({ guess: current.slice(), res });
+  turn++;
+  current = Array(cfg.pegs).fill(null); selHole = null;
+  if (res.good === cfg.pegs) end(true);
+  else if (turn >= cfg.rows) end(false);
+  render();
+});
+
+function end(win){
+  over = true;
+  $('mTitle').textContent = win ? '🎉 Bravo !' : '😕 Perdu…';
+  $('mText').textContent = win
+    ? `Tu as trouvé le code en ${turn} essai${turn>1?'s':''}.`
+    : 'Plus de lignes disponibles. Voici le code secret :';
+  $('mSecret').innerHTML = secret.map(c=>`<div class="peg c${c}"></div>`).join('');
+  $('secretRow').innerHTML = secret.map(c=>`<div class="peg c${c}"></div>`).join('');
+  setTimeout(() => {
+    $('secretRow').innerHTML = secret.map(c=>`<div class="peg c${c}"></div>`).join('');
+    $('overlay').classList.remove('hidden');
+  }, 350);
+}
+
+function toMenu(){ $('overlay').classList.add('hidden'); $('game').classList.add('hidden'); $('setup').classList.remove('hidden'); }
+$('startBtn').addEventListener('click', newGame);
+$('restartBtn').addEventListener('click', newGame);
+$('mAgain').addEventListener('click', newGame);
+$('menuBtn').addEventListener('click', toMenu);
+$('mMenu').addEventListener('click', toMenu);
+
+// Clavier : chiffres 1-8 = couleur, Entrée = valider, Retour arrière = effacer le dernier rond
+document.addEventListener('keydown', e => {
+  if ($('game').classList.contains('hidden') || over) return;
+  const n = parseInt(e.key);
+  if (n >= 1 && n <= cfg.colors){
+    selColor = n-1;
+    const idx = selHole !== null ? selHole : current.indexOf(null);
+    if (idx !== -1){ current[idx] = selColor; selHole = null; }
+    renderPalette(); render();
+  } else if (e.key === 'Enter'){ $('validateBtn').click(); }
+  else if (e.key === 'Backspace'){
+    for (let i = current.length-1; i >= 0; i--) if (current[i] !== null){ current[i] = null; break; }
+    selHole = null; render();
+  }
+});
+</script>
+</body>
+</html>
 
