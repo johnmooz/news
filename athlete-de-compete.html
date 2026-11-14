@@ -1,1 +1,963 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Athlètes de Compète</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#b14fa0; --orange:#f2a72e; --green:#2f9a4c; --blue:#3b79c9; --red:#e2392e;
+  --ink:#141414; --cream:#f6ead2; --wood:#e7cfa2;
+  --sq: clamp(22px, calc((min(100vw, 1180px) - 90px) / 15), 64px);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:var(--ink);
+  background:var(--wood) repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 3px,transparent 3px 40px);min-height:100vh}
+h1,h2,h3,.chunky{font-family:"Bowlby One",Impact,sans-serif;font-weight:400;letter-spacing:.5px}
+button{font-family:inherit;font-weight:900;cursor:pointer;border:3px solid var(--ink);border-radius:14px;padding:10px 18px;font-size:16px;background:#fff;box-shadow:0 4px 0 var(--ink);transition:transform .08s}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+button.primary{background:var(--red);color:#fff}
+button.go{background:var(--green);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+.wrap{max-width:1240px;margin:0 auto;padding:14px}
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between}
+.logo{font-family:"Bowlby One";font-size:clamp(24px,4.5vw,44px);margin:6px 0;color:#fff;
+  -webkit-text-stroke:2px var(--ink);text-shadow:4px 4px 0 var(--ink)}
+.logo span{color:var(--orange)}
+
+/* SETUP */
+.setup{background:#fff;border:4px solid var(--ink);border-radius:24px;padding:22px;max-width:760px;margin:20px auto;box-shadow:0 8px 0 var(--ink)}
+.setup h2{margin:0 0 12px}
+.nbtns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.nbtns button.sel{background:var(--orange)}
+.prow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.prow .dot{width:30px;height:30px;border-radius:50%;border:3px solid var(--ink)}
+.prow input{font:inherit;font-weight:700;padding:9px 12px;border:3px solid var(--ink);border-radius:12px;width:100%}
+.toggle{display:flex;border:3px solid var(--ink);border-radius:12px;overflow:hidden}
+.toggle button{border:0;border-radius:0;box-shadow:none;padding:8px 12px;font-size:14px;background:#eee}
+.toggle button.on{background:var(--blue);color:#fff}
+.rules-btn{background:var(--blue);color:#fff}
+
+/* GAME */
+.statusbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.pill{background:#fff;border:3px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:900}
+.pill.board-pepere{background:#ffe7f3}.pill.board-galere{background:#e3f1ff}
+.boardwrap{overflow-x:auto;padding-bottom:6px}
+.board{display:grid;grid-template-columns:repeat(15,var(--sq));grid-template-rows:repeat(4,var(--sq));gap:calc(var(--sq)*.07);
+  padding:calc(var(--sq)*.3);background:#121212;border-radius:calc(var(--sq)*.9);width:max-content;margin:0 auto;
+  box-shadow:0 0 0 4px #fff inset,0 8px 0 rgba(0,0,0,.35)}
+.sq{position:relative;border-radius:calc(var(--sq)*.08);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:1px;padding:2px}
+.sq .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Bowlby One";font-size:calc(var(--sq)*.36);color:rgba(255,255,255,.9);pointer-events:none}
+.sq.special .num{color:#fff;-webkit-text-stroke:1px #000;font-size:calc(var(--sq)*.3)}
+.sq.special{box-shadow:inset 0 0 0 3px #6c2a8a}
+.sq .lbl{position:absolute;bottom:1px;left:0;right:0;text-align:center;font-size:calc(var(--sq)*.17);font-weight:900;color:#fff;-webkit-text-stroke:.3px #000;pointer-events:none}
+.depart{grid-column:1/4;grid-row:1;background:var(--blue);border-radius:calc(var(--sq)*.5) calc(var(--sq)*.1) calc(var(--sq)*.1) calc(var(--sq)*.1);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;position:relative;padding:3px}
+.depart .t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Bowlby One";color:var(--red);font-size:calc(var(--sq)*.55);-webkit-text-stroke:1px #000;font-style:italic;pointer-events:none;opacity:.85}
+.podium{grid-column:1;grid-row:2/4;background:linear-gradient(#f6c94a,#e6a72a);border-radius:calc(var(--sq)*.5) calc(var(--sq)*.5) 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:space-around;padding:3px;border:3px solid #fff}
+.podium .slot{display:flex;flex-direction:column;align-items:center;font-weight:900;font-size:calc(var(--sq)*.24)}
+.mid{grid-column:2/15;grid-row:2/4;border:2px solid #fff;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.mid.pepere{background:radial-gradient(ellipse at 50% 70%,#5f8f35 0 36%,transparent 37%),#121212}
+.mid.galere{background:radial-gradient(ellipse at 50% 80%,#5a2d84 0 40%,transparent 41%),#121212}
+.mid .ttl{font-family:"Bowlby One";color:#fff;font-size:calc(var(--sq)*1.15);-webkit-text-stroke:2px #000;text-shadow:4px 4px 0 #000;z-index:2;letter-spacing:2px}
+.mid .deco{position:absolute;font-size:calc(var(--sq)*.6);z-index:1}
+.tok{width:calc(var(--sq)*.44);height:calc(var(--sq)*.44);border-radius:50%;background:var(--c);border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+  font-size:calc(var(--sq)*.26);z-index:3;box-shadow:0 2px 0 rgba(0,0,0,.6);transition:transform .2s}
+.tok.trip{transform:rotate(90deg);filter:grayscale(.5);border-color:#ff0}
+.tok.cur{outline:3px solid #fff;outline-offset:1px;animation:bob .7s infinite alternate}
+.tok.flash{animation:flash .6s 2}
+@keyframes bob{to{transform:translateY(-3px)}}
+@keyframes flash{50%{transform:scale(1.5)}}
+
+.cols{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-top:12px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+.panel{background:#fff;border:4px solid var(--ink);border-radius:20px;padding:14px;box-shadow:0 6px 0 var(--ink)}
+.panel h3{margin:0 0 8px;font-size:18px}
+.turnbox{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.die{width:74px;height:74px;border-radius:16px;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:"Bowlby One";font-size:44px;color:#ff6fa6;-webkit-text-stroke:2px var(--ink);background:#9ed0f5;box-shadow:inset -6px -6px 0 rgba(0,0,0,.12)}
+.die.rolling{animation:shake .12s infinite}
+@keyframes shake{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
+.turninfo{flex:1;min-width:160px;font-weight:700}
+.turninfo .who{font-family:"Bowlby One";font-size:20px}
+.order{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.order .o{display:flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:999px;padding:3px 10px 3px 3px;font-size:13px;font-weight:800;background:#f7f7f7}
+.order .o.cur{background:#fff2b3}
+.order .o.done{opacity:.55}
+.order .o .tok{width:24px;height:24px;font-size:13px;border-width:2px}
+.log{height:300px;overflow-y:auto;font-size:14px;line-height:1.35;padding-right:4px}
+.log div{padding:3px 0;border-bottom:1px dashed #ddd}
+.log .pw{background:#fff7d6}
+.log .big{font-weight:900;background:#e9f6ff}
+.teams{display:grid;gap:10px;margin-top:14px}
+.team{background:#fff;border:3px solid var(--ink);border-radius:16px;padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.team .tname{min-width:150px}
+.team .tname b{font-size:17px}
+.team .score{font-family:"Bowlby One";font-size:22px}
+.awards{font-size:14px}
+.cards{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Cards */
+.card{width:150px;border:3px solid var(--ink);border-radius:12px;background:#222;padding:5px;color:var(--ink);font-size:12px;position:relative;user-select:none}
+.card .hd{background:var(--hc);border-radius:7px;padding:4px;text-align:center}
+.card .hd .nm{font-family:"Bowlby One";font-size:13px;line-height:1.1}
+.card .hd .em{font-size:34px;line-height:1.2}
+.card .tx{background:#fff;border-radius:7px;margin-top:4px;padding:5px;min-height:62px;font-weight:700;line-height:1.25}
+.card.mini{width:118px;font-size:10.5px}
+.card.mini .hd .em{font-size:22px}
+.card.mini .tx{min-height:54px}
+.card.used{opacity:.33;filter:grayscale(1)}
+.card.racing{outline:4px solid var(--orange);outline-offset:2px}
+.card.pick{cursor:pointer;transition:transform .1s}
+.card.pick:hover{transform:translateY(-4px) rotate(-1deg)}
+.card .badge{position:absolute;top:-10px;right:-8px;background:var(--orange);border:2px solid var(--ink);border-radius:999px;padding:1px 7px;font-weight:900;font-size:11px}
+
+/* Modal */
+.ov{position:fixed;inset:0;background:rgba(20,10,30,.6);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+.mo{background:var(--cream);border:4px solid var(--ink);border-radius:22px;max-width:900px;width:100%;max-height:92vh;overflow:auto;padding:20px;box-shadow:0 10px 0 var(--ink)}
+.mo h2{margin:0 0 6px}
+.mo .who{font-weight:900;color:#555;margin-bottom:10px}
+.mo .opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.mo .cardsrow{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px}
+table.res{border-collapse:collapse;width:100%;margin-top:10px;background:#fff}
+table.res td,table.res th{border:2px solid var(--ink);padding:6px 8px;text-align:left}
+.rules{line-height:1.5}
+.rules h3{margin:14px 0 4px}
+.hidden{display:none!important}
+.small{font-size:13px;color:#555}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">Athlètes de <span>Compète</span></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label class="pill" id="speedWrap">Vitesse
+        <select id="speed" style="font:inherit;font-weight:800;border:0;background:transparent">
+          <option value="1">Normale</option><option value="0.5">Rapide</option><option value="0.15">Éclair</option>
+        </select></label>
+      <button id="soundBtn" title="Activer / couper le son">🔊 Son</button>
+      <button class="rules-btn" id="rulesBtn">📜 Règles</button>
+    </div>
+  </header>
+
+  <section id="setup" class="setup">
+    <h2>Nouvelle partie</h2>
+    <div class="small" style="margin-bottom:8px">Nombre de joueurs</div>
+    <div class="nbtns" id="nbtns"></div>
+    <div id="prows"></div>
+    <p class="small">Chaque joueur reçoit 4 athlètes au hasard, et chacun ne court qu'une seule des 4 courses.<br>
+    Course 1 : premier joueur tiré au sort. Courses 2 à 4 : le dernier de la course précédente commence.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+      <button class="primary" id="startBtn">🏁 Lancer la partie</button>
+    </div>
+  </section>
+
+  <section id="game" class="hidden">
+    <div class="statusbar" id="statusbar"></div>
+    <div class="boardwrap"><div class="board" id="board"></div></div>
+    <div class="cols">
+      <div>
+        <div class="panel">
+          <div class="turnbox">
+            <div class="die" id="die">?</div>
+            <div class="turninfo" id="turninfo">—</div>
+            <button class="go hidden" id="actBtn">🎲 Jouer</button>
+          </div>
+          <div class="order" id="order"></div>
+        </div>
+        <div class="teams" id="teams"></div>
+      </div>
+      <div class="panel"><h3>📣 Commentaires</h3><div class="log" id="log"></div></div>
+    </div>
+  </section>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+"use strict";
+const HAS_DOM = typeof document !== 'undefined' && !globalThis.__SIM__;
+const END = 30;
+const PCOLORS = ['#e2392e','#3b79c9','#2f9a4c','#f2a72e','#b14fa0','#20b5b0'];
+const PNAMES = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6'];
+const GOLD = [3,4,4,5], SILVER = [2,2,3,3];
+const BOARD_SEQ = ['pepere','galere','pepere','galere'];
+const SQ_COLORS = ['var(--purple)','var(--orange)','var(--green)','var(--blue)','var(--red)'];
+const SPECIALS = {
+  pepere:{},
+  galere:{1:{t:'star',v:1},5:{t:'oups'},7:{t:'arrow',v:3},11:{t:'arrow',v:1},13:{t:'star',v:1},
+          16:{t:'arrow',v:-4},17:{t:'oups'},23:{t:'arrow',v:2},24:{t:'arrow',v:-2},26:{t:'oups'}}
+};
+const ATH = {
+  hypno:{n:'Hypnotiseur',e:'🌀',c:'#f7d33a',t:"Au début de mon tour, je peux téléporter un autre athlète sur ma case."},
+  jumeau:{n:'Jumeau',e:'👯',c:'#3b79c9',t:"Avant la course, je choisis un athlète ayant gagné une course précédente et je cours avec son pouvoir."},
+  oeuf:{n:'Œuf',e:'🥚',c:'#2f9a4c',t:"Avant la course, je pioche 3 athlètes hors des équipes et j'en choisis un : je copie son pouvoir."},
+  coach:{n:'Coach',e:'📣',c:'#9b5fc0',t:"Tous les athlètes sur ma case, moi compris, gagnent +1 à leur déplacement principal."},
+  lievre:{n:'Lièvrapide',e:'🐇',c:'#f2a72e',t:"+2 à mon déplacement principal. Mais si je commence mon tour seul en tête, je ne fais pas mon déplacement principal."},
+  larbin:{n:'Larbin',e:'🙇',c:'#e2392e',t:"Quand un autre athlète obtient un 6 à son déplacement principal, j'avance de 2 cases avant lui."},
+  roue:{n:'Cinquième Roue',e:'🛞',c:'#2f9a4c',t:"Au début de mon tour, je peux me téléporter sur une case occupée par exactement 2 athlètes."},
+  chenille:{n:'Chenille',e:'🐛',c:'#e2392e',t:"Quand un autre athlète obtient un 1 à son déplacement principal, il ne bouge pas : c'est moi qui avance de 1 case."},
+  tremplin:{n:'Tremplin-Devin',e:'🔮',c:'#e86fb0',t:"À mon premier tour, je prédis le vainqueur. Si j'ai raison, la course s'arrête aussitôt et je termine 2e."},
+  romantique:{n:'Romantique',e:'💘',c:'#9b5fc0',t:"Quand un athlète s'arrête sur une case où se trouve un seul autre athlète, j'avance de 2 cases."},
+  hyene:{n:'Hyénarquoise',e:'😹',c:'#2f9a4c',t:"Quand un autre athlète finit son tour à 1 case ou moins de sa case de départ, j'avance de 2 cases."},
+  fetard:{n:'Gros Fêtard',e:'🥳',c:'#e2392e',t:"Au début de mon tour, tous les athlètes à 3 cases ou moins de moi viennent faire la fête sur ma case."},
+  sac:{n:'Sac-à-Puces',e:'🐶',c:'#e86fb0',t:"Quand le pouvoir d'un autre athlète se déclenche, j'avance de 1 case."},
+  marchand:{n:'Marchand Déambulant',e:'🎲',c:'#f7d33a',t:"Chaque athlète peut relancer une fois le dé de son déplacement principal. Quand un autre le fait, j'avance de 1 case."},
+  endormimie:{n:'Endormimie',e:'🐌',c:'#f2a72e',t:"Au début de mon tour, si je suis seul(e) en dernière position, je gagne un jeton Bronze (1 pt)."},
+  capitaine:{n:"Cap'taine Passe",e:'⚓',c:'#9b5fc0',t:"Quand un autre athlète obtient un 1 à son déplacement principal, je joue un tour juste après lui."},
+  magicien:{n:'Magicien',e:'🎩',c:'#f2a72e',t:"Je peux relancer le dé de mon déplacement principal une ou deux fois."},
+  grouille:{n:'Grouille-Grenouille',e:'🐸',c:'#f2a72e',t:"Quand je me déplace, je saute les cases occupées par d'autres athlètes (elles ne comptent pas)."},
+  fusee:{n:'Docteur Fusée',e:'🚀',c:'#e86fb0',t:"Je peux doubler le résultat de mon dé. Si je le fais, je trébuche après mon déplacement."},
+  duelliste:{n:'Duelliste',e:'🤺',c:'#e86fb0',t:"Quand un athlète partage ma case, je peux le défier : chacun lance un dé, le plus fort avance de 2 cases (égalité : moi)."},
+  ventouse:{n:'Poisson-Ventouse',e:'🐟',c:'#3b79c9',t:"Quand un athlète sur ma case avance, je peux m'accrocher et arriver avec lui sur sa nouvelle case."},
+  dirigeable:{n:'Dirigeable',e:'🎈',c:'#3b79c9',t:"Si je commence mon tour avant la ligne du bas (case 15) : +3. Ensuite : −1 à mon déplacement principal."},
+  tatillon:{n:'Tatillon',e:'🧐',c:'#3b79c9',t:"Les autres athlètes doivent faire le compte exact pour franchir l'arrivée, sinon ils ne bougent pas."},
+  sisyphe:{n:'Sisyphe',e:'🪨',c:'#a3a83a',t:"Avant la course, je gagne 4 jetons Bronze (1 pt). Si j'obtiens un 6, je perds un jeton et retourne au Départ."},
+  bebe:{n:'Gros Bébé',e:'👶',c:'#2f9a4c',t:"Personne ne peut partager ma case (sauf au Départ) : l'intrus recule sur la case juste derrière moi."},
+  genie:{n:'Génie',e:'🧞',c:'#f7d33a',t:"Avant de lancer, je peux prédire mon résultat. Si j'ai raison, je rejoue à la fin de mon tour."},
+  pompon:{n:'Pompon',e:'🤡',c:'#3b79c9',t:"Au début de mon tour, je peux faire avancer de 2 cases un athlète en dernière position. Si je le fais, j'avance de 1."},
+  imichateur:{n:'Imichateur',e:'🐱',c:'#e2392e',t:"Je copie le pouvoir de l'athlète actuellement en tête."},
+  babayaga:{n:'Baba Yaga',e:'🧙',c:'#3b79c9',t:"Je fais trébucher tout athlète qui s'arrête sur ma case, ou qui s'y trouve quand je m'y arrête."},
+  slime:{n:'Slime',e:'🟢',c:'#f2a72e',t:"Tous les autres athlètes ont −1 à leur déplacement principal."},
+  alchimiste:{n:'Alchimiste',e:'⚗️',c:'#f7d33a',t:"Si j'obtiens 1 ou 2 à mon déplacement principal, je peux avancer de 4 cases à la place."},
+  bouche:{n:'B.O.U.C.H.E.',e:'👄',c:'#2f9a4c',t:"Quand je m'arrête sur une case occupée par un seul autre athlète, il est éliminé de la course !"},
+  centaure:{n:'Centaure',e:'🐎',c:'#9b5fc0',t:"Quand je dépasse un athlète, il recule de 2 cases."},
+  guybollon:{n:'Guy Bollon',e:'🎭',c:'#2f9a4c',t:"Au lieu de lancer le dé, je peux choisir d'avancer de 3 cases."},
+  banane:{n:'Banane',e:'🍌',c:'#e86fb0',t:"Je fais trébucher tout athlète qui me dépasse."},
+  tong:{n:'Tong',e:'🩴',c:'#e2392e',t:"Au lieu de lancer le dé, je peux échanger ma place avec l'athlète de mon choix."}
+};
+const ATH_IDS = Object.keys(ATH);
+const NO_COPY = ['jumeau','oeuf','imichateur'];
+
+/* ---------- sound (Web Audio, synthesized) ---------- */
+const SFX = (() => {
+  let ctx = null, master = null, muted = false;
+  try { muted = localStorage.getItem('adc-muted')==='1'; } catch(e){}
+  function ensure(){
+    if(!HAS_DOM) return null;
+    try{
+      if(!ctx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = .5; master.connect(ctx.destination); }
+      if(ctx.state==='suspended') ctx.resume();
+    }catch(e){ return null; }
+    return ctx;
+  }
+  function tone(f, dur, {type='square', vol=.25, at=0, slide=null, attack=.005}={}){
+    const c = ensure(); if(!c || muted) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(20,slide), t+dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+attack); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+.02);
+  }
+  function noise(dur, {vol=.3, at=0, freq=1200, q=1, type='bandpass', sweep=null}={}){
+    const c = ensure(); if(!c || muted) return;
+    const t = c.currentTime + at;
+    const len = Math.max(1, Math.floor(c.sampleRate*dur)), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+    const s = c.createBufferSource(); s.buffer = buf;
+    const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.setValueAtTime(freq, t); fl.Q.value = q;
+    if(sweep) fl.frequency.exponentialRampToValueAtTime(sweep, t+dur);
+    const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    s.connect(fl); fl.connect(g); g.connect(master); s.start(t); s.stop(t+dur+.02);
+  }
+  const notes = (seq, type='square', vol=.2) => { let at = 0; for(const [f,d] of seq){ if(f) tone(f, d*.95, {type, vol, at}); at += d; } };
+  return {
+    unlock: ensure,
+    get muted(){ return muted; },
+    toggle(){ muted = !muted; try{ localStorage.setItem('adc-muted', muted?'1':'0'); }catch(e){} if(!muted){ ensure(); this.click(); } return muted; },
+    click(){ tone(660,.05,{type:'square',vol:.12}); },
+    pop(){ tone(420,.09,{type:'sine',vol:.25,slide:900}); },
+    rattle(){ for(let i=0;i<5;i++) noise(.04,{vol:.25,at:i*.06,freq:2500+Math.random()*1500,q:4}); },
+    thud(){ tone(140,.15,{type:'sine',vol:.5,slide:60}); noise(.06,{vol:.25,freq:800}); },
+    step(i=0){ tone(500+i*35,.06,{type:'triangle',vol:.18}); },
+    back(){ tone(420,.08,{type:'triangle',vol:.18,slide:260}); },
+    power(){ notes([[880,.06],[1175,.06],[1568,.1]],'sine',.18); },
+    trip(){ tone(700,.35,{type:'sawtooth',vol:.15,slide:120}); noise(.12,{vol:.3,at:.3,freq:300}); },
+    oups(){ noise(.3,{vol:.45,freq:200,type:'lowpass'}); tone(300,.3,{type:'square',vol:.15,slide:80}); },
+    star(){ notes([[988,.08],[1319,.25]],'square',.15); },
+    whoosh(up=true){ noise(.35,{vol:.35,freq:up?400:2500,sweep:up?3000:300,q:2}); },
+    chomp(){ for(let i=0;i<3;i++){ tone(180,.07,{type:'square',vol:.3,at:i*.1,slide:90}); noise(.05,{vol:.3,at:i*.1,freq:600}); } },
+    duel(){ noise(.08,{vol:.3,freq:5000,q:8}); noise(.08,{vol:.3,at:.15,freq:6000,q:8}); },
+    tele(){ tone(300,.4,{type:'sine',vol:.2,slide:1800}); tone(450,.4,{type:'sine',vol:.12,slide:2400,at:.05}); },
+    whistle(){ tone(2100,.12,{type:'sine',vol:.25}); tone(2100,.4,{type:'sine',vol:.25,at:.16}); },
+    finish(first){ first ? notes([[523,.1],[659,.1],[784,.1],[1047,.35]],'square',.18) : notes([[659,.1],[784,.1],[988,.3]],'square',.15); },
+    turn(){ tone(880,.07,{type:'sine',vol:.15}); tone(1320,.1,{type:'sine',vol:.12,at:.08}); },
+    reveal(){ notes([[392,.08],[523,.08],[659,.08],[784,.08],[1047,.25]],'triangle',.2); },
+    applause(){ for(let i=0;i<40;i++) noise(.03,{vol:.15+Math.random()*.15,at:Math.random()*1.4,freq:1500+Math.random()*2500,q:1.5}); },
+    fanfare(){ notes([[523,.15],[523,.08],[523,.08],[784,.4],[659,.15],[784,.15],[1047,.6]],'square',.2); notes([[262,.3],[0,.15],[392,.4],[330,.3],[523,.6]],'triangle',.2); setTimeout(()=>this.applause(),900); }
+  };
+})();
+
+/* ---------- state ---------- */
+let SETUP = {n:3, players:[]};
+let G = null;
+let SPEED = 1;
+
+const rnd = n => Math.floor(Math.random()*n);
+const d6 = () => 1+rnd(6);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const sleep = ms => (HAS_DOM && ms>0) ? new Promise(r=>setTimeout(r, ms*SPEED)) : Promise.resolve();
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- racer helpers ---------- */
+const R = () => G.race;
+const active = () => R().racers.filter(r=>!r.fin && !r.elim);
+const onSquare = (pos, excl) => active().filter(x=>x.pos===pos && x!==excl);
+const player = r => G.players[r.pid];
+const isAI = r => player(r).ai;
+function pw(r, depth=0){
+  const b = r.ath;
+  if(b==='jumeau' || b==='oeuf') return r.copy || null;
+  if(b==='imichateur'){
+    if(depth>0) return null;
+    const cand = active().filter(x=>x!==r && x.ath!=='imichateur');
+    if(!cand.length) return null;
+    const m = Math.max(...cand.map(x=>x.pos));
+    const lead = cand.filter(x=>x.pos===m);
+    return pw(lead[0],1);
+  }
+  return b;
+}
+const holders = id => active().filter(r=>pw(r)===id);
+function nm(r){ return `<b style="color:${player(r).color}">${ATH[r.ath].e} ${esc(ATH[r.ath].n)}</b> <span class="small">(${esc(player(r).name)})</span>`; }
+function pname(p){ return `<b style="color:${p.color}">${esc(p.name)}</b>`; }
+
+/* ---------- logging & render ---------- */
+function log(html, cls=''){
+  if(!HAS_DOM){ if(globalThis.__LOG__) globalThis.__LOG__(html); return; }
+  const d = document.createElement('div'); d.innerHTML = html; if(cls) d.className = cls;
+  const L = $('log'); L.appendChild(d); L.scrollTop = L.scrollHeight;
+}
+async function trigger(r, msg, snd='power'){
+  if(snd && SFX[snd]) SFX[snd]();
+  log(`✨ ${nm(r)} : ${msg}`, 'pw');
+  if(HAS_DOM){ G.flash[r.id] = Date.now()+1200; render(); }
+  await sleep(450);
+  if(R().over || G.depth>10) return;
+  for(const s of holders('sac')){
+    if(s===r || pw(r)==='sac') continue;
+    G.depth++;
+    log(`✨ ${nm(s)} saute de joie et avance de 1 case.`, 'pw');
+    await move(s, 1);
+    G.depth--;
+  }
+}
+
+function cellPos(pos){
+  if(pos>=1 && pos<=12) return {r:1, c:pos+3};
+  if(pos===13) return {r:2,c:15};
+  if(pos===14) return {r:3,c:15};
+  return {r:4, c:15-(pos-15)};
+}
+function tokHTML(r){
+  const cls = ['tok'];
+  if(r.tripped) cls.push('trip');
+  if(G.race && G.race.cur===r.id) cls.push('cur');
+  if(G.flash[r.id] && G.flash[r.id]>Date.now()) cls.push('flash');
+  return `<div class="${cls.join(' ')}" style="--c:${player(r).color}" title="${esc(ATH[r.ath].n)} — ${esc(player(r).name)}">${ATH[r.ath].e}</div>`;
+}
+function render(){
+  if(!HAS_DOM || !G) return;
+  const race = G.race, bk = BOARD_SEQ[G.raceIdx];
+  const sp = SPECIALS[bk];
+  const racers = race ? race.racers : [];
+  let h = `<div class="depart"><div class="t">DÉPART</div>${racers.filter(r=>!r.fin&&!r.elim&&r.pos===0).map(tokHTML).join('')}</div>`;
+  for(let p=1;p<END;p++){
+    const {r:row,c} = cellPos(p);
+    const s = sp[p];
+    let inner = '', cls='sq', bg = SQ_COLORS[(p-1)%5];
+    if(s){
+      cls += ' special';
+      const top = p<=12;
+      if(s.t==='star'){ inner = `<div class="num">⭐</div><div class="lbl">+1 🥉</div>`; bg='#7d3aa0'; if(race && race.stars[p]) inner = `<div class="num" style="opacity:.35">⭐</div>`; }
+      else if(s.t==='oups'){ inner = `<div class="num">💥</div><div class="lbl">OUPS!</div>`; }
+      else { const fwd = s.v>0; const arrow = top ? (fwd?'➡':'⬅') : (fwd?'⬅':'➡'); inner = `<div class="num">${arrow}</div><div class="lbl">${fwd?'+':'−'}${Math.abs(s.v)}</div>`; }
+    } else if(p%5===0){ inner = `<div class="num">${p}</div>`; }
+    h += `<div class="${cls}" style="grid-row:${row};grid-column:${c};background:${bg}">${inner}${racers.filter(r=>!r.fin&&!r.elim&&r.pos===p).map(tokHTML).join('')}</div>`;
+  }
+  const first = racers.find(r=>r.place===1), second = racers.find(r=>r.place===2);
+  h += `<div class="podium"><div class="slot">🏆${first?tokHTML(first):''}</div><div class="slot">🥈${second?tokHTML(second):''}</div><div class="small" style="font-size:calc(var(--sq)*.18);font-weight:900">ARRIVÉE</div></div>`;
+  const deco = bk==='pepere'
+    ? [['🌸',6,20],['🌺',14,60],['🌷',24,25],['🌼',80,22],['🌹',88,60],['🌻',72,62],['🐈',10,72],['🐈',90,78]]
+    : [['🌲',5,20],['🌲',13,55],['⛺',22,62],['🍄',78,68],['🌲',86,22],['🌲',93,55],['🐌',30,74],['🚀',35,12]];
+  h += `<div class="mid ${bk}">${deco.map(([e,x,y])=>`<span class="deco" style="left:${x}%;top:${y}%">${e}</span>`).join('')}<div class="ttl">${bk==='pepere'?'PÉPÈRE':'GALÈRE'}</div></div>`;
+  $('board').innerHTML = h;
+
+  // status
+  const rk = rankPlayers();
+  $('statusbar').innerHTML = `<span class="pill">Course ${G.raceIdx+1} / 4</span><span class="pill board-${bk}">Plateau : ${bk==='pepere'?'Pépère 🌸':'Galère 🌲'}</span>`
+    + `<span class="pill">🏆 ${GOLD[G.raceIdx]} pts · 🥈 ${SILVER[G.raceIdx]} pts</span>`
+    + (rk.length?`<span class="pill">En tête : ${pname(rk[0])} (${rk[0].score} pts)</span>`:'');
+
+  // order
+  if(race && race.racers.length){
+    $('order').innerHTML = race.order.map(pid=>{
+      const r = race.racers.find(x=>x.pid===pid);
+      const cls = ['o']; if(race.cur===r.id) cls.push('cur'); if(r.fin||r.elim) cls.push('done');
+      const tag = r.place===1?' 🏆':r.place===2?' 🥈':r.elim?' ❌':r.tripped?' 😵':'';
+      const cp = (r.ath==='jumeau'||r.ath==='oeuf'||r.ath==='imichateur') && pw(r) ? ` → ${ATH[pw(r)].e}` : '';
+      return `<span class="${cls.join(' ')}">${tokHTML(r)}${esc(G.players[pid].name)} · case ${r.fin?'🏁':r.pos}${cp}${tag}${r.bronze?` · 🥉${r.bronze}`:''}</span>`;
+    }).join('');
+  } else $('order').innerHTML = '';
+
+  // teams
+  $('teams').innerHTML = G.players.map(p=>{
+    const racing = race && race.racers.find(r=>r.pid===p.idx && race.revealed);
+    return `<div class="team" style="border-color:${p.color}">
+      <div class="tname"><b style="color:${p.color}">${esc(p.name)}</b> ${p.ai?'🤖':'🙂'}<div class="score">${p.score} pts</div>
+      <div class="awards">${p.awards.map(a=>a.k==='gold'?`🏆${a.v}`:a.k==='silver'?`🥈${a.v}`:`🥉${a.v}`).join(' ')||'&nbsp;'}</div></div>
+      <div class="cards">${p.team.map(id=>cardHTML(id,{mini:true,used:p.used.includes(id)&&!(racing&&racing.ath===id),racing:racing&&racing.ath===id})).join('')}</div></div>`;
+  }).join('');
+}
+function cardHTML(id, o={}){
+  const a = ATH[id];
+  const cls = ['card']; if(o.mini) cls.push('mini'); if(o.used) cls.push('used'); if(o.racing) cls.push('racing'); if(o.pick) cls.push('pick');
+  return `<div class="${cls.join(' ')}" style="--hc:${a.c}" ${o.pick?`data-v="${id}"`:''}>${o.badge?`<span class="badge">${o.badge}</span>`:''}
+    <div class="hd"><div class="nm">${esc(a.n)}</div><div class="em">${a.e}</div></div><div class="tx">${esc(a.t)}</div></div>`;
+}
+function setTurnInfo(html){ if(HAS_DOM) $('turninfo').innerHTML = html; }
+async function showDie(v, color, anim=true){
+  if(!HAS_DOM) return;
+  const d = $('die'); d.style.background = color || '#9ed0f5';
+  if(anim){ SFX.rattle(); d.classList.add('rolling'); for(let i=0;i<6;i++){ d.textContent = d6(); await sleep(60); } d.classList.remove('rolling'); SFX.thud(); }
+  d.textContent = v;
+}
+
+/* ---------- modal ---------- */
+function modal({title, who='', body='', options=[], cards=null, dismiss=false}){
+  if(!HAS_DOM) return Promise.resolve(globalThis.__PICK__ ? globalThis.__PICK__(options, cards) : (options[0] ? options[0].value : null));
+  return new Promise(res=>{
+    const root = $('modalRoot');
+    root.innerHTML = `<div class="ov"><div class="mo"><h2>${title}</h2>${who?`<div class="who">${who}</div>`:''}<div>${body}</div>
+      ${cards?`<div class="cardsrow">${cards}</div>`:''}
+      <div class="opts">${options.map((o,i)=>`<button data-i="${i}" class="${o.cls||''}">${o.label}</button>`).join('')}</div></div></div>`;
+    SFX.pop();
+    const done = v => { SFX.click(); root.innerHTML=''; res(v); };
+    root.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>done(options[+b.dataset.i].value));
+    root.querySelectorAll('.card.pick').forEach(c=>c.onclick=()=>done(c.dataset.v));
+    if(dismiss) root.querySelector('.ov').onclick = e => { if(e.target.classList.contains('ov')) done(null); };
+  });
+}
+// a decision for racer r: human → modal; AI → aiPick()
+async function choose(r, title, options, aiPick, body=''){
+  if(isAI(r)){ await sleep(250); return aiPick(); }
+  return modal({title, who:`${pname(player(r))} — ${ATH[r.ath].e} ${esc(ATH[r.ath].n)}`, body, options});
+}
+function waitAction(label){
+  if(!HAS_DOM) return Promise.resolve();
+  return new Promise(res=>{
+    const b = $('actBtn'); b.textContent = label; b.classList.remove('hidden');
+    SFX.turn();
+    b.onclick = () => { SFX.click(); b.classList.add('hidden'); b.onclick=null; res(); };
+  });
+}
+
+/* ---------- movement engine ---------- */
+function settleBaby(){
+  for(const b of holders('bebe')){
+    if(b.pos<=0 || b.pos>=END) continue;
+    const intr = active().filter(x=>x!==b && x.pos===b.pos);
+    for(const x of intr){ x.pos = Math.max(0, b.pos-1); log(`👶 ${nm(b)} ne partage pas sa case : ${nm(x)} recule juste derrière.`, 'pw'); }
+  }
+}
+function checkOver(){
+  const race = R();
+  if(race.places.length>=2 || active().length===0) race.over = true;
+  return race.over;
+}
+async function finish(r){
+  const race = R();
+  if(r.fin) return;
+  r.fin = true; r.pos = END;
+  race.places.push(r.id); r.place = race.places.length;
+  SFX.whistle(); setTimeout(()=>SFX.finish(r.place===1), 550);
+  log(`🏁 ${nm(r)} franchit la ligne d'arrivée en <b>${r.place===1?'1ère':'2e'} position</b> !`, 'big');
+  if(r.place===1){
+    for(const t of holders('tremplin')){
+      if(t.pred===r.id && race.places.length<2){
+        t.fin = true; t.pos = END; race.places.push(t.id); t.place = race.places.length;
+        log(`🔮 ${nm(t)} avait prédit cette victoire ! La course s'arrête : 2e place.`, 'big');
+        break;
+      }
+    }
+  }
+  checkOver(); render();
+}
+async function move(r, n, o={}){
+  const race = R();
+  if(race.over || r.fin || r.elim || !n) return;
+  if(n<0){
+    const target = Math.max(0, r.pos+n);
+    while(r.pos>target){ r.pos--; SFX.back(); render(); await sleep(110); }
+    settleBaby(); render();
+    return;
+  }
+  if(o.main && pw(r)!=='tatillon' && r.pos+n>END){
+    const t = holders('tatillon')[0];
+    if(t){ await trigger(t, `${nm(r)} doit faire le compte exact (${END-r.pos}) : il ne bouge pas !`); return; }
+  }
+  const followers = [];
+  for(const v of holders('ventouse')){
+    if(v!==r && v.pos===r.pos && r.pos>0){
+      const yes = await choose(v, `S'accrocher à ${ATH[r.ath].n} ?`, [{label:'🐟 Oui, je m\'accroche',value:true,cls:'go'},{label:'Non',value:false}], ()=>true);
+      if(yes) followers.push(v);
+    }
+  }
+  const start = r.pos, grouille = pw(r)==='grouille';
+  let p = start; const path = [];
+  for(let i=0;i<n;i++){
+    p++;
+    if(grouille) while(p<END && onSquare(p,r).length) p++;
+    path.push(p);
+    if(p>=END) break;
+  }
+  for(const [i,q] of path.entries()){ r.pos = Math.min(q,END); SFX.step(i); render(); await sleep(170); }
+  const end = r.pos;
+  const passed = active().filter(x=>x!==r && x.pos>start && x.pos<end);
+  if(end>=END) await finish(r);
+  if(grouille && path.length && path[path.length-1]-start>Math.min(n,path.length)) log(`🐸 ${nm(r)} saute par-dessus les autres !`,'pw');
+  for(const v of followers){
+    if(v.fin || v.elim || race.over) continue;
+    v.pos = r.fin ? END : r.pos;
+    await trigger(v, `s'accroche et arrive avec ${nm(r)} !`);
+    if(v.pos>=END) await finish(v);
+  }
+  if(!race.over && pw(r)==='centaure' && passed.length){
+    await trigger(r, `dépasse ${passed.map(nm).join(', ')} qui recule${passed.length>1?'nt':''} de 2 cases !`);
+    for(const x of passed) await move(x,-2);
+  }
+  if(!race.over && !r.fin){
+    for(const b of holders('banane')){
+      if(b!==r && passed.includes(b) && !r.tripped){ r.tripped = true; await trigger(b, `${nm(r)} glisse sur la peau de banane et trébuche !`, 'trip'); }
+    }
+  }
+  settleBaby(); render();
+  if(!r.fin) await onStop(r);
+  for(const v of followers) if(!v.fin) await onStop(v);
+}
+async function onStop(r){
+  const race = R();
+  if(race.over || r.fin || r.elim || r.pos<=0) return;
+  if(G.depth>10) return;
+  G.depth++;
+  try{
+    const mates = () => onSquare(r.pos, r);
+    for(const b of holders('babayaga')){
+      if(b===r){ for(const x of mates()) if(!x.tripped){ x.tripped = true; await trigger(b, `fait trébucher ${nm(x)} !`, 'trip'); } }
+      else if(b.pos===r.pos && !r.tripped){ r.tripped = true; await trigger(b, `fait trébucher ${nm(r)} qui arrive sur sa case !`, 'trip'); }
+    }
+    if(pw(r)==='bouche' && mates().length===1){
+      const v = mates()[0]; v.elim = true;
+      await trigger(r, `croque ${nm(v)} : éliminé de la course ! ❌`, 'chomp');
+      checkOver(); render();
+    }
+    for(const d of holders('duelliste')){
+      if(race.over) break;
+      let opp = null;
+      if(d===r) opp = mates()[0]; else if(d.pos===r.pos) opp = r;
+      if(!opp || opp.elim || opp.fin) continue;
+      const yes = await choose(d, `Défier ${ATH[opp.ath].n} en duel ?`, [{label:'🤺 En garde !',value:true,cls:'go'},{label:'Non',value:false}], ()=>true);
+      if(!yes) continue;
+      const a = d6(), b = d6();
+      const w = a>=b ? d : opp;
+      await trigger(d, `duel contre ${nm(opp)} : ${a} contre ${b} → ${nm(w)} avance de 2 !`, 'duel');
+      await move(w, 2);
+    }
+    for(const ro of holders('romantique')){
+      if(race.over || r.fin || r.elim) break;
+      const here = onSquare(r.pos, null);
+      if(here.length===2 && here.includes(r)){
+        await trigger(ro, `le cœur s'emballe 💘 et avance de 2 cases !`);
+        await move(ro, 2);
+      }
+    }
+  } finally { G.depth--; }
+}
+
+/* ---------- one turn ---------- */
+async function turn(r, bonus=false){
+  const race = R();
+  if(race.over || r.fin || r.elim) return;
+  race.cur = r.id; render();
+  const P = player(r);
+  setTurnInfo(`<div class="who" style="color:${P.color}">${esc(P.name)}</div>${ATH[r.ath].e} ${esc(ATH[r.ath].n)}${bonus?' — <b>tour bonus !</b>':''}<div class="small">Case ${r.pos}</div>`);
+  const startPos = r.pos;
+  if(r.tripped){
+    r.tripped = false;
+    SFX.back(); log(`😵 ${nm(r)} se relève et passe son tour.`);
+    render(); await sleep(700);
+    await afterTurn(r, startPos);
+    return;
+  }
+  if(!P.ai) await waitAction(bonus?'🎲 Tour bonus !':'🎲 Jouer mon tour');
+  else await sleep(500);
+  if(race.over) return;
+  r.turns++;
+  const me = () => pw(r);
+
+  // --- start-of-turn powers ---
+  if(me()==='tremplin' && r.pred==null){
+    const opts = active().filter(x=>x!==r);
+    if(opts.length){
+      const pick = await choose(r, 'Qui va gagner la course ?', opts.map(x=>({label:`${ATH[x.ath].e} ${esc(ATH[x.ath].n)} (${esc(player(x).name)})`, value:x.id})), ()=>opts[rnd(opts.length)].id);
+      r.pred = pick;
+      await trigger(r, `prédit la victoire de ${nm(race.racers.find(x=>x.id===pick))} 🔮`);
+    }
+  }
+  if(me()==='hypno'){
+    const opts = active().filter(x=>x!==r && x.pos!==r.pos);
+    if(opts.length){
+      const ahead = opts.filter(x=>x.pos>=r.pos+3).sort((a,b)=>b.pos-a.pos);
+      const pick = await choose(r, 'Hypnotiser un athlète ? Il sera téléporté sur votre case.',
+        [{label:'Non merci',value:null}, ...opts.map(x=>({label:`${ATH[x.ath].e} ${esc(ATH[x.ath].n)} (case ${x.pos})`,value:x.id}))],
+        ()=>ahead.length?ahead[0].id:null);
+      if(pick!=null){ const x = race.racers.find(y=>y.id===pick); x.pos = r.pos; await trigger(r, `hypnotise ${nm(x)} qui le rejoint case ${r.pos} 🌀`, 'tele'); settleBaby(); render(); }
+    }
+  }
+  if(me()==='roue' && !race.over){
+    const counts = {}; for(const x of active()) if(x!==r) counts[x.pos]=(counts[x.pos]||0)+1;
+    const sqs = Object.keys(counts).map(Number).filter(p=>counts[p]===2 && p!==r.pos && p>0);
+    if(sqs.length){
+      const best = Math.max(...sqs);
+      const pick = await choose(r, 'Se téléporter sur une case occupée par 2 athlètes ?',
+        [{label:'Rester',value:null}, ...sqs.sort((a,b)=>b-a).map(p=>({label:`Case ${p}`,value:p}))], ()=>best>r.pos?best:null);
+      if(pick!=null){ r.pos = pick; await trigger(r, `se téléporte case ${pick} 🛞`, 'tele'); settleBaby(); render(); await onStop(r); }
+    }
+  }
+  if(me()==='fetard' && !race.over && !r.fin){
+    const near = active().filter(x=>x!==r && Math.abs(x.pos-r.pos)<=3 && x.pos!==r.pos);
+    if(near.length){ for(const x of near) x.pos = r.pos; await trigger(r, `lance la fête 🥳 : ${near.map(nm).join(', ')} rejoignent la case ${r.pos} !`); settleBaby(); render(); }
+  }
+  if(me()==='endormimie' && !race.over){
+    const others = active().filter(x=>x!==r);
+    if(others.length && others.every(x=>x.pos>r.pos)){ r.bronze++; await trigger(r, `seul(e) en dernière position, gagne un jeton Bronze 🥉`); }
+  }
+  if(me()==='pompon' && !race.over){
+    const m = Math.min(...active().map(x=>x.pos));
+    const last = active().filter(x=>x.pos===m);
+    const pick = await choose(r, 'Faire avancer de 2 cases un athlète en dernière position (et avancer de 1) ?',
+      [{label:'Non',value:null}, ...last.map(x=>({label:`${ATH[x.ath].e} ${esc(ATH[x.ath].n)}${x===r?' (moi)':''}`,value:x.id}))],
+      ()=> last.includes(r) ? r.id : (r.pos-m>=4 ? last[0].id : null));
+    if(pick!=null){ const x = race.racers.find(y=>y.id===pick); await trigger(r, `pousse ${nm(x)} de 2 cases 🤡`); await move(x,2); await move(r,1); }
+  }
+  if(race.over || r.fin || r.elim){ await afterTurn(r,startPos); return; }
+  if(r.tripped){ log(`😵 ${nm(r)} est par terre et ne peut pas courir ce tour-ci.`); await afterTurn(r,startPos); return; }
+
+  // --- main movement ---
+  let skipMain = false;
+  if(me()==='lievre'){
+    const others = active().filter(x=>x!==r);
+    if(others.length && others.every(x=>x.pos<r.pos)){ skipMain = true; await trigger(r, `est seul en tête… et fait une sieste 💤 (pas de déplacement principal)`); }
+  }
+  if(!skipMain){
+    let mode = 'roll';
+    if(me()==='guybollon'){
+      const need = END - r.pos;
+      mode = await choose(r, 'Lancer le dé ou avancer de 3 cases ?', [{label:'🎲 Lancer',value:'roll',cls:'go'},{label:'➡️ Avancer de 3',value:'three'}],
+        ()=> (need===3 || (holders('tatillon').length && need<=3) || Math.random()<.35) ? 'three' : 'roll');
+    }
+    if(me()==='tong'){
+      const others = active().filter(x=>x!==r && x.pos!==r.pos);
+      if(others.length){
+        const lead = others.slice().sort((a,b)=>b.pos-a.pos)[0];
+        const pick = await choose(r, 'Lancer le dé ou échanger votre place ?',
+          [{label:'🎲 Lancer',value:'roll',cls:'go'}, ...others.map(x=>({label:`🔁 ${ATH[x.ath].e} ${esc(ATH[x.ath].n)} (case ${x.pos})`,value:x.id}))],
+          ()=> lead.pos-r.pos>=5 ? lead.id : 'roll');
+        if(pick!=='roll'){ mode='swap'; const x = race.racers.find(y=>y.id===pick); const t=x.pos; x.pos=r.pos; r.pos=t; await trigger(r, `échange sa place avec ${nm(x)} 🩴`, 'tele'); settleBaby(); render(); await onStop(r); }
+      }
+    }
+    if(mode==='three'){
+      await trigger(r, `préfère avancer tranquillement de 3 cases`);
+      await move(r, 3, {main:true});
+      await squareEffect(r);
+    } else if(mode==='roll'){
+      let guess = null;
+      if(me()==='genie'){
+        guess = await choose(r, 'Prédire le résultat du dé ?', [{label:'Pas de prédiction',value:null},1,2,3,4,5,6].map(v=>typeof v==='object'?v:{label:String(v),value:v}), ()=>1+rnd(6));
+        if(guess!=null) log(`🧞 ${nm(r)} prédit un <b>${guess}</b>…`);
+      }
+      let roll = d6();
+      await showDie(roll, P.color);
+      log(`🎲 ${nm(r)} lance le dé : <b>${roll}</b>`);
+      if(me()==='magicien'){
+        for(let k=0;k<2;k++){
+          const again = await choose(r, `Résultat ${roll}. Relancer ? (${2-k} relance${k?'':'s'} restante${k?'':'s'})`, [{label:'🎩 Relancer',value:true},{label:'Garder',value:false,cls:'go'}], ()=>roll<=2);
+          if(!again) break;
+          roll = d6(); await showDie(roll,P.color); await trigger(r, `relance… <b>${roll}</b>`);
+        }
+      }
+      const marchands = holders('marchand');
+      if(marchands.length){
+        const again = await choose(r, `Résultat ${roll}. Relancer grâce au Marchand Déambulant ?`, [{label:'🎲 Relancer',value:true},{label:'Garder',value:false,cls:'go'}], ()=>roll<=2);
+        if(again){
+          roll = d6(); await showDie(roll,P.color); log(`🎲 ${nm(r)} relance (Marchand) : <b>${roll}</b>`);
+          for(const m of marchands) if(m!==r && !m.fin){ await trigger(m, `encaisse sa commission et avance de 1 case`); await move(m,1); }
+        }
+      }
+      if(race.over || r.fin || r.elim){ await afterTurn(r,startPos); return; }
+      let moveIt = true, doubled = false, amount = roll;
+      if(me()==='sisyphe' && roll===6){
+        if(r.bronze>0) r.bronze--;
+        r.pos = 0; moveIt = false;
+        await trigger(r, `obtient un 6… et son rocher le ramène au Départ ! (−1 jeton)`); render();
+      }
+      if(moveIt && roll===6){
+        for(const l of holders('larbin')) if(l!==r){ await trigger(l, `se précipite et avance de 2 cases avant ${nm(r)} !`); await move(l,2); }
+      }
+      if(moveIt && roll===1){
+        const ch = holders('chenille').filter(c=>c!==r)[0];
+        for(const c of holders('capitaine')) if(c!==r){ race.bonus.push(c.id); await trigger(c, `« À l'abordage ! » — jouera juste après.`); }
+        if(ch){ moveIt = false; await trigger(ch, `vole le déplacement de ${nm(r)} et avance de 1 case 🐛`); await move(ch,1); }
+      }
+      if(race.over || r.fin || r.elim){ await afterTurn(r,startPos); return; }
+      if(moveIt && me()==='alchimiste' && roll<=2){
+        const y = await choose(r, `Résultat ${roll}. Transformer en 4 ?`, [{label:'⚗️ Oui, 4 cases',value:true,cls:'go'},{label:'Non',value:false}], ()=>true);
+        if(y){ amount = 4; await trigger(r, `transforme son ${roll} en 4 ⚗️`); }
+      }
+      if(moveIt && me()==='fusee'){
+        const need = END - r.pos;
+        const y = await choose(r, `Résultat ${amount}. Doubler (${amount*2}) et trébucher ensuite ?`, [{label:'🚀 Doubler !',value:true,cls:'primary'},{label:'Non',value:false}], ()=> amount>=3 || amount*2>=need);
+        if(y){ amount *= 2; doubled = true; await trigger(r, `allume les réacteurs : ${amount} cases ! 🚀`); }
+      }
+      if(moveIt){
+        const mods = [];
+        for(const c of holders('coach')) if(c.pos===r.pos) mods.push(['Coach',+1]);
+        if(me()==='lievre') mods.push(['Lièvrapide',+2]);
+        if(me()==='dirigeable') mods.push(['Dirigeable', startPos<15 ? +3 : -1]);
+        for(const s of holders('slime')) if(s!==r) mods.push(['Slime',-1]);
+        let tot = amount + mods.reduce((a,m)=>a+m[1],0);
+        tot = Math.max(0, tot);
+        if(mods.length) log(`➕ Modificateurs : ${mods.map(m=>`${m[0]} ${m[1]>0?'+':''}${m[1]}`).join(', ')} → <b>${tot}</b> case${tot>1?'s':''}`);
+        await move(r, tot, {main:true});
+        if(doubled && !r.fin && !r.elim){ r.tripped = true; SFX.trip(); log(`💫 ${nm(r)} s'écrase en atterrissant et trébuche.`); render(); }
+        await squareEffect(r);
+      }
+      if(guess!=null && me()==='genie' && guess===roll && !race.over && !r.fin && !r.elim){
+        race.bonus.unshift(r.id); await trigger(r, `avait vu juste ! Il rejoue 🧞`);
+      }
+    }
+  }
+  await afterTurn(r, startPos);
+}
+async function squareEffect(r){
+  const race = R();
+  if(race.over || r.fin || r.elim) return;
+  const s = SPECIALS[BOARD_SEQ[G.raceIdx]][r.pos];
+  if(!s) return;
+  if(s.t==='star'){
+    if(!race.stars[r.pos]){ race.stars[r.pos]=true; r.bronze += s.v; SFX.star(); log(`⭐ ${nm(r)} attrape l'étoile : +1 jeton Bronze 🥉`,'pw'); render(); }
+  } else if(s.t==='oups'){
+    r.tripped = true; SFX.oups(); log(`💥 OUPS ! ${nm(r)} trébuche (passe son prochain tour).`,'pw'); render();
+  } else if(s.t==='arrow'){
+    SFX.whoosh(s.v>0); log(`${s.v>0?'⏩':'⏪'} Case flèche : ${nm(r)} ${s.v>0?'avance':'recule'} de ${Math.abs(s.v)} case${Math.abs(s.v)>1?'s':''}.`,'pw');
+    await move(r, s.v);
+  }
+}
+async function afterTurn(r, startPos){
+  const race = R();
+  if(race.over) return;
+  if(!r.elim && !r.fin && Math.abs(r.pos-startPos)<=1){
+    for(const h of holders('hyene')) if(h!==r){ await trigger(h, `se moque de ${nm(r)} qui n'a pas avancé 😹 et avance de 2 cases`); await move(h,2); }
+  }
+  render();
+}
+
+/* ---------- races ---------- */
+async function runRace(){
+  const race = R();
+  for(const r of race.racers){
+    const P = player(r);
+    if(r.ath==='jumeau'){
+      const wins = [...new Set(G.winners)].filter(id=>!NO_COPY.includes(id));
+      if(!wins.length){ log(`👯 ${nm(r)} : aucun vainqueur précédent à imiter… pas de pouvoir pour cette course.`,'pw'); }
+      else {
+        const pick = P.ai ? wins[rnd(wins.length)] : await modal({title:'Jumeau : quel vainqueur imiter ?', who:pname(P), cards:wins.map(id=>cardHTML(id,{pick:true})).join('')});
+        r.copy = pick; log(`👯 ${nm(r)} copie le pouvoir de ${ATH[pick].e} <b>${ATH[pick].n}</b>.`,'pw');
+      }
+    }
+    if(r.ath==='oeuf'){
+      const used = new Set(G.players.flatMap(p=>p.team));
+      const pool = shuffle(ATH_IDS.filter(id=>!used.has(id) && !NO_COPY.includes(id))).slice(0,3);
+      if(pool.length){
+        const pick = P.ai ? pool[rnd(pool.length)] : await modal({title:'Œuf : choisissez le pouvoir qui va éclore', who:pname(P), cards:pool.map(id=>cardHTML(id,{pick:true})).join('')});
+        r.copy = pick; log(`🥚 ${nm(r)} éclot avec le pouvoir de ${ATH[pick].e} <b>${ATH[pick].n}</b> !`,'pw');
+      }
+    }
+  }
+  for(const r of race.racers) if(pw(r)==='sisyphe'){ r.bronze = 4; log(`🪨 ${nm(r)} reçoit 4 jetons Bronze… à protéger !`,'pw'); }
+  render();
+  let round = 0;
+  while(!race.over && round<80){
+    round++;
+    for(const pid of race.order){
+      if(race.over) break;
+      const r = race.racers.find(x=>x.pid===pid);
+      await turn(r);
+      let guard = 0;
+      while(race.bonus.length && !race.over && guard++<10){
+        const b = race.racers.find(x=>x.id===race.bonus.shift());
+        if(b && !b.fin && !b.elim){ log(`⚡ Tour bonus pour ${nm(b)} !`); await turn(b, true); }
+      }
+    }
+  }
+  if(!race.over){
+    log(`⏱️ Temps écoulé ! Classement selon la position.`,'big');
+    const rest = active().sort((a,b)=>b.pos-a.pos);
+    while(race.places.length<2 && rest.length){ const r = rest.shift(); r.fin = true; race.places.push(r.id); r.place = race.places.length; }
+    race.over = true;
+  }
+  race.cur = null; render();
+}
+
+function rankPlayers(){
+  return G.players.slice().sort((a,b)=> b.score-a.score || b.awards.filter(x=>x.k==='gold').length - a.awards.filter(x=>x.k==='gold').length);
+}
+
+async function selectAthletes(){
+  const humans = G.players.filter(p=>!p.ai);
+  const picks = {};
+  for(const p of G.players){
+    const avail = p.team.filter(id=>!p.used.includes(id));
+    if(p.ai || avail.length===1){ picks[p.idx] = avail[rnd(avail.length)]; continue; }
+    if(humans.length>1){
+      await modal({title:`Au tour de ${esc(p.name)} de choisir`, body:`<p>Les autres joueurs, regardez ailleurs 👀 — le choix est secret !</p>`, options:[{label:`Je suis ${esc(p.name)}`,value:1,cls:'go'}]});
+    }
+    picks[p.idx] = await modal({title:`Course ${G.raceIdx+1} — ${BOARD_SEQ[G.raceIdx]==='pepere'?'Pépère 🌸':'Galère 🌲'}`, who:`${pname(p)} : choisissez votre athlète (secret)`,
+      body:`<p class="small">Chaque athlète ne court qu'une seule fois. Il vous reste ${avail.length} athlète${avail.length>1?'s':''}.</p>`,
+      cards: avail.map(id=>cardHTML(id,{pick:true})).join('')});
+  }
+  return picks;
+}
+
+async function playRace(){
+  const idx = G.raceIdx;
+  // starter
+  let starter, why;
+  if(idx===0){
+    starter = G.firstStarter!=null ? G.firstStarter : rnd(G.players.length);
+    why = G.firstStarter!=null ? `${pname(G.players[starter])} a perdu la partie précédente : il/elle commence.` : `🎲 Tirage au sort : ${pname(G.players[starter])} commence !`;
+  } else {
+    starter = G.lastLoser;
+    why = `${pname(G.players[starter])} a fini dernier de la course précédente : il/elle commence.`;
+  }
+  const order = G.players.map((_,i)=>(starter+i)%G.players.length);
+  G.race = {racers:[], order, places:[], over:false, bonus:[], stars:{}, cur:null, revealed:false};
+  render();
+  log(`<b>═══ Course ${idx+1} / 4 — Plateau ${BOARD_SEQ[idx]==='pepere'?'Pépère':'Galère'} ═══</b>`,'big');
+  const picks = await selectAthletes();
+  let id = 0;
+  G.race.racers = order.map(pid=>({id:id++, pid, ath:picks[pid], copy:null, pos:0, tripped:false, fin:false, elim:false, place:0, bronze:0, pred:null, turns:0}));
+  for(const p of G.players) p.used.push(picks[p.idx]);
+  G.race.revealed = true;
+  render();
+  if(HAS_DOM){
+    SFX.reveal();
+    await modal({title:'🎉 Révélation des athlètes !', body:`<p>${why}</p><p class="small">Ordre de jeu (sens horaire) : ${order.map(i=>pname(G.players[i])).join(' → ')}</p>`,
+      cards: G.race.racers.map(r=>cardHTML(r.ath,{badge:esc(player(r).name)})).join(''), options:[{label:'🏁 Partez !',value:1,cls:'primary'}]});
+  }
+  log(why);
+  log(`Sur la ligne : ${G.race.racers.map(nm).join(', ')}`);
+  await runRace();
+
+  // scoring
+  const race = G.race;
+  const rows = [];
+  for(const r of race.racers){
+    const p = player(r); let pts = 0; const got = [];
+    if(r.place===1){ pts += GOLD[idx]; p.awards.push({k:'gold',v:GOLD[idx]}); got.push(`🏆 ${GOLD[idx]}`); G.winners.push(r.ath); }
+    if(r.place===2){ pts += SILVER[idx]; p.awards.push({k:'silver',v:SILVER[idx]}); got.push(`🥈 ${SILVER[idx]}`); }
+    if(r.bronze>0){ pts += r.bronze; for(let i=0;i<r.bronze;i++) p.awards.push({k:'bronze',v:1}); got.push(`🥉 ×${r.bronze}`); }
+    p.score += pts;
+    rows.push({r, p, pts, got});
+  }
+  // loser of this race = last on track
+  const notPlaced = race.racers.filter(r=>!r.place);
+  let cand;
+  const elim = notPlaced.filter(r=>r.elim);
+  if(elim.length) cand = elim; else { const m = Math.min(...notPlaced.map(r=>r.pos)); cand = notPlaced.filter(r=>r.pos===m); }
+  if(cand.length) G.lastLoser = cand[rnd(cand.length)].pid; else G.lastLoser = race.order[race.order.length-1];
+  render();
+  log(`Fin de la course ${idx+1} ! ${rows.filter(x=>x.pts).map(x=>`${pname(x.p)} +${x.pts}`).join(', ')}`,'big');
+  if(HAS_DOM){
+    SFX.applause();
+    rows.sort((a,b)=>(a.r.place||9)-(b.r.place||9) || b.r.pos-a.r.pos);
+    await modal({title:`Fin de la course ${idx+1}`, body:`<table class="res"><tr><th>Joueur</th><th>Athlète</th><th>Résultat</th><th>Points</th><th>Total</th></tr>
+      ${rows.map(x=>`<tr><td>${pname(x.p)}</td><td>${ATH[x.r.ath].e} ${esc(ATH[x.r.ath].n)}</td><td>${x.r.place===1?'1er 🏆':x.r.place===2?'2e 🥈':x.r.elim?'Éliminé ❌':'Case '+x.r.pos}</td><td>${x.got.join(' ')||'—'}</td><td><b>${x.p.score}</b></td></tr>`).join('')}</table>
+      ${idx<3?`<p>${pname(G.players[G.lastLoser])} a fini dernier : il/elle commencera la prochaine course.</p>`:''}`,
+      options:[{label: idx<3?'➡️ Course suivante':'🏆 Voir le champion', value:1, cls:'go'}]});
+  }
+}
+
+async function playGame(){
+  for(G.raceIdx=0; G.raceIdx<4; G.raceIdx++){
+    await playRace();
+  }
+  G.raceIdx = 3;
+  const rk = rankPlayers();
+  G.prevLoser = rk[rk.length-1].idx;
+  log(`🏆 ${pname(rk[0])} est le GRAND CHAMPION avec ${rk[0].score} points !`,'big');
+  if(!HAS_DOM) return rk;
+  SFX.fanfare();
+  const medal = ['🥇','🥈','🥉'];
+  const v = await modal({title:`🏆 ${esc(rk[0].name)} est le grand champion !`,
+    body:`<table class="res"><tr><th>#</th><th>Joueur</th><th>Récompenses</th><th>Points</th></tr>${rk.map((p,i)=>`<tr><td>${medal[i]||i+1}</td><td>${pname(p)}</td><td>${p.awards.map(a=>a.k==='gold'?`🏆${a.v}`:a.k==='silver'?`🥈${a.v}`:`🥉`).join(' ')||'—'}</td><td><b>${p.score}</b></td></tr>`).join('')}</table>
+    <p class="small">Revanche : ${pname(G.players[G.prevLoser])} (dernier) commencera la prochaine partie.</p>`,
+    options:[{label:'🔁 Revanche (mêmes joueurs)',value:'again',cls:'primary'},{label:'⚙️ Changer les joueurs',value:'setup'}]});
+  if(v==='again') startGame(G.players.map(p=>({name:p.name, ai:p.ai, color:p.color})), G.prevLoser);
+  else { $('game').classList.add('hidden'); $('setup').classList.remove('hidden'); }
+}
+
+function startGame(pl, firstStarter=null){
+  const deck = shuffle(ATH_IDS.slice());
+  G = { players: pl.map((p,i)=>({idx:i, name:p.name||PNAMES[i], ai:p.ai, color:p.color, team:deck.splice(0,4), used:[], score:0, awards:[]})),
+        raceIdx:0, race:null, winners:[], lastLoser:0, firstStarter, depth:0, flash:{} };
+  if(HAS_DOM){
+    $('setup').classList.add('hidden'); $('game').classList.remove('hidden'); $('log').innerHTML='';
+    $('die').textContent='?';
+    log(`Bienvenue à la grande compète ! Les équipes sont tirées au sort.`,'big');
+  }
+  return playGame();
+}
+
+/* ---------- setup UI ---------- */
+function initSetup(){
+  for(let i=0;i<6;i++) SETUP.players.push({name:PNAMES[i], ai:i>0, color:PCOLORS[i]});
+  const draw = () => {
+    $('nbtns').innerHTML = [2,3,4,5,6].map(n=>`<button class="${n===SETUP.n?'sel':''}" data-n="${n}">${n} joueurs</button>`).join('');
+    $('nbtns').querySelectorAll('button').forEach(b=>b.onclick=()=>{SETUP.n=+b.dataset.n; draw();});
+    $('prows').innerHTML = SETUP.players.slice(0,SETUP.n).map((p,i)=>`<div class="prow"><div class="dot" style="background:${p.color}"></div>
+      <input data-i="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Nom du joueur ${i+1}">
+      <div class="toggle"><button data-i="${i}" data-ai="0" class="${!p.ai?'on':''}">🙂 Joueur</button><button data-i="${i}" data-ai="1" class="${p.ai?'on':''}">🤖 Ordinateur</button></div></div>`).join('');
+    $('prows').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{SETUP.players[+inp.dataset.i].name = inp.value;});
+    $('prows').querySelectorAll('.toggle button').forEach(b=>b.onclick=()=>{SETUP.players[+b.dataset.i].ai = b.dataset.ai==='1'; draw();});
+  };
+  draw();
+  $('startBtn').onclick = () => startGame(SETUP.players.slice(0,SETUP.n).map((p,i)=>({...p, name:(p.name||'').trim()||PNAMES[i]})));
+  $('speed').onchange = e => SPEED = +e.target.value;
+  $('rulesBtn').onclick = showRules;
+  const sb = $('soundBtn'); const upd = () => sb.textContent = SFX.muted ? '🔇 Muet' : '🔊 Son';
+  upd(); sb.onclick = () => { SFX.toggle(); upd(); };
+  document.addEventListener('pointerdown', () => SFX.unlock(), {once:false, passive:true});
+}
+function showRules(){
+  modal({title:'📜 Règles — Athlètes de Compète', dismiss:true, body:`<div class="rules">
+  <p>Course asymétrique et chaotique pour 2 à 6 joueurs. 4 courses : <b>Pépère → Galère → Pépère → Galère</b>.</p>
+  <h3>Équipes</h3><p>Chaque joueur reçoit 4 athlètes au hasard. Chaque athlète ne court qu'<b>une seule</b> course : à vous de planifier !</p>
+  <h3>Une course</h3><p>1. Chacun choisit secrètement son athlète, puis on les révèle.<br>
+  2. Course 1 : le premier joueur est tiré au sort. Courses 2 à 4 : le dernier de la course précédente commence. On joue ensuite dans le sens horaire.<br>
+  3. À son tour, on lance le dé (1 à 6) et on avance. Les pouvoirs se déclenchent et s'enchaînent !<br>
+  4. La course s'arrête dès que <b>deux athlètes</b> ont franchi l'arrivée (case 30).</p>
+  <h3>Trébucher</h3><p>Un athlète qui trébuche est couché 😵 : il passe son prochain tour pour se relever.</p>
+  <h3>Plateau Galère</h3><p>⭐ <b>Étoile</b> : le premier qui s'y arrête gagne un jeton Bronze (1 pt).<br>➡ <b>Flèche</b> : avance ou recule du nombre indiqué (dans le sens de la flèche).<br>💥 <b>OUPS!</b> : l'athlète trébuche.<br>Les cases spéciales ne s'activent qu'à la fin du déplacement principal.</p>
+  <h3>Points</h3><p>🏆 1ère place : ${GOLD.join(' / ')} pts selon la course · 🥈 2e place : ${SILVER.join(' / ')} pts · 🥉 jetons Bronze : 1 pt chacun.<br>Après la 4e course, le plus de points est le grand champion (égalité : le plus de trophées).</p>
+  <h3>Les athlètes</h3><div class="cardsrow">${ATH_IDS.map(id=>cardHTML(id,{mini:true})).join('')}</div></div>`,
+  options:[{label:'Compris !',value:1,cls:'go'}]});
+}
+if(HAS_DOM) initSetup();
+</script>
+</body>
+</html>
 
