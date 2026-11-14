@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qui dés mieux ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#150a26; --bg2:#22113d; --panel:#1d0f33; --line:#3a2463;
+  --ink:#f6f1ff; --mute:#b6a6d6;
+  --yel:#f5d90a; --tea:#2fb9b9; --pin:#e0559a; --ora:#ff8a1f; --mag:#d6187a;
+  --tile:#f4efd9; --ok:#4fe08a; --ko:#ff5a6a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Nunito',system-ui,sans-serif;color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #3a1670 0%, transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, #0f4b5c 0%, transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, #5c1240 0%, transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+}
+h1,h2,h3,.title{font-family:'Baloo 2',cursive;margin:0;line-height:1.05}
+button{font-family:'Baloo 2',cursive;font-weight:700;cursor:pointer;border:none;border-radius:12px;padding:.55em 1em;font-size:1rem;color:#1a0b2e;background:var(--yel);box-shadow:0 3px 0 #a88f00;transition:transform .08s, filter .15s}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #a88f00}
+button:disabled{opacity:.4;cursor:not-allowed;filter:none;transform:none}
+button.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);box-shadow:none}
+button.tea{background:var(--tea);box-shadow:0 3px 0 #1a7676}
+button.pin{background:var(--pin);box-shadow:0 3px 0 #8f2a5d;color:#fff}
+button.sm{font-size:.85rem;padding:.35em .7em;border-radius:9px}
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+header.top{display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo h1{font-size:2.2rem;letter-spacing:.5px;background:linear-gradient(90deg,var(--yel),var(--ora),var(--pin),var(--tea));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo .mini-dice{display:flex;gap:4px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- Panels ---------- */
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:18px;padding:14px}
+.panel h3{font-size:1.15rem;margin-bottom:8px;color:var(--mute);text-transform:uppercase;letter-spacing:1px}
+
+/* ---------- Setup ---------- */
+#setup{max-width:760px;margin:20px auto}
+.setup-card{padding:22px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nbtn{width:52px;height:52px;font-size:1.4rem;background:var(--bg2);color:var(--ink);box-shadow:none;border:2px solid var(--line)}
+.nbtn.on{background:var(--yel);color:#1a0b2e;border-color:var(--yel)}
+.prow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:14px;background:rgba(0,0,0,.25);margin-top:8px}
+.prow input{width:100%;font:inherit;font-weight:700;padding:.55em .7em;border-radius:10px;border:2px solid var(--line);background:#120822;color:var(--ink)}
+.prow input:focus{outline:none;border-color:var(--tea)}
+.seg{display:flex;background:#120822;border-radius:10px;border:2px solid var(--line);overflow:hidden}
+.seg button{background:transparent;color:var(--mute);box-shadow:none;border-radius:0;padding:.45em .8em;font-size:.9rem}
+.seg button.on{background:var(--tea);color:#06222a}
+.cube{width:26px;height:26px;border-radius:6px;box-shadow:inset -3px -4px 0 rgba(0,0,0,.25), inset 2px 2px 0 rgba(255,255,255,.35);display:inline-block;flex:none}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.opts label{display:flex;flex-direction:column;gap:6px;font-weight:700;color:var(--mute);font-size:.9rem}
+select{font:inherit;font-weight:700;padding:.5em;border-radius:10px;border:2px solid var(--line);background:#120822;color:var(--ink)}
+.check{flex-direction:row!important;align-items:center}
+.check input{width:20px;height:20px;accent-color:var(--tea)}
+
+/* ---------- Game layout ---------- */
+#game{display:none}
+.layout{display:grid;grid-template-columns:250px 1fr 260px;gap:14px;align-items:start}
+@media (max-width:1050px){.layout{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}}
+@media (max-width:640px){.layout{grid-template-columns:1fr}.logo h1{font-size:1.7rem}}
+
+.player{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;margin-bottom:6px;background:rgba(0,0,0,.22);border:2px solid transparent;transition:border-color .2s, background .2s}
+.player.turn{border-color:var(--yel);background:rgba(245,217,10,.08)}
+.player .nm{font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player .nm small{display:block;font-weight:600;color:var(--mute);font-size:.75rem}
+.player .sc{font-family:'Baloo 2';font-size:1.6rem;font-weight:800}
+.tag{font-size:.7rem;font-weight:800;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px}
+.tag.team{background:var(--yel);color:#2a2000}
+.tag.skep{background:var(--pin);color:#fff}
+.tag.lead{background:var(--tea);color:#06222a}
+.bar{height:6px;border-radius:9px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px;transition:width .5s}
+
+.center{display:flex;flex-direction:column;gap:14px}
+.stage{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+@media (max-width:640px){.stage{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.round-info{color:var(--mute);font-weight:700;font-size:.9rem;margin-bottom:4px}
+.desc{font-size:1.15rem;font-weight:800;line-height:1.3}
+.legend{color:var(--mute);font-size:.8rem;margin-top:8px;line-height:1.4}
+
+/* ---------- Challenge card ---------- */
+.ccard{position:relative;width:230px;height:150px;border-radius:14px;padding:10px;border:5px solid #f6f2ea;
+  background:
+    conic-gradient(from 200deg at 50% 50%, transparent 0 20deg, rgba(47,185,185,.35) 22deg 28deg, transparent 30deg 80deg, rgba(224,85,154,.35) 82deg 90deg, transparent 92deg 160deg, rgba(245,217,10,.3) 162deg 168deg, transparent 170deg 250deg, rgba(224,85,154,.35) 252deg 258deg, transparent 260deg 320deg, rgba(47,185,185,.3) 322deg 328deg, transparent 330deg),
+    radial-gradient(circle at 50% 50%, #2a1446 0%, #0d0716 70%);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.ccard.flip{animation:flip .55s ease}
+@keyframes flip{0%{transform:rotateY(90deg) scale(.9)}100%{transform:rotateY(0) scale(1)}}
+.ccard .big{font-family:'Baloo 2';font-weight:800;font-size:3.6rem;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.4);letter-spacing:1px}
+.ccard.back{background:repeating-linear-gradient(45deg,#2a1446 0 12px,#1a0b2e 12px 24px)}
+.ccard.back .big{font-size:1.6rem;color:var(--mute)}
+.grid3{display:grid;grid-template-columns:repeat(3,44px);gap:7px}
+.rowflex{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap}
+.tile{width:44px;height:44px;border-radius:7px;background:var(--tile);display:flex;align-items:center;justify-content:center;font-family:'Baloo 2';font-weight:800;color:#1a0b2e;font-size:1.35rem;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25);position:relative}
+.tile.L-A{background:var(--yel)} .tile.L-B{background:var(--tea)} .tile.L-C{background:var(--pin)}
+.tile.small{font-size:.85rem}
+.tile.tri{display:grid;grid-template-columns:1fr 1fr;font-size:.8rem;line-height:1;padding:5px}
+.tile.tri span:last-child{grid-column:1/-1}
+.tile .x{position:absolute;left:-7px;bottom:-6px;color:#e2232f;font-size:1.3rem;font-weight:800;text-shadow:0 0 2px #000}
+.stack{position:relative;width:62px;height:56px}
+.stack i{position:absolute;width:36px;height:36px;border-radius:6px;background:var(--tile);box-shadow:inset 0 0 0 2px rgba(0,0,0,.25), 0 2px 4px rgba(0,0,0,.4)}
+.stack i:nth-child(1){left:22px;top:0;opacity:.75}
+.stack i:nth-child(2){left:11px;top:9px;opacity:.88}
+.stack i:nth-child(3){left:0;top:18px;background:#fff}
+.link{width:14px;height:4px;background:linear-gradient(90deg,var(--ora),var(--tea));border-radius:3px;margin:0 -7px;z-index:1}
+.sumline{display:flex;align-items:center;gap:3px;font-family:'Baloo 2';font-weight:800;color:#fff;font-size:1.1rem}
+.sumline .tile{width:34px;height:34px}
+/* pips */
+.pips{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:72%;height:72%}
+.pips b{width:62%;height:62%;margin:auto;border-radius:50%;background:transparent}
+.pips b.on{background:#1a0b2e}
+
+/* ---------- Bid track ---------- */
+.track{display:flex;flex-direction:column;gap:4px}
+.trow{display:grid;grid-template-columns:30px 1fr 38px 38px;gap:6px;align-items:center;padding:3px 6px;border-radius:9px;background:rgba(0,0,0,.2);font-weight:800;position:relative}
+.trow .n{font-family:'Baloo 2';font-size:1.25rem;text-align:center}
+.trow .slot{height:22px;border-radius:6px;background:linear-gradient(90deg,#efe9ff,#c9d9f5);opacity:.85;display:flex;align-items:center;padding-left:6px;gap:3px;font-size:.75rem;color:#3a2463;overflow:hidden}
+.trow .pt{text-align:center;border-radius:6px;padding:2px 0;font-size:.9rem}
+.trow .pt.w{background:rgba(245,217,10,.15);color:var(--yel)}
+.trow .pt.s{background:rgba(224,85,154,.15);color:var(--pin)}
+.trow.cur{background:rgba(245,217,10,.18);outline:2px solid var(--yel)}
+.trow .cubes{display:flex;gap:2px}
+.trow .cubes .cube{width:14px;height:14px;border-radius:3px}
+.thead{display:grid;grid-template-columns:30px 1fr 38px 38px;gap:6px;font-size:.68rem;color:var(--mute);font-weight:800;text-transform:uppercase;padding:0 6px}
+.thead span{text-align:center}
+
+/* ---------- Action panel ---------- */
+.action{min-height:120px}
+.action .who{display:flex;align-items:center;gap:10px;font-family:'Baloo 2';font-size:1.4rem;font-weight:800;margin-bottom:10px}
+.bidgrid{display:flex;flex-wrap:wrap;gap:6px}
+.bidgrid button{min-width:46px;font-size:1.15rem}
+.bidgrid button .p{display:block;font-size:.65rem;font-family:'Nunito';font-weight:800;opacity:.75}
+.choices{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.choices > div{flex:1;min-width:180px}
+.hint{color:var(--mute);font-size:.88rem;margin-top:6px}
+.thinking{display:flex;align-items:center;gap:10px;color:var(--mute);font-weight:700}
+.dots i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mute);margin:0 2px;animation:bl 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* ---------- Dice tray ---------- */
+.tray{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:18px 8px;border-radius:16px;background:radial-gradient(ellipse at center,#1f6a4a 0%,#0f3b2a 80%);box-shadow:inset 0 0 0 4px #5a3a1e, inset 0 0 40px rgba(0,0,0,.5);min-height:110px;align-items:center}
+.die{width:64px;height:64px;border-radius:13px;background:#fdfbf4;display:flex;align-items:center;justify-content:center;box-shadow:inset -4px -5px 0 rgba(0,0,0,.15), 0 5px 0 #bdb6a2, 0 8px 14px rgba(0,0,0,.4);cursor:default;position:relative;transition:transform .15s, box-shadow .15s}
+.die.click{cursor:pointer}
+.die.click:hover{transform:translateY(-3px)}
+.die.held{transform:translateY(-8px);box-shadow:inset -4px -5px 0 rgba(0,0,0,.15), 0 0 0 4px var(--yel), 0 8px 18px rgba(245,217,10,.4)}
+.die.held::after{content:'GARDÉ';position:absolute;bottom:-22px;font-size:.62rem;font-weight:800;color:var(--yel);letter-spacing:.5px}
+.die.sug{outline:3px dashed var(--tea);outline-offset:4px}
+.die.blank .pips{opacity:.15}
+.die.rolling{animation:shake .5s ease}
+@keyframes shake{0%{transform:rotate(0)}20%{transform:rotate(-25deg) translateY(-10px)}40%{transform:rotate(18deg)}60%{transform:rotate(-12deg) translateY(-4px)}80%{transform:rotate(6deg)}100%{transform:rotate(0)}}
+.die .pips{width:70%;height:70%}
+.die .pips b.on{background:#1a0b2e}
+.rollbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+.rollcount{display:flex;gap:5px}
+.rollcount i{width:16px;height:16px;border-radius:50%;border:2px solid var(--mute)}
+.rollcount i.used{background:var(--mute)}
+.prob{font-weight:800;color:var(--tea)}
+
+.banner{padding:14px 16px;border-radius:14px;font-family:'Baloo 2';font-size:1.5rem;font-weight:800;text-align:center;margin-bottom:10px}
+.banner.ok{background:rgba(79,224,138,.15);color:var(--ok);border:2px solid var(--ok)}
+.banner.ko{background:rgba(255,90,106,.12);color:var(--ko);border:2px solid var(--ko)}
+.gain{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.gain span{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.3);font-weight:800}
+
+.log{max-height:260px;overflow:auto;font-size:.85rem;line-height:1.35;display:flex;flex-direction:column;gap:4px}
+.log div{padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.2)}
+.log div b{font-weight:800}
+
+/* ---------- Modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(8,3,16,.75);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:30px 12px}
+.modal.on{display:flex}
+.modal .box{max-width:760px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;position:relative}
+.modal .box h2{font-size:1.8rem;margin-bottom:10px;color:var(--yel)}
+.modal .box h3{color:var(--tea);margin:16px 0 6px;font-size:1.2rem}
+.modal .box p,.modal .box li{line-height:1.5;color:#e6dcfb}
+.modal .close{position:absolute;right:14px;top:14px}
+table.pts{border-collapse:collapse;margin-top:6px;font-weight:800}
+table.pts td,table.pts th{border:1px solid var(--line);padding:4px 9px;text-align:center}
+table.pts th{color:var(--mute);font-size:.8rem}
+.win{text-align:center;padding:20px}
+.win h2{font-size:2.6rem;color:var(--yel)}
+.podium{display:flex;flex-direction:column;gap:6px;max-width:360px;margin:16px auto}
+.confetti{position:fixed;top:-10px;width:10px;height:14px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <div class="mini-dice" id="logoDice"></div>
+      <h1>Qui dés mieux ?</h1>
+    </div>
+    <div class="top-actions">
+      <button class="ghost sm" id="btnRules">📖 Règles</button>
+      <button class="ghost sm" id="btnCards">🃏 Les 55 cartes</button>
+      <button class="ghost sm" id="btnNew" style="display:none">↺ Nouvelle partie</button>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <section id="setup">
+    <div class="panel setup-card">
+      <h2 class="title" style="font-size:1.6rem;margin-bottom:4px">Nouvelle partie</h2>
+      <p style="color:var(--mute);margin:0 0 14px">Choisis le nombre de joueurs, leurs noms, et qui est humain ou ordinateur.</p>
+      <div class="row" id="nbRow"></div>
+      <div id="playerRows" style="margin-top:8px"></div>
+      <div class="opts">
+        <label>Score à atteindre
+          <select id="optTarget"><option>20</option><option selected>30</option><option>40</option><option>50</option></select>
+        </label>
+        <label>Vitesse de l'ordinateur
+          <select id="optSpeed"><option value="1400">Lente</option><option value="850" selected>Normale</option><option value="350">Rapide</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="optHelp"> Afficher les chances de réussite (aide)</label>
+      </div>
+      <div style="margin-top:18px;display:flex;justify-content:flex-end">
+        <button id="btnStart" style="font-size:1.25rem">🎲 Lancer la partie</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game">
+    <div class="layout">
+      <aside class="panel">
+        <h3>Joueurs</h3>
+        <div id="players"></div>
+        <div class="hint" id="targetInfo"></div>
+      </aside>
+
+      <main class="center">
+        <div class="panel">
+          <div class="stage">
+            <div id="cardSlot"></div>
+            <div>
+              <div class="round-info" id="roundInfo"></div>
+              <div class="desc" id="cardDesc"></div>
+              <div class="legend">Même lettre = même valeur · lettres différentes = valeurs différentes · <b>—</b> pair · <b>∿</b> impair · <b>✕</b> valeur interdite</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel action" id="action"></div>
+        <div class="panel">
+          <div class="tray" id="tray"></div>
+          <div class="rollbar" id="rollbar"></div>
+        </div>
+      </main>
+
+      <aside style="display:flex;flex-direction:column;gap:14px">
+        <div class="panel">
+          <h3>Piste d'enchères</h3>
+          <div class="thead"><span>Lanc.</span><span></span><span title="Points de l'équipe qui réussit">Défi</span><span title="Points des sceptiques si échec">Scept.</span></div>
+          <div class="track" id="track"></div>
+        </div>
+        <div class="panel">
+          <h3>Journal</h3>
+          <div class="log" id="log"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="mRules"><div class="box">
+  <button class="ghost sm close" data-close>✕</button>
+  <h2>Règles — Qui dés mieux ?</h2>
+  <p>À chaque manche, une carte <b>Défi</b> est révélée. Il faut la réaliser avec les <b>6 dés</b>. Les joueurs parient sur le <b>nombre minimum de lancers</b> nécessaires.</p>
+  <h3>1. Les enchères</h3>
+  <ul>
+    <li>Le premier joueur (il tourne à chaque manche) annonce un nombre de lancers entre 10 et 1.</li>
+    <li>Chacun à son tour peut <b>rester</b> (il accepte le nombre annoncé et rejoint l'équipe du défi), <b>surenchérir</b> (annoncer moins de lancers) ou <b>quitter</b> la manche (il devient <b>sceptique</b>).</li>
+    <li>Quand quelqu'un surenchérit, ceux qui étaient restés doivent se prononcer à nouveau.</li>
+    <li>Les enchères s'arrêtent quand tous les joueurs restants acceptent l'annonce.</li>
+  </ul>
+  <h3>2. Les deux camps</h3>
+  <p>Ceux qui restent forment l'<b>équipe du défi</b> ; le dernier à avoir surenchéri tient les dés. Ceux qui ont quitté sont les <b>sceptiques</b> : ils parient sur l'échec.</p>
+  <h3>3. Le lancer</h3>
+  <p>On lance les 6 dés, on garde ceux qui arrangent (clic sur un dé pour le garder ou le libérer) et on relance les autres, dans la limite du nombre de lancers annoncé. Le défi est vérifié automatiquement après chaque lancer.</p>
+  <h3>4. Les points (piste du plateau)</h3>
+  <p>Réussite : chaque membre de l'équipe marque les points « Défi ». Échec : chaque sceptique marque les points « Scept. ». S'il n'y a aucun sceptique et que le défi échoue, personne ne marque.</p>
+  <table class="pts" id="ptsTable"></table>
+  <p>Le premier joueur qui atteint le score choisi gagne (en fin de manche ; en cas d'égalité, la victoire est partagée).</p>
+  <h3>Les cartes Défi</h3>
+  <ul>
+    <li><b>Dés dessinés</b> : valeurs exactes à obtenir.</li>
+    <li><b>Lettres</b> : même lettre = même nombre, lettres différentes = nombres différents. <b>A+1</b> = la valeur de A plus 1.</li>
+    <li><b>—</b> n'importe quel nombre pair, <b>∿</b> n'importe quel nombre impair (une lettre colorée avec ∿ = impairs identiques).</li>
+    <li><b>Dé barré ✕</b> : cette valeur ne doit apparaître sur aucun dé.</li>
+    <li><b>Pile de dés</b> : un brelan (3 dés identiques). <b>1·2·3</b> / <b>4·5·6</b> : un dé de cette plage.</li>
+    <li><b>Cases reliées</b> : une suite de valeurs consécutives.</li>
+    <li><b>Nombre seul</b> : la somme des 6 dés doit valoir ce total ; <b>&lt;</b> / <b>&gt;</b> : inférieure / supérieure ; <b>20-25</b> : comprise entre ; <b>÷3</b> : divisible par 3.</li>
+    <li><b>□+□+□ = 10</b> : deux groupes de 3 dés, chacun avec la somme indiquée.</li>
+  </ul>
+</div></div>
+
+<div class="modal" id="mCards"><div class="box" style="max-width:1100px">
+  <button class="ghost sm close" data-close>✕</button>
+  <h2>Les 55 cartes Défi</h2>
+  <p style="color:var(--mute)">Le pourcentage indique la chance de réussir en 3 lancers avec un jeu optimal.</p>
+  <div id="allCards" style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center"></div>
+</div></div>
+
+<div class="modal" id="mWin"><div class="box win" id="winBox"></div></div>
+
+<script>
+/* =========================================================
+   Données
+   ========================================================= */
+const PTS={1:[12,6],2:[10,5],3:[9,4],4:[8,4],5:[7,4],6:[6,3],7:[5,2],8:[4,2],9:[3,2],10:[2,1]}; // [équipe, sceptiques]
+const COLORS=['#f5d90a','#ff8a1f','#d6187a','#2fb9b9','#f4f1ea'];
+const COLOR_NAMES=['Jaune','Orange','Magenta','Turquoise','Blanc'];
+const BOT_NAMES=['Dédé','Robocube','Lady Lucky','Max Hasard','Brelanator'];
+const P=(...a)=>({t:'pat',p:a});
+const CARDS=[
+  {t:'div',n:3},{t:'div',n:5},{t:'div',n:10},
+  P('L','L','L','L','L','L'), P('H','H','H','H','H','H'),
+  {t:'pat',p:['x','x','x','H','H','H'],disp:['STACK','H','H','H']},
+  {t:'pat',p:['x','x','x','L','L','L'],disp:['STACK','L','L','L']},
+  {t:'forbid',v:[2,3,4,5]},{t:'suite',n:3},
+  P('A','A','A','A','A','A'), P('1','2','3','4','5','6'), P('1','1','1','A','B','C'), P('2','3','A','2','3','B'),
+  {t:'tri',s:[10,10]},{t:'tri',s:[15,6]},
+  P('A','B','1','A','B','6'), {t:'forbid',v:[1,6]}, {t:'suite',n:2}, P('E','O','O','E','O','O'),
+  {t:'pat',p:['x','x','x','y','y','y'],disp:['STACK','STACK']},
+  P('Ao','Ao','Ao','Bo','Bo','Bo'), {t:'forbid',v:[4]}, P('1','2','A','1','2','A'),
+  P('1','1','2','A','A','A'), P('3','3','5','3','3','5'), P('1','1','1','1','1','6'), P('A','A','A','B','B','B'),
+  P('A','A','A','A+1','A+1','A+1'), P('4','4','4','4','4','4'), P('2','2','2','2','2','A'), P('6','6','A','6','6','A'),
+  P('5','5','5','A','B','B'), P('A','A','B','A','A','B'), P('A','A','1','A','A','1'), P('A','A','A','3','3','3'),
+  P('A','A','3','B','B','4'), P('A','B','1','A','B','1'), P('3','3','A','3','3','B'), P('A','B','C','A','B','C'),
+  P('A','B','C','A','C','C'), P('A','A','A','A','B','C'), P('5','B','C','A','B','C'), P('5','B','C','A','A','A'),
+  P('4','A','A','C','B','B'), P('4','4','4','3','3','3'), P('E','E','E','E','E','E'), P('O','O','O','O','O','O'),
+  {t:'sum',n:10},{t:'sum',n:25},{t:'lt',n:12},{t:'gt',n:30},{t:'range',a:20,b:25},{t:'sum',n:15},{t:'sum',n:20},{t:'sum',n:30}
+];
+CARDS.forEach((c,i)=>c.id=i);
+
+/* =========================================================
+   Vérification des défis (sur un tableau de comptes c[1..6])
+   ========================================================= */
+function parseTok(s){
+  if(/^[1-6]$/.test(s)) return {num:+s,o:0};
+  if(s==='E') return {set:[2,4,6],o:1};
+  if(s==='O') return {set:[1,3,5],o:1};
+  if(s==='L') return {set:[1,2,3],o:1};
+  if(s==='H') return {set:[4,5,6],o:1};
+  if(s==='A+1') return {plus:'A',o:3};
+  if(/^[ABC]o$/.test(s)) return {let:s[0],dist:true,set:[1,3,5],o:2};
+  if(/^[ABC]$/.test(s)) return {let:s,dist:true,o:2};
+  if(/^[xy]$/.test(s)) return {let:s,dist:false,o:2};
+  throw new Error('token '+s);
+}
+function matchPattern(toks,c){
+  const cnt=c.slice(); const bind={};
+  function ok(t,v){
+    if(t.num) return v===t.num;
+    if(t.plus) return bind[t.plus]!==undefined && v===bind[t.plus]+1;
+    if(t.set && !t.set.includes(v)) return false;
+    if(t.let){
+      if(bind[t.let]!==undefined) return bind[t.let]===v;
+      if(t.dist){ for(const k of 'ABC') if(k!==t.let && bind[k]===v) return false; }
+    }
+    return true;
+  }
+  function rec(i){
+    if(i===toks.length) return true;
+    const t=toks[i];
+    for(let v=1;v<=6;v++){
+      if(cnt[v]===0||!ok(t,v)) continue;
+      const newBind = t.let && bind[t.let]===undefined;
+      cnt[v]--; if(newBind) bind[t.let]=v;
+      const r=rec(i+1);
+      cnt[v]++; if(newBind) delete bind[t.let];
+      if(r) return true;
+    }
+    return false;
+  }
+  return rec(0);
+}
+function sumOf(c){let s=0;for(let v=1;v<=6;v++)s+=v*c[v];return s;}
+function diceFromCounts(c){const d=[];for(let v=1;v<=6;v++)for(let i=0;i<c[v];i++)d.push(v);return d;}
+function makeCheck(card){
+  switch(card.t){
+    case 'pat':{const toks=card.p.map(parseTok).sort((a,b)=>a.o-b.o);return c=>matchPattern(toks,c);}
+    case 'div': return c=>sumOf(c)%card.n===0;
+    case 'sum': return c=>sumOf(c)===card.n;
+    case 'lt': return c=>sumOf(c)<card.n;
+    case 'gt': return c=>sumOf(c)>card.n;
+    case 'range': return c=>{const s=sumOf(c);return s>=card.a&&s<=card.b;};
+    case 'forbid': return c=>card.v.every(v=>c[v]===0);
+    case 'suite': return c=>{for(let v=1;v+card.n-1<=6;v++){let ok=true;for(let k=0;k<card.n;k++)if(!c[v+k]){ok=false;break;}if(ok)return true;}return false;};
+    case 'tri': return c=>{
+      const d=diceFromCounts(c);const tot=d.reduce((a,b)=>a+b,0);
+      if(tot!==card.s[0]+card.s[1]) return false;
+      for(let i=0;i<6;i++)for(let j=i+1;j<6;j++)for(let k=j+1;k<6;k++) if(d[i]+d[j]+d[k]===card.s[0]) return true;
+      return false;};
+  }
+}
+const NUMW=['','un','deux','trois','quatre','cinq','six'];
+function describe(card){
+  switch(card.t){
+    case 'div': return `La somme des 6 dés doit être divisible par ${card.n}.`;
+    case 'sum': return `La somme des 6 dés doit faire exactement ${card.n}.`;
+    case 'lt': return `La somme des 6 dés doit être inférieure à ${card.n}.`;
+    case 'gt': return `La somme des 6 dés doit être supérieure à ${card.n}.`;
+    case 'range': return `La somme des 6 dés doit être comprise entre ${card.a} et ${card.b}.`;
+    case 'forbid': return card.v.length===1?`Aucun dé ne doit montrer un ${card.v[0]}.`:`Aucun dé ne doit montrer ${card.v.slice(0,-1).join(', ')} ou ${card.v.at(-1)}.`;
+    case 'suite': return card.n===3?`Obtenir une suite de 3 valeurs consécutives (ex. 2-3-4).`:`Obtenir 2 valeurs consécutives (ex. 4-5).`;
+    case 'tri': return `Former deux groupes de 3 dés : l'un de somme ${card.s[0]}, l'autre de somme ${card.s[1]}.`;
+  }
+  const p=card.p, parts=[]; const cnt={};
+  p.forEach(t=>cnt[t]=(cnt[t]||0)+1);
+  const nums=Object.keys(cnt).filter(k=>/^[1-6]$/.test(k)).sort();
+  if(nums.length) parts.push(nums.map(n=>`${NUMW[cnt[n]]} ${n}`).join(', '));
+  if(cnt.x&&cnt.y) parts.push('deux brelans');
+  else if(cnt.x) parts.push('un brelan (3 dés identiques)');
+  const setName={E:'pair',O:'impair',L:'entre 1 et 3',H:'entre 4 et 6'};
+  for(const k of ['E','O','L','H']) if(cnt[k]) parts.push(`${NUMW[cnt[k]]} dé${cnt[k]>1?'s':''} ${setName[k]}${cnt[k]>1&&k!=='L'&&k!=='H'?'s':''}`);
+  for(const L of ['A','B','C']){
+    const n=cnt[L]||0, no=cnt[L+'o']||0;
+    if(n) parts.push(n===1?`un dé ${L}`:`${NUMW[n]} dés identiques (${L})`);
+    if(no) parts.push(`${NUMW[no]} impairs identiques (${L})`);
+  }
+  if(cnt['A+1']) parts.push(`${NUMW[cnt['A+1']]} dés valant A+1`);
+  let s='Obtenir '+parts.join(' + ')+'.';
+  const letters=['A','B','C'].filter(L=>cnt[L]||cnt[L+'o']);
+  if(letters.length>1) s+=' Lettres différentes = valeurs différentes.';
+  if(card.p.every(t=>t==='A')) s='Obtenir six dés identiques.';
+  if(card.p.join()==='1,2,3,4,5,6') s='Obtenir la grande suite 1-2-3-4-5-6.';
+  return s;
+}
+
+/* =========================================================
+   Solveur exact (programmation dynamique sur les multi-ensembles)
+   ========================================================= */
+const POW=[1,7,49,343,2401,16807];
+const FACT=[1,1,2,6,24,120,720];
+function keyOf(c){let k=0;for(let v=1;v<=6;v++)k+=c[v]*POW[v-1];return k;}
+function genMS(m){const out=[];const c=[0,0,0,0,0,0,0];(function rec(v,left){if(v===6){c[6]=left;out.push(c.slice());c[6]=0;return;}for(let i=0;i<=left;i++){c[v]=i;rec(v+1,left-i);}c[v]=0;})(1,m);return out;}
+const MS=[];
+for(let m=0;m<=6;m++) MS[m]=genMS(m).map(c=>{let w=FACT[m];for(let v=1;v<=6;v++)w/=FACT[c[v]];return {c,k:keyOf(c),p:w/Math.pow(6,m),n:m};});
+const ALLK=[].concat(...MS);
+// sous-multi-ensembles de chaque main de 6
+const SUBS=new Map();
+for(const D of MS[6]){
+  const subs=[];const c=[0,0,0,0,0,0,0];
+  (function rec(v){if(v>6){subs.push({k:keyOf(c),n:c.reduce((a,b)=>a+b,0)});return;}for(let i=0;i<=D.c[v];i++){c[v]=i;rec(v+1);}c[v]=0;})(1);
+  SUBS.set(D.k,subs);
+}
+const SOLVE_CACHE={};
+function solve(card){
+  if(SOLVE_CACHE[card.id]) return SOLVE_CACHE[card.id];
+  const chk=makeCheck(card);
+  const S=new Map(); for(const D of MS[6]) S.set(D.k,chk(D.c));
+  const W=[]; const Q=[null];
+  W[0]=new Map(); for(const D of MS[6]) W[0].set(D.k,S.get(D.k)?1:0);
+  for(let r=1;r<=9;r++){
+    const q=new Map();
+    for(const K of ALLK){let e=0;for(const o of MS[6-K.n]) e+=o.p*W[r-1].get(K.k+o.k);q.set(K.k,e);}
+    Q[r]=q;
+    const w=new Map();
+    for(const D of MS[6]){
+      if(S.get(D.k)){w.set(D.k,1);continue;}
+      let best=0;for(const s of SUBS.get(D.k)){const v=q.get(s.k);if(v>best)best=v;}
+      w.set(D.k,best);
+    }
+    W[r]=w;
+  }
+  const prob={};
+  for(let b=1;b<=10;b++){let e=0;for(const D of MS[6]) e+=D.p*W[b-1].get(D.k);prob[b]=e;}
+  return SOLVE_CACHE[card.id]={S,W,Q,prob,chk};
+}
+function countsOf(dice){const c=[0,0,0,0,0,0,0];dice.forEach(v=>c[v]++);return c;}
+// meilleur choix de dés à garder, r = relances restantes (>=1)
+function bestKeep(sol,dice,r){
+  const D=countsOf(dice); const subs=SUBS.get(keyOf(D));
+  let best=null;
+  for(const s of subs){const v=sol.Q[r].get(s.k); if(!best||v>best.v+1e-12||(Math.abs(v-best.v)<=1e-12&&s.n>best.n)) best={v,k:s.k,n:s.n};}
+  const need=[0,0,0,0,0,0,0];let k=best.k;for(let v=1;v<=6;v++){need[v]=k%7;k=Math.floor(k/7);}
+  const keep=dice.map(v=>{if(need[v]>0){need[v]--;return true;}return false;});
+  return {keep,p:best.v};
+}
+
+/* =========================================================
+   Rendu des cartes
+   ========================================================= */
+const PIPS={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function pips(n){let h='<div class="pips">';for(let i=0;i<9;i++)h+=`<b class="${n&&PIPS[n].includes(i)?'on':''}"></b>`;return h+'</div>';}
+function tile(t){
+  if(/^[1-6]$/.test(t)) return `<div class="tile">${pips(+t)}</div>`;
+  if(/^[ABC]$/.test(t)) return `<div class="tile L-${t}">${t}</div>`;
+  if(/^[ABC]o$/.test(t)) return `<div class="tile L-${t[0]}" style="font-size:1.6rem">∿</div>`;
+  if(t==='E') return `<div class="tile" style="font-size:1.6rem">—</div>`;
+  if(t==='O') return `<div class="tile" style="font-size:1.6rem">∿</div>`;
+  if(t==='L') return `<div class="tile tri"><span>1</span><span>2</span><span>3</span></div>`;
+  if(t==='H') return `<div class="tile tri"><span>4</span><span>5</span><span>6</span></div>`;
+  if(t==='A+1') return `<div class="tile L-B small">A+1</div>`;
+  if(t==='STACK') return `<div class="stack"><i></i><i></i><i></i></div>`;
+  return `<div class="tile">?</div>`;
+}
+function cardHTML(card,extra=''){
+  let inner='';
+  switch(card.t){
+    case 'div': inner=`<div class="big">÷${card.n}</div>`;break;
+    case 'sum': inner=`<div class="big">${card.n}</div>`;break;
+    case 'lt': inner=`<div class="big">&lt;${card.n}</div>`;break;
+    case 'gt': inner=`<div class="big">&gt;${card.n}</div>`;break;
+    case 'range': inner=`<div class="big" style="font-size:2.7rem">${card.a}-${card.b}</div>`;break;
+    case 'forbid':{
+      const vs=card.v; const cls=vs.length===4?'grid3" style="grid-template-columns:repeat(2,44px)':'rowflex';
+      inner=`<div class="${cls}">${vs.map(v=>`<div class="tile">${pips(v)}<span class="x">✕</span></div>`).join('')}</div>`;break;}
+    case 'suite':{
+      const arr=[];for(let i=0;i<card.n;i++){arr.push('<div class="tile"></div>');if(i<card.n-1)arr.push('<div class="link"></div>');}
+      inner=`<div class="rowflex" style="gap:0">${arr.join('')}</div>`;break;}
+    case 'tri':{
+      const line=s=>`<div class="sumline"><div class="tile"></div>+<div class="tile"></div>+<div class="tile"></div>=${s}</div>`;
+      inner=`<div style="display:flex;flex-direction:column;gap:6px">${line(card.s[0])}${line(card.s[1])}</div>`;break;}
+    case 'pat':
+      if(card.disp) inner=`<div class="rowflex">${card.disp.map(tile).join('')}</div>`;
+      else inner=`<div class="grid3">${card.p.map(tile).join('')}</div>`;
+      break;
+  }
+  return `<div class="ccard ${extra}">${inner}</div>`;
+}
+
+/* =========================================================
+   État & utilitaires
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const rnd=n=>1+Math.floor(Math.random()*n);
+let G=null; let TOKEN=0;
+class Cancel extends Error{}
+function sleep(ms){const t=TOKEN;return new Promise((res,rej)=>setTimeout(()=>t===TOKEN?res():rej(new Cancel()),ms));}
+function guard(){ if(!G||G.token!==TOKEN) throw new Cancel(); }
+
+let setup={n:3,players:[]};
+function defaultPlayers(){
+  let saved=null; try{saved=JSON.parse(localStorage.getItem('qdm_setup')||'null');}catch(e){}
+  const arr=[];
+  for(let i=0;i<5;i++) arr.push(saved&&saved.players&&saved.players[i]?saved.players[i]:{name:i===0?'Joueur 1':BOT_NAMES[i],bot:i!==0});
+  if(saved&&saved.n) setup.n=saved.n;
+  return arr;
+}
+setup.players=defaultPlayers();
+
+function renderSetup(){
+  $('#nbRow').innerHTML='<b style="color:var(--mute);margin-right:6px">Joueurs :</b>'+[2,3,4,5].map(n=>`<button class="nbtn ${n===setup.n?'on':''}" data-n="${n}">${n}</button>`).join('');
+  let h='';
+  for(let i=0;i<setup.n;i++){
+    const p=setup.players[i];
+    h+=`<div class="prow">
+      <span class="cube" style="background:${COLORS[i]}" title="${COLOR_NAMES[i]}"></span>
+      <input data-i="${i}" maxlength="18" value="${esc(p.name)}" placeholder="Nom du joueur ${i+1}">
+      <div class="seg"><button data-i="${i}" data-bot="0" class="${!p.bot?'on':''}">👤 Joueur</button><button data-i="${i}" data-bot="1" class="${p.bot?'on':''}">🤖 Ordinateur</button></div>
+    </div>`;
+  }
+  $('#playerRows').innerHTML=h;
+}
+$('#nbRow').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;setup.n=+b.dataset.n;renderSetup();});
+$('#playerRows').addEventListener('input',e=>{if(e.target.matches('input'))setup.players[+e.target.dataset.i].name=e.target.value;});
+$('#playerRows').addEventListener('click',e=>{const b=e.target.closest('[data-bot]');if(!b)return;const p=setup.players[+b.dataset.i];p.bot=b.dataset.bot==='1';if(p.bot&&/^Joueur \d$/.test(p.name))p.name=BOT_NAMES[+b.dataset.i];if(!p.bot&&BOT_NAMES.includes(p.name))p.name='Joueur '+(+b.dataset.i+1);renderSetup();});
+
+$('#btnStart').onclick=()=>{
+  try{localStorage.setItem('qdm_setup',JSON.stringify(setup));}catch(e){}
+  startGame();
+};
+$('#btnNew').onclick=()=>{TOKEN++;G=null;$('#game').style.display='none';$('#setup').style.display='block';$('#btnNew').style.display='none';renderSetup();};
+
+/* =========================================================
+   Partie
+   ========================================================= */
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startGame(){
+  TOKEN++;
+  G={token:TOKEN,
+    players:setup.players.slice(0,setup.n).map((p,i)=>({name:(p.name||'').trim()||('Joueur '+(i+1)),bot:p.bot,color:COLORS[i],score:0})),
+    target:+$('#optTarget').value, speed:+$('#optSpeed').value, help:$('#optHelp').checked,
+    deck:shuffle(CARDS.map(c=>c.id)), discard:[], round:0, starter:Math.floor(Math.random()*setup.n),
+    card:null, sol:null, phase:'idle', bid:null, team:new Set(), skep:new Set(), lead:null, turn:null,
+    dice:[0,0,0,0,0,0], held:[false,false,false,false,false,false], rolls:0, logs:[]};
+  $('#setup').style.display='none';$('#game').style.display='block';$('#btnNew').style.display='';
+  $('#log').innerHTML='';
+  log(`Nouvelle partie à <b>${G.players.length}</b> joueurs — premier à <b>${G.target}</b> points.`);
+  gameLoop().catch(e=>{if(!(e instanceof Cancel))console.error(e);});
+}
+function log(html){const d=document.createElement('div');d.innerHTML=html;const l=$('#log');l.prepend(d);}
+const PN=i=>`<b style="color:${G.players[i].color==='#f4f1ea'?'#fff':G.players[i].color}">${esc(G.players[i].name)}</b>`;
+
+async function gameLoop(){
+  while(true){
+    await playRound();
+    guard();
+    const max=Math.max(...G.players.map(p=>p.score));
+    if(max>=G.target){showWinner();return;}
+    await waitButton('Manche suivante ▶');
+    G.starter=(G.starter+1)%G.players.length;
+  }
+}
+
+function drawCard(){
+  if(!G.deck.length){G.deck=shuffle(G.discard);G.discard=[];log('Le paquet est mélangé à nouveau.');}
+  const id=G.deck.pop();G.discard.push(id);return CARDS[id];
+}
+
+async function playRound(){
+  G.round++; G.phase='reveal'; G.bid=null; G.team=new Set(); G.skep=new Set(); G.lead=null; G.turn=null;
+  G.dice=[0,0,0,0,0,0]; G.held=Array(6).fill(false); G.rolls=0;
+  G.card=drawCard(); G.sol=solve(G.card);
+  renderAll(true);
+  log(`— Manche ${G.round} : ${esc(describe(G.card))}`);
+  await sleep(500);
+  await bidding();
+  await rolling();
+  await resolveRound();
+}
+
+/* ---------- Enchères ---------- */
+function nextPending(from){
+  const n=G.players.length;
+  for(let i=1;i<=n;i++){const q=(from+i)%n;if(G.team.has(q)&&!G.accepted.has(q))return q;}
+  return null;
+}
+async function bidding(){
+  G.phase='bid';
+  const n=G.players.length;
+  G.team=new Set(G.players.map((_,i)=>i)); G.accepted=new Set();
+  // ouverture
+  let p=G.starter; G.turn=p; renderAll();
+  const open=await askOpen(p); guard();
+  G.bid=open; G.lead=p; G.accepted.add(p);
+  log(`${PN(p)} annonce <b>${open}</b> lancer${open>1?'s':''}.`);
+  renderAll();
+  let cur=nextPending(p);
+  while(cur!==null){
+    G.turn=cur; renderAll();
+    const act=await askRespond(cur); guard();
+    if(act.type==='stay'){G.accepted.add(cur);log(`${PN(cur)} reste à <b>${G.bid}</b>.`);}
+    else if(act.type==='quit'){G.team.delete(cur);G.skep.add(cur);log(`${PN(cur)} quitte la manche et devient sceptique.`);}
+    else {G.bid=act.b;G.lead=cur;G.accepted=new Set([cur]);log(`${PN(cur)} surenchérit : <b>${act.b}</b> lancer${act.b>1?'s':''} !`);}
+    renderAll();
+    cur=nextPending(cur);
+  }
+  G.turn=null;
+  const teamNames=[...G.team].map(PN).join(', ');
+  log(`Équipe du défi (${G.bid} lancer${G.bid>1?'s':''}) : ${teamNames}${G.skep.size?' · Sceptiques : '+[...G.skep].map(PN).join(', '):''}`);
+}
+function noisy(x,amp=.22){return x*(1+(Math.random()*2-1)*amp);}
+function aiOpen(){
+  const pr=G.sol.prob; let best=10,bv=-1;
+  for(let b=1;b<=10;b++){const v=noisy(pr[b]*PTS[b][0]);if(v>bv){bv=v;best=b;}}
+  // un peu de prudence à l'ouverture : on laisse de la marge
+  if(best<10&&Math.random()<.4)best++;
+  return best;
+}
+function aiRespond(i){
+  const pr=G.sol.prob, cb=G.bid;
+  const opts=[];
+  opts.push({type:'stay',v:noisy(pr[cb]*PTS[cb][0])});
+  opts.push({type:'quit',v:noisy((1-pr[cb])*PTS[cb][1])});
+  for(let b=1;b<cb;b++) opts.push({type:'lower',b,v:noisy(pr[b]*PTS[b][0],.18)-0.15});
+  opts.sort((a,b)=>b.v-a.v);
+  return opts[0];
+}
+async function askOpen(p){
+  if(G.players[p].bot){renderThinking(p,'réfléchit à son annonce');await sleep(G.speed*1.2);return aiOpen();}
+  return new Promise(res=>{
+    const pr=G.sol.prob;
+    $('#action').innerHTML=whoHTML(p,'ouvre les enchères')+
+      `<div class="hint" style="margin:0 0 8px">Combien de lancers te faut-il pour réussir ce défi ?</div>
+       <div class="bidgrid">${[10,9,8,7,6,5,4,3,2,1].map(b=>`<button data-b="${b}">${b}${G.help?`<span class="p">${Math.round(pr[b]*100)}%</span>`:''}</button>`).join('')}</div>`;
+    $('#action').querySelectorAll('[data-b]').forEach(btn=>btn.onclick=()=>res(+btn.dataset.b));
+  });
+}
+async function askRespond(p){
+  if(G.players[p].bot){renderThinking(p,'réfléchit');await sleep(G.speed);return aiRespond(p);}
+  return new Promise(res=>{
+    const pr=G.sol.prob, cb=G.bid;
+    const lower=[];for(let b=cb-1;b>=1;b--)lower.push(b);
+    $('#action').innerHTML=whoHTML(p,'à toi de jouer')+
+      `<div class="hint" style="margin:0 0 10px">Annonce actuelle : <b style="color:var(--yel)">${cb} lancer${cb>1?'s':''}</b> par ${PN(G.lead)}.</div>
+      <div class="choices">
+        <div><button data-a="stay" style="width:100%">✔ Je reste (${cb})</button><div class="hint">Réussite : +${PTS[cb][0]} pts${G.help?` · chances ${Math.round(pr[cb]*100)}%`:''}</div></div>
+        <div><button data-a="quit" class="pin" style="width:100%">✋ Je quitte</button><div class="hint">Sceptique — si échec : +${PTS[cb][1]} pts</div></div>
+        <div style="flex-basis:100%"><div class="hint" style="margin:0 0 6px">${lower.length?'… ou je surenchéris (moins de lancers, et c\'est moi qui lance) :':'Impossible de surenchérir sous 1 lancer.'}</div>
+          <div class="bidgrid">${lower.map(b=>`<button class="tea" data-b="${b}">${b}${G.help?`<span class="p">${Math.round(pr[b]*100)}%</span>`:''}</button>`).join('')}</div></div>
+      </div>`;
+    $('#action').querySelector('[data-a=stay]').onclick=()=>res({type:'stay'});
+    $('#action').querySelector('[data-a=quit]').onclick=()=>res({type:'quit'});
+    $('#action').querySelectorAll('[data-b]').forEach(btn=>btn.onclick=()=>res({type:'lower',b:+btn.dataset.b}));
+  });
+}
+function whoHTML(p,txt){return `<div class="who"><span class="cube" style="background:${G.players[p].color}"></span>${esc(G.players[p].name)} <span style="font-size:1rem;color:var(--mute);font-family:Nunito">— ${txt}</span></div>`;}
+function renderThinking(p,txt){$('#action').innerHTML=whoHTML(p,'ordinateur')+`<div class="thinking">${esc(G.players[p].name)} ${txt}<span class="dots"><i></i><i></i><i></i></span></div>`;}
+
+/* ---------- Lancers ---------- */
+async function animateRoll(){
+  const idx=[0,1,2,3,4,5].filter(i=>!G.held[i]);
+  const els=[...document.querySelectorAll('#tray .die')];
+  idx.forEach(i=>els[i]&&els[i].classList.add('rolling'));
+  for(let f=0;f<7;f++){idx.forEach(i=>{if(els[i])els[i].innerHTML=pips(rnd(6));});await sleep(65);}
+  idx.forEach(i=>G.dice[i]=rnd(6));
+  G.rolls++;
+}
+async function rolling(){
+  G.phase='roll';
+  const lead=G.lead, bot=G.players[lead].bot;
+  G.held=Array(6).fill(false);
+  while(true){
+    renderAll();
+    if(G.rolls>0){
+      const ok=G.sol.chk(countsOf(G.dice));
+      if(ok){G.success=true;return;}
+      if(G.rolls>=G.bid){G.success=false;return;}
+    }
+    if(bot){
+      if(G.rolls>0){
+        renderRollPanel(true);
+        await sleep(G.speed);
+        const {keep}=bestKeep(G.sol,G.dice,G.bid-G.rolls);
+        G.held=keep; renderAll(); renderRollPanel(true);
+        await sleep(G.speed);
+      } else { renderRollPanel(true); await sleep(G.speed*.8); }
+    } else {
+      await new Promise(res=>{G._rollRes=res;renderRollPanel(false);});
+      guard();
+    }
+    if(G.held.every(h=>h)) G.held=Array(6).fill(false);
+    await animateRoll();
+  }
+}
+function renderRollPanel(isBot){
+  const lead=G.lead, left=G.bid-G.rolls;
+  let h=whoHTML(lead,isBot?'lance les dés':'à toi de lancer');
+  if(isBot) h+=`<div class="thinking">${G.rolls===0?'Premier lancer…':'Choisit les dés à garder…'}<span class="dots"><i></i><i></i><i></i></span></div>`;
+  else h+=`<div class="hint" style="margin:0">${G.rolls===0?'Lance les 6 dés !':'Clique sur les dés à garder, puis relance les autres.'} Il reste <b style="color:var(--yel)">${left}</b> lancer${left>1?'s':''}.</div>`;
+  $('#action').innerHTML=h;
+  renderRollbar(isBot);
+}
+function renderRollbar(isBot){
+  const rb=$('#rollbar');
+  if(G.phase!=='roll'){rb.innerHTML='';return;}
+  let dots='';for(let i=0;i<G.bid;i++)dots+=`<i class="${i<G.rolls?'used':''}"></i>`;
+  let prob='';
+  if(G.help&&G.rolls>0&&G.bid-G.rolls>0){
+    const W=G.sol.W[G.bid-G.rolls].get(keyOf(countsOf(G.dice)));
+    prob=`<span class="prob">Chances avec jeu optimal : ${Math.round(W*100)}%</span>`;
+  } else if(G.help&&G.rolls===0){prob=`<span class="prob">Chances : ${Math.round(G.sol.prob[G.bid]*100)}%</span>`;}
+  rb.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="color:var(--mute);font-weight:800">Lancers</span><div class="rollcount">${dots}</div></div>${prob}
+    ${isBot?'':`<div style="display:flex;gap:8px">${G.help&&G.rolls>0?'<button class="ghost sm" id="btnSug">💡 Conseil</button>':''}<button id="btnRoll">${G.rolls===0?'🎲 Lancer':'🎲 Relancer'}</button></div>`}`;
+  const br=$('#btnRoll'); if(br) br.onclick=()=>{const r=G._rollRes;G._rollRes=null;r&&r();};
+  const bs=$('#btnSug'); if(bs) bs.onclick=()=>{const {keep}=bestKeep(G.sol,G.dice,G.bid-G.rolls);document.querySelectorAll('#tray .die').forEach((d,i)=>d.classList.toggle('sug',keep[i]));};
+}
+function renderTray(){
+  const canClick=G.phase==='roll'&&G._rollRes&&G.rolls>0;
+  $('#tray').innerHTML=G.dice.map((v,i)=>`<div class="die ${v?'':'blank'} ${G.held[i]?'held':''} ${canClick?'click':''}" data-i="${i}">${pips(v||0)}</div>`).join('');
+}
+$('#tray').addEventListener('click',e=>{
+  const d=e.target.closest('.die');if(!d||!G||G.phase!=='roll'||!G._rollRes||G.rolls===0)return;
+  const i=+d.dataset.i;G.held[i]=!G.held[i];renderTray();
+});
+
+/* ---------- Résolution ---------- */
+async function resolveRound(){
+  G.phase='result';
+  const b=G.bid; const gains=[];
+  if(G.success){
+    G.team.forEach(i=>{G.players[i].score+=PTS[b][0];gains.push([i,PTS[b][0]]);});
+    log(`✅ Défi réussi en ${G.rolls} lancer${G.rolls>1?'s':''} ! L'équipe marque <b>${PTS[b][0]}</b> pts chacun.`);
+  } else {
+    G.skep.forEach(i=>{G.players[i].score+=PTS[b][1];gains.push([i,PTS[b][1]]);});
+    log(`❌ Défi raté.${G.skep.size?` Les sceptiques marquent <b>${PTS[b][1]}</b> pts chacun.`:' Aucun sceptique : personne ne marque.'}`);
+  }
+  renderAll();
+  $('#action').innerHTML=`<div class="banner ${G.success?'ok':'ko'}">${G.success?`Défi réussi en ${G.rolls} lancer${G.rolls>1?'s':''} !`:'Défi raté !'}</div>
+    <div class="gain">${gains.length?gains.map(([i,g])=>`<span><span class="cube" style="background:${G.players[i].color};width:16px;height:16px"></span>${esc(G.players[i].name)} +${g}</span>`).join(''):'<span>Personne ne marque</span>'}</div>
+    <div style="text-align:center;margin-top:10px" id="nextSlot"></div>`;
+  $('#rollbar').innerHTML='';
+}
+function waitButton(label){
+  return new Promise(res=>{
+    const slot=$('#nextSlot')||$('#action');
+    slot.innerHTML=`<button id="btnNext" style="font-size:1.15rem">${label}</button>`;
+    $('#btnNext').onclick=()=>res();
+    // si seulement des ordinateurs : enchaîne automatiquement
+    if(G.players.every(p=>p.bot)) setTimeout(()=>{const b=$('#btnNext');if(b)b.click();},G.speed*2.5);
+  });
+}
+function showWinner(){
+  const max=Math.max(...G.players.map(p=>p.score));
+  const winners=G.players.filter(p=>p.score===max);
+  const sorted=G.players.map((p,i)=>({...p,i})).sort((a,b)=>b.score-a.score);
+  $('#winBox').innerHTML=`<div style="font-size:3rem">🏆</div><h2>${winners.map(w=>esc(w.name)).join(' & ')} ${winners.length>1?'gagnent':'gagne'} !</h2>
+    <p style="color:var(--mute)">en ${G.round} manche${G.round>1?'s':''}</p>
+    <div class="podium">${sorted.map((p,r)=>`<div class="player"><span style="font-family:'Baloo 2';font-weight:800;width:22px">${r+1}</span><span class="cube" style="background:${p.color}"></span><span class="nm">${esc(p.name)}</span><span class="sc">${p.score}</span></div>`).join('')}</div>
+    <div style="display:flex;gap:10px;justify-content:center"><button id="wAgain">🎲 Rejouer</button><button class="ghost" id="wSetup">Changer les joueurs</button></div>`;
+  $('#mWin').classList.add('on');
+  confetti();
+  $('#wAgain').onclick=()=>{$('#mWin').classList.remove('on');startGame();};
+  $('#wSetup').onclick=()=>{$('#mWin').classList.remove('on');$('#btnNew').click();};
+}
+function confetti(){
+  const cols=[...COLORS];
+  for(let i=0;i<90;i++){
+    const c=document.createElement('div');c.className='confetti';
+    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(2+Math.random()*2.5)+'s';c.style.animationDelay=(Math.random()*.8)+'s';
+    document.body.appendChild(c);setTimeout(()=>c.remove(),5000);
+  }
+}
+
+/* ---------- Rendu général ---------- */
+function renderAll(flip=false){
+  if(!G) return;
+  // joueurs
+  $('#players').innerHTML=G.players.map((p,i)=>{
+    let tags='';
+    if(G.phase!=='reveal'&&G.bid){
+      if(G.skep.has(i)) tags=`<span class="tag skep">Sceptique</span>`;
+      else if(G.team.has(i)) tags=(G.lead===i?`<span class="tag lead">Lanceur</span> `:'')+(G.phase==='bid'&&!G.accepted.has(i)?'':`<span class="tag team">Défi</span>`);
+    }
+    const first=i===G.starter?' · 1er':'';
+    return `<div class="player ${G.turn===i||(G.phase==='roll'&&G.lead===i)?'turn':''}">
+      <span class="cube" style="background:${p.color}"></span>
+      <div class="nm">${esc(p.name)}<small>${p.bot?'🤖 Ordinateur':'👤 Joueur'}${first}</small><div style="margin-top:3px">${tags}</div>
+        <div class="bar"><i style="width:${Math.min(100,p.score/G.target*100)}%;background:${p.color}"></i></div></div>
+      <span class="sc">${p.score}</span></div>`;
+  }).join('');
+  $('#targetInfo').textContent=`Objectif : ${G.target} points`;
+  // carte
+  $('#cardSlot').innerHTML=G.card?cardHTML(G.card,flip?'flip':''):cardHTML({t:'sum',n:'?'},'back');
+  $('#roundInfo').textContent=`Manche ${G.round} · ${G.deck.length} cartes restantes`;
+  $('#cardDesc').textContent=G.card?describe(G.card):'';
+  // piste
+  let tr='';
+  for(let b=10;b>=1;b--){
+    const cur=G.bid===b;
+    const cubes=cur?[...G.team].map(i=>`<span class="cube" style="background:${G.players[i].color}"></span>`).join(''):'';
+    const pr=G.help&&G.sol?`<span style="margin-left:auto;padding-right:6px;font-weight:800">${Math.round(G.sol.prob[b]*100)}%</span>`:'';
+    tr+=`<div class="trow ${cur?'cur':''}"><span class="n">${b}</span><div class="slot"><div class="cubes">${cubes}</div>${pr}</div><span class="pt w">${PTS[b][0]}</span><span class="pt s">${PTS[b][1]}</span></div>`;
+  }
+  $('#track').innerHTML=tr;
+  renderTray();
+  if(G.phase!=='roll') $('#rollbar').innerHTML='';
+}
+
+/* ---------- Modales ---------- */
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on');}));
+$('#btnRules').onclick=()=>$('#mRules').classList.add('on');
+$('#btnCards').onclick=()=>{
+  const box=$('#allCards');
+  if(!box.dataset.done){
+    box.innerHTML=CARDS.map(c=>{const p=solve(c).prob[3];return `<div style="width:230px;text-align:center">${cardHTML(c)}<div style="font-size:.82rem;margin-top:6px;color:#e6dcfb">${esc(describe(c))}</div><div class="prob" style="font-size:.85rem">${Math.round(p*100)}% en 3 lancers</div></div>`;}).join('');
+    box.dataset.done=1;
+  }
+  $('#mCards').classList.add('on');
+};
+$('#ptsTable').innerHTML='<tr><th>Lancers</th>'+[10,9,8,7,6,5,4,3,2,1].map(b=>`<th>${b}</th>`).join('')+'</tr><tr><th>Défi réussi</th>'+[10,9,8,7,6,5,4,3,2,1].map(b=>`<td style="color:var(--yel)">${PTS[b][0]}</td>`).join('')+'</tr><tr><th>Sceptiques</th>'+[10,9,8,7,6,5,4,3,2,1].map(b=>`<td style="color:var(--pin)">${PTS[b][1]}</td>`).join('')+'</tr>';
+$('#logoDice').innerHTML=[5,2].map(v=>`<div class="die" style="width:38px;height:38px;border-radius:9px;transform:rotate(${v===5?-12:10}deg)">${pips(v)}</div>`).join('');
+
+renderSetup();
+</script>
+</body>
+</html>
