@@ -21,6 +21,8 @@ button.buy.on{background:#4cc9f0;color:#06222e;border-color:#9fe3ff}
 button.sell{background:#4b3328;border-color:#6d4a3a}
 input{font-family:inherit;font-size:15px;background:#10161a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
 .hidden{display:none!important}
+textarea.code{width:100%;height:96px;resize:vertical;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:#0b1013;color:#cfe3d3;border:1px solid var(--line);border-radius:6px;padding:8px;word-break:break-all}
+.err{color:var(--low);font-weight:700;margin-top:6px;font-size:14px}
 /* menu */
 #setup{max-width:720px;margin:0 auto;padding:28px 18px;overflow:auto;height:100%}
 .logo{text-align:center;margin-bottom:18px}
@@ -150,6 +152,12 @@ input{font-family:inherit;font-size:15px;background:#10161a;color:var(--txt);bor
     Cliquez « Acheter » sur un bâtiment, puis posez-le sur la carte près de votre base (clic droit ou Échap pour annuler). Cliquez un bâtiment posé pour le sélectionner ou le vendre.
   </div>
   <button class="primary" id="goBtn" style="width:100%;padding:14px;font-size:18px">LANCER LA PARTIE</button>
+  <div class="box" style="margin-top:12px">
+    <h3>💾 REPRENDRE UNE PARTIE</h3>
+    <textarea id="loadCode" class="code" placeholder="Collez ici votre code de sauvegarde (il commence par AR1- ou AR0-)…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="buy" id="loadBtn" style="flex:1">Restaurer la partie</button><button id="lastBtn" class="hidden">Dernier code</button></div>
+    <div class="err" id="loadErr"></div>
+  </div>
 </div>
 
 <div id="game" class="hidden">
@@ -163,6 +171,7 @@ input{font-family:inherit;font-size:15px;background:#10161a;color:var(--txt);bor
     <div class="spacer"></div>
     <div class="ctrl">
       <div class="stat" style="min-width:70px"><small>Temps</small><b id="sTime">0:00</b></div>
+      <button id="saveBtn" title="Sauvegarder / restaurer">💾 Sauvegarde</button>
       <button id="homeBtn" title="Recentrer sur ma base">🏠</button>
       <button id="sndBtn">🔊</button>
       <button id="pauseBtn">⏸ Pause</button>
@@ -208,6 +217,19 @@ input{font-family:inherit;font-size:15px;background:#10161a;color:var(--txt);bor
 <div id="overlay" class="overlay hidden"><div class="box">
   <h2 id="ovTitle">VICTOIRE</h2><p id="ovText"></p>
   <button class="primary" id="ovBtn" style="width:100%;padding:12px">Retour au menu</button>
+</div></div>
+<div id="saveModal" class="overlay hidden"><div class="box" style="max-width:600px;text-align:left">
+  <h2 style="font-size:24px;margin:0 0 6px">💾 SAUVEGARDE</h2>
+  <p class="hint" style="margin:0 0 8px">Copiez ce code et conservez-le (bloc-notes, message…). Il permet de reprendre la partie exactement à ce moment, sur n'importe quel appareil. La partie est en pause pendant que cette fenêtre est ouverte.</p>
+  <textarea id="saveCode" class="code" readonly></textarea>
+  <div class="hint" id="saveInfo" style="margin-top:4px"></div>
+  <div style="display:flex;gap:8px;margin-top:8px"><button class="buy" id="copyBtn" style="flex:1">📋 Copier le code</button><button id="saveClose">Fermer et reprendre</button></div>
+  <div class="hint" id="copyMsg" style="color:#3ecf5e;margin-top:4px"></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+  <h3 style="margin:0 0 6px;color:var(--khaki);font-size:15px">RESTAURER UNE AUTRE PARTIE</h3>
+  <textarea id="loadCode2" class="code" placeholder="Collez un code de sauvegarde… (la partie en cours sera remplacée)"></textarea>
+  <button class="primary" id="loadBtn2" style="width:100%;margin-top:8px">Restaurer</button>
+  <div class="err" id="loadErr2"></div>
 </div></div>
 <div id="toastHost"></div>
 
@@ -462,7 +484,9 @@ document.addEventListener('keydown',()=>SFX.init(),true);
    OUTILS & MÉCANIQUE (identique à la version fiches)
    ========================================================= */
 const $=s=>document.querySelector(s);
-const rnd=(a,b)=>a+Math.random()*(b-a);
+let RNG=Math.random;
+const rnd=(a,b)=>a+RNG()*(b-a);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 const effN=n=>n>0?1+0.1*(n-1):0;
 const cnt=(P,id)=>P.b[id]||0;
 const ucnt=(P,id)=>P.u[id]||0;
@@ -517,7 +541,8 @@ let sprites=[],effects=[],strikes=[];
 const idx=(x,y)=>y*MW+x;
 const hsh=(k,i)=>{const x=Math.sin(k*12.9898+i*78.233)*43758.5453;return x-Math.floor(x);};
 
-function genMap(total,bases){
+function genMap(total,bases,seed){
+ RNG=mulberry32(seed);
  terr=new Uint8Array(MW*MH);block=new Uint8Array(MW*MH);ore=new Float32Array(MW*MH);occ=new Int32Array(MW*MH);
  explored=new Uint8Array(MW*MH);visible=new Uint8Array(MW*MH);
  const near=(x,y,r)=>bases.some(b=>Math.hypot(x-b.x,y-b.y)<r);
@@ -536,6 +561,7 @@ function genMap(total,bases){
  if(total>0) for(const f of fields) blob(f.x,f.y,rnd(2.6,3.6),(x,y)=>{const k=idx(x,y);if(!ore[k]){ore[k]=1;block[k]=0;oreTiles.push(k);}});
  oreInit=oreTiles.length?total/oreTiles.length:1;
  for(const k of oreTiles) ore[k]=oreInit;
+ RNG=Math.random;
  buildTerrain();
 }
 function buildTerrain(){
@@ -896,25 +922,32 @@ let G={running:false},me=null,ai=null,cam={x:0,y:0,z:1},sel=null,placing=null,mo
 function newPlayer(id,name,camp,money,isAI,diff,base){
  return {id,name,camp,money,isAI,diff,b:{},u:{},bq:[],iq:[],vq:[],blds:[],alive:true,lastAttack:isAI?0:-999,inc:0,base,color:camp==='a'?'#4f8ad6':'#d8473a',striking:null};
 }
-function startGame(cfg){
+function initWorld(cfg,seed){
  insts.clear();sprites=[];effects=[];strikes=[];uidC=1;sel=null;placing=null;
- G={running:true,paused:false,time:0,ore:cfg.ore,ore0:Math.max(1,cfg.ore),over:false};
+ G={running:true,paused:false,time:0,ore:cfg.ore,ore0:Math.max(1,cfg.ore),over:false,cfg,seed};
  const pb={x:8,y:MH-9},ab={x:MW-9,y:8};
- genMap(cfg.ore,[pb,ab]);recountOre();G.ore0=Math.max(1,G.ore);
+ genMap(cfg.ore,[pb,ab],seed);recountOre();G.ore0=Math.max(1,G.ore);
  me=newPlayer('me',cfg.name,cfg.camp,cfg.money,false,null,pb);
  ai=newPlayer('ai','IA '+DIFF[cfg.diff].label,cfg.camp==='a'?'s':'a',cfg.money,true,cfg.diff,ab);
  for(const P of [me,ai]){
-  placeInst(P,'chantier',P.base.x-1,P.base.y-1,true);
   const cx=MW/2,cy=MH/2,d=Math.hypot(cx-P.base.x,cy-P.base.y);
   P.rallyV={x:(cx-P.base.x)/d,y:(cy-P.base.y)/d};
   P.rally={x:(P.base.x+0.5+P.rallyV.x*9)*T,y:(P.base.y+0.5+P.rallyV.y*9)*T};
  }
- $('#setup').classList.add('hidden');$('#game').classList.remove('hidden');
+}
+function showGame(){
+ $('#setup').classList.add('hidden');$('#game').classList.remove('hidden');$('#overlay').classList.add('hidden');
  $('#log').innerHTML='';
  resize();
  cam.z=1;centerOn(me.base.x*T,me.base.y*T-60);
- buildCards();resetUnlocks();lastEnergyState='ok';
+ buildCards();resetUnlocks();lastEnergyState=energy(me).state;
  $('#eName').innerHTML=`<span style="color:${ai.color}">${ai.camp==='a'?'★':'☭'} ${esc(ai.name)}</span>`;$('#eType').textContent='IA – '+DIFF[ai.diff].label;
+ $('#pauseBtn').textContent=G.paused?'▶ Reprendre':'⏸ Pause';
+}
+function startGame(cfg){
+ initWorld(cfg,(Math.random()*4294967296)>>>0);
+ for(const P of [me,ai])placeInst(P,'chantier',P.base.x-1,P.base.y-1,true);
+ showGame();
  log('Partie lancée. Votre chantier de construction est déployé : construisez une centrale électrique !','info');
  updateFog(true);
 }
@@ -1234,9 +1267,9 @@ mini.addEventListener('pointermove',e=>{if(mini._d)miniGo(e);});
 mini.addEventListener('pointerup',()=>{mini._d=false;});
 const keys={};
 addEventListener('keydown',e=>{
- if(e.target.tagName==='INPUT')return;
+ if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
  keys[e.key.toLowerCase()]=true;
- if(e.key==='Escape'){cancelPlacing();select(null);}
+ if(e.key==='Escape'){if(!$('#saveModal').classList.contains('hidden')){closeSave();return;}cancelPlacing();select(null);}
 });
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 function keyPan(dt){
@@ -1481,9 +1514,101 @@ $('#fBtn').onclick=()=>$('#formula').classList.toggle('hidden');
 function backToMenu(){
  G.running=false;G.over=false;me=null;ai=null;SFX.construction(false);try{speechSynthesis.cancel();}catch(e){}
  cancelPlacing();
- $('#overlay').classList.add('hidden');$('#game').classList.add('hidden');$('#setup').classList.remove('hidden');
+ $('#overlay').classList.add('hidden');$('#saveModal').classList.add('hidden');$('#game').classList.add('hidden');$('#setup').classList.remove('hidden');
  $('#quitBtn').textContent='Quitter';delete $('#quitBtn').dataset.c;$('#pauseBtn').textContent='⏸ Pause';
 }
+
+
+/* =========================================================
+   SAUVEGARDE / RESTAURATION PAR CODE
+   ========================================================= */
+function b64e(bytes){let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function b64d(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';const b=atob(str),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+async function packCode(obj){
+ const bytes=new TextEncoder().encode(JSON.stringify(obj));
+ if(window.CompressionStream){try{const buf=await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();return 'AR1-'+b64e(new Uint8Array(buf));}catch(e){}}
+ return 'AR0-'+b64e(bytes);
+}
+async function unpackCode(code){
+ code=(code||'').replace(/\s+/g,'');
+ const m=code.match(/^AR([01])-([A-Za-z0-9_-]+)$/);
+ if(!m)throw new Error('Ce texte n\'est pas un code de sauvegarde valide.');
+ let bytes=b64d(m[2]);
+ if(m[1]==='1'){
+  if(!window.DecompressionStream)throw new Error('Ce navigateur ne sait pas lire ce code compressé.');
+  bytes=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+ }
+ return JSON.parse(new TextDecoder().decode(bytes));
+}
+function serPlayer(P){
+ const r=x=>Math.round(x*100)/100;
+ return {m:Math.round(P.money),u:Object.fromEntries(Object.entries(P.u).filter(([,n])=>n>0)),la:r(P.lastAttack),al:P.alive?1:0,
+  b:P.blds.map(i=>[i.id,i.tx,i.ty,i.done?1:0]),
+  bq:P.bq.map(q=>[P.blds.indexOf(q.inst),r(q.prog)]),
+  iq:P.iq.map(q=>[q.id,r(q.prog)]),vq:P.vq.map(q=>[q.id,r(q.prog)])};
+}
+function snapshot(){
+ const exp=new Uint8Array(Math.ceil(MW*MH/8));for(let k=0;k<MW*MH;k++)if(explored[k])exp[k>>3]|=1<<(k&7);
+ return {v:1,seed:G.seed,cfg:G.cfg,t:Math.round(G.time*100)/100,o0:Math.round(G.ore0),ore:oreTiles.map(k=>Math.round(Math.max(0,ore[k]))),exp:b64e(exp),p:[serPlayer(me),serPlayer(ai)]};
+}
+function restorePlayer(P,d){
+ P.money=Math.max(0,+d.m||0);P.lastAttack=+d.la||0;P.alive=d.al!==0;
+ P.u={};for(const [id,n] of Object.entries(d.u||{}))if(UD[id])P.u[id]=Math.max(0,Math.floor(+n)||0);
+ const list=[];
+ for(const [id,tx,ty,done] of (d.b||[])){
+  if(!BI[id])throw new Error('Bâtiment inconnu dans le code.');
+  const b=BI[id];if(tx<0||ty<0||tx+b.w>MW||ty+b.h>MH)throw new Error('Code corrompu (position).');
+  list.push(placeInst(P,id,tx|0,ty|0,!!done));
+ }
+ for(const [ix,prog] of (d.bq||[])){const inst=list[ix];if(!inst||inst.done)continue;P.bq.push({id:inst.id,kind:'b',prog:+prog||0,time:inst.id==='chantier'?5:bTime(BI[inst.id]),inst});}
+ for(const inst of list)if(!inst.done&&!P.bq.some(q=>q.inst===inst))P.bq.push({id:inst.id,kind:'b',prog:0,time:bTime(BI[inst.id]),inst});
+ for(const [k,arr] of [['iq',d.iq],['vq',d.vq]])for(const [id,prog] of (arr||[])){const u=UD[id];if(u)P[k].push({id,kind:'u',prog:+prog||0,time:uTime(u)});}
+ syncSprites(P);
+}
+function loadSnapshot(st){
+ if(!st||st.v!==1||!st.cfg||!Array.isArray(st.p)||st.p.length!==2)throw new Error('Code de sauvegarde incompatible.');
+ const c=st.cfg;
+ const cfg={name:String(c.name||'Commandant').slice(0,18),camp:c.camp==='s'?'s':'a',diff:DIFF[c.diff]?c.diff:'moyen',money:+c.money||5000,ore:Math.max(0,Math.min(500000,+c.ore||0))};
+ initWorld(cfg,(+st.seed)>>>0);
+ if(Array.isArray(st.ore)&&st.ore.length===oreTiles.length)oreTiles.forEach((k,i)=>{ore[k]=Math.max(0,+st.ore[i]||0);});
+ recountOre();G.ore0=Math.max(1,+st.o0||G.ore0);G.time=Math.max(0,+st.t||0);
+ try{const e=b64d(st.exp||'');for(let k=0;k<MW*MH;k++)if(e[k>>3]&(1<<(k&7)))explored[k]=1;}catch(e){}
+ restorePlayer(me,st.p[0]);restorePlayer(ai,st.p[1]);
+ G.paused=true;
+ showGame();
+ updateFog(true);
+ log(`💾 Partie restaurée (${fmtTime(G.time)}). Elle est en pause : cliquez « Reprendre » quand vous êtes prêt.`,'info');
+ SFX.say('Partie restaurée',{gap:1});
+ updateUI();
+}
+async function restoreFrom(code,errEl){
+ errEl.textContent='';
+ try{const st=await unpackCode(code);loadSnapshot(st);$('#saveModal').classList.add('hidden');}
+ catch(e){console.warn(e);errEl.textContent='⚠ '+(e&&e.message&&/code|Code|navigateur|Bâtiment/.test(e.message)?e.message:'Code invalide ou incomplet. Vérifiez qu\'il a été copié en entier.');}
+}
+let pausedBeforeSave=false;
+async function openSave(){
+ if(!G.running||!me)return;
+ pausedBeforeSave=G.paused;G.paused=true;updateUI();
+ $('#saveCode').value='Génération…';$('#copyMsg').textContent='';$('#loadErr2').textContent='';$('#loadCode2').value='';
+ $('#saveModal').classList.remove('hidden');
+ const code=await packCode(snapshot());
+ $('#saveCode').value=code;
+ $('#saveInfo').textContent=`Partie à ${fmtTime(G.time)} · ${me.blds.length} bâtiments · ${Object.values(me.u).reduce((a,b)=>a+b,0)} unités · code de ${code.length} caractères`;
+ try{localStorage.setItem('ar_carte_last',code);}catch(e){}
+ SFX.say('Partie sauvegardée',{gap:2});
+}
+function closeSave(){$('#saveModal').classList.add('hidden');if(G.running&&!G.over){G.paused=pausedBeforeSave;$('#pauseBtn').textContent=G.paused?'▶ Reprendre':'⏸ Pause';updateUI();}}
+$('#saveBtn').onclick=openSave;
+$('#saveClose').onclick=closeSave;
+$('#copyBtn').onclick=async()=>{
+ const ta=$('#saveCode'),msg=$('#copyMsg');
+ try{await navigator.clipboard.writeText(ta.value);msg.textContent='✔ Code copié dans le presse-papiers.';}
+ catch(e){ta.focus();ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(_){}msg.textContent=ok?'✔ Code copié.':'Code sélectionné : faites Ctrl+C (ou Cmd+C) pour le copier.';}
+};
+$('#loadBtn2').onclick=()=>restoreFrom($('#loadCode2').value,$('#loadErr2'));
+$('#loadBtn').onclick=()=>restoreFrom($('#loadCode').value,$('#loadErr'));
+try{const last=localStorage.getItem('ar_carte_last');if(last){$('#lastBtn').classList.remove('hidden');$('#lastBtn').onclick=()=>{$('#loadCode').value=last;};}}catch(e){}
 
 /* menu */
 const S={camp:'a',diff:'moyen'};
