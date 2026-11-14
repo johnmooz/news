@@ -203,6 +203,7 @@ table.pts th{color:var(--mute);font-size:.8rem}
       <h1>Qui dés mieux ?</h1>
     </div>
     <div class="top-actions">
+      <button class="ghost sm" id="btnSound" title="Activer / couper le son">🔊 Son</button>
       <button class="ghost sm" id="btnRules">📖 Règles</button>
       <button class="ghost sm" id="btnCards">🃏 Les 55 cartes</button>
       <button class="ghost sm" id="btnNew" style="display:none">↺ Nouvelle partie</button>
@@ -534,6 +535,51 @@ function cardHTML(card,extra=''){
 }
 
 /* =========================================================
+   Sons (synthétisés avec Web Audio, aucun fichier)
+   ========================================================= */
+const SFX={
+  ctx:null, on:true,
+  init(){
+    try{ if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext; if(AC) this.ctx=new AC();}
+         if(this.ctx&&this.ctx.state==='suspended') this.ctx.resume(); }catch(e){}
+  },
+  ok(){return this.on&&this.ctx&&this.ctx.state==='running';},
+  tone(f1,f2,dur,type='sine',vol=.18,delay=0){
+    if(!this.ok())return; const c=this.ctx,t=c.currentTime+delay;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=type;o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02);
+  },
+  click(t,vol,freq){ // petit choc de dé sur la table
+    const c=this.ctx,len=Math.floor(c.sampleRate*.035),buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,4);
+    const s=c.createBufferSource();s.buffer=buf;
+    const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=2.5;
+    const g=c.createGain();g.gain.value=vol;
+    s.connect(f).connect(g).connect(c.destination);s.start(t);
+  },
+  roll(n=6){ // cliquetis des dés qui roulent
+    if(!this.ok())return; const t0=this.ctx.currentTime;
+    const hits=8+n*3;
+    for(let i=0;i<hits;i++){
+      const p=i/hits, t=t0+p*.5+Math.random()*.04;
+      this.click(t,(.9-.6*p)*(.6+Math.random()*.4),1800+Math.random()*2600);
+    }
+    // impact final
+    this.click(t0+.52,.7,1200);this.click(t0+.56,.4,2200);
+  },
+  hold(){this.tone(520,980,.09,'triangle',.16);},
+  release(){this.tone(760,360,.1,'triangle',.13);},
+  turn(){this.tone(660,660,.12,'sine',.12);this.tone(990,990,.18,'sine',.1,.09);},
+  success(){[523,659,784,1047].forEach((f,i)=>this.tone(f,f,.22,'triangle',.15,i*.09));},
+  fail(){[392,330,262].forEach((f,i)=>this.tone(f,f*.97,.26,'sawtooth',.06,i*.13));}
+};
+try{SFX.on=localStorage.getItem('qdm_sound')!=='0';}catch(e){}
+function updateSoundBtn(){$('#btnSound').textContent=SFX.on?'🔊 Son':'🔇 Muet';}
+document.addEventListener('pointerdown',()=>SFX.init(),{capture:true});
+
+/* =========================================================
    État & utilitaires
    ========================================================= */
 const $=s=>document.querySelector(s);
@@ -673,6 +719,7 @@ function aiRespond(i){
   return opts[0];
 }
 async function askOpen(p){
+  SFX.turn();
   if(G.players[p].bot){renderThinking(p,'réfléchit à son annonce');await sleep(G.speed*1.2);return aiOpen();}
   return new Promise(res=>{
     const pr=G.sol.prob;
@@ -683,6 +730,7 @@ async function askOpen(p){
   });
 }
 async function askRespond(p){
+  SFX.turn();
   if(G.players[p].bot){renderThinking(p,'réfléchit');await sleep(G.speed);return aiRespond(p);}
   return new Promise(res=>{
     const pr=G.sol.prob, cb=G.bid;
@@ -708,6 +756,7 @@ async function animateRoll(){
   const idx=[0,1,2,3,4,5].filter(i=>!G.held[i]);
   const els=[...document.querySelectorAll('#tray .die')];
   idx.forEach(i=>els[i]&&els[i].classList.add('rolling'));
+  SFX.roll(idx.length);
   for(let f=0;f<7;f++){idx.forEach(i=>{if(els[i])els[i].innerHTML=pips(rnd(6));});await sleep(65);}
   idx.forEach(i=>G.dice[i]=rnd(6));
   G.rolls++;
@@ -716,6 +765,7 @@ async function rolling(){
   G.phase='roll';
   const lead=G.lead, bot=G.players[lead].bot;
   G.held=Array(6).fill(false);
+  SFX.turn();
   while(true){
     renderAll();
     if(G.rolls>0){
@@ -728,6 +778,8 @@ async function rolling(){
         renderRollPanel(true);
         await sleep(G.speed);
         const {keep}=bestKeep(G.sol,G.dice,G.bid-G.rolls);
+        const prev=G.held;
+        keep.forEach((k,i)=>{ if(k!==prev[i]) setTimeout(()=>k?SFX.hold():SFX.release(),i*70); });
         G.held=keep; renderAll(); renderRollPanel(true);
         await sleep(G.speed);
       } else { renderRollPanel(true); await sleep(G.speed*.8); }
@@ -767,7 +819,7 @@ function renderTray(){
 }
 $('#tray').addEventListener('click',e=>{
   const d=e.target.closest('.die');if(!d||!G||G.phase!=='roll'||!G._rollRes||G.rolls===0)return;
-  const i=+d.dataset.i;G.held[i]=!G.held[i];renderTray();
+  const i=+d.dataset.i;G.held[i]=!G.held[i];G.held[i]?SFX.hold():SFX.release();renderTray();
 });
 
 /* ---------- Résolution ---------- */
@@ -782,6 +834,7 @@ async function resolveRound(){
     log(`❌ Défi raté.${G.skep.size?` Les sceptiques marquent <b>${PTS[b][1]}</b> pts chacun.`:' Aucun sceptique : personne ne marque.'}`);
   }
   renderAll();
+  G.success?SFX.success():SFX.fail();
   $('#action').innerHTML=`<div class="banner ${G.success?'ok':'ko'}">${G.success?`Défi réussi en ${G.rolls} lancer${G.rolls>1?'s':''} !`:'Défi raté !'}</div>
     <div class="gain">${gains.length?gains.map(([i,g])=>`<span><span class="cube" style="background:${G.players[i].color};width:16px;height:16px"></span>${esc(G.players[i].name)} +${g}</span>`).join(''):'<span>Personne ne marque</span>'}</div>
     <div style="text-align:center;margin-top:10px" id="nextSlot"></div>`;
@@ -856,6 +909,8 @@ function renderAll(flip=false){
 
 /* ---------- Modales ---------- */
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('on');}));
+$('#btnSound').onclick=()=>{SFX.on=!SFX.on;try{localStorage.setItem('qdm_sound',SFX.on?'1':'0');}catch(e){}updateSoundBtn();if(SFX.on){SFX.init();SFX.hold();}};
+updateSoundBtn();
 $('#btnRules').onclick=()=>$('#mRules').classList.add('on');
 $('#btnCards').onclick=()=>{
   const box=$('#allCards');
