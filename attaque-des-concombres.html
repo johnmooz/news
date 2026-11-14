@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Attaque des Concombres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood1:#c8945c; --wood2:#b07d48; --ink:#2b1d12; --felt:#2f6b46; --felt2:#24573a;
+    --c1:#5fae6a; --c1d:#2f7a3d;   /* vert   : 1 concombre */
+    --c2:#f2c43d; --c2d:#b88a0c;   /* jaune  : 2 */
+    --c3:#5b9be0; --c3d:#2a63a8;   /* bleu   : 3 */
+    --c4:#f08a3c; --c4d:#b45616;   /* orange : 4 */
+    --c5:#a2378f; --c5d:#6a1a5c;   /* violet : 5 */
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:light}
+  body{margin:0;font-family:'Fredoka',system-ui,'Segoe UI',Roboto,sans-serif;color:var(--ink);
+    min-height:100vh;background:
+      repeating-linear-gradient(92deg,rgba(0,0,0,.04) 0 2px,transparent 2px 18px),
+      linear-gradient(160deg,var(--wood1),var(--wood2));}
+  h1{margin:0;font-weight:700;letter-spacing:.5px}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none!important}
+
+  /* ---------- Écran de configuration ---------- */
+  #setup{max-width:640px;margin:0 auto;padding:28px 16px 40px}
+  .logo{text-align:center;margin-bottom:18px}
+  .logo h1{font-size:clamp(30px,6vw,46px);color:#fff;text-shadow:0 3px 0 var(--c1d),0 6px 14px rgba(0,0,0,.35)}
+  .logo p{margin:6px 0 0;color:#fff8;font-size:15px;color:rgba(255,255,255,.85)}
+  .panel{background:#fff;color:#000;border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .panel h2{margin:0 0 12px;font-size:19px}
+  .counts{display:flex;gap:8px;margin-bottom:18px}
+  .counts button{flex:1;padding:12px 0;font-size:20px;font-weight:700;border-radius:12px;border:3px solid #ccc;background:#fff;color:#000}
+  .counts button.on{border:4px solid #000;box-shadow:0 0 0 3px var(--c1)}
+  .prow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .prow .num{width:26px;height:26px;border-radius:50%;background:#fff;color:#000;border:2px solid #000;font-weight:700;display:grid;place-items:center;font-size:13px;flex:none}
+  .prow input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:2px solid #999;font:inherit;font-size:16px;background:#fff;color:#000;-webkit-text-fill-color:#000}
+  .seg{display:flex;border:2px solid #999;border-radius:10px;overflow:hidden;flex:none}
+  .seg button{border:0;padding:9px 10px;background:#fff;color:#000;font-size:14px;opacity:.45}
+  .seg button.on{opacity:1;font-weight:700;box-shadow:inset 0 -4px 0 #000}
+  .big{display:block;width:100%;margin-top:16px;padding:14px;font-size:20px;font-weight:700;border:0;border-radius:14px;
+       background:var(--c4);color:#fff;box-shadow:0 4px 0 var(--c4d)}
+  .big:active{transform:translateY(2px);box-shadow:0 2px 0 var(--c4d)}
+  details.rules{margin-top:16px;background:#fffaf0;border-radius:14px;padding:12px 16px;font-size:14.5px;line-height:1.45}
+  details.rules summary{font-weight:600;cursor:pointer}
+  .legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .legend span{padding:3px 8px;border-radius:8px;color:#fff;font-size:13px}
+
+  /* ---------- Plateau ---------- */
+  #game{max-width:1100px;margin:0 auto;padding:12px 10px 24px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#fff;margin-bottom:10px;flex-wrap:wrap}
+  .topbar h1{font-size:22px;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .pill{background:rgba(0,0,0,.25);padding:6px 12px;border-radius:999px;font-size:15px}
+  .topbar .ctrl{display:flex;gap:6px;align-items:center}
+  .small{border:0;border-radius:10px;padding:7px 11px;background:rgba(255,255,255,.9);font-size:14px}
+
+  .players{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px}
+  .player{background:#fff;color:#000;border-radius:14px;padding:8px 10px;border:3px solid transparent;position:relative;transition:border-color .2s,transform .2s}
+  .player.turn{border-color:var(--c2);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.25)}
+  .player.taker{border-color:var(--c5)}
+  .player .nm{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .player .cards{font-size:12px;color:#000;margin-top:2px}
+  .scores{display:flex;gap:6px;margin-top:6px}
+  .scores div{flex:1;background:#fff;border:1.5px solid #000;color:#000;border-radius:8px;padding:3px 6px;text-align:center}
+  .scores b{display:block;font-size:18px;line-height:1.1}
+  .scores small{font-size:10.5px;color:#000}
+  .badge-start{position:absolute;top:-8px;right:8px;background:var(--ink);color:#fff;font-size:11px;padding:2px 7px;border-radius:8px}
+
+  .table{background:radial-gradient(ellipse at center,var(--felt) 0%,var(--felt2) 100%);border-radius:22px;padding:14px;
+         box-shadow:inset 0 0 0 6px rgba(0,0,0,.15),0 8px 22px rgba(0,0,0,.3);min-height:250px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .table{transition:background .4s}
+  .table.red{background:radial-gradient(ellipse at center,#b8323a 0%,#8a1f27 100%)}
+  .rule{background:rgba(255,255,255,.95);border-radius:12px;padding:8px 14px;font-weight:600;font-size:16px;text-align:center;max-width:100%}
+  .rule.up{color:#1f5e2c} .rule.down{color:#1f4c86} .rule.broken{background:#ffe1f6;color:var(--c5d)}
+  .trick{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;min-height:150px;align-items:flex-start}
+  .slot{display:flex;flex-direction:column;align-items:center;gap:4px;animation:drop .3s ease-out}
+  .slot .who{color:#000;background:#fff;border-radius:6px;padding:0 6px;font-size:13px;max-width:90px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slot .tag{font-size:11px;padding:1px 6px;border-radius:6px;background:#fff;color:var(--c5d);font-weight:600}
+  @keyframes drop{from{transform:translateY(-14px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+  .msg{color:#fff;font-size:17px;text-align:center;min-height:24px;font-weight:500}
+
+  /* ---------- Cartes ---------- */
+  .card{width:78px;height:112px;border-radius:10px;position:relative;flex:none;color:#fff;user-select:none;
+        border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3);overflow:hidden;
+        display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .card .n{font-size:32px;font-weight:700;text-shadow:0 2px 0 rgba(0,0,0,.25);line-height:1}
+  .card .corner{position:absolute;top:3px;font-size:12px;font-weight:700;background:rgba(255,255,255,.92);color:var(--ink);border-radius:5px;padding:0 4px}
+  .card .corner.l{left:3px} .card .corner.r{right:3px}
+  .card .cu{font-size:13px;margin-top:6px;letter-spacing:-2px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.3))}
+  .card .bars{position:absolute;bottom:4px;display:flex;gap:2px}
+  .card .bars i{width:4px;height:10px;background:#fff;border-radius:2px;opacity:.9}
+  .k1{background:linear-gradient(160deg,var(--c1),var(--c1d))}
+  .k2{background:linear-gradient(160deg,var(--c2),var(--c2d))}
+  .k3{background:linear-gradient(160deg,var(--c3),var(--c3d))}
+  .k4{background:linear-gradient(160deg,var(--c4),var(--c4d))}
+  .k5{background:radial-gradient(circle at 50% 40%,#ff7ad9,var(--c5) 55%,var(--c5d))}
+  .card.win{outline:4px solid #ffe14d;outline-offset:2px}
+
+  .handwrap{margin-top:12px;background:rgba(0,0,0,.18);border-radius:18px;padding:10px 10px 14px}
+  .handhead{color:#fff;display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px;font-size:15px;flex-wrap:wrap;gap:6px}
+  .hand{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;min-height:112px}
+  .hand .card{cursor:default;transition:transform .15s,opacity .15s}
+  .hand.active .card{cursor:pointer}
+  .hand{padding-top:18px}
+  .hand.active .card.ok{transform:translateY(-16px);box-shadow:0 0 0 3px #b6ff8a,0 10px 14px rgba(0,0,0,.35)}
+  .hand.active .card.ok:hover{transform:translateY(-22px)}
+  .hand.active .card.no{opacity:.45;filter:grayscale(.5);cursor:not-allowed}
+  .hand.active .card.brk{transform:translateY(-16px);box-shadow:0 10px 14px rgba(0,0,0,.35)}
+  .hand.active .card.brk:hover{transform:translateY(-22px)}
+  .hand.active .card.brk::after{content:'⚡ briser';position:absolute;bottom:0;left:0;right:0;background:rgba(106,26,92,.9);font-size:11px;text-align:center;padding:2px 0}
+  .hand.idle .card{opacity:.75}
+  .cardback{width:78px;height:112px;border-radius:10px;border:3px solid #fff;background:repeating-linear-gradient(45deg,var(--c1d) 0 8px,var(--c1) 8px 16px)}
+
+  .log{margin-top:12px;background:#fffaf0;border-radius:14px;padding:8px 14px;font-size:13.5px}
+  .log summary{font-weight:600;cursor:pointer}
+  .log ol{margin:6px 0 0;padding-left:20px;max-height:180px;overflow:auto}
+
+  /* ---------- Fenêtres ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(30,18,8,.65);display:grid;place-items:center;z-index:10;padding:16px}
+  .modal{background:#fffaf0;border-radius:20px;padding:22px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.4);text-align:center;max-height:90vh;overflow:auto}
+  .modal h2{margin:0 0 10px;font-size:24px}
+  table.res{width:100%;border-collapse:collapse;margin:10px 0;font-size:15px}
+  table.res th,table.res td{padding:6px 4px;border-bottom:1px solid #eadcc3}
+  table.res th{font-size:12.5px;opacity:.7;font-weight:500}
+  table.res tr.best td{background:#e5f6dd;font-weight:600}
+
+  @media (max-width:560px){
+    .card,.cardback{width:58px;height:84px;border-radius:8px;border-width:2px}
+    .card .n{font-size:24px}
+    .card .corner{font-size:10px}
+    .card .cu{font-size:10px;margin-top:3px}
+    .hand{gap:5px;min-height:84px}
+    .trick{min-height:110px;gap:6px}
+    .players{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}
+    .scores b{font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Configuration ===== -->
+<section id="setup">
+  <div class="logo">
+    <h1>🥒 L'Attaque des Concombres</h1>
+    <p>Évitez les concombres : le moins de concombres après 4 manches gagne !</p>
+  </div>
+  <div class="panel">
+    <h2>Nombre de joueurs</h2>
+    <div class="counts" id="counts"></div>
+    <h2>Joueurs</h2>
+    <div id="plist"></div>
+    <button class="big" id="startBtn">Lancer la partie</button>
+  </div>
+  <details class="rules">
+    <summary>📖 Rappel des règles</summary>
+    <p>60 cartes numérotées de 1 à 60. Chaque manche, chacun reçoit 10 cartes : une manche = 10 plis, une partie = 4 manches.</p>
+    <p><b>Le pli :</b> le premier joueur pose une carte. <b>La 2ᵉ carte fixe la règle :</b> plus forte → tout le monde doit jouer plus fort que la carte d'ouverture et <b>la plus forte ramasse</b> ; plus faible → tout le monde doit jouer plus faible et <b>la plus faible ramasse</b>.</p>
+    <p><b>Briser la règle :</b> si on peut suivre la règle, on est obligé de le faire. Seul un joueur qui ne peut pas suivre joue n'importe quelle carte : il brise la règle. La règle s'inverse alors : si on jouait « plus fort », c'est la plus faible qui ramasse ; si on jouait « plus faible », c'est la plus forte.</p>
+    <p>Celui qui ramasse le pli prend tous les concombres des cartes et ouvre le pli suivant. Le premier joueur de la partie est tiré au sort ; ensuite, l'ouverture de chaque manche tourne d'un joueur.</p>
+    <div class="legend">
+      <span class="k1">1 🥒</span><span class="k2">2 🥒</span><span class="k3">3 🥒</span><span class="k4">4 🥒</span><span class="k5">5 🥒</span>
+    </div>
+  </details>
+</section>
+
+<!-- ===== Partie ===== -->
+<section id="game" class="hidden">
+  <div class="topbar">
+    <h1>🥒 L'Attaque des Concombres</h1>
+    <div class="ctrl">
+      <span class="pill" id="info"></span>
+      <button class="small" id="soundBtn" title="Sons">🔊</button>
+      <button class="small" id="speedBtn" title="Vitesse de l'ordinateur">⏩ Normal</button>
+      <button class="small" id="quitBtn">Quitter</button>
+    </div>
+  </div>
+  <div class="players" id="players"></div>
+  <div class="table">
+    <div class="rule" id="rule"></div>
+    <div class="trick" id="trick"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+  <div class="handwrap">
+    <div class="handhead"><span id="handTitle"></span><span id="handHint" style="opacity:.85;font-size:13.5px"></span></div>
+    <div class="hand" id="hand"></div>
+  </div>
+  <details class="log"><summary>Journal des plis</summary><ol id="log"></ol></details>
+</section>
+
+<div class="overlay hidden" id="overlay"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ================= Données des cartes =================
+   Nombre de concombres par carte (d'après la couleur des cartes de la photo).
+   Modifiez ces listes pour ajuster les valeurs. */
+const CUC_LISTS = {
+  5: [5,15,25,35,45,55],                                   // violet (explosion)
+  4: [7,10,20,30,40,50,53],                                // orange (concombres sur la tête)
+  3: [1,4,6,14,16,24,26,34,36,44,46,54,56,60],             // bleu (canapé)
+  2: [3,8,12,18,22,28,32,38,42,48,52,57]                   // jaune
+};                                                         // tout le reste : vert = 1
+const CUC = {};
+for (let n=1;n<=60;n++) CUC[n]=1;
+for (const k in CUC_LISTS) CUC_LISTS[k].forEach(n=>CUC[n]=+k);
+
+const ROUNDS = 4, TRICKS = 10;
+const SPEEDS = [{l:'⏩ Normal',ai:850,end:2100},{l:'⏩⏩ Rapide',ai:350,end:1100},{l:'🐢 Lent',ai:1500,end:3200}];
+let speedIdx = 0;
+
+
+/* ================= Sons (synthétisés, aucun fichier) ================= */
+const SND = (()=>{
+  let ctx=null;
+  const o = {on:true};
+  o.unlock = ()=>{ try{ if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended') ctx.resume(); }catch(e){} };
+  function tone(freq,dur,{type='sine',vol=.2,at=0,slide=0}={}){
+    if(!o.on||!ctx) return;
+    try{
+      const t=ctx.currentTime+at, g=ctx.createGain(), osc=ctx.createOscillator();
+      osc.type=type; osc.frequency.setValueAtTime(freq,t);
+      if(slide) osc.frequency.exponentialRampToValueAtTime(Math.max(30,freq*slide),t+dur);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      osc.connect(g).connect(ctx.destination); osc.start(t); osc.stop(t+dur+0.02);
+    }catch(e){}
+  }
+  function noise(dur,{vol=.15,at=0,freq=1800}={}){
+    if(!o.on||!ctx) return;
+    try{
+      const t=ctx.currentTime+at, len=Math.floor(ctx.sampleRate*dur), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+      const src=ctx.createBufferSource(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+      f.type='bandpass'; f.frequency.value=freq; g.gain.value=vol; src.buffer=buf;
+      src.connect(f).connect(g).connect(ctx.destination); src.start(t);
+    }catch(e){}
+  }
+  o.card  = ()=>{ noise(.07,{vol:.35,freq:2500}); tone(520,.06,{type:'triangle',vol:.08}); };
+  o.rule  = m=>{ o.card(); m==='up' ? (tone(440,.12,{type:'triangle',at:.05}),tone(660,.16,{type:'triangle',at:.15})) : (tone(660,.12,{type:'triangle',at:.05}),tone(440,.16,{type:'triangle',at:.15})); };
+  o.brk   = ()=>{ noise(.25,{vol:.4,freq:900}); tone(300,.35,{type:'sawtooth',vol:.12,slide:.3}); tone(900,.2,{type:'square',vol:.05,at:.05,slide:2}); };
+  o.take  = n=>{ const k=Math.min(n,8); for(let i=0;i<k;i++){ tone(220-i*8,.12,{type:'sine',vol:.22,at:i*.07,slide:.55}); noise(.05,{vol:.12,at:i*.07+.02,freq:700}); } };
+  o.turn  = ()=>{ tone(880,.09,{vol:.12}); tone(1175,.12,{vol:.12,at:.09}); };
+  o.nope  = ()=>{ tone(160,.15,{type:'square',vol:.08}); tone(130,.18,{type:'square',vol:.08,at:.12}); };
+  o.round = ()=>{ [523,659,784].forEach((f,i)=>tone(f,.18,{type:'triangle',vol:.15,at:i*.12})); };
+  o.win   = ()=>{ [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.22,{type:'triangle',vol:.16,at:i*.13})); };
+  return o;
+})();
+
+/* ================= Configuration ================= */
+let nPlayers = 4;
+let config = [];
+const defaultNames = ['Joueur 1','Ordi Cornichon','Ordi Gherkin','Ordi Courgette','Ordi Pickles','Ordi Tzatziki'];
+for (let i=0;i<6;i++) config.push({name:defaultNames[i], ai:i!==0});
+
+const $ = id => document.getElementById(id);
+
+function renderSetup(){
+  $('counts').innerHTML = [3,4,5,6].map(n=>`<button class="${n===nPlayers?'on':''}" data-n="${n}">${n}</button>`).join('');
+  $('plist').innerHTML = config.slice(0,nPlayers).map((p,i)=>`
+    <div class="prow">
+      <span class="num">${i+1}</span>
+      <input data-i="${i}" value="${esc(p.name)}" maxlength="18" aria-label="Nom du joueur ${i+1}">
+      <div class="seg">
+        <button data-i="${i}" data-ai="0" class="${!p.ai?'on':''}">👤 Joueur</button>
+        <button data-i="${i}" data-ai="1" class="${p.ai?'on':''}">🤖 Ordi</button>
+      </div>
+    </div>`).join('');
+}
+$('counts').addEventListener('click',e=>{const n=e.target.dataset.n; if(n){nPlayers=+n; renderSetup();}});
+$('plist').addEventListener('input',e=>{const i=e.target.dataset.i; if(i!=null) config[i].name=e.target.value;});
+$('plist').addEventListener('click',e=>{const b=e.target.closest('button'); if(b&&b.dataset.ai!=null){config[b.dataset.i].ai=b.dataset.ai==='1'; renderSetup();}});
+$('startBtn').addEventListener('click',()=>{SND.unlock(); startGame();});
+$('soundBtn').addEventListener('click',()=>{SND.unlock(); SND.on=!SND.on; $('soundBtn').textContent=SND.on?'🔊':'🔇'; if(SND.on) SND.card();});
+$('speedBtn').addEventListener('click',()=>{speedIdx=(speedIdx+1)%SPEEDS.length; $('speedBtn').textContent=SPEEDS[speedIdx].l;});
+$('quitBtn').addEventListener('click',()=>{
+  showModal(`<h2>Quitter la partie ?</h2><p>La partie en cours sera perdue.</p>
+    <button class="big" id="qYes">Oui, revenir au menu</button>
+    <button class="big" style="background:#8a7a66;box-shadow:0 4px 0 #5e5142" id="qNo">Continuer à jouer</button>`);
+  $('qYes').onclick=()=>{hideModal(); clearTimeout(S.timer); S.over=true; $('game').classList.add('hidden'); $('setup').classList.remove('hidden');};
+  $('qNo').onclick=hideModal;
+});
+renderSetup();
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ================= État de la partie ================= */
+let S = {};
+
+function startGame(){
+  const players = config.slice(0,nPlayers).map((p,i)=>({
+    name:(p.name||'').trim() || (p.ai?`Ordi ${i+1}`:`Joueur ${i+1}`),
+    ai:p.ai, hand:[], roundCuc:0, totalCuc:0, history:[]
+  }));
+  S = {players, n:players.length, round:0, firstStarter:Math.floor(Math.random()*players.length),
+       humans:players.filter(p=>!p.ai).length, timer:null, over:false};
+  $('setup').classList.add('hidden'); $('game').classList.remove('hidden');
+  $('log').innerHTML='';
+  const fs = S.players[S.firstStarter].name;
+  startRound(`🎲 Tirage au sort : <b>${esc(fs)}</b> commence la partie !`);
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startRound(introMsg){
+  S.round++;
+  const deck = shuffle(Array.from({length:60},(_,i)=>i+1));
+  S.players.forEach((p,i)=>{p.hand = deck.slice(i*TRICKS,(i+1)*TRICKS).sort((a,b)=>a-b); p.roundCuc=0;});
+  S.seen = new Set();
+  S.trickNo = 0;
+  S.roundStarter = (S.firstStarter + S.round - 1) % S.n;
+  S.leader = S.roundStarter;
+  addLog(`<b>— Manche ${S.round} —</b> ${esc(S.players[S.leader].name)} ouvre.`);
+  startTrick(introMsg || `Manche ${S.round} : <b>${esc(S.players[S.leader].name)}</b> ouvre le premier pli.`);
+}
+
+function startTrick(msg){
+  S.trickNo++;
+  S.trick = []; S.mode = null; S.broken = false; S.taker = null;
+  S.turn = S.leader; S.revealed = null; S.busy = false;
+  S.msg = msg || `<b>${esc(S.players[S.turn].name)}</b> ouvre le pli.`;
+  nextTurn();
+}
+
+const opening = () => S.trick[0]?.card;
+function respects(card){ return S.mode==='up' ? card>opening() : card<opening(); }
+// Cartes autorisées : si l'on peut suivre la règle, on y est obligé.
+function playable(hand){
+  if (S.trick.length<2) return hand.slice();
+  const ok = hand.filter(respects);
+  return ok.length ? ok : hand.slice();
+}
+function effMode(mode,broken){ return broken ? (mode==='up'?'down':'up') : mode; }
+function computeTaker(trick,mode,broken){
+  const m = effMode(mode,broken);
+  let best = trick[0];
+  for (const t of trick) if (m==='up' ? t.card>best.card : t.card<best.card) best=t;
+  return best.p;
+}
+
+function nextTurn(){
+  if (S.over) return;
+  const p = S.players[S.turn];
+  render();
+  if (p.ai){
+    S.busy = true;
+    S.timer = setTimeout(()=>play(S.turn, aiChoose(S.turn)), SPEEDS[speedIdx].ai);
+  } else {
+    S.busy = false;
+    if (S.humans===1) SND.turn();
+    if (S.humans>1 && S.revealed!==S.turn){
+      showModal(`<h2>Au tour de ${esc(p.name)}</h2><p>Passez l'appareil à <b>${esc(p.name)}</b>.</p><button class="big" id="reveal">👀 Voir ma main</button>`);
+      SND.turn();
+      $('reveal').onclick=()=>{S.revealed=S.turn; hideModal(); render();};
+    }
+  }
+}
+
+function play(pi, card){
+  const p = S.players[pi];
+  p.hand = p.hand.filter(c=>c!==card);
+  const pos = S.trick.length + 1;
+  let broke = false;
+  if (pos===2) S.mode = card>opening() ? 'up' : 'down';
+  else if (pos>=3 && !respects(card)){ broke = true; S.broken = true; }
+  S.trick.push({p:pi, card, broke});
+  if (broke) SND.brk(); else if (pos===2) SND.rule(S.mode); else SND.card();
+  S.seen.add(card);
+  if (pos===1) S.msg = `<b>${esc(p.name)}</b> ouvre avec le ${card}. La 2ᵉ carte va fixer la règle…`;
+  else if (pos===2) S.msg = `<b>${esc(p.name)}</b> joue ${card} : on joue <b>${S.mode==='up'?'plus fort':'plus faible'}</b> que ${opening()} !`;
+  else if (broke) S.msg = `⚡ <b>${esc(p.name)}</b> brise la règle avec le ${card} !`;
+  else S.msg = `<b>${esc(p.name)}</b> joue ${card}.`;
+  if (S.trick.length===S.n) endTrick();
+  else { S.turn = (S.turn+1)%S.n; nextTurn(); }
+}
+
+function endTrick(){
+  S.busy = true;
+  const taker = computeTaker(S.trick,S.mode,S.broken);
+  const sum = S.trick.reduce((s,t)=>s+CUC[t.card],0);
+  S.taker = taker;
+  S.players[taker].roundCuc += sum;
+  setTimeout(()=>SND.take(sum), 250);
+  S.msg = `🥒 <b>${esc(S.players[taker].name)}</b> ramasse le pli : +${sum} concombre${sum>1?'s':''} !`;
+  addLog(`Pli ${S.trickNo} : ${S.trick.map(t=>`${esc(S.players[t.p].name)} ${t.card}${t.broke?'⚡':''}`).join(', ')} → <b>${esc(S.players[taker].name)}</b> +${sum}🥒`);
+  S.turn = -1;
+  render();
+  S.timer = setTimeout(()=>{
+    if (S.over) return;
+    S.leader = taker;
+    if (S.trickNo>=TRICKS) endRound();
+    else startTrick(`<b>${esc(S.players[taker].name)}</b> a ramassé : à lui/elle d'ouvrir.`);
+  }, SPEEDS[speedIdx].end);
+}
+
+function endRound(){
+  S.players.forEach(p=>{p.totalCuc += p.roundCuc; p.history.push(p.roundCuc);});
+  render();
+  const last = S.round>=ROUNDS;
+  const sorted = [...S.players].sort((a,b)=>a.totalCuc-b.totalCuc);
+  const best = sorted[0].totalCuc;
+  const head = Array.from({length:S.round},(_,i)=>`<th>M${i+1}</th>`).join('');
+  const rows = sorted.map((p,i)=>`<tr class="${p.totalCuc===best?'best':''}"><td>${last?(i+1)+'. ':''}${esc(p.name)}</td>${p.history.map(h=>`<td>${h}</td>`).join('')}<td><b>${p.totalCuc}</b></td></tr>`).join('');
+  let title, extra, btn;
+  if (last){
+    const winners = sorted.filter(p=>p.totalCuc===best).map(p=>esc(p.name));
+    title = '🏆 Fin de la partie !';
+    extra = `<p style="font-size:18px">${winners.length>1?'Égalité ! Vainqueurs : ':'Victoire de '}<b>${winners.join(' & ')}</b> avec ${best} concombre${best>1?'s':''}.</p>`;
+    btn = `<button class="big" id="again">Rejouer avec les mêmes joueurs</button><button class="big" style="background:#8a7a66;box-shadow:0 4px 0 #5e5142" id="menu">Menu</button>`;
+  } else {
+    title = `Fin de la manche ${S.round}`;
+    extra = `<p>Encore ${ROUNDS-S.round} manche${ROUNDS-S.round>1?'s':''}. ${esc(S.players[(S.firstStarter+S.round)%S.n].name)} ouvrira la prochaine.</p>`;
+    btn = `<button class="big" id="nextR">Manche suivante</button>`;
+  }
+  showModal(`<h2>${title}</h2>${extra}<table class="res"><tr><th style="text-align:left">Joueur</th>${head}<th>Total</th></tr>${rows}</table>${btn}`);
+  last ? SND.win() : SND.round();
+  if (last){
+    $('again').onclick=()=>{hideModal(); startGame();};
+    $('menu').onclick=()=>{hideModal(); $('game').classList.add('hidden'); $('setup').classList.remove('hidden');};
+  } else {
+    $('nextR').onclick=()=>{hideModal(); startRound();};
+  }
+}
+
+/* ================= IA ================= */
+function aiChoose(pi){
+  const me = S.players[pi];
+  const hand = me.hand;
+  const pos = S.trick.length + 1;
+
+  if (pos===1){
+    // L'ouvreur ne ramasse jamais : on ouvre avec une carte extrême (limite les options adverses)
+    // et on en profite pour se débarrasser des concombres.
+    let best=null, bs=-1e9;
+    for (const c of hand){
+      const s = Math.abs(c-30.5) + CUC[c]*2.5 + Math.random()*2;
+      if (s>bs){bs=s;best=c;}
+    }
+    return best;
+  }
+
+  const unseen = [];
+  for (let c=1;c<=60;c++) if (!S.seen.has(c) && !hand.includes(c)) unseen.push(c);
+  const remAfter = S.n - pos;                 // joueurs qui joueront après moi
+  const cardsEach = Math.max(1, hand.length - 1);
+  let best=null, bestCost=1e9;
+
+  for (const c of playable(hand)){
+    const mode = pos===2 ? (c>opening()?'up':'down') : S.mode;
+    const broke = pos>=3 && !(mode==='up' ? c>opening() : c<opening());
+    const broken = S.broken || broke;
+    const trick = [...S.trick, {p:pi, card:c}];
+    const taker = computeTaker(trick, mode, broken);
+    const cucTrick = trick.reduce((s,t)=>s+CUC[t.card],0);
+    const future = remAfter*2.4;
+    const m = effMode(mode,broken);
+    let risk;
+    if (taker===pi){
+      if (remAfter===0) risk = 1;
+      else {
+        const beat = unseen.filter(u => m==='up' ? u>c : u<c).length;
+        const f = unseen.length ? beat/unseen.length : 0;
+        const pSomeoneCan = 1 - Math.pow(1-f, remAfter*cardsEach);
+        risk = 1 - 0.55*pSomeoneCan;       // les autres ne dépassent que s'ils y sont forcés
+      }
+    } else {
+      risk = remAfter>0 ? Math.min(0.5, 0.07*remAfter + (broken?0:0.05)) : 0;
+    }
+    let cost = risk*(cucTrick+future);
+    if (taker!==pi) cost -= CUC[c]*0.35*(1-risk);        // refiler ses concombres
+    cost += (Math.abs(c-30.5)/30)*0.6;                   // garder les cartes extrêmes, utiles plus tard
+    cost += Math.random()*0.3;
+    if (cost<bestCost){bestCost=cost; best=c;}
+  }
+  return best;
+}
+
+/* ================= Affichage ================= */
+function cardHTML(n, cls=''){
+  const k = CUC[n];
+  return `<div class="card k${k} ${cls}" data-c="${n}">
+    <span class="corner l">${n}</span><span class="corner r">${n}</span>
+    <div class="n">${n}</div>
+    <div class="cu">${'🥒'.repeat(k)}</div>
+  </div>`;
+}
+
+function render(){
+  $('info').textContent = `Manche ${S.round}/${ROUNDS} · Pli ${S.trickNo}/${TRICKS}`;
+
+  $('players').innerHTML = S.players.map((p,i)=>`
+    <div class="player ${i===S.turn?'turn':''} ${i===S.taker?'taker':''}">
+      ${i===S.leader && S.trick.length===0 ? '<span class="badge-start">ouvre</span>' : ''}
+      <div class="nm">${p.ai?'🤖':'👤'} ${esc(p.name)}</div>
+      <div class="cards">🂠 ${p.hand.length} carte${p.hand.length>1?'s':''}</div>
+      <div class="scores">
+        <div><b>${p.roundCuc}</b><small>🥒 manche</small></div>
+        <div><b>${p.totalCuc + (S.history_pending?0:0)}</b><small>🥒 total</small></div>
+      </div>
+    </div>`).join('');
+
+  // Tapis : rouge si la plus forte ramasse, vert sinon
+  document.querySelector('.table').classList.toggle('red', !!S.mode && effMode(S.mode,S.broken)==='up');
+
+  // Règle
+  const r = $('rule');
+  if (!S.trick.length){ r.className='rule'; r.textContent = 'Nouveau pli — en attente de la carte d’ouverture'; }
+  else if (!S.mode){ r.className='rule'; r.textContent = `Ouverture : ${opening()} — la 2ᵉ carte fixera la règle`; }
+  else {
+    const m = effMode(S.mode,S.broken);
+    const base = S.mode==='up' ? `▲ Jouer plus fort que ${opening()}` : `▼ Jouer plus faible que ${opening()}`;
+    if (S.broken){ r.className='rule broken'; r.innerHTML = `${base} · ⚡ Règle brisée ! <u>La plus ${m==='up'?'forte':'faible'} ramasse</u>`; }
+    else { r.className='rule '+S.mode; r.innerHTML = `${base} · la plus ${m==='up'?'forte':'faible'} ramasse`; }
+  }
+
+  // Pli
+  const takerCard = S.taker!=null ? S.trick.find(t=>t.p===S.taker)?.card : null;
+  $('trick').innerHTML = S.trick.map(t=>`
+    <div class="slot">${cardHTML(t.card, t.card===takerCard?'win':'')}
+      <span class="who">${esc(S.players[t.p].name)}</span>
+      ${t.broke?'<span class="tag">⚡ brisé</span>':''}
+    </div>`).join('');
+  $('msg').innerHTML = S.msg || '';
+
+  // Main
+  const cur = S.turn>=0 ? S.players[S.turn] : null;
+  let viewer = null, active = false;
+  if (cur && !cur.ai && (S.humans===1 || S.revealed===S.turn)){ viewer = S.turn; active = !S.busy; }
+  else if (S.humans===1){ viewer = S.players.findIndex(p=>!p.ai); }
+  const handEl = $('hand');
+  handEl.className = 'hand ' + (active?'active':'idle');
+  if (viewer===null || viewer<0){
+    $('handTitle').textContent = cur ? (cur.ai ? `🤖 ${cur.name} réfléchit…` : `Au tour de ${cur.name}`) : 'Fin du pli…';
+    $('handHint').textContent = '';
+    const cnt = cur ? cur.hand.length : 0;
+    handEl.innerHTML = cur && cur.ai ? Array.from({length:cnt},()=>'<div class="cardback"></div>').join('') : '';
+  } else {
+    const vp = S.players[viewer];
+    const pos = S.trick.length + 1;
+    $('handTitle').innerHTML = active ? `🫵 À toi de jouer, <b>${esc(vp.name)}</b>` : `Main de ${esc(vp.name)}`;
+    let hint = '';
+    if (active){
+      if (pos===1) hint = 'Ouvre le pli avec n’importe quelle carte.';
+      else if (pos===2) hint = `Plus fort que ${opening()} → la plus forte ramasse · plus faible → la plus faible ramasse.`;
+      else {
+        const can = vp.hand.some(respects);
+        hint = can ? `Tu dois suivre la règle : joue une des cartes surélevées.` : `Aucune carte ne suit la règle : tu dois la briser.`;
+      }
+    }
+    $('handHint').textContent = hint;
+    const legal = playable(vp.hand);
+    const canFollow = pos>=3 && vp.hand.some(respects);
+    handEl.innerHTML = vp.hand.map(c=>{
+      let cls='';
+      if (active){
+        if (pos<3) cls='ok';
+        else if (canFollow) cls = respects(c) ? 'ok' : 'no';
+        else cls='brk';
+      }
+      return cardHTML(c,cls);
+    }).join('');
+  }
+}
+
+$('hand').addEventListener('click',e=>{
+  const el = e.target.closest('.card'); if (!el) return;
+  if (S.busy || S.turn<0) return;
+  const p = S.players[S.turn];
+  if (p.ai || (S.humans>1 && S.revealed!==S.turn)) return;
+  const c = +el.dataset.c;
+  if (!p.hand.includes(c)) return;
+  if (!playable(p.hand).includes(c)){ SND.nope(); return; }
+  S.busy = true;
+  play(S.turn, c);
+});
+
+function addLog(html){ const li=document.createElement('li'); li.innerHTML=html; $('log').appendChild(li); $('log').scrollTop=1e6; }
+function showModal(html){ $('modal').innerHTML=html; $('overlay').classList.remove('hidden'); }
+function hideModal(){ $('overlay').classList.add('hidden'); }
+</script>
+</body>
+</html>
