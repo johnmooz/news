@@ -69,7 +69,7 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .chip.on.ambigu{border-color:#b07ce0;background:rgba(110,50,150,.28)}
 .camp-label{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;color:var(--muted);margin:14px 0 6px;text-transform:uppercase}
 .camp-label:first-child{margin-top:0}
-.stepper{display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid #e05050;background:rgba(160,30,30,.22)}
+.stepper{display:inline-flex;white-space:nowrap;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid #e05050;background:rgba(160,30,30,.22)}
 .stepper button{width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:var(--ink);font-size:1.1rem}
 .stepper b{min-width:18px;text-align:center;font-size:1.15rem}
 .summary{margin-top:14px;font-size:.98rem;color:var(--muted);line-height:1.45}
@@ -304,6 +304,11 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 <div id="toast"></div>
 
 <script>
+window.addEventListener("error",function(e){var el=document.getElementById("netStatus");if(el)el.innerHTML="⚠ Erreur du script : "+String(e&&e.message||e).replace(/</g,"&lt;");});
+</script>
+<script>
+(function(){
+"use strict";
 /* =============================================================
    DONNÉES DU JEU
    ============================================================= */
@@ -353,8 +358,7 @@ const isWolf = r => roleOk(r) && ROLES[r].camp==="loups";
    ============================================================= */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const clean=s=>String(s||"").replace(/[\u0000-\u001f\u007f-\u009f­​‌‎‏
--‮⁠-⁯﻿]/g,"").trim().slice(0,18);
+const clean=s=>String(s||"").replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b\u200c\u200e\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,"").trim().slice(0,18);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),4000);}
 const SCREENS=["home","setup","hostLobby","search","game"];
@@ -780,38 +784,95 @@ function showWin(w,meneur){
 /* =============================================================
    RÉSEAU : salle en direct + chiffrement des rôles
    ============================================================= */
-let room=null, myPeer=null, netState="wait", lastP="";
+let room=null, db=null, roomState="wait", dbState="wait", dbWrite="unknown";
+let lastP="", lastBody=undefined, seq=0, dbDocs=[], dbBusy=false, dbPending=undefined;
+const myPeer=(()=>{const a="abcdefghijkmnpqrstuvwxyz23456789";let s="p";for(let i=0;i<11;i++)s+=a[Math.floor(Math.random()*a.length)];return s;})();
+const STALE=5*60*1000;
+
+/* Publie l'état de cet appareil sur les deux canaux (salle en direct + base partagée) */
 function setP(obj){
-  if(!room) return;
-  const s=JSON.stringify(obj); if(s===lastP) return; lastP=s;
-  room.presence({lg:obj}).catch(()=>{lastP="";});
+  const body=obj?{...obj,id:myPeer}:null;
+  const s=JSON.stringify(body); if(s===lastP) return; lastP=s; lastBody=body;
+  sendAll();
 }
+function sendAll(){
+  if(lastBody===undefined) return;
+  const full=lastBody?{...lastBody,v:++seq,ts:Date.now()}:null;
+  if(room) room.presence({lg:full}).catch(()=>{});
+  if(db&&dbState!=="off"){dbPending=full;dbFlush();}
+}
+async function dbFlush(){
+  if(dbBusy||dbPending===undefined||!db) return;
+  dbBusy=true; const body=dbPending; dbPending=undefined;
+  try{ const ref=db.doc("lg/"+myPeer); if(body) await ref.set(body); else await ref.delete(); if(body) dbWrite="ok"; }
+  catch(e){ if(body) dbWrite="ro"; }
+  dbBusy=false; updateNetStatus();
+  if(dbPending!==undefined) dbFlush();
+}
+/* Tous les appareils visibles, fusionnés depuis les deux canaux */
+function netPeers(){
+  const m=new Map(), now=Date.now();
+  const put=lg=>{
+    if(!lg||typeof lg!=="object"||typeof lg.id!=="string") return;
+    const o=m.get(lg.id);
+    if(!o||(Number(lg.v)||0)>(Number(o.lg.v)||0)) m.set(lg.id,{peer:lg.id,me:lg.id===myPeer,lg});
+  };
+  if(room&&room.connected()) room.peers().forEach(p=>{if(p.kind==="viewer"&&p.presence) put(p.presence.lg);});
+  dbDocs.forEach(d=>{ if(Math.abs(now-(Number(d.ts)||0))<STALE) put(d); });
+  return [...m.values()];
+}
+function netReady(){ return !!(room&&room.connected()) || dbState==="ok"; }
 function updateNetStatus(){
-  const el=$("netStatus"), noCrypto=!(window.crypto&&crypto.subtle), ok=netState!=="off" && !!room && !noCrypto;
+  const el=$("netStatus"), noCrypto=!(window.crypto&&crypto.subtle);
+  const rOk=!!(room&&room.connected()), dOk=dbState==="ok";
+  const ok=(rOk||dOk)&&!noCrypto;
   $("mHost").disabled=!ok; $("mFind").disabled=!ok;
-  if(!ok && (netState==="off"||(room&&noCrypto))) el.innerHTML="⚠ Le jeu en réseau n'est pas disponible ici : seul le mode Solo fonctionne.<br><small>Pour jouer en réseau, ouvre la page depuis Claude en étant connecté à ton compte.</small>";
-  else if(!room || !room.connected()) el.innerHTML=`<span class="dots">Connexion au réseau</span>`;
-  else { const n=room.peers().filter(p=>!p.sameTab&&p.kind==="viewer").length;
-    el.textContent=`✓ Réseau prêt — ${n} autre${n>1?"s":""} personne${n>1?"s":""} sur cette page en ce moment`; }
+  const det=`<small>Salle en direct : ${rOk?"✓":(roomState==="off"||roomState==="slow")?"✗":"…"} · Base partagée : ${dOk?(dbWrite==="ro"?"lecture seule":"✓"):(dbState==="off"||dbState==="slow")?"✗":"…"}</small>`;
+  const dead=s=>s==="off"||s==="slow";
+  if(ok) el.innerHTML=`✓ Réseau prêt<br>${det}`;
+  else if(noCrypto||(dead(roomState)&&dead(dbState)))
+    el.innerHTML=`⚠ Le jeu en réseau n'est pas disponible ici : seul le mode Solo fonctionne.<br>${det}<br><small>Ouvre la page depuis son lien claude.ai, connecté à ton compte Claude, puis recharge-la.</small>`;
+  else el.innerHTML=`<span class="dots">Connexion au réseau</span><br>${det}`;
 }
-(async()=>{
-  try{ room = (window.claude && typeof claude.use==="function") ? await claude.use("room") : null; }catch(e){ room=null; }
-  if(!room){ netState="off"; updateNetStatus(); return; }
-  netState="on";
-  room.onPeers(ch=>{
-    const me=ch.peers.find(p=>p.sameTab); if(me) myPeer=me.peer;
-    onNet();
-  },()=>{ netState="off"; updateNetStatus(); });
-  room.onConnection(()=>updateNetStatus(),()=>{ netState="off"; updateNetStatus(); });
-  updateNetStatus();
+(function initNet(){
+  const c=(window.claude&&typeof window.claude.use==="function")?window.claude:null;
+  if(!c){ roomState="off"; dbState="off"; updateNetStatus(); return; }
+  c.use("room").then(r=>{
+    room=r; if(!r){roomState="off";updateNetStatus();return;}
+    r.onPeers(()=>onNet(),()=>{roomState="off";onNet();});
+    r.onConnection(ok=>{ if(ok){roomState="ok";sendAll();} else if(roomState!=="off") roomState="wait"; onNet(); },()=>{roomState="off";onNet();});
+    sendAll();
+  }).catch(()=>{roomState="off";updateNetStatus();});
+  c.use("db").then(d=>{
+    db=d; if(!d){dbState="off";updateNetStatus();return;}
+    try{
+      d.collection("lg").orderBy("ts","desc").limit(300).onSnapshot(snap=>{
+        dbDocs=snap.docs.filter(x=>x.exists).map(x=>x.data()).filter(Boolean);
+        dbState="ok"; onNet();
+      },()=>{dbState="off";onNet();});
+    }catch(e){dbState="off";}
+    sendAll(); updateNetStatus();
+  }).catch(()=>{dbState="off";updateNetStatus();});
 })();
-setTimeout(()=>{ if(!room){ netState="off"; updateNetStatus(); } },11000);
+setTimeout(()=>{
+  if(!(room&&room.connected())&&roomState!=="off") roomState="slow";
+  if(dbState==="wait") dbState="slow";
+  updateNetStatus();
+},12000);
+/* Signe de vie toutes les minutes sur la base partagée (pour repérer les appareils partis) */
+setInterval(()=>{ if(lastBody&&db&&dbState==="ok"){dbPending={...lastBody,v:++seq,ts:Date.now()};dbFlush();} },60000);
+setInterval(()=>{ if(MODE!=="home"&&MODE!=="solo") onNet(); },15000);
+window.addEventListener("pagehide",()=>{ if(lastBody){ lastBody=null; lastP="null"; if(room) room.presence({lg:null}).catch(()=>{}); if(db) db.doc("lg/"+myPeer).delete().catch(()=>{}); } });
 
 function onNet(){
   updateNetStatus();
   if(MODE==="find") renderGames();
   else if(MODE==="guest") guestSync();
   else if(MODE==="host"){ if(S) hostSync(); else hostLobbyUpdate(); }
+}
+function sendWarning(){
+  return (dbWrite==="ro"&&!(room&&room.connected()))
+    ?`<p class="hint" style="color:#ffb3a8">⚠ Ton appareil voit les parties mais ne peut pas envoyer d'informations. Demande à l'hôte de t'inviter avec le rôle « Éditeur » (bouton Partager de Claude).</p>`:"";
 }
 
 /* --- Chiffrement : chaque joueur ne peut lire que SA carte --- */
@@ -841,7 +902,7 @@ async function decrypt(key,e){
 function randCode(){const A="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
 function hostName(){return clean($("hName").value)||"Meneur";}
 async function hostOpen(){
-  if(!room) return;
+  if(!netReady()) return;
   MODE="host"; S=null;
   H={code:randCode(), keys:await genKeys(), sk:{}};
   compN=-1; touched=false;
@@ -852,15 +913,14 @@ async function hostOpen(){
 $("hName").addEventListener("input",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
 $("hPlay").addEventListener("change",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
 function lobbyGuests(){
-  if(!room||!H) return [];
-  return room.peers().filter(p=>!p.sameTab&&p.kind==="viewer"&&p.presence&&p.presence.lg&&!p.presence.lg.h
-      &&p.presence.lg.c===H.code&&typeof p.presence.lg.k==="string")
+  if(!H) return [];
+  return netPeers().filter(p=>!p.me&&!p.lg.h&&p.lg.c===H.code&&typeof p.lg.k==="string")
     .slice(0,$("hPlay").checked?11:12);
 }
 function hostLobbyUpdate(){
   if(!H||S) return;
   const g=lobbyGuests(), play=$("hPlay").checked;
-  const list=(play?[{n:hostName()+" (toi)",me:1}]:[]).concat(g.map(p=>({n:clean(p.presence.lg.n)||"Joueur"})));
+  const list=(play?[{n:hostName()+" (toi)",me:1}]:[]).concat(g.map(p=>({n:clean(p.lg.n)||"Joueur"})));
   $("hList").innerHTML=list.length?list.map(x=>`<span class="pchip ${x.me?"me":""}">${esc(x.n)}</span>`).join(""):`<p class="hint">En attente de joueurs…</p>`;
   if(!g.length) $("hList").innerHTML+=`<p class="hint" style="width:100%">Aucun joueur connecté pour l'instant<span class="dots"></span></p>`;
   $("hCount").textContent=list.length;
@@ -869,7 +929,7 @@ function hostLobbyUpdate(){
     if(!touched) defaults(compN); else wolves=Math.min(wolves,Math.max(compN,1));
     renderComp($("hComp"));
   }
-  setP({h:1,c:H.code,n:hostName(),ph:"lobby",pl:g.map(p=>({p:p.peer,n:clean(p.presence.lg.n)||"Joueur"}))});
+  setP({h:1,c:H.code,n:hostName(),ph:"lobby",pl:g.map(p=>({p:p.peer,n:clean(p.lg.n)||"Joueur"}))});
 }
 $("hStart").onclick=async()=>{
   const g=lobbyGuests(), play=$("hPlay").checked;
@@ -878,7 +938,7 @@ $("hStart").onclick=async()=>{
   $("hStart").disabled=true;
   shuffle(cards);
   const seats=[]; if(play) seats.push({peer:myPeer,name:hostName(),me:true});
-  g.forEach(p=>seats.push({peer:p.peer,name:clean(p.presence.lg.n)||"Joueur",k:p.presence.lg.k}));
+  g.forEach(p=>seats.push({peer:p.peer,name:clean(p.lg.n)||"Joueur",k:p.lg.k}));
   S={net:"host",players:seats.map((s,i)=>({...s,role:cards[i],dead:false,seen:false,lover:false,gone:false})),
      center:cards.slice(compN),turn:0,phase:"reveal",view:false,night:1,isDay:false,done:{},winner:null};
   try{ for(const p of S.players) if(!p.me) await encFor(p); }
@@ -901,10 +961,10 @@ function pubHost(){
 }
 function hostSync(){
   if(MODE!=="host"||!S) return;
-  const peers=room.peers(); let ch=false;
+  const peers=netPeers(); let ch=false;
   S.players.forEach((p,i)=>{
     if(p.me) return;
-    const q=peers.find(x=>x.peer===p.peer), lg=q&&q.presence&&q.presence.lg;
+    const q=peers.find(x=>x.peer===p.peer), lg=q&&q.lg;
     const gone=!(lg&&lg.c===H.code);
     if(gone!==p.gone){p.gone=gone;ch=true;}
     if(gone) return;
@@ -929,18 +989,18 @@ function hostRelobby(){
    INVITÉ (Chercher une partie)
    ============================================================= */
 function findOpen(){
-  if(!room) return;
+  if(!netReady()) return;
   MODE="find"; GU=null;
   $("sJoin").classList.remove("hidden"); $("sWait").classList.add("hidden");
   show("search"); renderGames();
 }
 function hostsList(){
-  return room.peers().filter(p=>!p.sameTab&&p.kind==="viewer"&&p.presence&&p.presence.lg&&p.presence.lg.h===1&&typeof p.presence.lg.c==="string");
+  return netPeers().filter(p=>!p.me&&p.lg.h===1&&typeof p.lg.c==="string");
 }
 function renderGames(){
   const hs=hostsList();
   $("gList").innerHTML=hs.length?hs.map(p=>{
-    const lg=p.presence.lg, n=Array.isArray(lg.pl)?lg.pl.length:0, open=lg.ph==="lobby";
+    const lg=p.lg, n=Array.isArray(lg.pl)?lg.pl.length:0, open=lg.ph==="lobby";
     return `<div class="game-row"><div><b>${esc(clean(lg.n))}</b><span class="code sm">${esc(String(lg.c).slice(0,6))}</span><br>
       <small>${open?`${n} joueur${n>1?"s":""} déjà inscrit${n>1?"s":""}`:"Partie en cours"}</small></div>
       ${open?`<button class="btn solid" data-join="${esc(String(lg.c).slice(0,6))}">Rejoindre</button>`:""}</div>`;
@@ -969,21 +1029,21 @@ function waitBox(html){
 }
 async function guestSync(){
   if(MODE!=="guest"||!GU) return;
-  const hp=room.peers().find(p=>!p.sameTab&&p.presence&&p.presence.lg&&p.presence.lg.h===1&&p.presence.lg.c===GU.code);
+  const hp=netPeers().find(p=>!p.me&&p.lg.h===1&&p.lg.c===GU.code);
   if(!hp){
     GU.hs=null;
     if(GU.inGame){ renderGuestPanel(); }
     else waitBox(`<h2>Partie introuvable</h2><p class="hint">L'hôte a fermé la partie ou s'est déconnecté.</p>`);
     return;
   }
-  const hs=hp.presence.lg; GU.hs=hs;
+  const hs=hp.lg; GU.hs=hs;
   const pl=Array.isArray(hs.pl)?hs.pl:[];
   const idx=pl.findIndex(s=>s&&s.p===myPeer);
   if(hs.ph==="lobby"){
     if(GU.inGame||GU.role) guestReset();
     waitBox(`<h2>Partie de ${esc(clean(hs.n))} <span class="code sm">${esc(GU.code)}</span></h2>
       <p style="margin:10px 0">${idx>=0?`✓ Tu es inscrit(e) sous le nom <b>${esc(GU.name)}</b>.<br><span class="dots">En attente que le meneur distribue les cartes</span>`
-        :`<span class="dots">Connexion à la partie</span><br><small class="hint">Si rien ne se passe, la partie est peut-être complète (12 joueurs).</small>`}</p>
+        :`<span class="dots">Connexion à la partie</span><br><small class="hint">Si rien ne se passe, la partie est peut-être complète (12 joueurs).</small>`}</p>${sendWarning()}
       <div class="plist">${pl.map(s=>`<span class="pchip ${s.p===myPeer?"me":""}">${esc(clean(s.n))}</span>`).join("")}</div>`);
     return;
   }
@@ -1051,6 +1111,7 @@ function guestTurnCard(){
 
 /* ============================================================= */
 updateNetStatus();
+})();
 </script>
 </body>
 </html>
