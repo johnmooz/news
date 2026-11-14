@@ -56,6 +56,9 @@
   .center { text-align:center; }
   .big { font-family:"Press Start 2P", monospace; font-size:14px; line-height:1.8; margin-bottom:14px; }
   .sub { font-size:14px; line-height:1.6; margin-bottom:14px; }
+  .code { font-family:"Press Start 2P", monospace; font-size:30px; letter-spacing:8px; background:#fff; border:3px solid var(--ink); padding:16px 10px 16px 18px; margin:8px auto 8px; max-width:320px; user-select:all; min-height:68px; }
+  .codein { text-transform:uppercase; letter-spacing:3px; font-weight:700 !important; }
+  .codein::placeholder { text-transform:none; letter-spacing:0; font-weight:400; }
   .ip { font-family:"Press Start 2P", monospace; font-size:15px; background:#fff; border:2px solid var(--ink); padding:12px; margin:6px 0 4px; user-select:all; }
   .dots::after { content:''; animation:dots 1.2s steps(4) infinite; }
   @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
@@ -104,7 +107,7 @@
             <button data-v="host">Réseau (hôte)</button>
             <button data-v="guest">Réseau (rejoindre)</button>
           </div>
-          <div class="warn" id="netNote" style="display:none">Le mode réseau fonctionne uniquement dans PONG.exe.</div>
+          <div class="warn" id="netNote" style="display:none">Le jeu en réseau marche dans PONG.exe ou en ouvrant le fichier pong.html dans un navigateur, pas dans cet aperçu.</div>
         </div>
         <div class="row">
           <span class="lbl" id="lblNames">Ton nom</span>
@@ -120,9 +123,9 @@
           </div>
         </div>
         <div class="row hidden" id="addrRow">
-          <span class="lbl">Adresse de l'hôte</span>
-          <input type="text" id="inAddr" maxlength="60" placeholder="ex. 192.168.1.23">
-          <div class="hint">L'adresse s'affiche sur l'écran de l'hôte après « Créer la partie ».</div>
+          <span class="lbl">Code de la partie</span>
+          <input type="text" id="inAddr" class="codein" maxlength="60" placeholder="ex. K7Q2M" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <div class="hint">Le code s'affiche chez celui qui héberge. Sur le même réseau, son adresse IP marche aussi (dans PONG.exe).</div>
         </div>
         <div class="row" id="aiRow">
           <span class="lbl">Niveau de l'ordinateur</span>
@@ -212,6 +215,7 @@
 
   const cfg = { mode: 'solo', ai: 'medium', level: 1 };
   let IS_APP = false;      // vrai quand la page est servie par PONG.exe
+  const netOK = () => IS_APP || location.protocol === 'file:';
 
   // ---------- Menu ----------
   function segment(id, onPick) {
@@ -243,8 +247,8 @@
     $('padR').classList.toggle('off', !showR); $('padRlbl').style.visibility = showR ? '' : 'hidden';
     $('padLlbl').textContent = m === 'guest' ? 'Toi (gauche)' : 'Joueur 2';
     $('padRlbl').textContent = m === 'local' ? 'Joueur 1' : 'Toi (droite)';
-    $('netNote').style.display = net && !IS_APP ? '' : 'none';
-    $('btnStart').disabled = net && !IS_APP;
+    $('netNote').style.display = net && !netOK() ? '' : 'none';
+    $('btnStart').disabled = net && !netOK();
   }
   segment('segMode', v => { cfg.mode = v; applyMode(); });
   segment('segAI', v => cfg.ai = v);
@@ -411,47 +415,134 @@
 
   // ---------- Réseau ----------
   // L'hôte fait tourner la partie ; l'invité envoie ses touches et affiche l'état reçu.
-  let ws = null;
-  const NET = { peerName: '', connected: false };
+  // Deux chemins : code de partie (PeerJS, marche par Internet) ou adresse IP (même réseau, PONG.exe).
+  const PEER_PREFIX = 'pong-jm-';
+  const PEER_URLS = [
+    'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
+    'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'
+  ];
+  const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let ws = null, peer = null, conn = null, chan = null, netSession = 0;
+  const NET = { peerName: '', connected: false, code: '', codeState: '', ips: [], lanState: '' };
   let remoteDir = 0, lastSentDir = 0;
 
-  function sendNet(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  const getPeer = () => window.Peer || (window.peerjs && window.peerjs.Peer);
+  let peerLoading = null;
+  function loadPeer() {
+    if (getPeer()) return Promise.resolve(true);
+    if (!peerLoading) peerLoading = (async () => {
+      for (const u of PEER_URLS) {
+        const ok = await new Promise(res => {
+          const sc = document.createElement('script');
+          sc.src = u; sc.onload = () => res(!!getPeer()); sc.onerror = () => res(false);
+          document.head.appendChild(sc);
+        });
+        if (ok) return true;
+      }
+      peerLoading = null;
+      return false;
+    })();
+    return peerLoading;
+  }
+  function makeCode() { let s = ''; for (let i = 0; i < 5; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; return s; }
+
+  function sendNet(o) {
+    if (chan === 'p2p' && conn && conn.open) { try { conn.send(o); } catch (e) {} }
+    else if (chan === 'ws' && ws && ws.readyState === 1) ws.send(JSON.stringify(o));
+  }
   function closeNet() {
-    if (ws) { ws.onclose = null; ws.onerror = null; ws.onmessage = null; try { ws.close(); } catch (e) {} }
-    ws = null; NET.connected = false; NET.peerName = '';
+    netSession++;
+    const w = ws, c = conn, p = peer;
+    ws = conn = peer = null; chan = null;
+    NET.connected = false; NET.peerName = '';
+    if (w) { w.onclose = w.onerror = w.onmessage = null; try { w.close(); } catch (e) {} }
+    if (c) { try { c.close(); } catch (e) {} }
+    if (p) { try { p.destroy(); } catch (e) {} }
   }
 
+  // ----- Hôte -----
   async function startHost() {
-    showWait('Hôte', '<span class="dots">Ouverture de la partie</span>');
-    let info;
-    try { info = await (await fetch('/api/host', { cache: 'no-store' })).json(); } catch (e) { info = { ok: false, err: String(e) }; }
-    if (!info.ok) {
-      showWait('Erreur', `Impossible d'ouvrir le port ${NET_PORT}.<br><small>${esc(info.err || '')}</small>`, 'Retour');
+    closeNet();
+    const s = netSession;
+    Object.assign(NET, { code: '', codeState: 'loading', ips: [], lanState: IS_APP ? 'loading' : 'none' });
+    renderHostWait();
+    if (IS_APP) {
+      let info;
+      try { info = await (await fetch('/api/host', { cache: 'no-store' })).json(); } catch (e) { info = { ok: false }; }
+      if (s !== netSession) return;
+      if (info.ok) { NET.ips = info.ips || []; NET.lanState = 'ok'; openHostWs(s); }
+      else NET.lanState = 'err';
+      renderHostWait();
+    }
+    startHostPeer(s, 0);
+  }
+  function openHostWs(s) {
+    const w = new WebSocket(`ws://${location.host}/ws?role=host`);
+    ws = w;
+    w.onmessage = e => { if (s === netSession) onHostMsg(JSON.parse(e.data), 'ws'); };
+    w.onclose = () => { if (s !== netSession) return; ws = null; if (chan === 'ws') netLost('La connexion réseau a été fermée.'); };
+  }
+  async function startHostPeer(s, tries) {
+    const ok = await loadPeer();
+    if (s !== netSession) return;
+    if (!ok) { NET.codeState = 'err'; renderHostWait(); return; }
+    const code = makeCode();
+    const P = getPeer();
+    const p = new P(PEER_PREFIX + code, { debug: 0 });
+    peer = p;
+    p.on('open', () => { if (peer !== p) return; NET.code = code; NET.codeState = 'ok'; renderHostWait(); });
+    p.on('error', err => {
+      if (peer !== p) return;
+      if (err && err.type === 'unavailable-id' && tries < 5) { peer = null; try { p.destroy(); } catch (e) {} startHostPeer(s, tries + 1); return; }
+      if (!NET.code) { NET.codeState = 'err'; renderHostWait(); }
+    });
+    p.on('disconnected', () => { if (peer === p && !p.destroyed) { try { p.reconnect(); } catch (e) {} } });
+    p.on('connection', c => {
+      c.on('open', () => {
+        if (s !== netSession) { try { c.close(); } catch (e) {} return; }
+        if (NET.connected || (conn && conn.open)) { try { c.send({ t: 'full' }); } catch (e) {} setTimeout(() => { try { c.close(); } catch (e) {} }, 400); return; }
+        conn = c;
+        c.on('data', m => { if (s === netSession && conn === c) onHostMsg(m, 'p2p'); });
+        c.on('close', () => { if (s === netSession && conn === c) { conn = null; onHostMsg({ t: 'peer-left' }, 'p2p'); } });
+      });
+    });
+  }
+  function renderHostWait() {
+    if (cfg.mode !== 'host' || NET.connected) return;
+    let codeHtml;
+    if (NET.codeState === 'ok') codeHtml = `<div class="code">${esc(NET.code)}</div>`;
+    else if (NET.codeState === 'loading') codeHtml = `<div class="code"><span class="dots"></span></div>`;
+    else codeHtml = `<div class="warn">Code indisponible : pas de connexion Internet ?</div>`;
+    const lan = NET.ips.length
+      ? `<div class="hint">Sur le même réseau, l'adresse IP marche aussi : <b>${NET.ips.map(esc).join(' · ')}</b></div>` : '';
+    if (NET.codeState === 'err' && !NET.ips.length && NET.lanState !== 'loading') {
+      showWait('Erreur', "Impossible de créer la partie : pas de connexion Internet, et pas de réseau local disponible.", 'Retour');
       return;
     }
-    closeNet();
-    ws = new WebSocket(`ws://${location.host}/ws?role=host`);
-    const ips = (info.ips && info.ips.length ? info.ips : ['(adresse introuvable)']);
-    const ipHtml = ips.map(ip => `<div class="ip">${esc(ip)}</div>`).join('');
-    ws.onopen = () => showWait('Partie créée',
-      `Donne cette adresse à l'autre joueur :${ipHtml}
-       <div class="hint">Vous devez être sur le même réseau (même box / Wi-Fi).</div><br>
-       <span class="dots">En attente d'un joueur</span>`);
-    ws.onmessage = e => onHostMsg(JSON.parse(e.data));
-    ws.onclose = () => { ws = null; if (cfg.mode === 'host') netLost('La connexion réseau a été fermée.'); };
+    showWait('Partie créée', `Donne ce code à l'autre joueur :${codeHtml}${lan}<br><span class="dots">En attente d'un joueur</span>`);
   }
-  function onHostMsg(m) {
+  function rejectOn(from) {
+    if (from === 'ws' && ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'full' }));
+    if (from === 'p2p' && conn) { const c = conn; conn = null; try { c.send({ t: 'full' }); } catch (e) {} setTimeout(() => { try { c.close(); } catch (e) {} }, 400); }
+  }
+  function onHostMsg(m, from) {
+    if (!m || typeof m !== 'object') return;
     if (m.t === 'hello') {
+      if (NET.connected && chan !== from) { rejectOn(from); return; }
+      chan = from;
       NET.peerName = String(m.name || 'Invité').slice(0, 14);
       NET.connected = true;
       newGame();
-    } else if (m.t === 'in') {
+      return;
+    }
+    if (from !== chan) return;
+    if (m.t === 'in') {
       remoteDir = Math.max(-1, Math.min(1, m.d | 0));
     } else if (m.t === 'pause') {
       togglePause();
     } else if (m.t === 'peer-left') {
       const was = NET.connected;
-      NET.connected = false;
+      NET.connected = false; chan = null;
       if (was) {
         if (S) S.running = false;
         showOver('Partie terminée', `${NET.peerName || "L'autre joueur"} a quitté la partie.`, false);
@@ -459,32 +550,77 @@
     }
   }
 
+  // ----- Invité -----
   function startGuest() {
-    let addr = $('inAddr').value.trim().replace(/^ws:\/\//, '').replace(/\/.*$/, '');
-    if (!addr) { $('inAddr').focus(); return; }
-    if (!/:\d+$/.test(addr)) addr += ':' + NET_PORT;
-    showWait('Connexion', `<span class="dots">Connexion à ${esc(addr)}</span>`);
+    const raw = $('inAddr').value.trim();
+    if (!raw) { $('inAddr').focus(); return; }
+    if (/[.:]/.test(raw)) {
+      if (!IS_APP) { showWait('Erreur', "La connexion par adresse IP ne marche que dans PONG.exe. Utilise le code de la partie.", 'Retour'); return; }
+      startGuestLan(raw);
+    } else {
+      startGuestCode(raw.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+    }
+  }
+  async function startGuestCode(code) {
     closeNet();
+    const s = netSession;
+    showWait('Connexion', `<span class="dots">Recherche de la partie ${esc(code)}</span>`);
+    const ok = await loadPeer();
+    if (s !== netSession) return;
+    if (!ok) { showWait('Erreur', "Impossible de charger le module réseau. Vérifie la connexion Internet.", 'Retour'); return; }
     let opened = false;
-    try { ws = new WebSocket(`ws://${addr}/ws?role=guest`); }
+    const fail = msg => { if (s !== netSession) return; closeNet(); showWait('Erreur', msg, 'Retour'); };
+    const timer = setTimeout(() => { if (!opened) fail(`Impossible de rejoindre la partie ${esc(code)}.<br>Vérifie le code et la connexion Internet.`); }, 15000);
+    const P = getPeer();
+    const p = new P({ debug: 0 });
+    peer = p;
+    p.on('error', err => {
+      if (opened || s !== netSession) return;
+      clearTimeout(timer);
+      fail(err && err.type === 'peer-unavailable' ? `Aucune partie avec le code ${esc(code)}.` : `Erreur réseau (${esc((err && err.type) || err)}).`);
+    });
+    p.on('open', () => {
+      if (s !== netSession) return;
+      const c = p.connect(PEER_PREFIX + code, { serialization: 'json', reliable: true });
+      conn = c; chan = 'p2p';
+      c.on('open', () => {
+        if (s !== netSession) return;
+        opened = true; clearTimeout(timer);
+        sendNet({ t: 'hello', name: myName('Invité') });
+        showWait('Connecté', '<span class="dots">La partie va commencer</span>');
+      });
+      c.on('data', m => { if (s === netSession) onGuestMsg(m); });
+      c.on('close', () => { if (s === netSession && opened) netLost("La connexion avec l'hôte a été perdue."); });
+    });
+  }
+  function startGuestLan(raw) {
+    let addr = raw.replace(/^ws:\/\//, '').replace(/\/.*$/, '');
+    if (!/:\d+$/.test(addr)) addr += ':' + NET_PORT;
+    closeNet();
+    const s = netSession;
+    showWait('Connexion', `<span class="dots">Connexion à ${esc(addr)}</span>`);
+    let opened = false, w;
+    const failMsg = `Impossible de joindre ${esc(addr)}.<br>Vérifie l'adresse, que l'hôte a bien créé la partie et que le pare-feu de son PC autorise PONG.`;
+    try { w = new WebSocket(`ws://${addr}/ws?role=guest`); }
     catch (e) { showWait('Erreur', 'Adresse invalide.', 'Retour'); return; }
-    const timer = setTimeout(() => {
-      if (!opened) { closeNet(); showWait('Erreur', `Impossible de joindre ${esc(addr)}.<br>Vérifie l'adresse, que l'hôte a bien créé la partie et que le pare-feu de son PC autorise PONG.`, 'Retour'); }
-    }, 6000);
-    ws.onopen = () => {
+    ws = w; chan = 'ws';
+    const timer = setTimeout(() => { if (!opened && s === netSession) { closeNet(); showWait('Erreur', failMsg, 'Retour'); } }, 6000);
+    w.onopen = () => {
       opened = true; clearTimeout(timer);
       sendNet({ t: 'hello', name: myName('Invité') });
       showWait('Connecté', '<span class="dots">La partie va commencer</span>');
     };
-    ws.onmessage = e => onGuestMsg(JSON.parse(e.data));
-    ws.onclose = () => {
+    w.onmessage = e => { if (s === netSession) onGuestMsg(JSON.parse(e.data)); };
+    w.onclose = () => {
       clearTimeout(timer);
+      if (s !== netSession) return;
       ws = null;
-      if (!opened) showWait('Erreur', `Impossible de joindre ${esc(addr)}.<br>Vérifie l'adresse, que l'hôte a bien créé la partie et que le pare-feu de son PC autorise PONG.`, 'Retour');
+      if (!opened) { closeNet(); showWait('Erreur', failMsg, 'Retour'); }
       else netLost("La connexion avec l'hôte a été perdue.");
     };
   }
   function onGuestMsg(m) {
+    if (!m || typeof m !== 'object') return;
     if (m.t === 'nohost') { closeNet(); showWait('Erreur', "Aucune partie n'a été créée à cette adresse.", 'Retour'); }
     else if (m.t === 'full') { closeNet(); showWait('Erreur', 'Cette partie a déjà deux joueurs.', 'Retour'); }
     else if (m.t === 'start') {
@@ -498,7 +634,7 @@
       S.serveIn = m.sv ? 1 : 0; S.serveDir = m.sv || 1;
       S.flash = m.f ? { side: m.f[0] ? 'right' : 'left', t: m.f[1] } : null;
       if (m.ll !== S.left.lives || m.rl !== S.right.lives) { S.left.lives = m.ll; S.right.lives = m.rl; renderHud(); }
-      if (m.snd) for (const s of m.snd) beep(s[0], s[1], s[2]);
+      if (m.snd) for (const x of m.snd) beep(x[0], x[1], x[2]);
       if (S.running && !!m.p !== S.paused) { S.paused = !!m.p; S.paused ? show('pause') : hide('pause'); }
     } else if (m.t === 'over' && S) {
       S.running = false;
