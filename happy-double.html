@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Happy Double</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#ff3fa4;--pink2:#ff86c8;--pinkbg:#ffe3f1;--lime:#9be22d;--lime2:#c9f56f;--ink:#121212;--ink2:#1d1d1d;--ink3:#2a2a2a;--paper:#fffafd;--orange:#ffa21f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Nunito,system-ui,sans-serif;color:#fff;min-height:100vh;
+ background:radial-gradient(circle at 15% 10%,rgba(255,63,164,.18),transparent 40%),radial-gradient(circle at 90% 80%,rgba(155,226,45,.14),transparent 45%),#0e0e0e}
+button{font-family:inherit;cursor:pointer}
+.disp{font-family:'Lilita One',Nunito,sans-serif;letter-spacing:.5px}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+/* logo */
+.logo{display:flex;align-items:center;gap:14px}
+.logo svg{width:64px;height:64px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.5))}
+.logo .t{font-family:'Lilita One';font-size:44px;line-height:.9;color:#fff;text-shadow:3px 3px 0 var(--pink),-1px -1px 0 var(--pink),1px -1px 0 var(--pink),-1px 1px 0 var(--pink)}
+.logo .t span{display:block}
+.logo .tag{display:inline-block;margin-top:6px;background:var(--pink);color:#fff;font-weight:900;font-size:12px;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.6px}
+.logo.small svg{width:40px;height:40px}.logo.small .t{font-size:24px;text-shadow:2px 2px 0 var(--pink)}
+/* buttons */
+.btn{border:none;border-radius:999px;padding:11px 22px;font-weight:900;font-size:15px;color:#fff;background:var(--ink3);box-shadow:0 4px 0 rgba(0,0,0,.45);transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
+.btn.pink{background:var(--pink)}.btn.lime{background:var(--lime);color:#13200a}
+.btn.ghost{background:transparent;border:2px solid #444;box-shadow:none;padding:8px 14px;font-size:13px}
+.btn.big{font-family:'Lilita One';font-size:26px;padding:14px 34px;letter-spacing:1px}
+/* setup */
+.setup{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;margin-top:22px}
+.panel{background:var(--ink2);border:2px solid #2c2c2c;border-radius:22px;padding:20px}
+.panel h2{font-family:'Lilita One';font-weight:400;margin:0 0 14px;font-size:24px;color:var(--lime)}
+.counter{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.counter .n{font-family:'Lilita One';font-size:40px;width:52px;text-align:center;color:var(--pink)}
+.counter button{width:44px;height:44px;border-radius:50%;border:none;background:var(--ink3);color:#fff;font-size:24px;font-weight:900}
+.prow{display:grid;grid-template-columns:32px 1fr auto auto;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;background:#171717;margin-bottom:8px}
+.prow .num{font-family:'Lilita One';color:var(--pink);font-size:20px;text-align:center}
+.prow input{width:100%;background:#0f0f0f;border:2px solid #333;color:#fff;border-radius:10px;padding:9px 11px;font:inherit;font-weight:800}
+.prow input:focus{outline:none;border-color:var(--pink)}
+.seg{display:flex;background:#0f0f0f;border-radius:10px;padding:3px;border:2px solid #333}
+.seg button{border:none;background:transparent;color:#aaa;font-weight:800;padding:6px 10px;border-radius:7px;font-size:13px}
+.seg button.on{background:var(--pink);color:#fff}
+.seg button.on.cpu{background:var(--lime);color:#13200a}
+select{background:#0f0f0f;color:#fff;border:2px solid #333;border-radius:10px;padding:7px;font:inherit;font-weight:700;font-size:13px}
+select:disabled{opacity:.25}
+.summary ul{padding-left:18px;margin:6px 0 12px;line-height:1.55}
+.summary li::marker{color:var(--pink)}
+.summary b{color:var(--lime2)}
+.summary h3{font-family:'Lilita One';font-weight:400;color:var(--pink2);margin:14px 0 4px;font-size:18px}
+.start{margin-top:16px;width:100%}
+/* game */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.roundInfo{font-family:'Lilita One';font-size:22px;display:flex;gap:10px;align-items:center}
+.roundInfo .pill{background:var(--pink);padding:4px 14px;border-radius:999px}
+.roundInfo .goal{background:var(--ink3);color:var(--lime);padding:4px 14px;border-radius:999px;font-size:16px}
+.tools{display:flex;gap:8px}
+.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;margin-top:14px}
+.turn{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.turn .who{font-family:'Lilita One';font-size:28px}
+.turn .who small{font-family:Nunito;font-weight:800;font-size:13px;color:#999;margin-left:6px}
+.tray{position:relative;background:radial-gradient(ellipse at 50% 40%,#9fe047,#6fb526);border:12px solid var(--pink);border-radius:26px;height:220px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 40px rgba(0,0,0,.35),0 8px 0 #b02470}
+#dice{display:flex;gap:34px}
+.die{width:140px;height:140px;filter:drop-shadow(0 10px 6px rgba(0,0,0,.45));transition:transform .2s}
+#dice.rolling .die:nth-child(1){animation:shake .14s infinite}
+#dice.rolling .die:nth-child(2){animation:shake .16s infinite reverse}
+#dice.land .die{animation:land .3s}
+@keyframes shake{0%{transform:translate(-6px,2px) rotate(-14deg)}50%{transform:translate(5px,-5px) rotate(12deg)}100%{transform:translate(-3px,4px) rotate(-8deg)}}
+@keyframes land{0%{transform:scale(1.15)}60%{transform:scale(.95)}100%{transform:scale(1)}}
+.msg{min-height:52px;margin:14px 0 4px;padding:12px 16px;border-radius:14px;background:#181818;font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px}
+.msg.good{background:#1b2a0c;color:var(--lime2)}.msg.bad{background:#3a0f22;color:var(--pink2)}.msg.info{background:#181818}
+.actions{display:flex;gap:14px;justify-content:center;margin:14px 0}
+.hint{text-align:center;color:#777;font-size:12px;font-weight:700}
+.risk{margin:6px 0 14px}
+.risk .bar{height:10px;border-radius:10px;background:#252525;overflow:hidden}
+.risk .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--lime),var(--orange),var(--pink));transition:width .4s}
+.risk .lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:#bbb;margin-bottom:5px}
+/* score line */
+.sheet{background:var(--paper);color:#222;border-radius:18px;padding:12px;overflow-x:auto}
+.sheet table{border-collapse:separate;border-spacing:3px;width:100%;min-width:520px}
+.sheet th{font-family:'Lilita One';font-weight:400;font-size:14px;color:#fff;background:var(--lime);border-radius:7px;padding:4px 2px;color:#13200a}
+.sheet th.rz{background:var(--pink);color:#fff}
+.sheet th.bonus{background:transparent;color:var(--pink);font-size:16px;padding:0}
+.sheet th.blank{background:transparent}
+.sheet th.pts{background:#222;color:var(--lime)}
+.sheet td{background:#fff;border:2px solid #e8e1e5;border-radius:8px;height:40px;text-align:center;font-family:'Lilita One';font-size:20px;color:#2a2a2a;min-width:44px;position:relative}
+.sheet td.rzc{background:var(--pinkbg)}
+.sheet td.rh{background:var(--pink);color:#fff;border-color:var(--pink);font-size:15px;min-width:36px}
+.sheet td.rh.alt{background:var(--lime);border-color:var(--lime);color:#13200a}
+.sheet td.ptsc{background:#f3f3f3;color:#111}
+.sheet td .d{color:var(--pink)}
+.sheet td.new{animation:pop .35s}
+@keyframes pop{0%{transform:scale(.4);background:var(--lime2)}100%{transform:scale(1)}}
+.sheet tr.cur td:not(.rh){border-color:var(--pink)}
+.sheet tr.busted td:not(.rh):not(.ptsc){color:#aaa}
+.sheet tr.busted td.strike::after{content:'';position:absolute;left:-4px;right:-4px;top:50%;height:3px;background:#e0245e;transform:rotate(-4deg)}
+.sheet td svg{width:28px;height:28px;vertical-align:middle}
+.lineFoot{display:flex;justify-content:space-between;margin-top:8px;font-weight:900;color:#333;padding:0 4px;flex-wrap:wrap;gap:6px}
+.lineFoot b{color:var(--pink)}
+/* board */
+.board .pl{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 14px;border-radius:16px;background:#181818;margin-bottom:9px;border:2px solid transparent;cursor:pointer}
+.board .pl.active{border-color:var(--pink);background:#231520}
+.board .pl .nm{font-weight:900;font-size:16px;display:flex;align-items:center;gap:6px}
+.board .pl .tot{font-family:'Lilita One';font-size:26px;color:var(--lime);text-align:right;line-height:1}
+.board .prog{grid-column:1/3;height:7px;border-radius:7px;background:#2a2a2a;overflow:hidden}
+.board .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--pink),var(--lime))}
+.board .meta{grid-column:1/3;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.jk{font-size:11px;font-weight:900;padding:3px 7px;border-radius:7px;background:#2c2c2c;color:#ddd}
+.jk.used{text-decoration:line-through;opacity:.35}
+.gc{font-size:11px;font-weight:900;padding:3px 7px;border-radius:7px;background:var(--lime);color:#13200a}
+.badge{font-size:10px;font-weight:900;padding:2px 6px;border-radius:6px;background:#333;color:#ccc;text-transform:uppercase}
+.badge.cpu{background:var(--lime);color:#13200a}
+.log{background:#151515;border-radius:16px;padding:12px 14px;margin-top:12px;max-height:260px;overflow:auto;font-size:13px;line-height:1.5;color:#bbb}
+.log h4{margin:0 0 6px;font-family:'Lilita One';font-weight:400;color:var(--pink2);font-size:16px}
+.log div{padding:3px 0;border-bottom:1px solid #222}
+.log div:first-of-type{color:#fff}
+.sheetWrap{margin-top:20px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.tabs .lab{font-family:'Lilita One';font-size:20px;margin-right:8px}
+.tabs button{border:none;background:#222;color:#bbb;font-weight:800;padding:7px 13px;border-radius:999px;font-size:13px}
+.tabs button.on{background:var(--pink);color:#fff}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal.show{display:flex}
+.mbox{background:var(--ink2);border:3px solid var(--pink);border-radius:24px;padding:24px;max-width:640px;width:100%;max-height:90vh;overflow:auto;text-align:center;animation:pop2 .25s}
+@keyframes pop2{from{transform:scale(.85);opacity:0}}
+.mbox h2{font-family:'Lilita One';font-weight:400;font-size:30px;margin:0 0 8px}
+.mbox p{color:#ccc;font-weight:700}
+.mbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.mbox.rules{text-align:left}
+.cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.card{width:180px;min-height:240px;border-radius:18px;padding:12px;color:#222;text-align:left;box-shadow:0 8px 0 rgba(0,0,0,.35);display:flex;flex-direction:column;gap:8px;border:none;font:inherit}
+.card.pink{background:linear-gradient(160deg,#ff7cc3,var(--pink))}
+.card.green{background:linear-gradient(160deg,#d2f78a,var(--lime))}
+.card .ct{background:#fff;border-radius:10px;padding:5px 8px;font-family:'Lilita One';font-size:18px;text-align:center;color:#222}
+.card .ci{font-size:54px;text-align:center;line-height:1.2}
+.card .cx{background:rgba(255,255,255,.85);border-radius:10px;padding:8px;font-size:13px;font-weight:800;flex:1}
+.card .ck{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:rgba(0,0,0,.6);text-align:center}
+button.card{cursor:pointer;transition:transform .12s}button.card:hover{transform:translateY(-6px) rotate(-1deg)}
+.jopts{display:grid;gap:10px;margin-top:14px;text-align:left}
+.jopt{display:flex;gap:12px;align-items:center;background:#171717;border:2px solid #333;border-radius:14px;padding:12px;color:#fff;font:inherit;text-align:left}
+.jopt:hover{border-color:var(--lime)}
+.jopt .ji{font-family:'Lilita One';width:46px;height:46px;border-radius:12px;background:var(--lime);color:#13200a;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.jopt b{display:block;font-size:16px}.jopt span{color:#aaa;font-size:13px;font-weight:700}
+.podium{display:grid;gap:8px;margin-top:14px;text-align:left}
+.podium div{display:flex;justify-content:space-between;align-items:center;background:#181818;border-radius:12px;padding:10px 16px;font-weight:900}
+.podium div:first-child{background:var(--pink);font-size:20px}
+.podium .s{font-family:'Lilita One';font-size:22px;color:var(--lime)}
+.podium div:first-child .s{color:#fff}
+.hidden{display:none!important}
+@media (max-width:900px){.setup,.grid{grid-template-columns:1fr}.die{width:110px;height:110px}.tray{height:180px}.logo .t{font-size:36px}}
+@media (max-width:520px){.prow{grid-template-columns:26px 1fr;}.prow .seg,.prow select{grid-column:2}.btn.big{font-size:21px;padding:12px 24px}.die{width:92px;height:92px}#dice{gap:22px}}
+/* v2 : cartes réelles, manches simultanées */
+.card{width:190px;min-height:270px}
+.card .ci{font-size:46px}
+.card .cx{font-size:12px;line-height:1.35;display:flex;flex-direction:column;gap:5px}
+.card .cx .ln{display:flex;gap:6px;align-items:flex-start}
+.card .cx .ln i{font-style:normal;flex:none;width:17px;height:17px;border-radius:4px;background:#222;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:900;margin-top:1px}
+.card .cf{font-size:10px;font-weight:800;color:rgba(0,0,0,.65);font-style:italic}
+.card .bt{align-self:flex-end;margin-top:-6px;background:var(--lime);color:#13200a;font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;transform:rotate(-6deg)}
+.card .ci.big{font-family:'Lilita One';color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.st{font-size:10px;font-weight:900;padding:2px 7px;border-radius:6px;text-transform:uppercase}
+.st.in{background:#2b4a10;color:var(--lime2)}.st.out{background:#333;color:#ddd}.st.bust{background:#4a1028;color:var(--pink2)}
+.mini{grid-column:1/3;display:flex;gap:3px;flex-wrap:wrap;min-height:22px}
+.mini span{min-width:24px;height:22px;border-radius:6px;background:#fff;color:#222;font-family:'Lilita One';font-size:13px;display:flex;align-items:center;justify-content:center;padding:0 4px;position:relative}
+.mini span.rz{background:var(--pinkbg)}.mini span.e{background:#2a2a2a}.mini span.rz.e{background:#3a2330}
+.mini span .d{color:var(--pink)}.mini svg{width:16px;height:16px}
+.pl.bust .mini span:not(.e){opacity:.45;text-decoration:line-through}
+.mark{color:var(--pink);font-family:'Lilita One';font-size:24px;position:absolute;right:-9px;top:3px;z-index:2}
+.mini .mark{font-size:16px;right:-6px;top:1px}
+.btn.orange{background:var(--orange);color:#2a1600}
+.jrow{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.jopt .ji.pk{background:var(--pink);color:#fff}
+.jopt small{display:block;color:var(--lime2);font-weight:800;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="modal"></div>
+
+<script>
+/* ============ Constantes ============ */
+const TARGET = 222, MAX_ROUNDS = 10;
+const COLS = ['SW','W1','W2','W3','W4','W5','W6'];
+const BONUS = [0,0,0,0,5,10,15,20]; // bonus de risque selon le nombre de cases remplies
+const JOKERS = {
+  filet:{icon:')', lab:'Filet', name:'Filet de sécurité', text:'Avant un lancer : placez une parenthèse après votre dernière case. Si vous êtes éliminé plus tard dans la manche, vous gardez les points notés avant elle.'},
+  deux:{icon:'2', lab:'2nde chance', name:'Seconde chance', text:'En cas de doublon : ne notez pas ce résultat et relancez.'},
+  jokerD:{icon:'D', lab:'Joker D', name:'Joker D', text:'En cas de doublon : transformez ce lancer en double. Inscrivez un D et piochez une carte Action.'}
+};
+const START_JOKERS = ['filet','deux','jokerD','deux'];
+const FOOT = 'Sur un double, prenez n’importe quel dé ; une double chouette vaut toujours 15.';
+const CARDS = {
+  doublon:{c:'pink', n:2, t:'Doublon', i:'×2', big:true, l:['Inscrivez un D.','Relancez les deux dés.','Doublez le meilleur résultat.','Notez-le à côté du D.'], f:FOOT},
+  trio:{c:'pink', n:2, t:'Trio risqué', i:'😈', l:['Inscrivez un D.','Choisissez n’importe quelle personne encore en jeu. Elle effectue 3 lancers.','Elle note le résultat le plus élevé de chaque lancer (ou un D en cas de double).','Cela peut l’éliminer.','Alternative : notez 5 points à côté du D.']},
+  stop:{c:'pink', n:3, t:'Stop', i:'🛑', l:['Inscrivez un D.','Choisissez une personne encore en jeu : elle sort aussitôt de la manche (en gardant ses points).','Si vous êtes la seule personne encore en jeu, notez 5 points à côté du D.']},
+  filet:{c:'pink', n:1, t:'Filet de sécurité', i:'🥅', bonus:true, l:['Inscrivez un D.','Notez une parenthèse (filet de sécurité) dans votre case Bonus des jokers. Vous pourrez l’utiliser dès votre prochain lancer.']},
+  seconde:{c:'pink', n:1, t:'Seconde chance', i:'2', big:true, bonus:true, l:['Inscrivez un D.','Notez un 2 (seconde chance) dans votre case Bonus des jokers. Vous pourrez l’utiliser dès votre prochain lancer.']},
+  p5:{c:'pink', n:1, t:'5 points', i:'🪙', pts:5, l:['Inscrivez un D.','Notez 5 points à côté du D.']},
+  p7:{c:'pink', n:1, t:'7 points', i:'🪙', pts:7, l:['Inscrivez un D.','Notez 7 points à côté du D.']},
+  p10:{c:'pink', n:1, t:'10 points', i:'💰', pts:10, l:['Inscrivez un D.','Notez 10 points à côté du D.']},
+  duo:{c:'pink', n:2, t:'Duo maudit', i:'👿', l:['Inscrivez un D.','Choisissez n’importe quel joueur actif. Il doit effectuer 2 lancers, mais ne note aucun résultat.','Cela peut néanmoins l’éliminer.','Alternative : notez 5 points à côté du D.']},
+  numero:{c:'pink', n:1, t:'Numéro gagnant', i:'✅', l:['Inscrivez un D.','Relancez les deux dés.','Notez le résultat le plus élevé à côté du D.'], f:FOOT},
+  unpour:{c:'pink', n:1, t:'Un pour tous', i:'🥊', l:['Inscrivez un D.','Relancez les deux dés.','Notez le résultat le plus élevé à côté du D. Les autres personnes encore en jeu sont éliminées de la manche si ce résultat provoque un doublon chez elles.'], f:FOOT},
+  bois:{c:'green', n:1, t:'Bouclier de bois', i:'🛡️', range:[5,8], l:['Inscrivez un D.','Vous protège 1× d’une élimination due à un doublon de 5 à 8 lors de cette manche.','Lorsque vous l’utilisez : ne notez pas le résultat obtenu. Effectuez une relance ou sortez de la manche en cours. Défaussez cette carte après utilisation ou à la fin de la manche.']},
+  argent:{c:'green', n:1, t:'Bouclier d’argent', i:'🥈', range:[9,12], l:['Inscrivez un D.','Vous protège 1× d’une élimination due à un doublon de 9 à 12 lors de cette manche.','Lorsque vous l’utilisez : ne notez pas le résultat obtenu. Effectuez une relance ou sortez de la manche en cours. Défaussez cette carte après utilisation ou à la fin de la manche.']},
+  or:{c:'green', n:1, t:'Bouclier d’or', i:'🥇', range:[1,12], l:['Inscrivez un D.','Vous protège 1× d’une élimination due à un doublon, quel qu’il soit, lors de cette manche.','Lorsque vous l’utilisez : ne notez pas le résultat obtenu. Effectuez une relance ou sortez de la manche en cours. Défaussez cette carte après utilisation ou à la fin de la manche.']},
+  quitte:{c:'green', n:1, t:'Quitte ou double', i:'📈', l:['Inscrivez un D.','À la fin de la manche, doublez les points de la ligne de cette manche.','Annulé en cas d’élimination.','Ensuite, défaussez cette carte.']}
+};
+const CPU_NAMES = ['Hulotte','Chevêche','Grand-Duc','Effraie','Harfang','Petit-Duc','Moyen-Duc','Chouette'];
+const STYLES = {prudent:'Prudent', equilibre:'Équilibré', audacieux:'Audacieux'};
+
+const OWL = `<path d="M18 32 L26 6 L42 24 Q50 20 58 24 L74 6 L82 32 Q93 52 83 73 Q71 95 50 95 Q29 95 17 73 Q7 52 18 32Z" fill="#ff3fa4"/>
+<path d="M30 78 Q50 90 70 78 Q66 70 50 70 Q34 70 30 78Z" fill="#ff86c8"/>
+<circle cx="35" cy="46" r="16" fill="#fff"/><circle cx="65" cy="46" r="16" fill="#fff"/>
+<circle cx="37" cy="48" r="9.5" fill="#9be22d"/><circle cx="63" cy="48" r="9.5" fill="#9be22d"/>
+<circle cx="38" cy="49" r="5" fill="#111"/><circle cx="62" cy="49" r="5" fill="#111"/>
+<circle cx="40" cy="46" r="1.8" fill="#fff"/><circle cx="64" cy="46" r="1.8" fill="#fff"/>
+<path d="M44 60 L56 60 L50 71Z" fill="#ffa21f"/>`;
+const owlSVG = () => `<svg viewBox="0 0 100 100">${OWL}</svg>`;
+
+/* ============ Utilitaires ============ */
+const $ = s => document.querySelector(s);
+const r12 = () => 1 + Math.floor(Math.random()*12);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S = null, GID = 0;
+const wait = ms => new Promise(r => setTimeout(r, ms / (S ? S.speed : 1)));
+
+/* ============ Sons (Web Audio, synthétisés) ============ */
+const SND = {ctx:null, on:true};
+try { SND.on = localStorage.getItem('hd-sound') !== 'off'; } catch(e) {}
+function ac(){
+  if (!SND.ctx){ try { SND.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return null; } }
+  if (SND.ctx.state === 'suspended') SND.ctx.resume().catch(()=>{});
+  return SND.ctx;
+}
+function tone(freq, dur, {type='sine', vol=.2, delay=0, slide=null, vib=0}={}){
+  if (!SND.on) return; const c = ac(); if (!c) return;
+  const t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  if (vib){ const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = vib; lg.gain.value = freq*0.035; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t+dur+.05); }
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+function noise(dur, {vol=.25, delay=0, freq=2500, q=1}={}){
+  if (!SND.on) return; const c = ac(); if (!c) return;
+  const t = c.currentTime + delay, n = Math.max(1, Math.floor(c.sampleRate*dur));
+  const b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+  for (let i=0;i<n;i++) d[i] = Math.random()*2 - 1;
+  const s = c.createBufferSource(); s.buffer = b;
+  const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(c.destination); s.start(t); s.stop(t + dur);
+}
+const sfx = {
+  rattle(){ for (let i=0;i<4;i++) noise(.045, {vol:.22, delay:i*.06 + Math.random()*.03, freq:1500 + Math.random()*2000, q:4}); },
+  land(){ noise(.09, {vol:.4, freq:800, q:1.2}); tone(150, .14, {type:'triangle', vol:.3, slide:70}); noise(.05, {vol:.2, delay:.09, freq:1200, q:2}); },
+  write(){ tone(660, .08, {type:'square', vol:.06}); tone(990, .12, {type:'square', vol:.05, delay:.07}); },
+  double(){ [523,659,784,1047].forEach((f,i) => tone(f, .2, {type:'triangle', vol:.2, delay:i*.08})); tone(1568, .35, {type:'sine', vol:.12, delay:.32}); },
+  owl(){ tone(430, .32, {vol:.28, slide:370, vib:7}); tone(410, .55, {vol:.28, delay:.42, slide:330, vib:7}); },
+  bust(){ [392,370,349].forEach((f,i) => tone(f, .26, {type:'sawtooth', vol:.1, delay:i*.27})); tone(330, .8, {type:'sawtooth', vol:.11, delay:.81, slide:200, vib:6}); },
+  bank(){ tone(988, .1, {type:'square', vol:.08}); tone(1319, .4, {type:'square', vol:.08, delay:.09}); tone(1976, .3, {type:'sine', vol:.05, delay:.16}); },
+  card(){ noise(.28, {vol:.18, freq:3500, q:.6}); tone(700, .22, {vol:.05, slide:1500}); },
+  joker(){ [784,988,1175,1568,1976,2349].forEach((f,i) => tone(f, .16, {vol:.11, delay:i*.05})); },
+  shield(){ tone(500, .45, {type:'triangle', vol:.16, slide:1200}); tone(1200, .3, {vol:.08, delay:.35}); },
+  coin(){ tone(1319, .07, {type:'square', vol:.06}); tone(1760, .2, {type:'square', vol:.06, delay:.06}); },
+  click(){ tone(520, .04, {type:'square', vol:.04}); },
+  turn(){ tone(880, .08, {vol:.07}); tone(1175, .12, {vol:.07, delay:.08}); },
+  win(){ [[523,.15],[659,.15],[784,.15],[1047,.3],[784,.15],[1047,.6]].reduce((t,[f,d]) => { tone(f, d+.05, {type:'triangle', vol:.2, delay:t}); tone(f/2, d+.05, {type:'sine', vol:.12, delay:t}); return t + d; }, 0); }
+};
+function toggleSound(){ SND.on = !SND.on; try { localStorage.setItem('hd-sound', SND.on ? 'on' : 'off'); } catch(e) {} if (SND.on){ ac(); sfx.coin(); } }
+const soundLabel = () => SND.on ? '🔊 Son' : '🔇 Muet';
+document.addEventListener('pointerdown', () => { if (SND.on) ac(); });
+document.addEventListener('click', e => { if (e.target.closest('button')) sfx.click(); }, true);
+
+/* ============ Dé à 12 faces (SVG) ============ */
+function dieSVG(v){
+  const sideC = [[74.7,16,36],[89.9,63,108],[50,92,180],[10.1,63,252],[25.3,16,324]];
+  const sides = [ (v+3)%12+1, (v+5)%12+1, (v+7)%12+1, (v+9)%12+1, (v+10)%12+1 ];
+  let s = `<svg class="die" viewBox="-2 -2 104 104">
+  <defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3a3a"/><stop offset="1" stop-color="#050505"/></linearGradient></defs>
+  <polygon points="50,0 79.4,9.55 97.55,34.55 97.55,65.45 79.4,90.45 50,100 20.6,90.45 2.45,65.45 2.45,34.55 20.6,9.55" fill="url(#dg)" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+  <g stroke="#444" stroke-width="1"><line x1="50" y1="18" x2="50" y2="0"/><line x1="80.4" y1="40.1" x2="97.55" y2="34.55"/><line x1="68.8" y1="75.9" x2="79.4" y2="90.45"/><line x1="31.2" y1="75.9" x2="20.6" y2="90.45"/><line x1="19.6" y1="40.1" x2="2.45" y2="34.55"/></g>
+  <polygon points="50,18 80.4,40.1 68.8,75.9 31.2,75.9 19.6,40.1" fill="#161616" stroke="#4a4a4a" stroke-width="1"/>`;
+  sides.forEach((n,i) => {
+    const [x,y,a] = sideC[i];
+    if (n === 1) s += `<g transform="translate(${x-6},${y-6}) scale(.12)" opacity=".8">${OWL}</g>`;
+    else s += `<text x="${x}" y="${y}" transform="rotate(${a} ${x} ${y})" text-anchor="middle" dominant-baseline="central" font-family="Lilita One" font-size="9" fill="#9be22d" opacity=".75">${n}</text>`;
+  });
+  if (v === 1) s += `<g transform="translate(28.5,27) scale(.43)">${OWL}</g>`;
+  else {
+    s += `<text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-family="Lilita One" font-size="${v>9?27:31}" fill="#9be22d">${v}</text>`;
+    if (v === 6 || v === 9) s += `<rect x="43" y="64" width="14" height="2.4" rx="1.2" fill="#9be22d"/>`;
+  }
+  return s + `</svg>`;
+}
+
+/* ============ Configuration ============ */
+let setup = {
+  count: 3,
+  players: Array.from({length:8}, (_,i) => i === 0
+    ? {name:'Joueur 1', cpu:false, style:'equilibre'}
+    : {name:CPU_NAMES[i-1], cpu:true, style:['equilibre','prudent','audacieux'][i%3]})
+};
+
+function renderSetup(){
+  GID++; S = null;
+  $('#app').innerHTML = `
+  <div class="topbar"><div class="logo"><div>${owlSVG()}</div><div><div class="t"><span>HAPPY</span><span>DOUBLE</span></div><div class="tag">Ose relancer… ou pas !</div></div></div><button class="btn ghost" id="sndBtn">${soundLabel()}</button></div>
+  <div class="setup">
+    <div class="panel">
+      <h2>Les joueurs</h2>
+      <div class="counter"><button id="minus" aria-label="Moins">−</button><div class="n">${setup.count}</div><button id="plus" aria-label="Plus">+</button><div style="color:#aaa;font-weight:800">joueurs (2 à 8)</div></div>
+      <div id="prows">${setup.players.slice(0,setup.count).map((p,i) => `
+        <div class="prow">
+          <div class="num">${i+1}</div>
+          <input data-i="${i}" class="pname" maxlength="16" value="${esc(p.name)}" aria-label="Nom du joueur ${i+1}">
+          <div class="seg"><button data-i="${i}" data-cpu="0" class="ptype ${!p.cpu?'on':''}">👤 Joueur</button><button data-i="${i}" data-cpu="1" class="ptype cpu ${p.cpu?'on cpu':''}">🤖 Ordi</button></div>
+          <select data-i="${i}" class="pstyle" ${p.cpu?'':'disabled'} aria-label="Style de l'ordinateur">${Object.entries(STYLES).map(([k,v]) => `<option value="${k}" ${p.style===k?'selected':''}>${v}</option>`).join('')}</select>
+        </div>`).join('')}</div>
+      <button class="btn pink big start" id="startBtn">Commencer la partie</button>
+    </div>
+    <div class="panel summary">
+      <h2>Matériel et résumé</h2>
+      <ul>
+        <li><b>Joueurs :</b> 2 à 8</li>
+        <li><b>Matériel :</b> 2 dés noirs à 12 faces, chiffres verts, le 1 est remplacé par une chouette ; 20 cartes Action roses et vertes</li>
+        <li><b>Durée :</b> environ 20 minutes</li>
+        <li><b>But :</b> être le premier à atteindre <b>222 points</b>, ou avoir le plus de points après <b>10 manches</b></li>
+      </ul>
+      <h3>Une manche</h3>
+      <ul>
+        <li>Chacun son tour : <b>Encore</b> (lancer les 2 dés et noter la valeur la plus haute) ou <b>Stop</b> (sortir de la manche en sécurisant ses points).</li>
+        <li>La manche continue tant qu’au moins une personne est encore en jeu (7 cases au maximum : SW puis W1 à W6).</li>
+        <li>Zone de risque : finir en W3, W4, W5 ou W6 rapporte +5, +10, +15 ou +20.</li>
+        <li><b>Doublon</b> (nombre déjà noté) : ligne barrée, 0 point… sauf si une chouette, un bouclier ou un joker vous protège.</li>
+        <li><b>Double</b> aux dés : inscrivez un D et piochez une carte Action.</li>
+      </ul>
+      <button class="btn ghost" id="rulesBtn2">Lire toutes les règles et les cartes</button>
+    </div>
+  </div>`;
+  $('#minus').onclick = () => { if (setup.count > 2){ setup.count--; renderSetup(); } };
+  $('#plus').onclick = () => { if (setup.count < 8){ setup.count++; renderSetup(); } };
+  document.querySelectorAll('.pname').forEach(el => el.oninput = () => setup.players[+el.dataset.i].name = el.value);
+  document.querySelectorAll('.ptype').forEach(el => el.onclick = () => { setup.players[+el.dataset.i].cpu = el.dataset.cpu === '1'; renderSetup(); });
+  document.querySelectorAll('.pstyle').forEach(el => el.onchange = () => setup.players[+el.dataset.i].style = el.value);
+  $('#startBtn').onclick = newGame;
+  $('#sndBtn').onclick = () => { toggleSound(); $('#sndBtn').textContent = soundLabel(); };
+  $('#rulesBtn2').onclick = showRules;
+}
+
+/* ============ Outils de partie ============ */
+function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function buildDeck(){ const d = []; for (const [id,c] of Object.entries(CARDS)) for (let k=0;k<c.n;k++) d.push(id); return shuffle(d); }
+function drawOne(){ if (!S.deck.length){ S.deck = shuffle(S.discard); S.discard = []; } return S.deck.pop() || 'p5'; }
+
+const cur = () => S.players[S.idx];
+const nums = p => p.line.cells.filter(c => c.t === 'n').map(c => c.v);
+const lineSum = (p, upto) => p.line.cells.slice(0, upto ?? p.line.cells.length).reduce((s,c) => s + c.pts, 0);
+const inPlay = () => S.players.filter(p => p.line.status === 'in');
+const stakeOf = p => (lineSum(p) + BONUS[p.line.cells.length]) * (p.line.greens.includes('quitte') ? 2 : 1);
+const hasJoker = (p,k) => p.jokers.some(j => j.k === k && !j.used);
+function useJoker(p,k){ const j = p.jokers.find(j => j.k === k && !j.used); if (j) j.used = true; sfx.joker(); addLog(`🃏 ${p.name} utilise le joker « ${JOKERS[k].name} ».`); }
+function shieldFor(p,v){ for (const id of ['bois','argent','or']) if (p.line.greens.includes(id)){ const [a,b] = CARDS[id].range; if (v >= a && v <= b) return id; } return null; }
+function dropGreen(p,id){ const i = p.line.greens.indexOf(id); if (i >= 0){ p.line.greens.splice(i,1); S.discard.push(id); } }
+function addLog(t){ S.log.unshift(t); if (S.log.length > 50) S.log.pop(); }
+function setMsg(t,h){ S.msg = {t,h}; }
+function addCell(p,c){ p.line.cells.push(c); if (p === S.players[S.view]) S.newCell = p.line.cells.length - 1; return c; }
+function schedule(fn, ms){ const g = GID; setTimeout(() => { if (g === GID && S) fn(); }, ms / S.speed); }
+
+/* ============ Déroulement ============ */
+function newGame(){
+  GID++;
+  const used = new Set(), speed = S ? S.speed : 1;
+  S = {
+    players: setup.players.slice(0,setup.count).map((p,i) => {
+      let name = (p.name||'').trim() || (p.cpu ? CPU_NAMES[i] : 'Joueur '+(i+1));
+      const base = name; let k = 2; while (used.has(name)) name = base+' '+(k++); used.add(name);
+      return {name, cpu:p.cpu, style:p.style, total:0, rounds:[], jokers:START_JOKERS.map(k => ({k, used:false})),
+        line:{cells:[], mark:null, status:'in', greens:[]}};
+    }),
+    round:1, idx:0, busy:false, turnOver:false, deck:buildDeck(), discard:[],
+    log:[], view:0, dice:[1,12], speed, msg:{t:'info',h:''}, newCell:-1, over:false
+  };
+  renderGameShell();
+  addLog('🎲 Nouvelle partie ! Objectif : 222 points.');
+  startRound();
+}
+
+function startRound(){
+  S.players.forEach(p => p.line = {cells:[], mark:null, status:'in', greens:[]});
+  S.idx = (S.round - 1) % S.players.length;
+  addLog(`— Manche ${S.round} — ${S.players[S.idx].name} commence.`);
+  startTurn();
+}
+
+function startTurn(){
+  const p = cur();
+  S.turnOver = false; S.busy = false; S.view = S.idx; S.newCell = -1;
+  setMsg('info', p.cpu ? `🤖 ${esc(p.name)} réfléchit…` : `À vous, ${esc(p.name)} ! Encore (lancer) ou Stop (sortir de la manche) ?`);
+  if (!p.cpu) sfx.turn();
+  render();
+  if (p.cpu) schedule(cpuStep, 800);
+}
+
+function finishTurn(){ S.turnOver = true; S.busy = false; render(); schedule(nextTurn, 1150); }
+
+function nextTurn(){
+  if (!inPlay().length) return endRound();
+  let i = S.idx;
+  do { i = (i + 1) % S.players.length; } while (S.players[i].line.status !== 'in');
+  S.idx = i;
+  startTurn();
+}
+
+function endRound(){
+  S.players.forEach(p => { p.line.greens.forEach(id => S.discard.push(id)); p.line.greens = []; });
+  if (S.round >= MAX_ROUNDS || S.players.some(p => p.total >= TARGET)){ S.over = true; S.turnOver = true; gameOver(); return; }
+  S.round++;
+  startRound();
+}
+
+function bank(p, reason){
+  const L = p.line; if (L.status !== 'in') return;
+  const n = L.cells.length, sum = lineSum(p), bonus = BONUS[n];
+  let pts = sum + bonus, dbl = false;
+  if (L.greens.includes('quitte')){ pts *= 2; dbl = true; dropGreen(p,'quitte'); }
+  L.status = 'out';
+  p.total += pts;
+  p.rounds[S.round-1] = {cells:L.cells.slice(), pts, bonus, busted:false, mark:L.mark, dbl};
+  sfx.bank();
+  addLog(`✅ ${p.name}${reason==='forced'?' est sorti par une carte Stop et':reason==='full'?' a rempli sa ligne et':''} sécurise ${pts} pts${bonus?` (dont ${bonus} de risque)`:''}${dbl?' — quitte ou double !':''}.`);
+  return pts;
+}
+
+function bust(p, v){
+  const L = p.line; if (L.status !== 'in') return;
+  L.status = 'bust';
+  const pts = L.mark != null ? lineSum(p, L.mark) : 0;
+  L.greens.forEach(id => S.discard.push(id)); L.greens = [];
+  p.total += pts;
+  p.rounds[S.round-1] = {cells:L.cells.slice(), pts, bonus:0, busted:true, mark:L.mark};
+  sfx.bust();
+  addLog(`💥 ${p.name} : doublon${v?` de ${v}`:''}, ligne barrée${pts?` (filet : ${pts} pts gardés)`:''}.`);
+}
+
+function useFilet(p){
+  useJoker(p,'filet');
+  p.line.mark = p.line.cells.length;
+  setMsg('good', `⛑ ${esc(p.name)} place un filet de sécurité : ${lineSum(p)} points sont protégés.`);
+  render();
+}
+
+async function doRoll(){
+  if (!S || S.busy || S.turnOver) return;
+  const p = cur(), g = GID;
+  S.busy = true; render();
+  while (p.line.status === 'in'){
+    const [a,b] = await animateRoll(); if (g !== GID) return;
+    const r = await resolveOwn(p,a,b); if (g !== GID) return;
+    render();
+    if (r === 'again'){ await wait(700); if (g !== GID) return; continue; }
+    if (r === 'shield'){
+      const again = p.cpu ? cpuShouldRoll(p)
+        : await modal(`<h2 style="color:var(--lime)">🛡️ Protégé !</h2><p>Le résultat n’est pas noté. Que faites-vous ?</p>`,
+            [{label:'🎲 Relancer', value:true, cls:'pink'},{label:'✋ Sortir de la manche', value:false, cls:'lime'}]);
+      if (g !== GID) return;
+      if (!again){ bank(p,'stop'); setMsg('good', `✋ ${esc(p.name)} sort de la manche et sécurise ses points.`); break; }
+      await wait(300); continue;
+    }
+    break;
+  }
+  if (p.line.status === 'in' && p.line.cells.length >= 7){ bank(p,'full'); setMsg('good', `🎉 Ligne complète ! ${esc(p.name)} sécurise ${p.rounds[S.round-1].pts} points.`); }
+  finishTurn();
+}
+
+async function animateRoll(){
+  const box = $('#dice');
+  box.classList.add('rolling');
+  for (let i=0;i<9;i++){ if (i % 3 === 0) sfx.rattle(); S.dice = [r12(), r12()]; drawDice(); await wait(60); }
+  const a = r12(), b = r12();
+  S.dice = [a,b]; drawDice();
+  box.classList.remove('rolling'); box.classList.add('land'); sfx.land();
+  setTimeout(() => box && box.classList.remove('land'), 320);
+  await wait(280);
+  return [a,b];
+}
+
+async function resolveOwn(p, d1, d2){
+  const nm = esc(p.name);
+  if (d1 === d2){
+    const cell = addCell(p, {t:'D', pts:0});
+    if (d1 === 1){
+      sfx.owl(); setTimeout(sfx.double, 800);
+      setMsg('good', `🦉🦉 Double chouette ! ${nm} inscrit un D, pioche 3 cartes et en garde une.`);
+      addLog(`🦉 ${p.name} fait une double chouette !`); render();
+      await owlChoice(p, cell);
+    } else {
+      sfx.double();
+      setMsg('good', `Double ${d1} ! ${nm} inscrit un D et pioche une carte Action.`);
+      addLog(`🎯 ${p.name} : double ${d1}.`); render();
+      await drawCard(p, cell);
+    }
+    return 'done';
+  }
+  const hi = Math.max(d1,d2), lo = Math.min(d1,d2);
+  if (!nums(p).includes(hi)){
+    addCell(p, {t:'n', v:hi, pts:hi}); sfx.write();
+    setMsg('info', `${nm} note <b>&nbsp;${hi}&nbsp;</b> (plus haut des deux dés).`);
+    return 'done';
+  }
+  if (lo === 1){
+    sfx.owl();
+    setMsg('good', `Le ${hi} est déjà noté… mais la chouette protège ${nm} : on relance !`);
+    addLog(`🦉 La chouette sauve ${p.name} (${hi} déjà noté).`);
+    return 'again';
+  }
+  const sh = shieldFor(p, hi);
+  if (sh){
+    dropGreen(p, sh); sfx.shield();
+    setMsg('good', `Doublon de ${hi}… le ${CARDS[sh].t} protège ${nm} !`);
+    addLog(`🛡️ ${CARDS[sh].t} : ${p.name} évite l’élimination.`);
+    return 'shield';
+  }
+  const opts = ['deux','jokerD'].filter(k => hasJoker(p,k));
+  let ch = null;
+  if (opts.length){
+    if (p.cpu) ch = cpuJoker(p, opts);
+    else {
+      render();
+      ch = await modal(`<h2 style="color:var(--pink)">Aïe ! Le ${hi} est déjà noté</h2>
+        <p>Dés : ${d1===1?'chouette':d1} et ${d2===1?'chouette':d2}. Sans joker, votre ligne est barrée et vous perdez ${lineSum(p)} points${p.line.mark!=null?` (le filet en protège ${lineSum(p,p.line.mark)})`:''}.</p>
+        <div class="jopts">${opts.map(k => `<button class="jopt" data-v="${k}"><div class="ji">${JOKERS[k].icon}</div><div><b>${JOKERS[k].name}</b><span>${JOKERS[k].text}</span></div></button>`).join('')}</div>`,
+        [{label:'Accepter l’élimination', value:null, cls:'ghost'}]);
+    }
+  }
+  if (ch === 'deux'){ useJoker(p,'deux'); setMsg('info', `Seconde chance : ${nm} relance !`); return 'again'; }
+  if (ch === 'jokerD'){
+    useJoker(p,'jokerD');
+    const cell = addCell(p, {t:'D', pts:0});
+    setMsg('good', `Joker D : ce lancer devient un double, ${nm} pioche une carte !`); render();
+    await drawCard(p, cell);
+    return 'done';
+  }
+  setMsg('bad', `💥 Doublon de ${hi} : la ligne de ${nm} est barrée !`);
+  bust(p, hi);
+  return 'done';
+}
+
+/* lancer imposé par une carte (Trio risqué / Duo maudit) */
+function forcedRoll(q, a, b, note){
+  const nm = esc(q.name);
+  if (a === b){
+    if (note){ addCell(q, {t:'D', pts:0}); sfx.write(); setMsg('info', `Double : ${nm} inscrit un D (sans carte).`); }
+    else setMsg('info', `Double : rien à noter pour ${nm}.`);
+    return;
+  }
+  const hi = Math.max(a,b), lo = Math.min(a,b);
+  if (!nums(q).includes(hi)){
+    if (note){ addCell(q, {t:'n', v:hi, pts:hi}); sfx.write(); setMsg('info', `${nm} note ${hi}.`); }
+    else setMsg('info', `${hi} : pas de doublon pour ${nm}, ouf !`);
+    return;
+  }
+  if (lo === 1){ sfx.owl(); setMsg('good', `${hi} déjà noté, mais la chouette protège ${nm} !`); return; }
+  const sh = shieldFor(q, hi);
+  if (sh){ dropGreen(q, sh); sfx.shield(); setMsg('good', `Doublon de ${hi}… le ${CARDS[sh].t} protège ${nm} !`); return; }
+  setMsg('bad', `💥 Doublon de ${hi} : ${nm} est éliminé de la manche !`);
+  bust(q, hi);
+}
+
+/* ============ Cartes ============ */
+function cardHTML(id, attr=''){
+  const c = CARDS[id], tag = attr ? 'button' : 'div';
+  return `<${tag} class="card ${c.c}" ${attr}><div class="ct">${c.t}</div>${c.bonus?'<div class="bt">BONUS !</div>':''}<div class="ci ${c.big?'big':''}">${c.i}</div>
+    <div class="cx">${c.l.map((t,i) => `<div class="ln"><i>${i===0?'D':'•'}</i><span>${t}</span></div>`).join('')}${c.f?`<div class="cf">${c.f}</div>`:''}</div>
+    <div class="ck">${c.c==='pink'?'Carte rose · immédiate':'Carte verte · pour cette manche'}</div></${tag}>`;
+}
+
+async function drawCard(p, cell){
+  const id = drawOne(), g = GID;
+  sfx.card();
+  await modal(`<h2>${p.cpu?`🤖 ${esc(p.name)} pioche`:'Carte Action'}</h2><div class="cards">${cardHTML(id)}</div>`,
+    [{label: CARDS[id].c==='pink' ? 'Appliquer' : 'Garder la carte', value:1, cls:'pink'}], p.cpu ? 2000/S.speed : 0, 1);
+  if (g !== GID) return;
+  await applyCard(p, id, cell);
+}
+
+async function owlChoice(p, cell){
+  const ids = [drawOne(), drawOne(), drawOne()], g = GID;
+  sfx.card(); setTimeout(sfx.card, 180); setTimeout(sfx.card, 360);
+  let pick;
+  if (p.cpu){
+    pick = cpuPickCard(p, ids);
+    await modal(`<h2>🤖 ${esc(p.name)} choisit une carte</h2><div class="cards">${ids.map((id,i) => `<div style="opacity:${i===pick?1:.35};transform:${i===pick?'scale(1.04)':'none'}">${cardHTML(id)}</div>`).join('')}</div>`, [{label:'OK', value:1, cls:'pink'}], 2400/S.speed, 1);
+  } else {
+    pick = +(await modal(`<h2>🦉🦉 Double chouette !</h2><p>Choisissez la carte à garder ; les deux autres sont défaussées.</p><div class="cards">${ids.map((id,i) => cardHTML(id, `data-v="${i}"`)).join('')}</div>`, []));
+  }
+  if (g !== GID) return;
+  ids.forEach((id,i) => { if (i !== pick) S.discard.push(id); });
+  await applyCard(p, ids[pick], cell);
+}
+
+async function chooseTarget(p, others, id){
+  const c = CARDS[id], alt = id !== 'stop';
+  if (p.cpu){
+    const t = cpuTarget(p, others, id);
+    if (t) addLog(`🎯 ${p.name} vise ${t.name} avec « ${c.t} ».`);
+    return t;
+  }
+  const q = id === 'stop' ? 'Qui sort de la manche ?' : id === 'trio' ? 'Qui doit effectuer 3 lancers ?' : 'Qui doit effectuer 2 lancers sans rien noter ?';
+  const v = await modal(`<h2>${c.i} ${c.t}</h2><p>${q}</p>
+    <div class="jopts">${others.map(o => `<button class="jopt" data-v="${S.players.indexOf(o)}"><div class="ji pk">${o.cpu?'🤖':'👤'}</div><div><b>${esc(o.name)}</b><span>Nombres notés : ${nums(o).sort((a,b)=>a-b).join(', ') || '—'}</span><small>${lineSum(o)} pts en jeu · total ${o.total}</small></div></button>`).join('')}</div>`,
+    alt ? [{label:'Alternative : noter 5 points', value:'alt', cls:'lime'}] : []);
+  return v === 'alt' ? null : S.players[+v];
+}
+
+async function applyCard(p, id, cell){
+  const c = CARDS[id], nm = esc(p.name), g = GID;
+  addLog(`🃏 ${p.name} : « ${c.t} ».`);
+  if (c.c === 'green'){
+    p.line.greens.push(id); sfx.shield();
+    setMsg('good', `${c.i} ${nm} garde « ${c.t} » pour cette manche.`);
+    render(); return;
+  }
+  S.discard.push(id);
+  switch (id){
+    case 'p5': case 'p7': case 'p10':
+      cell.pts = c.pts; sfx.coin(); setMsg('good', `${nm} note ${c.pts} points à côté du D.`); break;
+    case 'filet': case 'seconde':
+      p.jokers.push({k: id === 'filet' ? 'filet' : 'deux', used:false, bonus:true}); sfx.joker();
+      setMsg('good', `${nm} gagne un joker bonus « ${c.t} ».`); break;
+    case 'doublon': case 'numero': case 'unpour': {
+      setMsg('info', `${c.t} : ${nm} relance les deux dés…`); render(); await wait(450); if (g !== GID) return;
+      const [a,b] = await animateRoll(); if (g !== GID) return;
+      let v = a === b ? (a === 1 ? 15 : a) : Math.max(a,b);
+      if (id === 'doublon' && !(a === 1 && b === 1)) v *= 2;
+      cell.pts = v; sfx.coin();
+      setMsg('good', `${c.t} : ${nm} note ${v} points à côté du D.`);
+      if (id === 'unpour'){
+        const hit = [];
+        for (const q of inPlay()) if (q !== p && nums(q).includes(v)){
+          const sh = shieldFor(q, v);
+          if (sh){ dropGreen(q, sh); addLog(`🛡️ ${q.name} est protégé par le ${CARDS[sh].t}.`); }
+          else { bust(q, v); hit.push(esc(q.name)); }
+        }
+        setMsg(hit.length ? 'bad' : 'good', `Un pour tous : ${v} points pour ${nm}. ${hit.length ? `${hit.join(', ')} ${hit.length>1?'sont éliminés':'est éliminé'} de la manche !` : 'Personne d’autre n’est éliminé.'}`);
+      }
+      break;
+    }
+    case 'stop': {
+      const others = inPlay().filter(q => q !== p);
+      if (!others.length){ cell.pts = 5; sfx.coin(); setMsg('good', `${nm} est seul en jeu : 5 points à côté du D.`); break; }
+      const t = await chooseTarget(p, others, 'stop'); if (g !== GID) return;
+      bank(t, 'forced');
+      setMsg('info', `🛑 ${esc(t.name)} sort aussitôt de la manche et garde ses points.`);
+      break;
+    }
+    case 'trio': case 'duo': {
+      const others = inPlay().filter(q => q !== p);
+      const t = others.length ? await chooseTarget(p, others, id) : null; if (g !== GID) return;
+      if (!t){ cell.pts = 5; sfx.coin(); setMsg('good', `${nm} prend l’alternative : 5 points à côté du D.`); break; }
+      const k = id === 'trio' ? 3 : 2;
+      for (let i=0; i<k && t.line.status === 'in'; i++){
+        setMsg('info', `${c.i} ${c.t} : ${esc(t.name)} lance (${i+1}/${k})…`); S.view = S.players.indexOf(t); render();
+        await wait(500); if (g !== GID) return;
+        const [a,b] = await animateRoll(); if (g !== GID) return;
+        forcedRoll(t, a, b, id === 'trio'); render();
+        if (t.line.status === 'in' && t.line.cells.length >= 7){ bank(t, 'full'); break; }
+        await wait(800); if (g !== GID) return;
+      }
+      S.view = S.idx;
+      break;
+    }
+  }
+  render();
+}
+
+/* ============ Intelligence de l'ordinateur ============ */
+function analyze(p){
+  const L = p.line, used = nums(p), n = L.cells.length, sum = lineSum(p);
+  const cb = BONUS[n], step = BONUS[Math.min(n+1,7)] - cb;
+  const mult = L.greens.includes('quitte') ? 2 : 1;
+  const safe = L.mark != null ? lineSum(p, L.mark) : 0;
+  const jok = hasJoker(p,'deux') || hasJoker(p,'jokerD');
+  let ev = 0, cnt = 0, busts = 0;
+  for (let a=1;a<=12;a++) for (let b=1;b<=12;b++){
+    cnt++;
+    if (a === b){ ev += (5 + step) * mult; continue; }
+    const hi = Math.max(a,b), lo = Math.min(a,b);
+    if (!used.includes(hi)) ev += (hi + step) * mult;
+    else if (lo === 1) { cnt--; }
+    else if (shieldFor(p,hi)) {}
+    else { busts++; let loss = (sum + cb) * mult - safe; if (jok) loss *= 0.45; ev -= loss; }
+  }
+  return {ev: ev/cnt, pb: busts/cnt};
+}
+function bustProb(p){
+  const used = nums(p); let b = 0, t = 0;
+  for (let a=1;a<=12;a++) for (let c=1;c<=12;c++){
+    if (a === c){ t++; continue; }
+    const hi = Math.max(a,c), lo = Math.min(a,c);
+    if (used.includes(hi) && lo === 1) continue; // la chouette fait relancer
+    t++;
+    if (used.includes(hi) && !shieldFor(p,hi)) b++;
+  }
+  return b/t;
+}
+function cpuShouldRoll(p){
+  const n = p.line.cells.length;
+  if (n === 0) return true;
+  if (n >= 7) return false;
+  const stake = stakeOf(p);
+  if (p.total + stake >= TARGET) return false;
+  const best = Math.max(...S.players.filter(q => q !== p).map(q => q.total + (q.line.status==='in' ? stakeOf(q) : 0)));
+  const finalRound = S.round === MAX_ROUNDS || S.players.some(q => q.total >= TARGET);
+  const th = {prudent:2.5, equilibre:0.3, audacieux:-2.8}[p.style] ?? 0;
+  let adj = 0;
+  if (finalRound && p.total + stake <= best) adj -= 7;
+  return analyze(p).ev + (Math.random()*2.4 - 1.2) > th + adj;
+}
+function cpuJoker(p, opts){
+  const stake = stakeOf(p);
+  if (stake < 12 && S.round < 8) return null;
+  if (opts.includes('jokerD')) return 'jokerD';
+  return opts.includes('deux') ? 'deux' : null;
+}
+function cpuTarget(p, others, id){
+  const by = f => others.slice().sort(f)[0];
+  if (id === 'stop') return by((a,b) => (stakeOf(a) - stakeOf(b)) || (b.total - a.total));
+  const t = by((a,b) => stakeOf(b) - stakeOf(a));
+  return stakeOf(t) >= 12 ? t : null;
+}
+function cpuPickCard(p, ids){
+  const others = inPlay().filter(q => q !== p).length;
+  const score = id => ({p10:10, quitte: lineSum(p) >= 20 ? 12 : 4, unpour: others ? 9 : 7, doublon:9, trio: others ? 8 : 5, p7:7, numero:7,
+    or:7, duo: others ? 6 : 5, seconde:6, filet:5, p5:5, argent:5, bois:4, stop: others ? 3 : 5})[id] ?? 0;
+  let best = 0; ids.forEach((id,i) => { if (score(id) > score(ids[best])) best = i; });
+  return best;
+}
+function cpuStep(){
+  if (!S || S.busy || S.turnOver) return;
+  const p = cur(); if (!p.cpu || p.line.status !== 'in') return;
+  if ($('#modal').classList.contains('show')){ schedule(cpuStep, 400); return; }
+  if (!cpuShouldRoll(p)){
+    bank(p, 'stop');
+    setMsg('good', `✋ ${esc(p.name)} dit Stop et sécurise ${p.rounds[S.round-1].pts} points.`);
+    finishTurn(); return;
+  }
+  if (hasJoker(p,'filet') && p.line.mark == null && p.line.cells.length >= 3 && lineSum(p) >= 22) useFilet(p);
+  setMsg('info', `🤖 ${esc(p.name)} dit Encore !`); render();
+  schedule(doRoll, 450);
+}
+
+/* ============ Modale ============ */
+function modal(html, buttons, autoMs=0, autoVal=null, cls=''){
+  return new Promise(res => {
+    const m = $('#modal');
+    m.innerHTML = `<div class="mbox ${cls}">${html}${buttons.length?`<div class="mbtns">${buttons.map((b,i) => `<button class="btn ${b.cls||''}" data-i="${i}">${b.label}</button>`).join('')}</div>`:''}</div>`;
+    m.classList.add('show');
+    let done = false;
+    const finish = v => { if (done) return; done = true; m.classList.remove('show'); m.innerHTML = ''; res(v); };
+    m.querySelectorAll('[data-i]').forEach(el => el.onclick = () => finish(buttons[+el.dataset.i].value));
+    m.querySelectorAll('[data-v]').forEach(el => el.onclick = () => finish(el.dataset.v));
+    if (autoMs) setTimeout(() => finish(autoVal), autoMs);
+  });
+}
+
+function gameOver(){
+  sfx.win();
+  const ranked = S.players.slice().sort((a,b) => b.total - a.total);
+  const top = ranked[0].total, winners = ranked.filter(p => p.total === top);
+  const reached = S.players.some(p => p.total >= TARGET);
+  addLog(`🏆 Fin de partie : ${winners.map(w=>w.name).join(' et ')} ${winners.length>1?'gagnent':'gagne'} !`);
+  render();
+  modal(`<div style="width:90px;margin:0 auto">${owlSVG()}</div>
+    <h2>🏆 ${winners.map(w=>esc(w.name)).join(' & ')} ${winners.length>1?'gagnent':'gagne'} !</h2>
+    <p>${reached ? '222 points atteints en fin de manche.' : 'Les 10 manches sont jouées.'}</p>
+    <div class="podium">${ranked.map((p,i) => `<div><span>${i+1}. ${esc(p.name)} ${p.cpu?'🤖':''}</span><span class="s">${p.total}</span></div>`).join('')}</div>`,
+    [{label:'Rejouer', value:'again', cls:'pink'},{label:'Nouvelle configuration', value:'setup', cls:'ghost'},{label:'Voir les fiches', value:'view', cls:'ghost'}]
+  ).then(v => { if (v === 'again') newGame(); else if (v === 'setup') renderSetup(); });
+}
+
+function showRules(){
+  const order = ['doublon','trio','stop','filet','seconde','p5','p7','p10','duo','numero','unpour','bois','argent','or','quitte'];
+  modal(`<h2 style="color:var(--lime)">Règles de Happy Double</h2>
+  <div class="summary">
+  <h3>But du jeu</h3><p>Avoir le plus de points quand quelqu’un atteint <b>222 points</b> (vérifié en fin de manche), ou après <b>10 manches</b>.</p>
+  <h3>Une manche</h3><ul>
+   <li>Tout le monde commence la manche « en jeu ». Chacun son tour, une personne encore en jeu choisit : <b>Encore</b> ou <b>Stop</b>.</li>
+   <li><b>Encore :</b> lancez les 2 dés et notez la <b>valeur la plus haute</b> dans votre case suivante (SW, puis W1 à W6). La chouette vaut 1.</li>
+   <li><b>Stop :</b> vous sortez de la manche et sécurisez la somme de votre ligne. Remplir W6 vous fait sortir automatiquement.</li>
+   <li>Zone de risque : sortir avec W3 / W4 / W5 / W6 rempli rapporte <b>+5 / +10 / +15 / +20</b>.</li>
+   <li><b>Doublon :</b> si la valeur à noter est déjà sur votre ligne, la ligne est barrée et vaut 0.</li>
+   <li><b>Chouette protectrice :</b> si une chouette accompagne une valeur déjà inscrite, rien n’est noté et vous relancez.</li>
+   <li>La manche se termine quand plus personne n’est en jeu. Le premier joueur change à chaque manche.</li></ul>
+  <h3>Doubles et cartes Action</h3><ul>
+   <li>Un double aux dés : inscrivez un <b>D</b> et piochez une carte. Le D vaut les points que la carte fait noter à côté (0 sinon) et ne compte jamais comme doublon.</li>
+   <li><b>Double chouette :</b> piochez 3 cartes, gardez-en une, défaussez les deux autres.</li>
+   <li><b>Cartes roses :</b> effet immédiat. <b>Cartes vertes :</b> restent devant vous jusqu’à leur utilisation ou la fin de la manche.</li></ul>
+  <h3>Jokers (cochés une seule fois par partie)</h3>
+  <p>Chaque fiche commence avec : Filet de sécurité, Seconde chance, Joker D, Seconde chance. Les cartes « Bonus ! » en ajoutent un.</p>
+  <ul>${Object.values(JOKERS).map(j => `<li><b>${j.icon} ${j.name} :</b> ${j.text}</li>`).join('')}</ul>
+  <h3>Les 20 cartes Action</h3>
+  <ul>${order.map(id => { const c = CARDS[id]; return `<li>${c.i} <b style="color:${c.c==='pink'?'var(--pink2)':'var(--lime2)'}">${c.t}</b> (×${c.n}) : ${c.l.slice(1).join(' ')}${c.f?` <i>${c.f}</i>`:''}</li>`; }).join('')}</ul>
+  <h3>Raccourcis</h3><p>Espace : Encore · Entrée ou S : Stop · F : filet de sécurité</p>
+  </div>`, [{label:'Compris !', value:1, cls:'pink'}], 0, null, 'rules');
+}
+
+/* ============ Rendu ============ */
+function renderGameShell(){
+  $('#app').innerHTML = `
+  <div class="topbar">
+    <div class="logo small"><div>${owlSVG()}</div><div class="t">HAPPY DOUBLE</div></div>
+    <div class="roundInfo" id="roundInfo"></div>
+    <div class="tools"><button class="btn ghost" id="sndBtn"></button><button class="btn ghost" id="speedBtn"></button><button class="btn ghost" id="rulesBtn">Règles</button><button class="btn ghost" id="quitBtn">Quitter</button></div>
+  </div>
+  <div class="grid">
+    <section>
+      <div class="turn"><div class="who" id="who"></div><div class="jrow" id="greensNow"></div></div>
+      <div class="tray"><div id="dice"></div></div>
+      <div class="msg" id="msg"></div>
+      <div class="actions"><button class="btn pink big" id="rollBtn">🎲 Encore</button><button class="btn lime big" id="stopBtn">✋ Stop</button><button class="btn orange" id="filetBtn">) Filet</button></div>
+      <div class="risk" id="risk"></div>
+      <div class="sheet" id="line"></div>
+    </section>
+    <aside><div class="board" id="board"></div><div class="log" id="log"></div></aside>
+  </div>
+  <section class="sheetWrap"><div class="tabs" id="tabs"></div><div class="sheet" id="full"></div></section>`;
+  $('#rollBtn').onclick = () => { if (canAct()) doRoll(); };
+  $('#stopBtn').onclick = humanStop;
+  $('#filetBtn').onclick = () => { if (canAct() && canFilet(cur())) useFilet(cur()); };
+  $('#rulesBtn').onclick = showRules;
+  $('#sndBtn').onclick = () => { toggleSound(); render(); };
+  $('#speedBtn').onclick = () => { S.speed = S.speed === 1 ? 2.2 : 1; render(); };
+  $('#quitBtn').onclick = async () => {
+    const v = await modal('<h2>Quitter la partie ?</h2><p>La partie en cours sera perdue.</p>', [{label:'Quitter', value:1, cls:'pink'},{label:'Continuer', value:0, cls:'ghost'}]);
+    if (v) renderSetup();
+  };
+}
+const canAct = () => S && !S.over && !S.busy && !S.turnOver && !cur().cpu && cur().line.status === 'in' && !$('#modal').classList.contains('show');
+const canFilet = p => hasJoker(p,'filet') && p.line.cells.length > 0 && p.line.mark !== p.line.cells.length;
+function humanStop(){
+  if (!canAct() || !cur().line.cells.length) return;
+  const p = cur(); const pts = bank(p, 'stop');
+  setMsg('good', `✋ ${esc(p.name)} dit Stop et sécurise ${pts} points.`);
+  finishTurn();
+}
+
+function drawDice(){ const d = $('#dice'); if (d) d.innerHTML = dieSVG(S.dice[0]) + dieSVG(S.dice[1]); }
+
+function cellHTML(c, mark){
+  let h = '';
+  if (c){
+    if (c.t === 'n') h = c.v;
+    else if (c.t === 'D') h = `<span class="d">D</span>${c.pts?`<small style="font-size:.65em">${c.pts}</small>`:''}`;
+  }
+  return h + (mark ? '<span class="mark">)</span>' : '');
+}
+function headRows(first){
+  return `<tr><th class="blank" colspan="${first?4:3}"></th>${['+5','+10','+15','+20'].map(b => `<th class="bonus">${b}</th>`).join('')}<th class="blank" colspan="2"></th></tr>
+  <tr>${first?'<th class="blank"></th>':''}${COLS.map((c,i) => `<th class="${i>=3?'rz':''}">${c}</th>`).join('')}<th class="pts">Points</th><th class="pts">Total</th></tr>`;
+}
+function jokerChips(p){
+  return p.jokers.map(j => `<span class="jk ${j.used?'used':''}" title="${esc(JOKERS[j.k].name)}${j.bonus?' (bonus)':''}">${JOKERS[j.k].icon} ${JOKERS[j.k].lab}${j.bonus?'★':''}</span>`).join('');
+}
+function greenChips(p){ return p.line.greens.map(id => `<span class="gc" title="${esc(CARDS[id].l[1])}">${CARDS[id].i} ${CARDS[id].t}</span>`).join(''); }
+
+function render(){
+  if (!S || !$('#rollBtn')) return;
+  const p = cur(), L = p.line;
+  $('#roundInfo').innerHTML = `<span class="pill">Manche ${S.round}/${MAX_ROUNDS}</span><span class="goal">Objectif 222</span>`;
+  $('#sndBtn').textContent = soundLabel();
+  $('#speedBtn').textContent = S.speed === 1 ? '⏩ Ordi rapide' : '▶ Ordi normal';
+  $('#who').innerHTML = `${p.cpu?'🤖':'👤'} ${esc(p.name)}<small>${p.cpu?STYLES[p.style]:'à vous !'} · ${p.total} pts</small>`;
+  $('#greensNow').innerHTML = greenChips(p);
+  if (!S.busy) drawDice();
+  const m = $('#msg'); m.className = 'msg ' + S.msg.t; m.innerHTML = S.msg.h;
+  const act = canAct();
+  $('#rollBtn').disabled = !act;
+  $('#stopBtn').disabled = !act || L.cells.length === 0;
+  $('#filetBtn').classList.toggle('hidden', !(act && canFilet(p)));
+
+  const n = L.cells.length;
+  if (L.status === 'in' && n < 7){
+    const pct = Math.round(bustProb(p)*100);
+    $('#risk').innerHTML = `<div class="lbl"><span>Risque de doublon au prochain lancer de ${esc(p.name)}</span><span>${pct} %</span></div><div class="bar"><i style="width:${Math.max(2,pct)}%"></i></div>`;
+  } else $('#risk').innerHTML = '';
+
+  const sum = lineSum(p), bonus = BONUS[n], q = L.greens.includes('quitte');
+  const st = L.status === 'in' ? 'en jeu' : L.status === 'out' ? 'sorti ✓' : 'éliminé ✗';
+  $('#line').innerHTML = `<table>${headRows(false)}<tr class="${L.status==='bust'?'busted':''}">${COLS.map((c,i) => `<td class="${i>=3?'rzc':''} ${i===S.newCell&&S.view===S.idx?'new':''} ${L.status==='bust'?'strike':''}">${cellHTML(L.cells[i], L.mark!=null && L.mark===i+1)}</td>`).join('')}
+    <td class="ptsc">${sum}</td><td class="ptsc">${p.total}</td></tr></table>
+    <div class="lineFoot"><span>${esc(p.name)} (${st}) : <b>${sum}</b> pts${bonus?` + <b>${bonus}</b> de risque`:''}${q?' · <b>×2</b> quitte ou double':''}${L.mark!=null?` · filet : ${lineSum(p,L.mark)} protégés`:''}</span><span>Nombres notés : ${nums(p).sort((a,b)=>a-b).join(', ') || '—'}</span></div>`;
+
+  $('#board').innerHTML = S.players.map((q,i) => {
+    const Lq = q.line, rec = q.rounds[S.round-1];
+    const stc = Lq.status === 'in' ? '<span class="st in">En jeu</span>' : Lq.status === 'out' ? `<span class="st out">Sorti +${rec?rec.pts:0}</span>` : `<span class="st bust">Éliminé${rec&&rec.pts?' +'+rec.pts:''}</span>`;
+    return `<div class="pl ${i===S.idx?'active':''} ${Lq.status==='bust'?'bust':''}" data-i="${i}">
+    <div class="nm">${q.cpu?'🤖':'👤'} ${esc(q.name)} ${stc}</div>
+    <div class="tot">${q.total}</div>
+    <div class="mini">${COLS.map((c,k) => `<span class="${k>=3?'rz':''} ${Lq.cells[k]?'':'e'}">${cellHTML(Lq.cells[k], Lq.mark!=null && Lq.mark===k+1)}</span>`).join('')}</div>
+    <div class="prog"><i style="width:${Math.min(100,q.total/TARGET*100)}%"></i></div>
+    <div class="meta">${jokerChips(q)}${greenChips(q)}</div></div>`; }).join('');
+  document.querySelectorAll('.board .pl').forEach(el => el.onclick = () => { S.view = +el.dataset.i; render(); });
+
+  $('#log').innerHTML = `<h4>Journal</h4>` + S.log.slice(0,16).map(t => `<div>${esc(t)}</div>`).join('');
+
+  $('#tabs').innerHTML = `<span class="lab">Fiche de score</span>` + S.players.map((q,i) => `<button data-i="${i}" class="${i===S.view?'on':''}">${esc(q.name)}</button>`).join('');
+  document.querySelectorAll('#tabs button').forEach(el => el.onclick = () => { S.view = +el.dataset.i; render(); });
+  const v = S.players[S.view];
+  let run = 0, rows = '';
+  for (let r=0;r<MAX_ROUNDS;r++){
+    const rec = v.rounds[r];
+    const live = !rec && r === S.round-1 && v.line.status === 'in';
+    const cells = rec ? rec.cells : live ? v.line.cells : [];
+    const mk = rec ? rec.mark : live ? v.line.mark : null;
+    if (rec) run += rec.pts;
+    const ptsTxt = rec ? `${rec.busted && !rec.pts ? '✗' : rec.pts}${rec.dbl?'<small style="font-size:11px;color:var(--pink)"> ×2</small>':''}` : live ? `<small style="font-size:13px;color:#999">${lineSum(v)}…</small>` : '';
+    rows += `<tr class="${live?'cur':''} ${rec&&rec.busted?'busted':''}"><td class="rh ${r%2?'alt':''}">R${r+1}</td>
+      ${COLS.map((c,i) => `<td class="${i>=3?'rzc':''} ${rec&&rec.busted?'strike':''}">${cellHTML(cells[i], mk!=null && mk===i+1)}</td>`).join('')}
+      <td class="ptsc">${ptsTxt}</td><td class="ptsc">${rec?run:''}</td></tr>`;
+  }
+  $('#full').innerHTML = `<table>${headRows(true)}${rows}</table>
+    <div class="lineFoot"><span class="jrow">Jokers : ${jokerChips(v).replace(/class="jk/g,'style="background:#eee;color:#222" class="jk')}</span><span>Total : <b>${v.total}</b></span></div>`;
+  S.newCell = -1;
+}
+
+document.addEventListener('keydown', e => {
+  if (!S || e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space'){ e.preventDefault(); if (canAct()) doRoll(); }
+  else if ((e.key === 'Enter' || e.key.toLowerCase() === 's') && canAct()){ e.preventDefault(); humanStop(); }
+  else if (e.key.toLowerCase() === 'f' && canAct() && canFilet(cur())) useFilet(cur());
+});
+
+renderSetup();
+</script>
+</body>
+</html>
