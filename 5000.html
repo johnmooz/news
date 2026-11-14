@@ -14,6 +14,12 @@
   }
   h1 { margin: 0 0 4px; font-size: 2.6rem; letter-spacing: 0.05em; text-shadow: 0 2px 6px rgba(0,0,0,.4); }
   .hidden { display: none !important; }
+  .sound-btn {
+    position: fixed; top: 12px; right: 12px; z-index: 10;
+    font-family: inherit; font-size: .9rem; padding: 7px 14px; border-radius: 999px; cursor: pointer;
+    border: 2px solid rgba(245,215,110,.6); background: rgba(0,0,0,.3); color: #f5d76e;
+  }
+  .sound-btn:hover { background: rgba(245,215,110,.15); }
   .net-status { font-size: .85rem; color: #ffcf8a; min-height: 1.2em; }
 
   /* ---------- Panneaux ---------- */
@@ -154,6 +160,7 @@
 </style>
 </head>
 <body>
+  <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">🔊 Son</button>
   <h1>Jeu du 5000</h1>
   <div class="net-status" id="netStatus"></div>
 
@@ -502,6 +509,121 @@
   try { Object.assign(prefs, JSON.parse(localStorage.getItem('5000-prefs') || '{}')); } catch (e) {}
   const savePrefs = () => { try { localStorage.setItem('5000-prefs', JSON.stringify(prefs)); } catch (e) {} };
 
+  // =====================================================================
+  // Sons (synthétisés avec Web Audio, aucun fichier)
+  // =====================================================================
+  let actx = null, master = null, noiseBuf = null;
+  function audio() {
+    try {
+      if (!actx) {
+        const C = window.AudioContext || window.webkitAudioContext;
+        if (!C) return null;
+        actx = new C();
+        master = actx.createGain();
+        master.gain.value = 0.6;
+        master.connect(actx.destination);
+        noiseBuf = actx.createBuffer(1, actx.sampleRate * 0.5, actx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (actx.state === 'suspended') actx.resume().catch(() => {});
+      return actx;
+    } catch (e) { return null; }
+  }
+  // Le navigateur n'autorise le son qu'après un clic : on active l'audio au premier geste
+  document.addEventListener('pointerdown', () => { if (!prefs.muted) audio(); }, true);
+  document.addEventListener('keydown', () => { if (!prefs.muted) audio(); }, true);
+
+  function tone(freq, at, dur, { type = 'sine', vol = 0.18, to = null } = {}) {
+    const t = actx.currentTime + at;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function click(at, { freq = 3000, dur = 0.035, vol = 0.35, q = 4 } = {}) {
+    const t = actx.currentTime + at;
+    const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    s.buffer = noiseBuf;
+    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t, Math.random() * 0.4, dur + 0.02);
+  }
+  const SOUNDS = {
+    roll() { // dés qui roulent sur la table
+      for (let i = 0; i < 14; i++) click(i * 0.032 + Math.random() * 0.02, { freq: 1800 + Math.random() * 2500, vol: 0.25 + Math.random() * 0.2 });
+      click(0.47, { freq: 600, dur: 0.08, vol: 0.5, q: 1.5 });
+      click(0.5, { freq: 900, dur: 0.05, vol: 0.3, q: 2 });
+    },
+    select()   { tone(880, 0, 0.07, { type: 'triangle', vol: 0.16 }); tone(1320, 0.04, 0.08, { type: 'triangle', vol: 0.12 }); },
+    deselect() { tone(660, 0, 0.07, { type: 'triangle', vol: 0.14 }); tone(440, 0.04, 0.08, { type: 'triangle', vol: 0.1 }); },
+    tick()     { click(0, { freq: 2500, dur: 0.03, vol: 0.4 }); tone(1046, 0, 0.06, { type: 'triangle', vol: 0.1 }); },
+    clear()    { tone(320, 0, 0.12, { type: 'sine', vol: 0.18, to: 180 }); },
+    validate() { tone(660, 0, 0.1, { vol: 0.16 }); tone(990, 0.08, 0.14, { vol: 0.16 }); },
+    bank()     { [784, 988, 1175, 1568].forEach((f, i) => tone(f, i * 0.07, 0.22, { type: 'triangle', vol: 0.15 })); },
+    lost()     { tone(392, 0, 0.25, { type: 'triangle', vol: 0.18 }); tone(330, 0.2, 0.25, { type: 'triangle', vol: 0.18 }); tone(262, 0.4, 0.5, { type: 'triangle', vol: 0.18, to: 196 }); },
+    turn()     { tone(523, 0, 0.18, { vol: 0.1 }); },
+    yourturn() { tone(880, 0, 0.35, { vol: 0.14 }); tone(1320, 0.12, 0.4, { vol: 0.1 }); },
+    win() {
+      [523, 659, 784, 1046].forEach((f, i) => tone(f, i * 0.13, 0.25, { type: 'square', vol: 0.07 }));
+      [523, 659, 784, 1046].forEach(f => tone(f, 0.6, 0.9, { type: 'triangle', vol: 0.1 }));
+    }
+  };
+  function play(name) {
+    if (prefs.muted || !SOUNDS[name]) return;
+    const c = audio();
+    if (!c || c.state !== 'running') return;
+    try { SOUNDS[name](); } catch (e) {}
+  }
+
+  const soundBtn = $('soundBtn');
+  function renderSoundBtn() {
+    soundBtn.textContent = prefs.muted ? '🔇 Son coupé' : '🔊 Son';
+    soundBtn.setAttribute('aria-pressed', prefs.muted ? 'false' : 'true');
+  }
+  soundBtn.addEventListener('click', () => {
+    prefs.muted = !prefs.muted;
+    savePrefs();
+    renderSoundBtn();
+    if (!prefs.muted) { audio(); setTimeout(() => play('select'), 30); }
+  });
+  renderSoundBtn();
+
+  // Sons déduits des changements d'état (fonctionne aussi pour les actions des autres joueurs en réseau)
+  function diffSounds(a, b) {
+    if (!a || !b || a.players.length !== b.players.length) return [];
+    if (b.phase === 'over' && a.phase !== 'over') return ['win'];
+    const out = [];
+    const banked = b.players.some((p, i) => p.total > a.players[i].total);
+    if (banked) out.push('bank');
+    const cnt = (g, f) => g.dice.filter(f).length;
+    const filled = g => g.phase === 'enter' ? g.pending.filter(i => g.dice[i].value !== null).length : 0;
+    if (a.current === b.current && !banked) {
+      if (b.turnScore > a.turnScore) out.push('validate');          // dés gardés puis relance
+      else {
+        const sa = cnt(a, d => d.selected), sb = cnt(b, d => d.selected);
+        if (sb > sa) out.push('select');
+        else if (sb < sa) out.push('deselect');
+      }
+      if (a.phase === 'enter' && b.phase === 'enter' && a.pending.join() === b.pending.join()) {
+        if (filled(b) > filled(a)) out.push('tick');
+        else if (filled(b) < filled(a)) out.push('clear');
+      }
+      if (a.phase === 'enter' && b.phase === 'choose') out.push('validate'); // lancer saisi validé
+    }
+    if (b.phase === 'lost' && a.phase !== 'lost') out.push('lost');
+    if (a.current !== b.current) out.push(appMode !== 'local' && myIndex() === b.current ? 'yourturn' : 'turn');
+    return out;
+  }
+  let prevSnap = null;
+
   const SECTIONS = ['setup', 'lobby', 'game', 'victory'];
   const show = id => SECTIONS.forEach(s => $(s).classList.toggle('hidden', s !== id));
 
@@ -692,8 +814,11 @@
       copy.players.forEach(p => { p.name = cleanName(p.name) || 'Joueur'; });
       G = copy;
     } catch (e) { return; }
-    if (G.phase === 'over') { showVictory(); return; }
-    if ($('game').classList.contains('hidden')) { lastAnim = null; show('game'); }
+    if (G.phase !== 'over' && $('game').classList.contains('hidden')) {
+      if (!$('victory').classList.contains('hidden')) prevSnap = null; // nouvelle partie après une victoire
+      lastAnim = null;
+      show('game');
+    }
     renderGame();
   }
 
@@ -784,7 +909,6 @@
     if (appMode === 'host' && a.type !== 'skip' && !canControl()) return;
     if (act(G, a)) {
       publish();
-      if (G.phase === 'over') { showVictory(); return; }
       renderGame();
     }
   }
@@ -814,17 +938,27 @@
 
   let lastAnim = null, animating = false, animIdx = [];
 
+  let deferredSounds = [];
   function renderGame() {
     if (!G) return;
-    if (G.phase === 'over') { showVictory(); return; }
     if (animating) return; // l'animation en cours affichera le dernier état
+    const snap = JSON.parse(JSON.stringify(G));
+    const sounds = diffSounds(prevSnap, snap);
+    prevSnap = snap;
+    if (G.phase === 'over') { sounds.forEach(play); showVictory(); return; }
     const a = G.anim || { id: 0, idx: [] };
     if (lastAnim !== null && a.id !== lastAnim && Array.isArray(a.idx) && a.idx.length) {
       lastAnim = a.id;
+      // sons immédiats, puis le résultat du lancer après l'animation
+      const now = ['validate', 'bank', 'select', 'deselect', 'tick', 'clear'];
+      sounds.filter(s => now.includes(s)).forEach(play);
+      deferredSounds = sounds.filter(s => !now.includes(s));
+      play('roll');
       animate(a.idx.filter(i => i >= 0 && i < 6));
       return;
     }
     lastAnim = a.id;
+    sounds.forEach(play);
     draw();
   }
 
@@ -839,6 +973,8 @@
         clearInterval(t);
         idx.forEach(i => buttons[i].classList.remove('rolling'));
         animating = false; animIdx = [];
+        deferredSounds.forEach(play);
+        deferredSounds = [];
         renderGame();
       }
     }, 80);
