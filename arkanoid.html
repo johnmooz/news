@@ -80,7 +80,7 @@ h2{text-align:center;font:900 30px "Courier New",monospace;color:#ffd400;text-sh
     <div class="sect"><div class="lbl">Niveau de départ</div>
       <div class="stepper"><button id="lvMinus">−</button><span id="lvVal">1</span><button id="lvPlus">+</button></div></div>
     <div class="sect"><div class="lbl">Vitesse du jeu</div><div class="seg" id="spdSeg"></div></div>
-    <div class="sect"><label class="chk"><input type="checkbox" id="touchChk"> Afficher les boutons tactiles</label></div>
+    <div class="sect"><div class="lbl">Écran tactile</div><label class="chk"><input type="checkbox" id="touchChk"> Afficher les boutons ◀ ▶ TIR</label><div style="font-size:12px;color:#aab;margin-top:4px">Sans boutons, tu peux aussi glisser le doigt sur le jeu pour déplacer ta raquette, et toucher brièvement l'écran pour lancer ou tirer.</div></div>
     <button class="big" id="startBtn">JOUER</button>
     <div class="help" id="help"></div>
     <div class="help">
@@ -93,7 +93,7 @@ h2{text-align:center;font:900 30px "Courier New",monospace;color:#ffd400;text-sh
 <div class="overlay" id="pauseOv">
   <div class="panel">
     <h2>PAUSE</h2>
-    <div class="row"><button class="btn" id="resumeBtn">Reprendre</button><button class="btn" id="quitBtn">Menu</button></div>
+    <div class="row"><button class="btn" id="resumeBtn">Reprendre</button><button class="btn" id="quitBtn">Menu</button></div><div class="row"><button class="btn" id="touchToggle">Boutons tactiles : OUI</button></div>
   </div>
 </div>
 
@@ -257,6 +257,26 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{const n=mapKey(e);if(n)keys[n]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;for(const k in touch)touch[k]=false;});
 function inp(n){return !!(keys[n]||touch[n]||tap[n]);}
+// ---- glisser le doigt sur le jeu ----
+const drags={},dragDX=[0,0],dragHold=[0,0];
+function toGame(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};}
+cv.addEventListener('pointerdown',e=>{
+  if(!game||paused||menuOpen()||game.state==='over')return;
+  e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}
+  const pt=toGame(e);let pid=0;
+  if(game.mode==='vs')pid=pt.y<H/2?1:0;                       // moitié haute = joueur 2
+  else if(game.mode==='coop'){let bd=1e9;for(const p of game.paddles){const d=Math.abs(pt.x-p.x);if(d<bd){bd=d;pid=p.id;}}}
+  drags[e.pointerId]={pid,lx:pt.x,sx:pt.x,sy:pt.y,t0:performance.now(),moved:false};dragHold[pid]++;
+});
+cv.addEventListener('pointermove',e=>{const d=drags[e.pointerId];if(!d)return;e.preventDefault();
+  const pt=toGame(e);dragDX[d.pid]+=(pt.x-d.lx)*1.25;d.lx=pt.x;
+  if(Math.abs(pt.x-d.sx)>8||Math.abs(pt.y-d.sy)>8)d.moved=true;});
+function dragEnd(e){const d=drags[e.pointerId];if(!d)return;delete drags[e.pointerId];dragHold[d.pid]=Math.max(0,dragHold[d.pid]-1);
+  if(!d.moved&&performance.now()-d.t0<350)tap[(d.pid===0?'p1':'p2')+'f']=true;}
+cv.addEventListener('pointerup',dragEnd);cv.addEventListener('pointercancel',dragEnd);cv.addEventListener('lostpointercapture',dragEnd);
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+// premier contact tactile : on affiche les boutons si le joueur n'a rien choisi
+window.addEventListener('touchstart',()=>{if(!touchSet&&!cfg.touch){cfg.touch=true;touchSet=true;refreshMenu();if(game){buildBars();resize();}}},{once:true,passive:true});
 function getCtl(id){
   if(game.mode==='solo')return{l:inp('p1l')||inp('p2l'),r:inp('p1r')||inp('p2r'),f:inp('p1f')||inp('p2f')};
   const p=id===0?'p1':'p2';return{l:inp(p+'l'),r:inp(p+'r'),f:inp(p+'f')};
@@ -305,7 +325,7 @@ function newGame(){
   else{g.paddles=[mk(0,H-40,-1),mk(1,40,1)];}
   if(g.mode==='coop'){g.paddles[0].x=W/2+50;g.paddles[1].x=W/2-50;}
   loadLevel(g.levelNum);serve(0);
-  showBanner('NIVEAU '+g.levelNum,'Lance la balle avec TIR',150);
+  showBanner('NIVEAU '+g.levelNum,isTouch?'Touche l\'écran ou TIR pour lancer':'Lance la balle avec TIR',150);
 }
 function fieldTop(){return game.mode==='vs'?0:FT_SOLO;}
 
@@ -437,7 +457,7 @@ function updateBall(b){
 // ---------- déroulement ----------
 function movePaddle(p,c){
   const g=game;
-  p.x+=((c.r?1:0)-(c.l?1:0))*g.padSpeed;
+  p.x+=((c.r?1:0)-(c.l?1:0))*g.padSpeed+dragDX[p.id];dragDX[p.id]=0;
   p.w+=(p.targetW-p.w)*0.2;
   const gateOk=g.gate&&g.gate.ids.includes(p.id);
   p.x=clamp(p.x,WALL+p.w/2,gateOk?W+p.w/2:W-WALL-p.w/2);
@@ -506,6 +526,7 @@ function update(){
     const edge=c.f&&!p.prevF;p.prevF=c.f;let rel=false;
     if(edge){for(const b of g.balls)if(b.stuck===p){launch(b);rel=true;}}
     if(c.f&&!rel&&p.mode==='L'&&p.cd<=0&&!g.balls.some(b=>b.stuck===p)){shoot(p);p.cd=16;}
+    if(!rel&&dragHold[p.id]>0&&p.mode==='L'&&p.cd<=0&&!g.balls.some(b=>b.stuck===p)){shoot(p);p.cd=16;}  // laser auto en gardant le doigt posé
     if(p.cd>0)p.cd--;
   }
   for(const k in tap)tap[k]=false;
@@ -705,7 +726,8 @@ function refreshMenu(){
   document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===cfg.mode));
   document.querySelectorAll('#spdSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===cfg.speed));
   $('lvVal').textContent=cfg.level;$('touchChk').checked=cfg.touch;
-  $('help').innerHTML=HELP[cfg.mode]+'<br><b>P / Échap :</b> pause · <b>M :</b> son';
+  $('help').innerHTML=HELP[cfg.mode]+'<br><b>Tactile :</b> boutons ◀ ▶ TIR, ou glisse le doigt sur le jeu (toucher = lancer / tirer'+(cfg.mode==='vs'?', chacun sa moitié d\'écran':cfg.mode==='coop'?', le doigt pilote la raquette la plus proche':'')+')<br><b>P / Échap :</b> pause · <b>M :</b> son';
+  $('touchToggle').textContent='Boutons tactiles : '+(cfg.touch?'OUI':'NON');
 }
 $('spdSeg').innerHTML=SPEEDS.map((s,i)=>`<button data-v="${i}">${s.n}</button>`).join('');
 $('capsLegend').innerHTML=Object.keys(CAPS).map(k=>`<div><span class="cap" style="background:${CAPS[k].col}">${k}</span>${CAPS[k].fr}</div>`).join('');
@@ -713,10 +735,11 @@ document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{cfg.mode=
 document.querySelectorAll('#spdSeg button').forEach(b=>b.onclick=()=>{cfg.speed=+b.dataset.v;refreshMenu();saveCfg();});
 $('lvMinus').onclick=()=>{cfg.level=cfg.level<=1?NLEV:cfg.level-1;refreshMenu();saveCfg();};
 $('lvPlus').onclick=()=>{cfg.level=cfg.level>=NLEV?1:cfg.level+1;refreshMenu();saveCfg();};
-$('touchChk').onchange=e=>{cfg.touch=e.target.checked;try{localStorage.setItem('arkanoid_touchset','1');}catch(_){}saveCfg();};
+$('touchChk').onchange=e=>{cfg.touch=e.target.checked;touchSet=true;try{localStorage.setItem('arkanoid_touchset','1');}catch(_){}saveCfg();refreshMenu();};
+$('touchToggle').onclick=()=>{cfg.touch=!cfg.touch;touchSet=true;try{localStorage.setItem('arkanoid_touchset','1');}catch(_){}saveCfg();refreshMenu();buildBars();resize();};
 function start(){
   hide('menu');hide('endOv');hide('pauseOv');paused=false;
-  for(const k in keys)keys[k]=false;for(const k in touch)touch[k]=false;
+  for(const k in keys)keys[k]=false;for(const k in touch)touch[k]=false;for(const k in drags)delete drags[k];dragDX[0]=dragDX[1]=dragHold[0]=dragHold[1]=0;
   buildBars();newGame();$('hudBtns').style.display='flex';last=0;acc=0;resize();
   sfx('start');
 }
