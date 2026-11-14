@@ -12,8 +12,7 @@
 html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at top,#16204a,#070b17 70%) fixed;color:var(--txt);font-family:Inter,system-ui,sans-serif;touch-action:manipulation}
 body{display:flex;align-items:center;justify-content:center;min-height:100vh;
   padding:max(16px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
-.wrap{width:min(100%,920px,max(300px,calc((100vh - 150px) * 1.38)))}
-body.is-touch .wrap{width:min(100%,920px,max(300px,calc((100vh - 250px) * 1.38)))}
+.wrap{width:min(100%,920px,max(300px,calc((100vh - 250px) * 1.38)))}
 .hud{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;margin-bottom:10px}
 .side{display:flex;flex-direction:column;gap:8px;min-width:0}
 .pl,.center{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
@@ -73,15 +72,16 @@ kbd{display:inline-block;min-width:24px;padding:3px 6px;border-radius:5px;backgr
 .slot i{width:14px;height:14px;border-radius:4px;background:var(--c);flex:none}
 .slot.empty{color:#4b5a8f;border-style:dashed;font-weight:400}
 .slot.empty i{background:#24305a}
-.touch{display:none;justify-content:space-between;gap:12px;margin-top:12px;user-select:none;-webkit-user-select:none}
-body.is-touch .touch{display:flex}
+.touch{display:flex;justify-content:space-between;gap:12px;margin-top:12px;user-select:none;-webkit-user-select:none}
 .tgroup{display:flex;gap:10px}
 .tgroup.ghost{visibility:hidden}
 .tbtn{width:74px;height:74px;border-radius:18px;border:2px solid var(--line);background:#141d3b;color:var(--txt);font-size:30px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
-.tbtn:active{transform:scale(.94);background:#1e2950}
+.tbtn:hover{background:#1a2448}
+.tbtn:active,.tbtn.hit{transform:scale(.94);background:#1e2950}
+.tbtn small{display:block;font:600 9px Inter,sans-serif;letter-spacing:1px;opacity:.7;margin-top:-2px}
 .tbtn.c0{border-color:#2f7a4c;color:var(--p1)}.tbtn.c1{border-color:#2f5a9a;color:#60a5fa}
 .tbtn.mid{width:56px;height:56px;font-size:20px;align-self:center}
-@media (max-width:620px){.hud{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}.hearts{font-size:16px}.plist{grid-template-columns:1fr}}
+@media (max-width:620px){.hud{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}.hearts{font-size:16px}.plist{grid-template-columns:1fr}.eggs{gap:2px}.eggs i{width:6px;height:8px}}
 </style>
 </head>
 <body>
@@ -107,7 +107,7 @@ body.is-touch .touch{display:flex}
           <button class="opt sel" data-v="solo">Solo<small>1 joueur</small></button>
           <button class="opt" data-v="duo">2 joueurs<small>Même clavier, face à face</small></button>
           <button class="opt" data-v="host">Réseau (hôte)<small id="hostNote">Créer une partie · 4 max</small></button>
-          <button class="opt" data-v="join">Réseau (rejoindre)<small>Entrer l'adresse de l'hôte</small></button>
+          <button class="opt" data-v="join">Réseau (rejoindre)<small>Rejoindre une partie</small></button>
         </div>
       </div>
       <div id="modeBox">
@@ -119,8 +119,9 @@ body.is-touch .touch{display:flex}
       </div>
       <div class="fields hidden" id="netBox">
         <label>Pseudo<input id="inName" maxlength="12" placeholder="Ton pseudo" autocomplete="off"></label>
-        <label id="addrLbl">Adresse de l'hôte<input id="inAddr" placeholder="192.168.1.23:47822" autocomplete="off" inputmode="url"></label>
+        <label id="addrLbl"><span id="addrTxt">Adresse de l'hôte</span><input id="inAddr" placeholder="192.168.1.23:47822" autocomplete="off" inputmode="url"></label>
       </div>
+      <div class="opts hidden" id="gameList"></div>
       <div class="err" id="menuErr"></div>
       <button class="play" id="btnPlay">JOUER</button>
       <div class="keys">
@@ -136,9 +137,9 @@ body.is-touch .touch{display:flex}
     <div class="overlay hidden" id="lobby">
       <h2>SALON</h2>
       <div id="lobbyHost">
-        <div class="lbl">Adresse à donner aux autres joueurs</div>
+        <div class="lbl" id="lobbyLbl">Adresse à donner aux autres joueurs</div>
         <div class="addr" id="lobbyAddr"></div>
-        <p class="hint">Les joueurs doivent être sur le même réseau (même box / Wi-Fi). Ils choisissent « Réseau (rejoindre) » et tapent cette adresse — ou l'ouvrent directement dans le navigateur de leur téléphone : <b id="lobbyUrl"></b></p>
+        <p class="hint" id="lobbyHint"></p>
       </div>
       <div class="hint hidden" id="lobbyGuest"></div>
       <div id="lobbyModeHost">
@@ -174,9 +175,9 @@ body.is-touch .touch{display:flex}
   </div>
 
   <div class="touch">
-    <div class="tgroup"><button class="tbtn c0" data-g="0" data-d="-1" aria-label="Tourner à gauche">◀</button><button class="tbtn c0" data-g="0" data-d="1" aria-label="Tourner à droite">▶</button></div>
-    <button class="tbtn mid" id="tPause" aria-label="Pause">❚❚</button>
-    <div class="tgroup ghost" id="tP2"><button class="tbtn c1" data-g="1" data-d="-1" aria-label="Joueur 2 gauche">◀</button><button class="tbtn c1" data-g="1" data-d="1" aria-label="Joueur 2 droite">▶</button></div>
+    <div class="tgroup"><button class="tbtn c0" tabindex="-1" data-g="0" data-d="-1" title="Tourner à gauche (←)" aria-label="Tourner à gauche">◀</button><button class="tbtn c0" tabindex="-1" data-g="0" data-d="1" title="Tourner à droite (→)" aria-label="Tourner à droite">▶</button></div>
+    <button class="tbtn mid" tabindex="-1" id="tPause" title="Pause (Espace)" aria-label="Pause">❚❚</button>
+    <div class="tgroup ghost" id="tP2"><button class="tbtn c1" tabindex="-1" data-g="1" data-d="-1" title="Joueur 2 : tourner à gauche (Q)" aria-label="Joueur 2 gauche">◀</button><button class="tbtn c1" tabindex="-1" data-g="1" data-d="1" title="Joueur 2 : tourner à droite (D)" aria-label="Joueur 2 droite">▶</button></div>
   </div>
 </div>
 
@@ -360,17 +361,13 @@ function levelUp(winner){
   G.bannerT=1800;playLevel();G.ev.push({k:'lvl'});G.dirty=true;
 }
 function playerLabel(s){return `<span style="color:${COLORS[s.id].body}">${esc(s.name)}</span>`}
-function endGame(){
-  G.state='over';
-  const n=G.snakes.length,local=!NET.role,p=cfg.play==='duo'?2:1;
-  let html='',rec=false;
+function resultHTML(){
+  const n=G.snakes.length;let html='';
   if(cfg.mode==='classic'){
     html+=`Niveau atteint : <b>${G.level}</b><br>`;
-    G.snakes.forEach(s=>html+=`${playerLabel(s)} : ${s.score} pts<br>`);
+    G.snakes.forEach(s=>html+=`${playerLabel(s)} : ${s.score} pts${s.left?' (parti)':''}<br>`);
     if(n>1){const best=Math.max(...G.snakes.map(s=>s.score)),w=G.snakes.filter(s=>s.score===best);
       html+=w.length>1?'<span class="w">Égalité !</span>':`<span class="w">${esc(w[0].name)} gagne !</span>`}
-    const best=Math.max(...G.snakes.map(s=>s.score));
-    if(local&&best>getRec('classic',p)){save(recKey('classic',p),best);rec=best>0}
   }else{
     html+=`Temps tenu : <b>${fmtTime(G.time)}</b><br>`;
     if(n>1){
@@ -378,10 +375,19 @@ function endGame(){
       const best=Math.max(...G.snakes.map(s=>s.outTime||0)),w=G.snakes.filter(s=>(s.outTime||0)===best);
       html+=w.length>1?'<span class="w">Égalité !</span>':`<span class="w">${esc(w[0].name)} a tenu le plus longtemps !</span>`;
     }else html+=`Score : ${G.snakes[0].score} pts`;
-    if(local&&G.time>getRec('infinite',p)){save(recKey('infinite',p),G.time);rec=true}
   }
-  if(NET.role==='host'){NET.sender.send(snapshot(),true);G.ev=[];NET.sender.send({t:'over',html})}
-  showOver(html,rec);
+  return html;
+}
+function endGame(){
+  G.state='over';
+  const local=!NET.role,p=cfg.play==='duo'?2:1;let rec=false;
+  if(local){
+    if(cfg.mode==='classic'){const best=Math.max(...G.snakes.map(s=>s.score));
+      if(best>getRec('classic',p)){save(recKey('classic',p),best);rec=best>0}}
+    else if(G.time>getRec('infinite',p)){save(recKey('infinite',p),G.time);rec=true}
+  }
+  if(NET.role==='host'){T.hostSend(snapshot(),true);G.ev=[];T.hostSend({t:'over'})}
+  showOver(resultHTML(),rec);
 }
 
 /* =================== écrans =================== */
@@ -426,7 +432,6 @@ function renderRecords(){
 }
 
 /* =================== menu =================== */
-let canHost=false;
 const inName=$('inName'),inAddr=$('inAddr');
 inName.value=load('snake_name')||'';inAddr.value=load('snake_addr')||'';
 function selectOpt(group,v){
@@ -440,7 +445,13 @@ function updateMenu(){
   $('addrLbl').classList.toggle('hidden',p!=='join');
   $('keysP2').classList.toggle('hidden',p!=='duo');
   $('btnPlay').textContent=p==='host'?'CRÉER LE SALON':p==='join'?'REJOINDRE':'JOUER';
-  $('hostNote').textContent=canHost?'Créer une partie · 4 max':'Nécessite SNAKE.exe (PC)';
+  $('hostNote').textContent=canHost?'Créer une partie · 4 max':'Indisponible ici';
+  const room=T&&T.kind==='room';
+  $('addrTxt').textContent=room?'Code de la partie':"Adresse de l'hôte";
+  inAddr.placeholder=room?'ex. K7MP':'192.168.1.23:47822';
+  inAddr.maxLength=room?4:60;
+  if(room&&/[.:]/.test(inAddr.value))inAddr.value='';
+  renderGameList();
   $('tP2').classList.toggle('ghost',p!=='duo');
   $('menuErr').textContent='';
   if(!G)buildHud();
@@ -466,8 +477,16 @@ $('btnAgain').onclick=again;$('btnBack').onclick=back;
 $('btnLaunch').onclick=()=>hostLaunch();
 $('btnLeave').onclick=()=>NET.role==='host'?hostQuit():clientQuit();
 
-/* =================== réseau (local, via SNAKE.exe) =================== */
-// Envoi en série (l'ordre est garanti) ; les états successifs non encore partis sont fusionnés.
+/* =================== réseau =================== */
+// Deux façons de jouer en réseau, avec le même jeu :
+//  • « room » : la page web publiée sur claude.ai — les joueurs qui ont la page ouverte
+//    se retrouvent par internet grâce à un code de partie ;
+//  • « lan »  : SNAKE.exe — partie sur le réseau local, via l'adresse IP de l'hôte.
+// L'hôte fait tourner le jeu et diffuse l'état ; les invités n'envoient que leurs virages.
+let ROOM=null;           // espace « room » de claude.ai (null hors de la page publiée)
+let T=null;              // transport actif
+let canHost=false;
+
 function makeSender(urlFn){
   let busy=false,q=[];
   function pump(){
@@ -485,30 +504,241 @@ function fetchTimeout(url,opt,ms){
   const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
   return fetch(url,{...opt,signal:c.signal}).finally(()=>clearTimeout(t));
 }
+function cleanName(s){
+  s=String(s==null?'':s).replace(/[\u0000-\u001f<>&"'​-‏‪-‮⁠-⁯]/g,'').trim();
+  return Array.from(s).slice(0,12).join('')||'Joueur';
+}
 function snapshot(){
   return{t:'s',st:G.state,banner:G.banner,sub:G.bannerSub,level:G.level,time:Math.round(G.time),clock:Math.round(G.clock),mode:cfg.mode,
     walls:[...G.walls],eggs:G.eggs.map(e=>[e.x,e.y]),
-    sn:G.snakes.map(s=>({p:s.pid,n:s.name,b:s.body.flatMap(c=>[c.x,c.y]),d:s.dir,l:s.lives,sc:s.score,eg:s.eggs,a:s.alive,o:s.out,lf:s.left,r:Math.round(s.respawnAt)})),
+    sn:G.snakes.map(s=>({p:s.pid,n:s.name,b:s.body.flatMap(c=>[c.x,c.y]),d:s.dir,l:s.lives,sc:s.score,eg:s.eggs,a:s.alive,o:s.out,lf:s.left,r:Math.round(s.respawnAt),ot:Math.round(s.outTime||0)})),
     ev:G.ev};
 }
+
+/* ---- transport « réseau local » (SNAKE.exe) ---- */
+function normAddr(a){
+  a=a.trim().replace(/^https?:\/\//i,'').replace(/\/.*$/,'');
+  if(a&&!/:\d+$/.test(a)&&!/^\[.*\]$/.test(a))a+=':'+NET_PORT;
+  return a;
+}
+const lanT={
+  kind:'lan',
+  async host(name){
+    const r=await fetchTimeout('/net/listen',{method:'POST'},4000);
+    const info=await r.json();
+    if(!info.ok)throw new Error(info.err||'listen');
+    this.sender=makeSender(()=>'/net/broadcast');
+    this.es=new EventSource('/net/host');
+    this.es.onmessage=e=>{try{hostMsg(JSON.parse(e.data))}catch(err){}};
+    return{addrs:(info.ips||[]).map(ip=>ip+':'+info.port)};
+  },
+  hostSend(m,coalesce){this.sender.send(m,coalesce)},
+  setOpen(v){fetch('/net/open?v='+(v?1:0),{method:'POST'}).catch(()=>{})},
+  closeHost(){fetch('/net/close',{method:'POST'}).catch(()=>{});if(this.es)this.es.close();this.es=null},
+  async join(name,target){
+    const addr=normAddr(target);
+    if(!addr)return{err:"Entre l'adresse affichée chez l'hôte (ex. 192.168.1.23:47822)."};
+    save('snake_addr',addr);
+    const base='http://'+addr;
+    let j;
+    try{
+      const r=await fetchTimeout(base+'/net/join',{method:'POST',body:JSON.stringify({name})},5000);
+      j=await r.json();
+    }catch(e){return{err:"Impossible de joindre l'hôte. Vérifie l'adresse, que la partie est ouverte et que vous êtes sur le même réseau."}}
+    if(j.err)return{err:j.err};
+    this.base=base;this.addr=addr;this.tok=j.tok;this.pid=j.id;
+    this.sender=makeSender(()=>base+'/net/input');
+    const es=new EventSource(`${base}/net/events?id=${j.id}&tok=${j.tok}`);
+    this.es=es;
+    es.onmessage=e=>{try{clientMsg(JSON.parse(e.data))}catch(err){}};
+    es.onerror=()=>{if(this.es===es&&NET.role==='client')lost("Connexion perdue avec l'hôte.")};
+    return{id:j.id,where:addr};
+  },
+  input(d){this.sender.send({id:this.pid,tok:this.tok,d})},
+  leave(){
+    fetch(this.base+'/net/leave',{method:'POST',body:JSON.stringify({id:this.pid,tok:this.tok})}).catch(()=>{});
+    const es=this.es;this.es=null;if(es)es.close();
+  }
+};
+
+/* ---- transport « room » (page claude.ai, par internet) ---- */
+const enc=(x,y)=>(y*COLS+x).toString(36).padStart(2,'0');
+function decCells(str){
+  const out=[];
+  for(let i=0;i+1<str.length;i+=2){const v=parseInt(str.substr(i,2),36);if(v>=0&&v<COLS*ROWS)out.push(v%COLS,Math.floor(v/COLS))}
+  return out;
+}
+function encodeSnap(m){
+  return{st:m.st,bn:m.banner||'',sb:m.sub||'',lv:m.level,tm:m.time,ck:m.clock,md:m.mode,
+    w:m.walls.map(k=>{const[x,y]=k.split(',');return enc(+x,+y)}).join(''),
+    e:m.eggs.map(([x,y])=>enc(x,y)).join(''),
+    sn:m.sn.map(s=>{let b='';for(let i=0;i<s.b.length&&i<500;i+=2)b+=enc(s.b[i],s.b[i+1]);
+      return[s.p,s.n,b,s.d,s.l,s.sc,s.eg,(s.a?1:0)|(s.o?2:0)|(s.lf?4:0),s.r,s.ot||0]})};
+}
+function decodeSnap(s,ev){
+  const w=decCells(String(s.w||'')),walls=[];for(let i=0;i<w.length;i+=2)walls.push(w[i]+','+w[i+1]);
+  const e=decCells(String(s.e||'')),eggs=[];for(let i=0;i<e.length;i+=2)eggs.push([e[i],e[i+1]]);
+  return{t:'s',st:['banner','play','pause','over'].includes(s.st)?s.st:'play',banner:String(s.bn||'').slice(0,40),sub:String(s.sb||'').slice(0,80)||null,
+    level:+s.lv||1,time:+s.tm||0,clock:+s.ck||0,mode:s.md==='infinite'?'infinite':'classic',walls,eggs,
+    sn:(Array.isArray(s.sn)?s.sn:[]).slice(0,MAXP).map(a=>({p:+a[0]||0,n:cleanName(a[1]),b:decCells(String(a[2]||'')),d:(+a[3]|0)&3,
+      l:+a[4]||0,sc:+a[5]||0,eg:+a[6]||0,a:!!(a[7]&1),o:!!(a[7]&2),lf:!!(a[7]&4),r:+a[8]||0,ot:+a[9]||0})),ev};
+}
+const roomT={
+  kind:'room',
+  async host(name){
+    const code=Array.from({length:4},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.random()*31|0]).join('');
+    const nr=await ROOM.join('snake-'+code);
+    Object.assign(this,{nr,code,name,open:true,acc:new Map(),seen:new Map(),evId:0,evs:[],ovId:0,
+      pres:{r:'h',n:name,ph:'lobby',acc:[],lb:null,s:null,ev:[],ov:null}});
+    this.unsub=nr.onPeers(ch=>this.hostPeers(ch));
+    this.push();this.advertise();
+    return{code};
+  },
+  push(){if(this.nr)this.nr.presence(this.pres).catch(()=>{})},
+  advertise(){
+    if(!ROOM)return;
+    ROOM.presence({g:this.nr&&NET.role==='host'?{c:this.code,n:this.name,m:cfg.mode,k:(NET.roster||[]).length||1,o:this.open}:null}).catch(()=>{});
+  },
+  hostPeers(ch){
+    for(const p of ch.left){
+      const id=this.acc.get(p.peer);
+      if(id){this.acc.delete(p.peer);this.seen.delete(p.peer);hostMsg({t:'leave',id});this.syncAcc()}
+    }
+    for(const p of ch.peers){
+      const pr=p.presence||{};
+      if(p.isMe||pr.r!=='g')continue;
+      let id=this.acc.get(p.peer);
+      if(!id&&this.open){
+        const used=new Set(this.acc.values());
+        for(let i=1;i<MAXP;i++)if(!used.has(i)){id=i;break}
+        if(id){this.acc.set(p.peer,id);this.seen.set(p.peer,+pr.k||0);hostMsg({t:'join',id,name:cleanName(pr.n)});this.syncAcc()}
+      }
+      if(id){ // virages envoyés par l'invité (compteur + derniers virages)
+        const k=+pr.k||0,last=this.seen.get(p.peer)||0;
+        if(k>last){
+          const t=String(pr.t||'').replace(/[^LR]/g,''),n=Math.min(k-last,t.length);
+          for(const c of t.slice(t.length-n))hostMsg({t:'in',id,d:c==='R'?1:-1});
+          this.seen.set(p.peer,k);
+        }
+      }
+    }
+  },
+  syncAcc(){this.pres.acc=[...this.acc].map(([peer,id])=>[peer,id]);this.push();this.advertise()},
+  hostSend(m){
+    const P=this.pres;
+    if(m.t==='lobby'){P.ph='lobby';P.lb={pl:m.players.map(p=>[p.pid,p.name]),m:m.mode};P.s=null;P.ov=null;this.advertise()}
+    else if(m.t==='s'){
+      P.ph='game';
+      for(const e of m.ev||[])this.evs.push([++this.evId,e.k,e.x|0,e.y|0]);
+      this.evs=this.evs.slice(-10);P.ev=this.evs;P.s=encodeSnap(m);
+      if(m.st!=='over')P.ov=null;
+    }else if(m.t==='over'){P.ov=++this.ovId}
+    this.push();
+  },
+  setOpen(v){this.open=v;this.advertise()},
+  closeHost(){
+    if(this.unsub)this.unsub();this.unsub=null;
+    const nr=this.nr;this.nr=null;if(nr)nr.leave().catch(()=>{});
+    this.advertise();
+  },
+  findHost(){
+    if(!this.nr)return null;
+    const hs=this.nr.peers().filter(p=>!p.isMe&&p.presence&&p.presence.r==='h');
+    return hs.find(p=>(p.presence.acc||[]).some(x=>x&&x[0]===this.me))||hs[0]||null;
+  },
+  async join(name,target){
+    const code=String(target||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(!code)return{err:'Entre le code de la partie (4 caractères) ou choisis une partie dans la liste.'};
+    let nr;
+    try{nr=await ROOM.join('snake-'+code)}catch(e){return{err:'Impossible de rejoindre cette partie.'}}
+    Object.assign(this,{nr,code,k:0,turns:'',lastEv:null,lastOv:0,lastLobby:'',hostGoneT:0});
+    nr.presence({r:'g',n:name,k:0,t:''}).catch(()=>{});
+    const res=await new Promise(resolve=>{
+      const t0=Date.now();
+      const iv=setInterval(()=>{
+        const me=nr.peers().find(p=>p.isMe&&p.sameTab);
+        if(me)this.me=me.peer;
+        const host=this.findHost();
+        const a=host&&me&&(host.presence.acc||[]).find(x=>x&&x[0]===me.peer);
+        if(a){clearInterval(iv);resolve({id:+a[1]});return}
+        if(Date.now()-t0>7000){clearInterval(iv);resolve({err:host?'Partie pleine (4 joueurs maximum) ou déjà commencée.':'Aucune partie ouverte avec ce code.'})}
+      },250);
+    });
+    if(res.err){nr.leave().catch(()=>{});this.nr=null;return res}
+    this.unsub=nr.onPeers(()=>this.guestPeers());
+    setTimeout(()=>this.guestPeers(),0);
+    return{id:res.id,where:'code '+code.toUpperCase()};
+  },
+  guestPeers(){
+    if(NET.role!=='client'||T!==this||!this.nr)return;
+    const host=this.findHost();
+    if(!host){
+      if(!this.hostGoneT)this.hostGoneT=setTimeout(()=>{this.hostGoneT=0;if(NET.role==='client'&&!this.findHost())lost("L'hôte a quitté la partie.")},3000);
+      return;
+    }
+    clearTimeout(this.hostGoneT);this.hostGoneT=0;
+    const P=host.presence;
+    if(!(P.acc||[]).some(x=>x&&x[0]===this.me)){lost("L'hôte a fermé la partie.");return}
+    try{
+      if(P.ph==='lobby'&&P.lb){
+        const key=JSON.stringify(P.lb);
+        if(key!==this.lastLobby||G){
+          this.lastLobby=key;
+          clientMsg({t:'lobby',players:(P.lb.pl||[]).slice(0,MAXP).map(([pid,name])=>({pid:+pid||0,name:cleanName(name)})),mode:P.lb.m==='infinite'?'infinite':'classic'});
+        }
+      }else if(P.ph==='game'&&P.s){
+        this.lastLobby='';
+        const evs=Array.isArray(P.ev)?P.ev:[];let ev=[];
+        const top=evs.length?+evs[evs.length-1][0]||0:0;
+        if(this.lastEv===null)this.lastEv=top;
+        else{ev=evs.filter(e=>+e[0]>this.lastEv).map(e=>({k:String(e[1]),x:+e[2]||0,y:+e[3]||0}));this.lastEv=Math.max(this.lastEv,top)}
+        clientMsg(decodeSnap(P.s,ev));
+        if(P.ov&&+P.ov>this.lastOv){this.lastOv=+P.ov;clientMsg({t:'over'})}
+      }
+    }catch(e){}
+  },
+  input(d){
+    this.k++;this.turns=(this.turns+(d>0?'R':'L')).slice(-8);
+    if(this.nr)this.nr.presence({k:this.k,t:this.turns}).catch(()=>{});
+  },
+  leave(){
+    if(this.unsub)this.unsub();this.unsub=null;clearTimeout(this.hostGoneT);
+    const nr=this.nr;this.nr=null;if(nr)nr.leave().catch(()=>{});
+  }
+};
+
+/* ---- liste des parties ouvertes (page claude.ai) ---- */
+function renderGameList(){
+  const box=$('gameList');
+  if(!ROOM||cfg.play!=='join'||screen!=='menu'){box.classList.add('hidden');return}
+  const games=ROOM.peers().filter(p=>!p.isMe&&p.presence&&p.presence.g&&p.presence.g.o)
+    .map(p=>p.presence.g).filter(g=>/^[a-z0-9]{4}$/.test(String(g.c)));
+  box.classList.remove('hidden');
+  box.innerHTML=games.length
+    ?games.map(g=>`<button class="opt" data-code="${esc(g.c)}">${esc(cleanName(g.n))}<small>${g.m==='infinite'?'Infini':'Classique'} · ${Math.min(MAXP,+g.k||1)}/${MAXP} · code ${esc(String(g.c).toUpperCase())}</small></button>`).join('')
+    :'<div class="hint">Aucune partie ouverte pour l\'instant. Demande le code à l\'hôte, ou attends qu\'il crée son salon.</div>';
+}
+$('gameList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-code]');if(!b)return;
+  inAddr.value=b.dataset.code.toUpperCase();menuGo();
+});
 
 /* ---- hôte ---- */
 async function hostCreate(name){
   const btn=$('btnPlay');btn.disabled=true;
   try{
-    const r=await fetchTimeout('/net/listen',{method:'POST'},4000);
-    const info=await r.json();
-    if(!info.ok)throw new Error(info.err||'');
-    NET={role:'host',pid:0,roster:[{pid:0,name}],addrs:(info.ips||[]).map(ip=>ip+':'+info.port),last:0};
-    NET.sender=makeSender(()=>'/net/broadcast');
-    NET.es=new EventSource('/net/host');
-    NET.es.onmessage=e=>{try{hostMsg(JSON.parse(e.data))}catch(err){}};
-    showLobby();
+    if(!canHost)throw new Error('nohost');
+    const info=await T.host(name);
+    NET={role:'host',pid:0,roster:[{pid:0,name}],info,last:0};
+    sendLobby();showLobby();
   }catch(e){
-    $('menuErr').textContent=canHost?"Impossible d'ouvrir la partie réseau.":'Pour héberger une partie, lance SNAKE.exe sur un PC Windows (le jeu en réseau ne fonctionne pas depuis cette page web).';
+    $('menuErr').textContent=!canHost
+      ?"Le jeu en réseau n'est pas disponible ici. Ouvre la page SNAKE publiée sur claude.ai (connecté à ton compte), ou lance SNAKE.exe sur un PC."
+      :"Impossible de créer la partie réseau. Réessaie dans un instant.";
   }finally{btn.disabled=false}
 }
 function hostMsg(m){
+  if(NET.role!=='host')return;
   if(m.t==='join'){
     NET.roster=NET.roster.filter(p=>p.pid!==m.id);
     NET.roster.push({pid:m.id,name:m.name});NET.roster.sort((a,b)=>a.pid-b.pid);
@@ -524,57 +754,37 @@ function hostMsg(m){
   }
   if(!G){sendLobby();renderLobby()}
 }
-function sendLobby(){if(NET.role==='host')NET.sender.send({t:'lobby',players:NET.roster,mode:cfg.mode})}
+function sendLobby(){if(NET.role==='host')T.hostSend({t:'lobby',players:NET.roster,mode:cfg.mode})}
 function hostLaunch(){
   if(NET.role!=='host')return;
-  ac();fetch('/net/open?v=0',{method:'POST'}).catch(()=>{});
+  ac();T.setOpen(false);
   newGame(NET.roster);show(null);
 }
 function hostToLobby(){
   G=null;particles=[];
-  fetch('/net/open?v=1',{method:'POST'}).catch(()=>{});
-  sendLobby();showLobby();
+  T.setOpen(true);sendLobby();showLobby();
 }
-function hostQuit(){
-  fetch('/net/close',{method:'POST'}).catch(()=>{});
-  if(NET.es)NET.es.close();
-  toMenu();
-}
+function hostQuit(){T.closeHost();toMenu()}
 
-/* ---- client ---- */
-function normAddr(a){
-  a=a.trim().replace(/^https?:\/\//i,'').replace(/\/.*$/,'');
-  if(a&&!/:\d+$/.test(a)&&!/^\[.*\]$/.test(a))a+=':'+NET_PORT;
-  return a;
-}
+/* ---- invité ---- */
 async function clientJoin(name){
-  const addr=normAddr(inAddr.value);
-  if(!addr){$('menuErr').textContent="Entre l'adresse affichée chez l'hôte (ex. 192.168.1.23:47822).";inAddr.focus();return}
-  save('snake_addr',addr);
-  const base='http://'+addr,btn=$('btnPlay');btn.disabled=true;$('menuErr').textContent='Connexion…';
+  const btn=$('btnPlay');btn.disabled=true;$('menuErr').textContent='Connexion…';
   try{
-    const r=await fetchTimeout(base+'/net/join',{method:'POST',body:JSON.stringify({name})},5000);
-    const j=await r.json();
-    if(j.err){$('menuErr').textContent=j.err;return}
-    NET={role:'client',base,addr,pid:j.id,tok:j.tok,roster:[]};
-    NET.sender=makeSender(()=>base+'/net/input');
-    const es=new EventSource(`${base}/net/events?id=${j.id}&tok=${j.tok}`);
-    NET.es=es;
-    es.onmessage=e=>{try{clientMsg(JSON.parse(e.data))}catch(err){}};
-    es.onerror=()=>{if(NET.es===es)lost("Connexion perdue avec l'hôte.")};
+    const r=await T.join(name,inAddr.value);
+    if(r.err){$('menuErr').textContent=r.err;return}
+    NET={role:'client',pid:r.id,where:r.where,roster:[]};
     $('menuErr').textContent='';
     showLobby();
-  }catch(e){
-    $('menuErr').textContent="Impossible de joindre l'hôte. Vérifie l'adresse, que la partie est ouverte et que vous êtes sur le même réseau.";
   }finally{btn.disabled=false}
 }
 function clientMsg(m){
+  if(NET.role!=='client')return;
   if(m.t==='lobby'){
     NET.roster=m.players;cfg.mode=m.mode;
     if(G){G=null;particles=[]}
     showLobby();
   }else if(m.t==='s'){applySnap(m)}
-  else if(m.t==='over'){if(G)G.state='over';showOver(m.html,false)}
+  else if(m.t==='over'){if(G){G.state='over';showOver(resultHTML(),false)}}
   else if(m.t==='closed'){lost("L'hôte a fermé la partie.")}
 }
 function applySnap(m){
@@ -585,8 +795,8 @@ function applySnap(m){
   const old=G.eggs;
   G.eggs=m.eggs.map(([x,y])=>old.find(e=>e.x===x&&e.y===y)||{x,y,born:performance.now()});
   const n0=G.snakes.length;
-  G.snakes=m.sn.map((d,i)=>{const body=[];for(let k=0;k<d.b.length;k+=2)body.push({x:d.b[k],y:d.b[k+1]});
-    return{id:i,pid:d.p,name:d.n,body,dir:d.d,lives:d.l,score:d.sc,eggs:d.eg,alive:d.a,out:d.o,left:d.lf,respawnAt:d.r}});
+  G.snakes=m.sn.map((d,i)=>{const body=[];for(let k=0;k+1<d.b.length;k+=2)body.push({x:d.b[k],y:d.b[k+1]});
+    return{id:i,pid:d.p,name:cleanName(d.n),body,dir:d.d&3,lives:d.l,score:d.sc,eggs:d.eg,alive:d.a,out:d.o,left:d.lf,respawnAt:d.r,outTime:d.ot}});
   if(fresh||n0!==G.snakes.length)buildHud();
   for(const e of m.ev||[]){
     if(e.k==='egg'){playLA();burst(e,'#fde68a',14)}
@@ -597,15 +807,12 @@ function applySnap(m){
   else if(G.state!=='over'&&screen!==null)show(null);
 }
 function lost(msg){
-  if(NET.es)NET.es.close();
+  if(T&&NET.role==='client')T.leave();
   toMenu();selectOpt('play','join');updateMenu();
   $('menuErr').textContent=msg;
 }
 function clientQuit(){
-  if(NET.role==='client'){
-    fetch(NET.base+'/net/leave',{method:'POST',body:JSON.stringify({id:NET.pid,tok:NET.tok})}).catch(()=>{});
-    if(NET.es)NET.es.close();
-  }
+  if(NET.role==='client')T.leave();
   toMenu();
 }
 
@@ -618,12 +825,20 @@ function renderLobby(){
   $('btnLaunch').classList.toggle('hidden',!host);
   $('lobbyGuest').classList.toggle('hidden',host);
   if(host){
-    $('lobbyAddr').innerHTML=NET.addrs.length?NET.addrs.map(esc).join('<br>'):'Aucun réseau détecté';
-    $('lobbyUrl').textContent=NET.addrs.length?'http://'+NET.addrs[0]:'';
+    if(T.kind==='room'){
+      $('lobbyLbl').textContent='Code de la partie';
+      $('lobbyAddr').textContent=NET.info.code.toUpperCase();
+      $('lobbyHint').innerHTML="Les autres joueurs ouvrent cette même page SNAKE (partagée avec eux), choisissent « Réseau (rejoindre) », puis cliquent sur ta partie ou tapent ce code. Garde cette page au premier plan pendant la partie.";
+    }else{
+      const a=NET.info.addrs||[];
+      $('lobbyLbl').textContent='Adresse à donner aux autres joueurs';
+      $('lobbyAddr').innerHTML=a.length?a.map(esc).join('<br>'):'Aucun réseau détecté';
+      $('lobbyHint').innerHTML=`Les joueurs doivent être sur le même réseau (même box / Wi-Fi). Ils choisissent « Réseau (rejoindre) » et tapent cette adresse — ou l'ouvrent dans le navigateur de leur téléphone : <b>${a.length?esc('http://'+a[0]):''}</b>`;
+    }
     selectOpt('mode',cfg.mode);
     $('lobbyErr').textContent=NET.roster.length<2?'En attente de joueurs… (tu peux aussi lancer seul)':'';
   }else{
-    $('lobbyGuest').innerHTML=`Connecté à <b>${esc(NET.addr)}</b> — mode <b>${cfg.mode==='classic'?'Classique':'Infini'}</b>.<br>En attente du lancement par l'hôte…`;
+    $('lobbyGuest').innerHTML=`Connecté à <b>${esc(NET.where||'')}</b> — mode <b>${cfg.mode==='classic'?'Classique':'Infini'}</b>.<br>En attente du lancement par l'hôte…`;
     $('lobbyErr').textContent='';
   }
   let h='';
@@ -639,13 +854,18 @@ function renderLobby(){
 // which = 0 : joueur principal de cet écran ; 1 : second joueur (2 joueurs même clavier)
 function localTurn(which,d){
   if(!G||G.state!=='play')return;
-  if(NET.role==='client'){if(which===0)NET.sender.send({id:NET.pid,tok:NET.tok,d});return}
+  if(NET.role==='client'){if(which===0)T.input(d);return}
   turn(which===0?G.snakes[0]:(cfg.play==='duo'&&!NET.role?G.snakes[1]:null),d);
 }
 if(window.FORCE_TOUCH||'ontouchstart' in window||(window.matchMedia&&matchMedia('(pointer:coarse)').matches))document.body.classList.add('is-touch');
+// Flèches à l'écran : souris, doigt ou stylet, en plus du clavier.
+function flash(b){b.classList.add('hit');setTimeout(()=>b.classList.remove('hit'),120)}
+document.querySelectorAll('.tbtn').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault())); // pas de focus
 document.querySelectorAll('.tbtn[data-g]').forEach(b=>b.addEventListener('pointerdown',e=>{
   e.preventDefault();ac();localTurn(+b.dataset.g,+b.dataset.d);
 }));
+// Les touches du clavier font aussi « s'enfoncer » la flèche correspondante.
+function flashKey(g,d){const b=document.querySelector(`.tbtn[data-g="${g}"][data-d="${d}"]`);if(b)flash(b)}
 $('tPause').addEventListener('pointerdown',e=>{e.preventDefault();if(NET.role!=='client')togglePause()});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 
@@ -659,9 +879,9 @@ addEventListener('keydown',e=>{
   if(k===' '||l==='p'){if(NET.role!=='client')togglePause();return}
   if(k==='Escape'){back();return}
   if(e.repeat)return;
-  if(k==='ArrowLeft')localTurn(0,-1);
-  if(k==='ArrowRight')localTurn(0,1);
-  if(l==='q'||l==='d')localTurn(cfg.play==='duo'&&!NET.role?1:0,l==='q'?-1:1);
+  if(k==='ArrowLeft'){localTurn(0,-1);flashKey(0,-1)}
+  if(k==='ArrowRight'){localTurn(0,1);flashKey(0,1)}
+  if(l==='q'||l==='d'){const g=cfg.play==='duo'&&!NET.role?1:0,d=l==='q'?-1:1;localTurn(g,d);flashKey(g,d)}
 });
 
 /* =================== rendu =================== */
@@ -739,7 +959,7 @@ function draw(t,dt){
 const hudCache={};
 function setHTML(id,v){const el=$(id);if(el&&hudCache[id]!==v){hudCache[id]=v;el.innerHTML=v}}
 function buildHud(){
-  const n=G?G.snakes.length:(cfg.play==='duo'?2:1);
+  const n=G?G.snakes.length:(NET.role?0:(cfg.play==='duo'?2:1));
   const L=$('hudL'),R=$('hudR');L.innerHTML='';R.innerHTML='';
   for(let i=0;i<n;i++){
     const s=G&&G.snakes[i],name=(s&&s.name)||('JOUEUR '+(i+1));
@@ -753,7 +973,7 @@ function buildHud(){
   for(const k in hudCache)delete hudCache[k];
 }
 function updateHud(){
-  const n=G?G.snakes.length:(cfg.play==='duo'?2:1);
+  const n=G?G.snakes.length:(NET.role?0:(cfg.play==='duo'?2:1));
   for(let i=0;i<n;i++){
     const s=G&&G.snakes[i],lives=s?Math.max(0,s.lives):LIVES;
     let h='';for(let k=0;k<LIVES;k++)h+=`<span class="${k<lives?'':'off'}">♥</span>`;
@@ -789,7 +1009,7 @@ function frame(t){
       if(G.state==='play')respawns();
     }
     if(NET.role==='host'&&G&&G.state!=='over'&&(G.dirty||t-NET.last>250)){
-      NET.sender.send(snapshot(),true);G.ev=[];G.dirty=false;NET.last=t;
+      T.hostSend(snapshot(),true);G.ev=[];G.dirty=false;NET.last=t;
     }
   }
   draw(t,dt);updateHud();
@@ -797,10 +1017,20 @@ function frame(t){
 }
 
 /* =================== démarrage =================== */
-// SNAKE.exe sert cette page : on peut héberger (depuis le PC lui-même) ;
+T=lanT;
+// Page publiée sur claude.ai : jeu en réseau par internet (code de partie).
+if(window.claude&&typeof window.claude.use==='function'){
+  window.claude.use('room').then(r=>{
+    if(!r)return;
+    ROOM=r;T=roomT;canHost=true;
+    ROOM.onPeers(()=>renderGameList());
+    if(!NET.role)updateMenu();
+  }).catch(()=>{});
+}
+// SNAKE.exe sert cette page : on peut héberger depuis le PC lui-même ;
 // ouverte depuis un téléphone via l'adresse de l'hôte : on pré-remplit « rejoindre ».
 fetchTimeout('/net/info',{},2000).then(r=>r.json()).then(j=>{
-  if(j.app!=='snake')return;
+  if(j.app!=='snake'||ROOM)return;
   const loop=['127.0.0.1','localhost','[::1]','::1'].includes(location.hostname);
   canHost=loop;
   if(!loop&&screen==='menu'){inAddr.value=location.host;selectOpt('play','join')}
