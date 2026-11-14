@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test des périphériques</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1f232c; --line:#2a2f3a;
+    --txt:#e6e8ec; --mut:#8b93a3; --acc:#4f8cff; --ok:#2ecc71; --warn:#f5a623; --bad:#ff5c5c;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:650;letter-spacing:.2px}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav button{background:transparent;border:1px solid transparent;color:var(--mut);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit}
+  nav button:hover{color:var(--txt);background:var(--panel2)}
+  nav button.on{color:var(--txt);background:var(--panel2);border-color:var(--line)}
+  main{padding:20px;max-width:1280px;margin:0 auto}
+  section{display:none}
+  section.on{display:block}
+  h2{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);margin:0 0 18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+  .card h3{margin:0 0 12px;font-size:14px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit}
+  .btn:hover{border-color:#3a4150}
+  .btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+  .btn.d{background:#3a1f22;border-color:#5a2a2e;color:#ffb3b3}
+  select,input[type=number]{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:7px 10px;border-radius:8px;font:inherit}
+  input[type=range]{accent-color:var(--acc)}
+  label{color:var(--mut)}
+  .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px}
+  .kv b{font-weight:500;color:var(--mut)}
+  .kv span{font-variant-numeric:tabular-nums;word-break:break-word}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .note{color:var(--mut);font-size:13px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);font-size:12px}
+  .pill.ok{color:var(--ok);border-color:#24553a}
+  .pill.bad{color:var(--bad);border-color:#5a2a2e}
+
+  /* Écran */
+  .swatches{display:flex;gap:8px;flex-wrap:wrap}
+  .sw{width:64px;height:44px;border-radius:8px;border:1px solid var(--line);cursor:pointer}
+  #overlay{position:fixed;inset:0;z-index:100;display:none;cursor:none}
+  #overlay .hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;transition:opacity .4s;pointer-events:none;mix-blend-mode:normal}
+
+  /* Clavier */
+  .kbwrap{display:flex;gap:18px;overflow-x:auto;padding-bottom:6px}
+  .kblock{display:flex;flex-direction:column;gap:5px}
+  .krow{display:flex;gap:5px;min-height:40px}
+  .k{height:40px;min-width:40px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mut);user-select:none;transition:background .05s;white-space:nowrap;padding:0 4px}
+  .k.done{background:#1d3b2a;border-color:#2b6b45;color:#bff0d2}
+  .k.down{background:var(--acc);border-color:var(--acc);color:#fff}
+  .k.gap{visibility:hidden}
+  #keylog{height:160px;overflow:auto;background:var(--panel2);border-radius:8px;padding:8px 10px;font-size:12px}
+  #extraKeys .pill{margin:2px}
+
+  /* Souris */
+  #mzone{position:relative;height:340px;border:1px dashed #3a4150;border-radius:var(--r);overflow:hidden;background:var(--panel2);touch-action:none}
+  #mzone canvas{position:absolute;inset:0}
+  #mzone .center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);pointer-events:none;text-align:center;padding:20px}
+  .mbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .mb{flex:1;min-width:90px;padding:12px 8px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);text-align:center}
+  .mb small{display:block;color:var(--mut);font-size:11px}
+  .mb.done{background:#1d3b2a;border-color:#2b6b45}
+  .mb.down{background:var(--acc);border-color:var(--acc)}
+
+  /* Media */
+  video{width:100%;max-height:480px;background:#000;border-radius:8px;display:block}
+  video.mirror{transform:scaleX(-1)}
+  canvas.viz{width:100%;height:140px;background:var(--panel2);border-radius:8px;display:block}
+  .meter{height:18px;background:var(--panel2);border-radius:6px;overflow:hidden;position:relative}
+  .meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--ok),var(--warn) 75%,var(--bad))}
+  .meter u{position:absolute;top:0;bottom:0;width:2px;background:#fff;left:0}
+  #snap{max-width:240px;border-radius:8px;display:none}
+
+  /* Manette */
+  .pad{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+  .pbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;margin:10px 0}
+  .pb{position:relative;height:46px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .pb i{position:absolute;left:0;right:0;bottom:0;background:var(--acc);opacity:.85}
+  .pb span{position:relative}
+  .pb.done{border-color:#2b6b45}
+  .sticks{display:flex;gap:18px;flex-wrap:wrap}
+  .stick{width:120px;height:120px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);position:relative}
+  .stick::before,.stick::after{content:"";position:absolute;background:var(--line)}
+  .stick::before{left:50%;top:0;bottom:0;width:1px}
+  .stick::after{top:50%;left:0;right:0;height:1px}
+  .stick b{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--acc);left:52px;top:52px;z-index:1}
+  .axes{display:grid;gap:4px;font-size:12px}
+  .axbar{height:8px;background:var(--panel2);border-radius:4px;position:relative;width:200px}
+  .axbar i{position:absolute;top:0;bottom:0;background:var(--acc);border-radius:4px}
+
+  /* Tactile */
+  #tzone{height:380px;background:var(--panel2);border-radius:var(--r);border:1px dashed #3a4150;touch-action:none;position:relative;overflow:hidden}
+  #tzone canvas{position:absolute;inset:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔧 Test des périphériques</h1>
+  <nav id="nav">
+    <button data-t="ecran" class="on">Écran</button>
+    <button data-t="clavier">Clavier</button>
+    <button data-t="souris">Souris</button>
+    <button data-t="son">Son</button>
+    <button data-t="webcam">Webcam</button>
+    <button data-t="micro">Micro</button>
+    <button data-t="manette">Manette</button>
+    <button data-t="tactile">Tactile</button>
+    <button data-t="infos">Infos</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============ ÉCRAN ============ -->
+<section id="ecran" class="on">
+  <h2>Écran</h2>
+  <p class="sub">Plein écran en couleurs unies pour repérer pixels morts, pixels bloqués, fuites de lumière et défauts d'uniformité.</p>
+  <div class="card">
+    <h3>Lancer le test</h3>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn p" id="scrStart">▶ Démarrer la séquence plein écran</button>
+      <span class="note">Clic / Espace / → : suivant · ← : précédent · Échap : quitter</span>
+    </div>
+    <div class="swatches" id="swatches"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Caractéristiques</h3>
+      <div class="kv" id="scrInfo"></div>
+    </div>
+    <div class="card">
+      <h3>Fréquence de rafraîchissement</h3>
+      <div style="font-size:34px;font-weight:650" id="hz">— Hz</div>
+      <p class="note">Mesurée par le navigateur (requestAnimationFrame). Peut être plafonnée si le navigateur limite l'affichage.</p>
+      <button class="btn" id="hzBtn">Mesurer à nouveau</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLAVIER ============ -->
+<section id="clavier">
+  <h2>Clavier</h2>
+  <p class="sub">Appuyez sur chaque touche : elle passe au vert une fois testée. Disposition AZERTY (touches identifiées par leur position physique).</p>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <span><b id="kCount">0</b> <span class="note">touches testées</span> · <span class="note">touches enfoncées simultanément (max) :</span> <b id="kRoll">0</b></span>
+      <button class="btn" id="kReset">Réinitialiser</button>
+    </div>
+    <div class="kbwrap" id="kb"></div>
+    <p class="note" style="margin-top:10px">Certaines touches (Windows/⌘, Impr. écran, Fn, combinaisons système) peuvent être interceptées par le système d'exploitation et ne jamais arriver jusqu'à la page.</p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Dernière touche</h3>
+      <div class="kv" id="kLast"><b>key</b><span>—</span><b>code</b><span>—</span><b>keyCode</b><span>—</span><b>Modificateurs</b><span>—</span></div>
+      <div id="extraKeys" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h3>Journal</h3>
+      <div id="keylog" class="mono"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SOURIS ============ -->
+<section id="souris">
+  <h2>Souris</h2>
+  <p class="sub">Cliquez, faites défiler et déplacez la souris dans la zone ci-dessous.</p>
+  <div class="card">
+    <div class="mbtns" id="mbtns">
+      <div class="mb" data-b="0">Gauche<small>0 clic</small></div>
+      <div class="mb" data-b="1">Milieu<small>0 clic</small></div>
+      <div class="mb" data-b="2">Droit<small>0 clic</small></div>
+      <div class="mb" data-b="3">Précédent<small>0 clic</small></div>
+      <div class="mb" data-b="4">Suivant<small>0 clic</small></div>
+      <div class="mb" data-b="wu">Molette ↑<small>0</small></div>
+      <div class="mb" data-b="wd">Molette ↓<small>0</small></div>
+      <div class="mb" data-b="wl">Molette ←<small>0</small></div>
+      <div class="mb" data-b="wr">Molette →<small>0</small></div>
+      <div class="mb" data-b="dbl">Double-clic<small>0</small></div>
+    </div>
+  </div>
+  <div class="card">
+    <div id="mzone"><canvas id="mcanvas"></canvas><div class="center">Zone de test — maintenez le clic gauche pour dessiner<br>(le clic droit et les boutons latéraux sont capturés ici)</div></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="kv" style="grid-template-columns:repeat(6,max-content)">
+        <b>Position</b><span id="mPos" class="mono">—</span>
+        <b>Taux de rapport</b><span id="mHz" class="mono">— Hz</span>
+        <b>Vitesse</b><span id="mSpd" class="mono">—</span>
+      </div>
+      <button class="btn" id="mClear">Effacer</button>
+    </div>
+    <p class="note">Le taux de rapport (polling rate) est estimé en bougeant vite la souris en cercles ; les souris gaming affichent 500–1000 Hz ou plus.</p>
+  </div>
+</section>
+
+<!-- ============ SON ============ -->
+<section id="son">
+  <h2>Son</h2>
+  <p class="sub">Vérifiez les canaux gauche/droit, la plage de fréquences et le volume des haut-parleurs ou du casque.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>Stéréo</h3>
+      <div class="row">
+        <button class="btn" data-pan="-1">◀ Gauche</button>
+        <button class="btn" data-pan="0">● Centre</button>
+        <button class="btn" data-pan="1">Droite ▶</button>
+        <button class="btn" id="voice">🗣 Voix G/D</button>
+      </div>
+      <p class="note">« Voix G/D » annonce « gauche » puis « droite » sur le canal correspondant (si la synthèse vocale est disponible, sinon un bip).</p>
+    </div>
+    <div class="card">
+      <h3>Balayage de fréquences</h3>
+      <div class="row">
+        <button class="btn" id="sweep">▶ Balayage 20 Hz → 20 kHz (12 s)</button>
+        <span class="mono" id="sweepF">—</span>
+      </div>
+      <p class="note">Notez à partir de quelle fréquence vous commencez/arrêtez d'entendre. Commencez avec un volume bas.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Générateur de tonalité</h3>
+    <div class="row" style="margin-bottom:10px">
+      <label>Fréquence</label>
+      <input type="range" id="toneF" min="0" max="1000" value="500" style="width:280px">
+      <input type="number" id="toneFn" value="440" min="20" max="20000" style="width:100px"> Hz
+      <select id="toneW"><option value="sine">Sinus</option><option value="square">Carré</option><option value="sawtooth">Dent de scie</option><option value="triangle">Triangle</option><option value="noise">Bruit blanc</option></select>
+    </div>
+    <div class="row">
+      <label>Volume</label><input type="range" id="vol" min="0" max="100" value="30" style="width:200px"><span id="volV" class="mono">30 %</span>
+      <label style="margin-left:12px">Balance</label><input type="range" id="bal" min="-100" max="100" value="0" style="width:160px">
+      <button class="btn p" id="toneGo">▶ Jouer</button>
+      <button class="btn d" id="stopAll">■ Tout arrêter</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WEBCAM ============ -->
+<section id="webcam">
+  <h2>Webcam</h2>
+  <p class="sub">Le navigateur vous demandera l'autorisation d'accéder à la caméra. Rien n'est enregistré ni envoyé.</p>
+  <div class="card">
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn p" id="camGo">▶ Démarrer</button>
+      <button class="btn d" id="camStop">■ Arrêter</button>
+      <select id="camSel"><option value="">Caméra par défaut</option></select>
+      <select id="camRes">
+        <option value="640x480">480p</option>
+        <option value="1280x720" selected>720p</option>
+        <option value="1920x1080">1080p</option>
+        <option value="3840x2160">4K</option>
+      </select>
+      <label><input type="checkbox" id="camMirror" checked> Miroir</label>
+      <button class="btn" id="camSnap">📷 Photo</button>
+    </div>
+    <div class="grid2">
+      <video id="cam" autoplay playsinline muted class="mirror"></video>
+      <div>
+        <div class="kv" id="camInfo"><b>État</b><span>Arrêtée</span></div>
+        <div style="margin-top:12px"><img id="snap" alt="Capture"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MICRO ============ -->
+<section id="micro">
+  <h2>Micro</h2>
+  <p class="sub">Parlez ou tapez dans vos mains : le niveau et la forme d'onde doivent réagir.</p>
+  <div class="card">
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn p" id="micGo">▶ Démarrer</button>
+      <button class="btn d" id="micStop">■ Arrêter</button>
+      <select id="micSel"><option value="">Micro par défaut</option></select>
+      <label><input type="checkbox" id="micProc"> Réduction de bruit / annulation d'écho</label>
+      <label><input type="checkbox" id="micLoop"> Retour casque (⚠ larsen sur haut-parleurs)</label>
+    </div>
+    <div class="row" style="margin-bottom:6px;justify-content:space-between"><span class="note">Niveau</span><span class="mono" id="micDb">— dB</span></div>
+    <div class="meter" style="margin-bottom:14px"><i id="micBar"></i><u id="micPeak"></u></div>
+    <div class="grid2">
+      <div><span class="note">Forme d'onde</span><canvas class="viz" id="micWave"></canvas></div>
+      <div><span class="note">Spectre</span><canvas class="viz" id="micSpec"></canvas></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Enregistrement</h3>
+      <div class="row">
+        <button class="btn" id="recGo">⏺ Enregistrer 5 s</button>
+        <span id="recState" class="note"></span>
+      </div>
+      <audio id="recAudio" controls style="width:100%;margin-top:12px;display:none"></audio>
+    </div>
+    <div class="card">
+      <h3>Infos piste</h3>
+      <div class="kv" id="micInfo"><b>État</b><span>Arrêté</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MANETTE ============ -->
+<section id="manette">
+  <h2>Manette de jeu</h2>
+  <p class="sub">Branchez la manette (USB ou Bluetooth) puis <b>appuyez sur un bouton</b> : le navigateur ne la signale qu'après une première action.</p>
+  <div id="pads"><div class="card note" id="noPad">Aucune manette détectée pour l'instant… appuyez sur un bouton.</div></div>
+</section>
+
+<!-- ============ TACTILE ============ -->
+<section id="tactile">
+  <h2>Écran tactile / stylet</h2>
+  <p class="sub">Posez un ou plusieurs doigts (ou le stylet) dans la zone. La pression du stylet modifie l'épaisseur du trait.</p>
+  <div class="card">
+    <div id="tzone"><canvas id="tcanvas"></canvas></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between">
+      <span>Points actifs : <b id="tNow">0</b> · Max simultanés : <b id="tMax">0</b> · Type : <b id="tType">—</b> · Pression : <b id="tPress">—</b></span>
+      <button class="btn" id="tClear">Effacer</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INFOS ============ -->
+<section id="infos">
+  <h2>Informations système</h2>
+  <p class="sub">Ce que le navigateur expose de la machine.</p>
+  <div class="grid2">
+    <div class="card"><h3>Système & navigateur</h3><div class="kv" id="sysInfo"></div></div>
+    <div class="card"><h3>Périphériques multimédia</h3><div id="devList" class="note">Cliquez pour lister (les noms n'apparaissent qu'après autorisation caméra/micro).</div><button class="btn" id="devBtn" style="margin-top:10px">Lister les périphériques</button></div>
+  </div>
+</section>
+
+</main>
+
+<div id="overlay"><div class="hint" id="ovHint"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+let current = 'ecran';
+
+/* ---------- Navigation ---------- */
+$('#nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  current = b.dataset.t;
+  $$('#nav button').forEach(x => x.classList.toggle('on', x === b));
+  $$('section').forEach(s => s.classList.toggle('on', s.id === current));
+  b.blur();
+  if (current === 'souris') sizeCanvas($('#mcanvas'));
+  if (current === 'tactile') sizeCanvas($('#tcanvas'));
+  if (current === 'infos') sysInfo();
+});
+
+function sizeCanvas(c){
+  const r = c.parentElement.getBoundingClientRect(), d = devicePixelRatio || 1;
+  c.width = r.width * d; c.height = r.height * d;
+  c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+  c.getContext('2d').setTransform(d,0,0,d,0,0);
+}
+function kv(el, obj){ el.innerHTML = Object.entries(obj).map(([k,v]) => `<b>${k}</b><span>${v}</span>`).join(''); }
+
+/* ---------- ÉCRAN ---------- */
+const checker = 'repeating-conic-gradient(#000 0 25%, #fff 0 50%) 0 0/2px 2px';
+const SCREENS = [
+  ['Noir', '#000'], ['Blanc', '#fff'], ['Rouge', '#f00'], ['Vert', '#0f0'], ['Bleu', '#00f'],
+  ['Gris 50 %', '#808080'], ['Gris foncé', '#202020'], ['Cyan', '#0ff'], ['Magenta', '#f0f'], ['Jaune', '#ff0'],
+  ['Dégradé N→B', 'linear-gradient(90deg,#000,#fff)'],
+  ['Dégradé RVB', 'linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)'],
+  ['Damier 1 px', checker],
+  ['Grille', 'linear-gradient(#fff 1px,transparent 1px) 0 0/40px 40px, linear-gradient(90deg,#fff 1px,#000 1px) 0 0/40px 40px']
+];
+let scrIdx = 0, hintTimer;
+const ov = $('#overlay');
+SCREENS.forEach(([n,c],i) => {
+  const d = document.createElement('div'); d.className='sw'; d.title=n; d.style.background=c;
+  d.onclick = () => openScreen(i); $('#swatches').appendChild(d);
+});
+function showScreen(){
+  const [n,c] = SCREENS[scrIdx]; ov.style.background = c;
+  const h = $('#ovHint'); h.textContent = `${scrIdx+1}/${SCREENS.length} · ${n} — clic/→ suivant · ← précédent · Échap quitter`;
+  h.style.opacity = 1; clearTimeout(hintTimer); hintTimer = setTimeout(()=>h.style.opacity=0, 1800);
+}
+function openScreen(i=0){
+  scrIdx = i; ov.style.display='block'; showScreen();
+  const el = document.documentElement;
+  (el.requestFullscreen ? el.requestFullscreen() : Promise.resolve()).catch(()=>{});
+}
+function closeScreen(){ ov.style.display='none'; if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+function stepScreen(d){ scrIdx += d; if (scrIdx >= SCREENS.length) return closeScreen(); if (scrIdx<0) scrIdx=0; showScreen(); }
+$('#scrStart').onclick = () => openScreen(0);
+ov.addEventListener('click', () => stepScreen(1));
+ov.addEventListener('contextmenu', e => { e.preventDefault(); stepScreen(-1); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && ov.style.display==='block') ov.style.display='none'; });
+
+function scrInfo(){
+  kv($('#scrInfo'), {
+    'Résolution écran': `${screen.width} × ${screen.height}`,
+    'Résolution réelle (px physiques)': `${Math.round(screen.width*devicePixelRatio)} × ${Math.round(screen.height*devicePixelRatio)}`,
+    'Zone disponible': `${screen.availWidth} × ${screen.availHeight}`,
+    'Fenêtre': `${innerWidth} × ${innerHeight}`,
+    'Ratio de pixels (DPR)': devicePixelRatio,
+    'Profondeur de couleur': screen.colorDepth + ' bits',
+    'Gamut large (P3)': matchMedia('(color-gamut: p3)').matches ? 'Oui' : 'Non',
+    'HDR': matchMedia('(dynamic-range: high)').matches ? 'Oui' : 'Non',
+    'Orientation': (screen.orientation && screen.orientation.type) || '—'
+  });
+}
+scrInfo(); addEventListener('resize', scrInfo);
+function measureHz(){
+  $('#hz').textContent = 'Mesure…';
+  const times = []; let start;
+  function f(t){ if (start===undefined) start=t; times.push(t);
+    if (t - start < 1500) requestAnimationFrame(f);
+    else { const diffs = times.slice(1).map((x,i)=>x-times[i]).sort((a,b)=>a-b);
+      const med = diffs[Math.floor(diffs.length/2)]; $('#hz').textContent = Math.round(1000/med) + ' Hz'; } }
+  requestAnimationFrame(f);
+}
+measureHz(); $('#hzBtn').onclick = measureHz;
+
+/* ---------- CLAVIER ---------- */
+const K = (c,l,w=1) => ({c,l,w});
+const G = w => ({gap:true,w});
+const MAIN = [
+  [K('Escape','Échap'),G(.5),K('F1','F1'),K('F2','F2'),K('F3','F3'),K('F4','F4'),G(.3),K('F5','F5'),K('F6','F6'),K('F7','F7'),K('F8','F8'),G(.3),K('F9','F9'),K('F10','F10'),K('F11','F11'),K('F12','F12')],
+  [K('Backquote','²'),K('Digit1','& 1'),K('Digit2','é 2'),K('Digit3','" 3'),K('Digit4',"' 4"),K('Digit5','( 5'),K('Digit6','- 6'),K('Digit7','è 7'),K('Digit8','_ 8'),K('Digit9','ç 9'),K('Digit0','à 0'),K('Minus',') °'),K('Equal','= +'),K('Backspace','⌫ Retour',2)],
+  [K('Tab','Tab ↹',1.5),K('KeyQ','A'),K('KeyW','Z'),K('KeyE','E'),K('KeyR','R'),K('KeyT','T'),K('KeyY','Y'),K('KeyU','U'),K('KeyI','I'),K('KeyO','O'),K('KeyP','P'),K('BracketLeft','^ ¨'),K('BracketRight','$ £'),K('Enter','Entrée ↵',1.5)],
+  [K('CapsLock','Verr. Maj',1.75),K('KeyA','Q'),K('KeyS','S'),K('KeyD','D'),K('KeyF','F'),K('KeyG','G'),K('KeyH','H'),K('KeyJ','J'),K('KeyK','K'),K('KeyL','L'),K('Semicolon','M'),K('Quote','ù %'),K('Backslash','* µ',1.25)],
+  [K('ShiftLeft','⇧ Maj',1.25),K('IntlBackslash','< >'),K('KeyZ','W'),K('KeyX','X'),K('KeyC','C'),K('KeyV','V'),K('KeyB','B'),K('KeyN','N'),K('KeyM',', ?'),K('Comma','; .'),K('Period',': /'),K('Slash','! §'),K('ShiftRight','⇧ Maj',2.75)],
+  [K('ControlLeft','Ctrl',1.25),K('MetaLeft','⊞/⌘',1.25),K('AltLeft','Alt',1.25),K('Space','Espace',6.25),K('AltRight','Alt Gr',1.25),K('MetaRight','⊞/⌘',1.25),K('ContextMenu','☰',1.25),K('ControlRight','Ctrl',1.25)]
+];
+const NAV = [
+  [K('PrintScreen','Impr'),K('ScrollLock','Arrêt défil'),K('Pause','Pause')],
+  [K('Insert','Inser'),K('Home','Début'),K('PageUp','Pg ↑')],
+  [K('Delete','Suppr'),K('End','Fin'),K('PageDown','Pg ↓')],
+  [G(3)],
+  [G(1),K('ArrowUp','↑'),G(1)],
+  [K('ArrowLeft','←'),K('ArrowDown','↓'),K('ArrowRight','→')]
+];
+const NUM = [
+  [G(4)],
+  [K('NumLock','Verr num'),K('NumpadDivide','/'),K('NumpadMultiply','*'),K('NumpadSubtract','−')],
+  [K('Numpad7','7'),K('Numpad8','8'),K('Numpad9','9'),K('NumpadAdd','+')],
+  [K('Numpad4','4'),K('Numpad5','5'),K('Numpad6','6'),G(1)],
+  [K('Numpad1','1'),K('Numpad2','2'),K('Numpad3','3'),K('NumpadEnter','Entrée')],
+  [K('Numpad0','0',2),K('NumpadDecimal','.'),G(1)]
+];
+const keyEls = {}, tested = new Set(), downSet = new Set(); let roll = 0;
+const U = 42;
+function buildBlock(rows){
+  const b = document.createElement('div'); b.className='kblock';
+  rows.forEach(r => { const row = document.createElement('div'); row.className='krow';
+    r.forEach(k => { const d = document.createElement('div');
+      d.className = 'k' + (k.gap ? ' gap' : ''); d.style.width = (k.w*U - 5) + 'px'; d.style.minWidth = d.style.width;
+      if (!k.gap){ d.textContent = k.l; keyEls[k.c] = d; }
+      row.appendChild(d); });
+    b.appendChild(row); });
+  return b;
+}
+[MAIN, NAV, NUM].forEach(r => $('#kb').appendChild(buildBlock(r)));
+function logKey(t){ const l = $('#keylog'); const d = document.createElement('div'); d.textContent = t; l.prepend(d); while (l.children.length > 200) l.lastChild.remove(); }
+document.addEventListener('keydown', e => {
+  if (ov.style.display === 'block'){
+    if (e.key==='Escape'){ closeScreen(); }
+    else if (['ArrowRight',' ','Enter','PageDown'].includes(e.key)){ e.preventDefault(); stepScreen(1); }
+    else if (['ArrowLeft','Backspace','PageUp'].includes(e.key)){ e.preventDefault(); stepScreen(-1); }
+    return;
+  }
+  if (current !== 'clavier') return;
+  if (e.target.matches('input,select,textarea')) return;
+  e.preventDefault();
+  const code = e.code || ('key_' + e.key);
+  downSet.add(code); roll = Math.max(roll, downSet.size); $('#kRoll').textContent = roll;
+  if (!tested.has(code)){ tested.add(code); $('#kCount').textContent = tested.size;
+    if (!keyEls[code]){ const p = document.createElement('span'); p.className='pill ok'; p.textContent = code; $('#extraKeys').appendChild(p); } }
+  const el = keyEls[code]; if (el) el.classList.add('down','done');
+  const mods = ['ctrlKey','shiftKey','altKey','metaKey'].filter(m=>e[m]).map(m=>m.replace('Key','')).join(' + ') || '—';
+  kv($('#kLast'), {key: JSON.stringify(e.key), code: e.code || '(vide)', keyCode: e.keyCode, 'Emplacement': ['standard','gauche','droite','pavé num.'][e.location] || e.location, 'Modificateurs': mods, 'Répétition': e.repeat ? 'oui' : 'non'});
+  if (!e.repeat) logKey(`↓ ${e.code.padEnd(16)} key=${JSON.stringify(e.key)}`);
+});
+document.addEventListener('keyup', e => {
+  const code = e.code || ('key_' + e.key); downSet.delete(code);
+  const el = keyEls[code]; if (el) el.classList.remove('down');
+  if (current === 'clavier' && !e.target.matches('input,select,textarea')){ e.preventDefault(); logKey(`↑ ${e.code}`); }
+  // PrintScreen n'émet souvent que keyup
+  if (current === 'clavier' && code === 'PrintScreen' && keyEls[code]){ keyEls[code].classList.add('done'); if(!tested.has(code)){tested.add(code);$('#kCount').textContent=tested.size;} }
+});
+addEventListener('blur', () => { downSet.clear(); Object.values(keyEls).forEach(k=>k.classList.remove('down')); });
+$('#kReset').onclick = () => { tested.clear(); roll=0; $('#kRoll').textContent=0; $('#kCount').textContent=0; $('#extraKeys').innerHTML=''; $('#keylog').innerHTML=''; Object.values(keyEls).forEach(k=>k.classList.remove('done','down')); };
+
+/* ---------- SOURIS ---------- */
+const mz = $('#mzone'), mc = $('#mcanvas'), mctx = mc.getContext('2d');
+const mCounts = {};
+function mHit(key, down){
+  const el = $(`.mb[data-b="${key}"]`); if (!el) return;
+  if (down !== false){ mCounts[key] = (mCounts[key]||0) + 1; el.classList.add('done');
+    el.querySelector('small').textContent = /^\d$/.test(key) ? `${mCounts[key]} clic${mCounts[key]>1?'s':''}` : mCounts[key]; }
+  if (down === true) el.classList.add('down');
+  if (down === false) el.classList.remove('down');
+}
+let drawing = false, last = null, evCount = 0, lastMove = null;
+mz.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') { /* tactile: dessin seul */ }
+  e.preventDefault(); mHit(String(e.button), true);
+  if (e.button === 0){ drawing = true; last = [e.offsetX, e.offsetY]; mz.setPointerCapture(e.pointerId); }
+});
+mz.addEventListener('pointerup', e => { e.preventDefault(); mHit(String(e.button), false); if (e.button===0) drawing=false; });
+mz.addEventListener('mousedown', e => { if (e.button !== 0) e.preventDefault(); });
+mz.addEventListener('mouseup', e => { if (e.button === 3 || e.button === 4) e.preventDefault(); });
+mz.addEventListener('auxclick', e => e.preventDefault());
+mz.addEventListener('contextmenu', e => e.preventDefault());
+mz.addEventListener('dblclick', e => mHit('dbl'));
+mz.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.deltaY < 0) mHit('wu'); else if (e.deltaY > 0) mHit('wd');
+  if (e.deltaX < 0) mHit('wl'); else if (e.deltaX > 0) mHit('wr');
+}, {passive:false});
+mz.addEventListener('pointermove', e => {
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  evCount += Math.max(1, evs.length);
+  $('#mPos').textContent = `${Math.round(e.offsetX)}, ${Math.round(e.offsetY)}`;
+  if (lastMove){ const dt = e.timeStamp - lastMove.t; if (dt>0){ const v = Math.hypot(e.clientX-lastMove.x, e.clientY-lastMove.y)/dt*1000; $('#mSpd').textContent = Math.round(v)+' px/s'; } }
+  lastMove = {x:e.clientX, y:e.clientY, t:e.timeStamp};
+  if (drawing){
+    const r = mz.getBoundingClientRect();
+    mctx.strokeStyle = '#4f8cff'; mctx.lineWidth = 2; mctx.lineCap='round';
+    evs.forEach(p => { const x = p.clientX - r.left, y = p.clientY - r.top;
+      mctx.beginPath(); mctx.moveTo(last[0], last[1]); mctx.lineTo(x, y); mctx.stroke(); last = [x,y]; });
+  } else {
+    const r = mz.getBoundingClientRect();
+    mctx.fillStyle = 'rgba(139,147,163,.35)';
+    evs.forEach(p => mctx.fillRect(p.clientX - r.left - 1, p.clientY - r.top - 1, 2, 2));
+  }
+});
+setInterval(() => { if (current==='souris' && evCount){ $('#mHz').textContent = evCount*2 + ' Hz'; } evCount = 0; }, 500);
+$('#mClear').onclick = () => mctx.clearRect(0,0,mc.width,mc.height);
+addEventListener('resize', () => { if (current==='souris') sizeCanvas(mc); if (current==='tactile') sizeCanvas($('#tcanvas')); });
+
+/* ---------- SON ---------- */
+let actx, master, srcs = [];
+function ac(){
+  if (!actx){ actx = new (window.AudioContext || window.webkitAudioContext)(); master = actx.createGain(); master.connect(actx.destination); setVol(); }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function setVol(){ const v = $('#vol').value/100; $('#volV').textContent = $('#vol').value + ' %'; if (master) master.gain.setTargetAtTime(v*v, actx.currentTime, .02); }
+$('#vol').oninput = setVol;
+function stopAll(){ srcs.forEach(s => { try{ s.stop(); }catch(_){} }); srcs = []; $('#toneGo').textContent = '▶ Jouer'; tonePlaying = null; speechSynthesis && speechSynthesis.cancel(); $('#sweepF').textContent='—'; }
+$('#stopAll').onclick = stopAll;
+function beep(pan, dur=1.2, f=440){
+  const a = ac(); const o = a.createOscillator(), g = a.createGain(), p = a.createStereoPanner();
+  o.frequency.value = f; p.pan.value = pan;
+  g.gain.setValueAtTime(0, a.currentTime); g.gain.linearRampToValueAtTime(.8, a.currentTime+.03);
+  g.gain.setValueAtTime(.8, a.currentTime+dur-.08); g.gain.linearRampToValueAtTime(0, a.currentTime+dur);
+  o.connect(g).connect(p).connect(master); o.start(); o.stop(a.currentTime+dur); srcs.push(o);
+}
+$$('[data-pan]').forEach(b => b.onclick = () => beep(+b.dataset.pan));
+$('#voice').onclick = () => {
+  // la synthèse vocale ne permet pas de choisir le canal : on alterne bip + voix
+  beep(-1, .5, 520); setTimeout(()=>beep(1,.5,660), 900);
+  if ('speechSynthesis' in window){
+    speechSynthesis.cancel();
+    const u1 = new SpeechSynthesisUtterance('Gauche'); u1.lang='fr-FR';
+    const u2 = new SpeechSynthesisUtterance('Droite'); u2.lang='fr-FR';
+    setTimeout(()=>speechSynthesis.speak(u1), 0); setTimeout(()=>speechSynthesis.speak(u2), 900);
+  }
+};
+$('#voice').title = "Bip à gauche puis à droite. La voix (synthèse) n'est pas spatialisée.";
+$('#sweep').onclick = () => {
+  const a = ac(); const o = a.createOscillator(), g = a.createGain(); const T = 12, t0 = a.currentTime;
+  o.frequency.setValueAtTime(20, t0); o.frequency.exponentialRampToValueAtTime(20000, t0+T);
+  g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.6,t0+.1); g.gain.setValueAtTime(.6,t0+T-.1); g.gain.linearRampToValueAtTime(0,t0+T);
+  o.connect(g).connect(master); o.start(); o.stop(t0+T); srcs.push(o);
+  const iv = setInterval(() => { const t = a.currentTime - t0; if (t > T || !srcs.includes(o)){ clearInterval(iv); $('#sweepF').textContent='—'; return; }
+    $('#sweepF').textContent = Math.round(20*Math.pow(1000, t/T)) + ' Hz'; }, 80);
+};
+// tonalité
+const f2s = f => Math.round(Math.log(f/20)/Math.log(1000)*1000), s2f = s => Math.round(20*Math.pow(1000, s/1000));
+$('#toneF').value = f2s(440);
+let tonePlaying = null;
+$('#toneF').oninput = () => { $('#toneFn').value = s2f(+$('#toneF').value); updTone(); };
+$('#toneFn').onchange = () => { const f = Math.min(20000, Math.max(20, +$('#toneFn').value||440)); $('#toneFn').value=f; $('#toneF').value=f2s(f); updTone(); };
+$('#bal').oninput = updTone;
+$('#toneW').onchange = () => { if (tonePlaying){ stopAll(); playTone(); } };
+function updTone(){ if (!tonePlaying) return; const {o,p} = tonePlaying;
+  if (o.frequency) o.frequency.setTargetAtTime(+$('#toneFn').value, actx.currentTime, .01);
+  p.pan.setTargetAtTime($('#bal').value/100, actx.currentTime, .01); }
+function playTone(){
+  const a = ac(); const p = a.createStereoPanner(); p.pan.value = $('#bal').value/100; let o;
+  if ($('#toneW').value === 'noise'){
+    const buf = a.createBuffer(1, a.sampleRate*2, a.sampleRate), d = buf.getChannelData(0);
+    for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    o = a.createBufferSource(); o.buffer = buf; o.loop = true;
+  } else { o = a.createOscillator(); o.type = $('#toneW').value; o.frequency.value = +$('#toneFn').value; }
+  const g = a.createGain(); g.gain.value = .5;
+  o.connect(g).connect(p).connect(master); o.start(); srcs.push(o); tonePlaying = {o,p};
+  $('#toneGo').textContent = '■ Stop';
+}
+$('#toneGo').onclick = () => { if (tonePlaying) stopAll(); else playTone(); };
+
+/* ---------- Utilitaires média ---------- */
+async function fillDevices(kind, sel){
+  try{ const list = (await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind===kind);
+    const cur = sel.value; sel.innerHTML = '';
+    list.forEach((d,i) => { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || `${kind==='videoinput'?'Caméra':'Micro'} ${i+1}`; sel.appendChild(o); });
+    if (!list.length) sel.innerHTML = '<option value="">Aucun détecté</option>';
+    if (cur && [...sel.options].some(o=>o.value===cur)) sel.value = cur;
+  }catch(_){}
+}
+function mediaErr(e){
+  const m = {NotAllowedError:'Accès refusé (autorisez la caméra/le micro dans le navigateur).', NotFoundError:'Aucun périphérique trouvé.', NotReadableError:'Périphérique déjà utilisé par une autre application.', OverconstrainedError:'Résolution non supportée par ce périphérique.', SecurityError:'Contexte non sécurisé : ouvrez la page en local (fichier) ou en https.'};
+  return m[e.name] || (e.name + ' : ' + e.message);
+}
+const hasMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+/* ---------- WEBCAM ---------- */
+let camStream = null, camFpsT = null;
+async function camStart(){
+  if (!hasMedia) return kv($('#camInfo'), {'État': '<span class="pill bad">API caméra indisponible ici</span>'});
+  camStop();
+  const [w,h] = $('#camRes').value.split('x').map(Number);
+  const v = {width:{ideal:w}, height:{ideal:h}}; if ($('#camSel').value) v.deviceId = {exact: $('#camSel').value};
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:v, audio:false});
+    $('#cam').srcObject = camStream; await fillDevices('videoinput', $('#camSel'));
+    const t = camStream.getVideoTracks()[0]; if (t.getSettings().deviceId) $('#camSel').value = t.getSettings().deviceId;
+    let frames = 0, t0 = performance.now(), fps = '—';
+    const vid = $('#cam');
+    const tick = () => { if (!camStream) return; frames++; const n = performance.now(); if (n-t0 >= 1000){ fps = Math.round(frames*1000/(n-t0)); frames=0; t0=n; showCam(t,fps); }
+      vid.requestVideoFrameCallback ? vid.requestVideoFrameCallback(tick) : requestAnimationFrame(tick); };
+    vid.requestVideoFrameCallback ? vid.requestVideoFrameCallback(tick) : requestAnimationFrame(tick);
+    showCam(t, fps);
+  }catch(e){ kv($('#camInfo'), {'État': `<span class="pill bad">${mediaErr(e)}</span>`}); }
+}
+function showCam(t, fps){ const s = t.getSettings();
+  kv($('#camInfo'), {'État':'<span class="pill ok">Active</span>', 'Périphérique': t.label, 'Résolution': `${s.width} × ${s.height}`, 'Images/s (réel)': fps, 'Images/s (annoncé)': s.frameRate ? Math.round(s.frameRate) : '—', 'Orientation': s.facingMode || '—'}); }
+function camStop(){ if (camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; $('#cam').srcObject = null; kv($('#camInfo'), {'État':'Arrêtée'}); } }
+$('#camGo').onclick = camStart; $('#camStop').onclick = camStop;
+$('#camSel').onchange = () => camStream && camStart(); $('#camRes').onchange = () => camStream && camStart();
+$('#camMirror').onchange = e => $('#cam').classList.toggle('mirror', e.target.checked);
+$('#camSnap').onclick = () => { const v = $('#cam'); if (!camStream) return;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; const x = c.getContext('2d');
+  if ($('#camMirror').checked){ x.translate(c.width,0); x.scale(-1,1); } x.drawImage(v,0,0);
+  const img = $('#snap'); img.src = c.toDataURL('image/jpeg', .9); img.style.display='block'; };
+
+/* ---------- MICRO ---------- */
+let micStream = null, micSrc = null, micAn = null, micLoopNode = null, micRAF = null, peakHold = 0, peakT = 0;
+async function micStart(){
+  if (!hasMedia) return kv($('#micInfo'), {'État':'<span class="pill bad">API micro indisponible ici</span>'});
+  micStop();
+  const proc = $('#micProc').checked;
+  const a = {echoCancellation:proc, noiseSuppression:proc, autoGainControl:proc}; if ($('#micSel').value) a.deviceId = {exact:$('#micSel').value};
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({audio:a, video:false});
+    await fillDevices('audioinput', $('#micSel'));
+    const t = micStream.getAudioTracks()[0], s = t.getSettings(); if (s.deviceId) $('#micSel').value = s.deviceId;
+    kv($('#micInfo'), {'État':'<span class="pill ok">Actif</span>', 'Périphérique': t.label, 'Fréquence d\'échantillonnage': s.sampleRate ? s.sampleRate+' Hz' : (ac().sampleRate+' Hz (contexte)'), 'Canaux': s.channelCount || '—', 'Traitement': proc ? 'activé' : 'désactivé'});
+    const x = ac(); micSrc = x.createMediaStreamSource(micStream); micAn = x.createAnalyser(); micAn.fftSize = 2048; micAn.smoothingTimeConstant = .7;
+    micSrc.connect(micAn); setLoop(); drawMic();
+  }catch(e){ kv($('#micInfo'), {'État':`<span class="pill bad">${mediaErr(e)}</span>`}); }
+}
+function setLoop(){ if (!micSrc) return;
+  if ($('#micLoop').checked && !micLoopNode){ micLoopNode = actx.createGain(); micLoopNode.gain.value = 1; micSrc.connect(micLoopNode).connect(actx.destination); }
+  else if (!$('#micLoop').checked && micLoopNode){ micLoopNode.disconnect(); micLoopNode = null; } }
+$('#micLoop').onchange = setLoop;
+function micStop(){ cancelAnimationFrame(micRAF); if (micLoopNode){ micLoopNode.disconnect(); micLoopNode=null; }
+  if (micSrc) micSrc.disconnect(); micSrc = null;
+  if (micStream){ micStream.getTracks().forEach(t=>t.stop()); micStream=null; kv($('#micInfo'), {'État':'Arrêté'}); }
+  $('#micBar').style.width='0'; $('#micDb').textContent='— dB'; }
+function drawMic(){
+  const wc = $('#micWave'), sc = $('#micSpec');
+  [wc,sc].forEach(c => { const d = devicePixelRatio||1; if (c.width !== c.clientWidth*d){ c.width = c.clientWidth*d; c.height = c.clientHeight*d; } });
+  const N = micAn.fftSize, td = new Float32Array(N), fd = new Uint8Array(micAn.frequencyBinCount);
+  micAn.getFloatTimeDomainData(td); micAn.getByteFrequencyData(fd);
+  let sum = 0, pk = 0; for (const v of td){ sum += v*v; pk = Math.max(pk, Math.abs(v)); }
+  const rms = Math.sqrt(sum/N), db = 20*Math.log10(rms || 1e-8);
+  const pct = Math.max(0, Math.min(100, (db+60)/60*100));
+  $('#micBar').style.width = pct + '%'; $('#micDb').textContent = (db < -99 ? '-∞' : db.toFixed(1)) + ' dBFS';
+  const now = performance.now(); if (pct > peakHold || now - peakT > 1500){ peakHold = pct; peakT = now; } $('#micPeak').style.left = peakHold + '%';
+  let x = wc.getContext('2d'); x.clearRect(0,0,wc.width,wc.height); x.strokeStyle = '#4f8cff'; x.lineWidth = 1.5*(devicePixelRatio||1); x.beginPath();
+  for (let i=0;i<N;i++){ const px = i/N*wc.width, py = (1 - (td[i]+1)/2)*wc.height; i ? x.lineTo(px,py) : x.moveTo(px,py); } x.stroke();
+  x = sc.getContext('2d'); x.clearRect(0,0,sc.width,sc.height);
+  const bins = fd.length, bars = 96;
+  for (let b=0;b<bars;b++){ const lo = Math.floor(Math.pow(bins, b/bars)), hi = Math.max(lo+1, Math.floor(Math.pow(bins,(b+1)/bars)));
+    let m = 0; for (let i=lo;i<hi && i<bins;i++) m = Math.max(m, fd[i]);
+    const h = m/255*sc.height, w = sc.width/bars; x.fillStyle = `hsl(${220 - m/255*180},80%,60%)`; x.fillRect(b*w, sc.height-h, w-1, h); }
+  micRAF = requestAnimationFrame(drawMic);
+}
+$('#micGo').onclick = micStart; $('#micStop').onclick = micStop;
+$('#micSel').onchange = () => micStream && micStart(); $('#micProc').onchange = () => micStream && micStart();
+$('#recGo').onclick = async () => {
+  if (!micStream) await micStart(); if (!micStream) return;
+  if (!window.MediaRecorder){ $('#recState').textContent = 'Enregistrement non supporté par ce navigateur.'; return; }
+  const rec = new MediaRecorder(micStream), chunks = [];
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = () => { const a = $('#recAudio'); a.src = URL.createObjectURL(new Blob(chunks, {type: rec.mimeType})); a.style.display='block'; $('#recState').textContent = 'Terminé — écoutez ci-dessous.'; $('#recGo').disabled=false; };
+  rec.start(); $('#recGo').disabled = true; let n = 5; $('#recState').textContent = `Enregistrement… ${n}`;
+  const iv = setInterval(() => { n--; if (n<=0){ clearInterval(iv); rec.stop(); } else $('#recState').textContent = `Enregistrement… ${n}`; }, 1000);
+};
+
+/* ---------- MANETTE ---------- */
+const STD = ['A / ✕','B / ○','X / □','Y / △','LB / L1','RB / R1','LT / L2','RT / R2','Select / Share','Start / Options','L3','R3','↑','↓','←','→','Home / PS','Pavé tactile'];
+const padUI = {}, padDone = {};
+function buildPad(gp){
+  const d = document.createElement('div'); d.className = 'pad';
+  const std = gp.mapping === 'standard';
+  d.innerHTML = `<div class="row" style="justify-content:space-between"><div><b>#${gp.index} · ${gp.id.replace(/</g,'&lt;')}</b><br><span class="note">Mapping : ${gp.mapping || 'non standard'} · ${gp.buttons.length} boutons · ${gp.axes.length} axes</span></div>
+    <div class="row"><button class="btn" data-rumble="weak">Vibration faible</button><button class="btn" data-rumble="strong">Vibration forte</button></div></div>
+    <div class="pbtns"></div><div class="sticks"></div><div class="axes" style="margin-top:12px"></div><p class="note rnote"></p>`;
+  const pb = d.querySelector('.pbtns');
+  gp.buttons.forEach((_,i) => { const b = document.createElement('div'); b.className='pb'; b.innerHTML = `<i></i><span>${std && STD[i] ? STD[i] : 'B'+i}</span>`; pb.appendChild(b); });
+  const st = d.querySelector('.sticks');
+  for (let i=0;i<Math.floor(gp.axes.length/2);i++){ const s = document.createElement('div'); s.innerHTML = `<div class="stick"><b></b></div><div class="note" style="text-align:center;margin-top:4px">${std ? (i===0?'Stick gauche':i===1?'Stick droit':'Axes '+(i*2)+'/'+(i*2+1)) : 'Axes '+(i*2)+'/'+(i*2+1)}</div>`; st.appendChild(s); }
+  const ax = d.querySelector('.axes');
+  gp.axes.forEach((_,i) => { const r = document.createElement('div'); r.className='row'; r.innerHTML = `<span class="mono" style="width:60px">Axe ${i}</span><div class="axbar"><i></i></div><span class="mono av" style="width:70px">0.000</span>`; ax.appendChild(r); });
+  d.querySelectorAll('[data-rumble]').forEach(btn => btn.onclick = () => {
+    const g = navigator.getGamepads()[gp.index], strong = btn.dataset.rumble === 'strong', note = d.querySelector('.rnote');
+    const act = g && (g.vibrationActuator || (g.hapticActuators && g.hapticActuators[0]));
+    if (act && act.playEffect){ act.playEffect('dual-rumble', {duration:600, strongMagnitude: strong?1:0, weakMagnitude: strong?.3:1}).catch(()=>{}); note.textContent=''; }
+    else if (act && act.pulse){ act.pulse(strong?1:.5, 600); }
+    else note.textContent = 'Vibration non supportée par ce navigateur ou cette manette (souvent dispo sous Chrome/Edge).';
+  });
+  $('#pads').appendChild(d); padDone[gp.index] = new Set();
+  return d;
+}
+function pollPads(){
+  const gps = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
+  $('#noPad').style.display = gps.length ? 'none' : 'block';
+  Object.keys(padUI).forEach(i => { if (!gps.find(g=>g.index==i)){ padUI[i].remove(); delete padUI[i]; } });
+  gps.forEach(gp => {
+    const ui = padUI[gp.index] || (padUI[gp.index] = buildPad(gp));
+    const pbs = ui.querySelectorAll('.pb');
+    gp.buttons.forEach((b,i) => { const v = typeof b === 'object' ? b.value : b, p = typeof b === 'object' ? b.pressed : b > .5;
+      if (!pbs[i]) return; pbs[i].querySelector('i').style.height = (v*100)+'%'; if (p){ pbs[i].classList.add('done'); padDone[gp.index].add(i); } });
+    const sticks = ui.querySelectorAll('.stick b');
+    sticks.forEach((s,i) => { const x = gp.axes[i*2]||0, y = gp.axes[i*2+1]||0; s.style.left = (52 + x*52)+'px'; s.style.top = (52 + y*52)+'px'; });
+    const rows = ui.querySelectorAll('.axes .row');
+    gp.axes.forEach((a,i) => { const bar = rows[i].querySelector('i');
+      bar.style.left = (a<0 ? 50 + a*50 : 50) + '%'; bar.style.width = Math.abs(a)*50 + '%'; rows[i].querySelector('.av').textContent = a.toFixed(3); });
+  });
+  requestAnimationFrame(pollPads);
+}
+if (navigator.getGamepads) requestAnimationFrame(pollPads);
+else $('#noPad').textContent = "L'API Gamepad n'est pas disponible dans ce navigateur.";
+
+/* ---------- TACTILE ---------- */
+const tz = $('#tzone'), tc = $('#tcanvas'), tctx = tc.getContext('2d'); const tPts = new Map(); let tMax = 0;
+const tCols = ['#4f8cff','#2ecc71','#f5a623','#ff5c5c','#b07cff','#00d1d1','#ff7ac6','#e6e8ec','#9ccc65','#ffd54f'];
+function tPos(e){ const r = tz.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; }
+tz.addEventListener('pointerdown', e => { e.preventDefault(); tz.setPointerCapture(e.pointerId);
+  tPts.set(e.pointerId, {p:tPos(e), c: tCols[tPts.size % tCols.length]}); tMax = Math.max(tMax, tPts.size); tUpd(e); dot(e); });
+tz.addEventListener('pointermove', e => { const t = tPts.get(e.pointerId); if (!t) return;
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  evs.forEach(ev => { const p = tPos(ev); const pr = ev.pressure || .5;
+    tctx.strokeStyle = t.c; tctx.lineCap='round'; tctx.lineWidth = ev.pointerType==='pen' ? 1+pr*12 : 4;
+    tctx.beginPath(); tctx.moveTo(t.p[0],t.p[1]); tctx.lineTo(p[0],p[1]); tctx.stroke(); t.p = p; });
+  tUpd(e); });
+const tEnd = e => { tPts.delete(e.pointerId); tUpd(e); };
+tz.addEventListener('pointerup', tEnd); tz.addEventListener('pointercancel', tEnd);
+tz.addEventListener('contextmenu', e => e.preventDefault());
+function dot(e){ const [x,y] = tPos(e), t = tPts.get(e.pointerId); tctx.fillStyle = t.c; tctx.beginPath(); tctx.arc(x,y,10,0,7); tctx.fill(); }
+function tUpd(e){ $('#tNow').textContent = tPts.size; $('#tMax').textContent = tMax; $('#tType').textContent = {mouse:'souris',touch:'doigt',pen:'stylet'}[e.pointerType] || e.pointerType;
+  $('#tPress').textContent = e.pressure != null ? e.pressure.toFixed(2) + (e.tiltX ? ` · inclinaison ${e.tiltX}°/${e.tiltY}°` : '') : '—'; }
+$('#tClear').onclick = () => { tctx.clearRect(0,0,tc.width,tc.height); tMax = 0; $('#tMax').textContent = 0; };
+
+/* ---------- INFOS ---------- */
+async function sysInfo(){
+  const n = navigator, o = {
+    'Navigateur': n.userAgent,
+    'Plateforme': (n.userAgentData && n.userAgentData.platform) || n.platform || '—',
+    'Langue': n.language,
+    'Cœurs logiques (CPU)': n.hardwareConcurrency || '—',
+    'Mémoire (approx.)': n.deviceMemory ? '≥ ' + n.deviceMemory + ' Go' : '—',
+    'Points tactiles max': n.maxTouchPoints,
+    'En ligne': n.onLine ? 'Oui' : 'Non',
+    'Connexion': n.connection ? `${n.connection.effectiveType || ''} ${n.connection.downlink ? '· ~'+n.connection.downlink+' Mb/s' : ''}` : '—',
+    'Contexte sécurisé': isSecureContext ? 'Oui' : 'Non (caméra/micro/manette peuvent être bloqués)',
+    'Fuseau horaire': Intl.DateTimeFormat().resolvedOptions().timeZone,
+    'Écran': `${screen.width}×${screen.height} @${devicePixelRatio}x`,
+  };
+  try{ const c = document.createElement('canvas').getContext('webgl'); const ext = c && c.getExtension('WEBGL_debug_renderer_info');
+    if (ext) o['Carte graphique'] = c.getParameter(ext.UNMASKED_RENDERER_WEBGL); }catch(_){}
+  try{ if (n.getBattery){ const b = await n.getBattery(); o['Batterie'] = Math.round(b.level*100) + ' %' + (b.charging ? ' (en charge)' : ''); } }catch(_){}
+  kv($('#sysInfo'), o);
+}
+$('#devBtn').onclick = async () => {
+  if (!navigator.mediaDevices) return $('#devList').textContent = 'API indisponible.';
+  const list = await navigator.mediaDevices.enumerateDevices();
+  const names = {videoinput:'📷 Caméra', audioinput:'🎤 Micro', audiooutput:'🔊 Sortie audio'};
+  $('#devList').innerHTML = list.length ? list.map(d => `<div>${names[d.kind]||d.kind} — ${d.label || '<i>(nom masqué)</i>'}</div>`).join('') : 'Aucun.';
+};
+</script>
+</body>
+</html>
