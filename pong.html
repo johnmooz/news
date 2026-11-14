@@ -60,6 +60,16 @@
   .dots::after { content:''; animation:dots 1.2s steps(4) infinite; }
   @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
   .foot { margin-top:10px; font-size:12px; color:var(--muted); text-align:center; }
+  body { touch-action: manipulation; }
+  .pads { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; user-select:none; -webkit-user-select:none; }
+  .pad { display:flex; gap:10px; }
+  .pad.off { visibility:hidden; }
+  .pad button, .pbtn { width:78px; height:78px; border:3px solid var(--ink); background:var(--paper); color:var(--ink);
+    font-size:30px; line-height:1; cursor:pointer; touch-action:none; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
+  .pad button.down { background:var(--ink); color:var(--paper); }
+  .pbtn { width:58px; height:58px; font-size:18px; font-family:"Press Start 2P", monospace; }
+  .padlbl { font-size:11px; color:var(--muted); text-align:center; margin-top:4px; }
+  @media (max-width: 520px) { .pad button { width:64px; height:64px; } h1 { font-size:24px; } }
 </style>
 </head>
 <body>
@@ -163,6 +173,25 @@
       </div>
     </div>
   </div>
+
+  <!-- BOUTONS TACTILES -->
+  <div class="pads">
+    <div>
+      <div class="pad" id="padL">
+        <button data-k="z" aria-label="Gauche monter">▲</button>
+        <button data-k="s" aria-label="Gauche descendre">▼</button>
+      </div>
+      <div class="padlbl" id="padLlbl">Gauche</div>
+    </div>
+    <button class="pbtn" id="btnPauseT" aria-label="Pause">II</button>
+    <div>
+      <div class="pad" id="padR">
+        <button data-k="arrowup" aria-label="Droite monter">▲</button>
+        <button data-k="arrowdown" aria-label="Droite descendre">▼</button>
+      </div>
+      <div class="padlbl" id="padRlbl">Droite</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -208,6 +237,12 @@
     $('addrRow').classList.toggle('hidden', m !== 'guest');
     $('lvlRow').classList.toggle('hidden', m === 'guest');
     $('btnStart').textContent = { solo: 'Jouer', local: 'Jouer', host: 'Créer la partie', guest: 'Rejoindre' }[m];
+    // boutons tactiles : uniquement pour le ou les joueurs de cet écran
+    const showL = m === 'local' || m === 'guest', showR = m !== 'guest';
+    $('padL').classList.toggle('off', !showL); $('padLlbl').style.visibility = showL ? '' : 'hidden';
+    $('padR').classList.toggle('off', !showR); $('padRlbl').style.visibility = showR ? '' : 'hidden';
+    $('padLlbl').textContent = m === 'guest' ? 'Toi (gauche)' : 'Joueur 2';
+    $('padRlbl').textContent = m === 'local' ? 'Joueur 1' : 'Toi (droite)';
     $('netNote').style.display = net && !IS_APP ? '' : 'none';
     $('btnStart').disabled = net && !IS_APP;
   }
@@ -509,6 +544,20 @@
   });
   window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+  // Boutons à l'écran (tactile ou souris), plusieurs doigts à la fois possibles
+  document.querySelectorAll('.pad button').forEach(btn => {
+    const k = btn.dataset.k;
+    const on = e => { e.preventDefault(); unlockAudio(); keys[k] = true; btn.classList.add('down'); try { btn.setPointerCapture(e.pointerId); } catch (_) {} };
+    const off = () => { keys[k] = false; btn.classList.remove('down'); };
+    btn.addEventListener('pointerdown', on);
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, off));
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  $('btnPauseT').addEventListener('click', () => {
+    if (!S || !S.running || !$('menu').classList.contains('hidden')) return;
+    if (cfg.mode === 'guest') sendNet({ t: 'pause' }); else togglePause();
+  });
 
   $('btnStart').addEventListener('click', () => {
     unlockAudio();
