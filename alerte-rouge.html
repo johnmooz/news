@@ -102,6 +102,8 @@ input,select{font-family:inherit;font-size:15px;background:#10161a;color:var(--t
 .qtxt{font-size:12px;color:#8fc6ff;min-height:15px}
 .btns{display:flex;gap:6px;margin-top:auto}
 .btns button{flex:1;padding:6px 4px}
+.card.isnew{border-color:#4cc9f0;box-shadow:0 0 0 1px #4cc9f0,0 0 14px #4cc9f055}
+.card.isnew::after{content:"NOUVEAU";position:absolute;top:34px;right:6px;background:#4cc9f0;color:#06222e;font-weight:700;font-size:11px;padding:1px 6px;border-radius:4px}
 .card.locked .img{filter:grayscale(1) brightness(.55)}
 .card.locked .nm{color:var(--mute)}
 .side{display:flex;flex-direction:column;gap:10px}
@@ -173,8 +175,8 @@ input,select{font-family:inherit;font-size:15px;background:#10161a;color:var(--t
     <h3>RESSOURCES DE DÉPART</h3>
     <div class="slider"><span>Argent de départ</span><b id="moneyV">5 000 €</b>
       <input type="range" id="money" min="2000" max="10000" step="500" value="5000" style="grid-column:1/3"></div>
-    <div class="slider"><span>Minerai sur la carte (commun à tous)</span><b id="oreV">80 000</b>
-      <input type="range" id="ore" min="0" max="100000" step="5000" value="80000" style="grid-column:1/3"></div>
+    <div class="slider"><span>Minerai sur la carte (commun à tous)</span><b id="oreV">400 000</b>
+      <input type="range" id="ore" min="0" max="500000" step="25000" value="400000" style="grid-column:1/3"></div>
     <div class="hint" id="resHint"></div>
   </div>
 
@@ -214,6 +216,7 @@ input,select{font-family:inherit;font-size:15px;background:#10161a;color:var(--t
     <div class="spacer"></div>
     <div class="ctrl">
       <div class="stat" style="min-width:80px"><small>Temps</small><b id="sTime">0:00</b></div>
+      <button id="sndBtn" title="Activer / couper les sons">🔊 Son</button>
       <button id="pauseBtn">⏸ Pause</button>
       <button id="quitBtn">Quitter</button>
     </div>
@@ -332,6 +335,7 @@ const DIFF={
  difficile:{spd:1.45,grace:100, every:55,  thr:.75, label:'Difficile'},
 };
 const PLAYER_COOLDOWN=20;
+const APPROACH=8; // secondes entre l'alerte « Ennemi en approche » et l'attaque
 
 /* =========================================================
    IMAGES (SVG dessinés)
@@ -410,6 +414,115 @@ const ICON={
 const icon=id=>W(ICON[id]||'');
 
 /* =========================================================
+   SONS (Web Audio synthétisé + annonces vocales)
+   ========================================================= */
+const SFX=(()=>{
+ let ctx=null,master=null,on=true,hum=null,clankT=0,nb=null;
+ try{on=localStorage.getItem('ar_sound')!=='off';}catch(e){}
+ function init(){
+  if(ctx){if(ctx.state==='suspended')ctx.resume();return;}
+  const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  try{ctx=new AC();master=ctx.createGain();master.gain.value=on?.5:0;master.connect(ctx.destination);}catch(e){ctx=null;}
+ }
+ function noiseBuf(){
+  if(nb) return nb;
+  nb=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+  const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return nb;
+ }
+ function tone(f,dur,type='sine',vol=.3,t0=0,fEnd){
+  if(!ctx) return; const t=ctx.currentTime+t0;
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t); if(fEnd) o.frequency.exponentialRampToValueAtTime(fEnd,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(master);o.start(t);o.stop(t+dur+.05);
+ }
+ function noise(dur,freq,vol=.4,t0=0,type='bandpass',q=1){
+  if(!ctx) return; const t=ctx.currentTime+t0;
+  const src=ctx.createBufferSource();src.buffer=noiseBuf();
+  const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;
+  const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  src.connect(f).connect(g).connect(master);src.start(t,Math.random()*.5);src.stop(t+dur+.05);
+ }
+ const fx={
+  click(){tone(900,.05,'square',.07);},
+  radio(){noise(.12,2500,.12,0,'bandpass',.8);tone(1200,.06,'square',.05);tone(1600,.06,'square',.05,.08);},
+  clank(){const f=500+Math.random()*600;tone(f,.14,'triangle',.16);tone(f*2.7,.08,'sine',.06);noise(.06,3500,.1,0,'highpass');},
+  drill(){noise(.22,800+Math.random()*400,.07,0,'bandpass',5);tone(140+Math.random()*40,.22,'sawtooth',.03);},
+  done(){[523,659,784].forEach((f,i)=>tone(f,.25,'triangle',.16,i*.09));},
+  unit(){tone(440,.08,'square',.06);tone(660,.1,'square',.06,.08);},
+  cash(){tone(1318,.08,'square',.07);tone(1760,.18,'square',.07,.07);noise(.1,6000,.05,0,'highpass');},
+  boom(t0=0,vol=.5){noise(.9,300,vol,t0,'lowpass',.7);tone(90,.6,'sine',vol*.7,t0,35);},
+  battle(){for(let i=0;i<7;i++){fx.boom(i*.22+Math.random()*.1,.2+Math.random()*.25);noise(.05,2000,.1,i*.13+.05,'bandpass',2);}},
+  siren(){
+   if(!ctx) return; const t=ctx.currentTime;
+   const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+   o.type='sawtooth';
+   for(let i=0;i<4;i++){o.frequency.setValueAtTime(480,t+i*.5);o.frequency.linearRampToValueAtTime(950,t+i*.5+.25);o.frequency.linearRampToValueAtTime(480,t+i*.5+.5);}
+   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.05);g.gain.setValueAtTime(.11,t+1.9);g.gain.exponentialRampToValueAtTime(.0001,t+2.1);
+   f.type='lowpass';f.frequency.value=2200;o.connect(f).connect(g).connect(master);o.start(t);o.stop(t+2.2);
+  },
+  alarm(){for(let i=0;i<3;i++){tone(880,.15,'square',.09,i*.3);tone(660,.15,'square',.09,i*.3+.15);}},
+  win(){[523,659,784,1046].forEach((f,i)=>tone(f,.45,'triangle',.18,i*.15));},
+  lose(){[392,330,262,196].forEach((f,i)=>tone(f,.5,'sawtooth',.1,i*.25));},
+ };
+ /* bruit de chantier continu : moteur + coups de marteau / perceuse */
+ function humOn(){
+  if(!ctx||hum) return; const t=ctx.currentTime;
+  const o=ctx.createOscillator(),o2=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();
+  o.type='sawtooth';o.frequency.value=55;o2.type='sawtooth';o2.frequency.value=56.5;
+  f.type='lowpass';f.frequency.value=260;lfo.frequency.value=3;lg.gain.value=60;lfo.connect(lg).connect(f.frequency);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.4);
+  o.connect(f);o2.connect(f);f.connect(g).connect(master);o.start();o2.start();lfo.start();
+  hum={o,o2,lfo,g};
+ }
+ function humOff(){
+  if(!hum||!ctx){hum=null;return;} const h=hum;hum=null;const t=ctx.currentTime;
+  h.g.gain.cancelScheduledValues(t);h.g.gain.setValueAtTime(Math.max(.0001,h.g.gain.value),t);h.g.gain.exponentialRampToValueAtTime(.0001,t+.4);
+  [h.o,h.o2,h.lfo].forEach(x=>{try{x.stop(t+.45);}catch(e){}});
+ }
+ function construction(active,dt=.25){
+  if(!ctx) return;
+  if(active&&on){humOn();clankT-=dt;if(clankT<=0){Math.random()<.65?fx.clank():fx.drill();clankT=.3+Math.random()*.45;}}
+  else humOff();
+ }
+ /* annonces vocales */
+ const lastSaid={}; let frVoice=null;
+ function pickVoice(){try{const vs=speechSynthesis.getVoices();frVoice=vs.find(v=>/^fr/i.test(v.lang))||null;}catch(e){}}
+ try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice();}catch(e){}
+ const queue=[]; let speaking=false, token=0;
+ function speakNext(){
+  if(speaking||!queue.length||!on) return;
+  const text=queue.shift(); speaking=true; const my=++token;
+  fx.radio();
+  const finish=()=>{if(my!==token||!speaking)return;speaking=false;setTimeout(speakNext,120);};
+  try{
+   const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';if(frVoice)u.voice=frVoice;u.rate=1.08;u.pitch=.75;u.volume=.9;
+   u.onend=finish;u.onerror=finish;
+   setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){finish();}},170);
+  }catch(e){finish();}
+  setTimeout(finish,2500+text.length*90); // sécurité si onend ne vient jamais
+ }
+ function say(text,{urgent=false,gap=4}={}){
+  if(!on) return; const now=Date.now();
+  if(lastSaid[text]&&now-lastSaid[text]<gap*1000) return; lastSaid[text]=now;
+  if(!window.speechSynthesis){fx.radio();return;}
+  if(urgent){queue.length=0;try{speechSynthesis.cancel();}catch(e){}speaking=false;token++;queue.push(text);}
+  else{if(queue.includes(text))return;if(queue.length>=4)queue.shift();queue.push(text);}
+  speakNext();
+ }
+ function play(name,...a){if(!on||!ctx)return;try{fx[name]&&fx[name](...a);}catch(e){}}
+ function setOn(v){
+  on=v;try{localStorage.setItem('ar_sound',v?'on':'off');}catch(e){}
+  if(master) master.gain.value=v?.5:0;
+  if(!v){humOff();queue.length=0;speaking=false;token++;try{speechSynthesis.cancel();}catch(e){}}
+ }
+ return {init,play,say,construction,setOn,isOn:()=>on};
+})();
+document.addEventListener('pointerdown',()=>SFX.init(),true);
+document.addEventListener('keydown',()=>SFX.init(),true);
+
+/* =========================================================
    MÉCANIQUE
    ========================================================= */
 const effN=n=>n>0?1+0.1*(n-1):0;
@@ -484,8 +597,8 @@ function procQueue(P,q,rate,dt){
  it.prog+=dt*r;
  if(it.prog>=it.time){
   q.shift();
-  if(it.kind==='b'){P.b[it.id]=(P.b[it.id]||0)+1; if(P===me) log(`✔ ${nameOf(it.id)} construit(e).`,'good');}
-  else {P.u[it.id]=(P.u[it.id]||0)+1;}
+  if(it.kind==='b'){P.b[it.id]=(P.b[it.id]||0)+1; if(P===me){log(`✔ ${nameOf(it.id)} construit(e).`,'good');SFX.play('done');SFX.say(it.id==='chantier'?'Chantier déployé':'Construction terminée',{gap:2});}}
+  else {P.u[it.id]=(P.u[it.id]||0)+1; if(P===me){SFX.play('unit');SFX.say(UI[it.id].c==='inf'?'Unité prête':'Véhicule prêt',{gap:8});}}
  }
 }
 function simPlayer(P,dt){
@@ -540,9 +653,18 @@ function localAttack(att,def){
  att.lastAttack=G.time;
  report(att,def,res,ld,la,loot,destroyed);
 }
+function announceIncoming(name){
+ SFX.play('alarm');SFX.say('Ennemi en approche',{urgent:true,gap:1});
+ log(`📡 Ennemi en approche : les troupes de ${name} arrivent dans ${APPROACH} s ! Renforcez vos défenses.`,'warn');
+ toast(`📡 Ennemi en approche : ${name} (${APPROACH} s)`,'bad');
+}
 function report(att,def,res,ld,la,loot,destroyed){
- const pct=Math.round;
- if(att===me||att.id===myId){
+ const mine=att===me||att.id===myId;
+ SFX.play('battle');
+ if(!mine){SFX.play('siren');SFX.say('Attaque ennemie !',{urgent:true,gap:1});
+  setTimeout(()=>SFX.say(res.win?(destroyed?'Bâtiment détruit':'Défenses percées'):'Attaque repoussée',{gap:1}),1800);}
+ else setTimeout(()=>SFX.say(res.win?'Attaque réussie':'Notre attaque a échoué',{gap:1}),1200);
+ if(mine){
   if(res.win){log(`⚔ Attaque réussie contre ${def.name} (${fmt(res.a)} vs ${fmt(res.d)}). Pertes ennemies : ${ld.lost} unités${ld.tl?`, ${ld.tl} tourelles`:''}. Butin : ${fmt(loot)} €.${destroyed?` Bâtiment détruit : ${destroyed} !`:''} Vos pertes : ${la.lost} unités.`,'good');toast(`Victoire ! Butin ${fmt(loot)} €`,'good');}
   else {log(`⚔ Attaque repoussée par ${def.name} (${fmt(res.a)} vs ${fmt(res.d)}). Vos pertes : ${la.lost} unités.`,'bad');toast('Attaque repoussée…','bad');}
  }else{
@@ -617,11 +739,12 @@ function startGame(cfg){
  $('#setup').classList.add('hidden');$('#lobby').classList.add('hidden');$('#game').classList.remove('hidden');
  $('#pauseBtn').classList.toggle('hidden',cfg.mode!=='solo');
  $('#log').innerHTML='';
- buildCards(); buildEnemies();
+ buildCards(); buildEnemies(); resetUnlocks();
  log(`Partie lancée — ${cfg.mode==='solo'?'Solo contre '+ai.name:'Réseau ('+Object.keys(net.enemies).length+' adversaire(s))'}. Votre chantier de construction est déployé : construisez une centrale électrique pour commencer !`,'info');
  render();
 }
 setInterval(()=>{
+ SFX.construction(!!(G.running&&!G.paused&&!G.over&&me&&me.alive&&me.bq.length>0));
  if(!G.running||G.paused||G.over) return;
  const dt=0.25; G.time+=dt;
  simPlayer(me,dt);
@@ -630,9 +753,11 @@ setInterval(()=>{
   aiTimer+=dt;
   if(aiTimer>=1.5){aiTimer=0;aiThink(ai);}
   const d=DIFF[ai.diff];
-  if(ai.alive&&me.alive&&G.time>d.grace&&G.time-ai.lastAttack>d.every){
+  if(ai.incomingAt){
+   if(G.time>=ai.incomingAt){ai.incomingAt=0; if(ai.alive&&me.alive&&attackPow(ai)>0) localAttack(ai,me); else ai.lastAttack=G.time;}
+  }else if(ai.alive&&me.alive&&G.time>d.grace&&G.time-ai.lastAttack>d.every){
    const A=attackPow(ai),D=defensePow(me);
-   if(A>0&&(A>D*d.thr||G.time-ai.lastAttack>d.every*2.5)) localAttack(ai,me);
+   if(A>0&&(A>D*d.thr||G.time-ai.lastAttack>d.every*2.5)){ai.incomingAt=G.time+APPROACH;announceIncoming(ai.name);}
   }
  }
  if(G.mode==='net'){netTimer+=dt;if(netTimer>=1){netTimer=0;netTick();}}
@@ -650,6 +775,7 @@ function checkEnd(){
 function endGame(win){
  G.over=true;
  if(G.mode==='net') netEmit({t:'st',...myStatus()});
+ SFX.construction(false);SFX.play(win?'win':'lose');SFX.say(win?'Victoire !':'Défaite. Notre base est détruite.',{urgent:true,gap:1});
  $('#ovTitle').textContent=win?'VICTOIRE':'DÉFAITE';
  $('#ovTitle').style.color=win?'#3ecf5e':'#ff4b3e';
  $('#ovText').textContent=win?`Tous les ennemis ont été éliminés en ${fmtTime(G.time)}.`:`Votre base a été rasée après ${fmtTime(G.time)}.`;
@@ -836,12 +962,45 @@ setInterval(()=>{
  if(!G.running||!me||G.over) return;
  const s=energy(me).state;
  if(s!==lastEnergyState){
-  if(s==='low'){log('⚠ Énergie insuffisante ! Production ralentie, tourelles hors service.','bad');toast('⚠ Énergie insuffisante !','bad');}
-  else if(s==='warn'&&lastEnergyState==='ok') log('⚡ Énergie à la limite.','warn');
-  else if(lastEnergyState==='low') log('⚡ Énergie rétablie.','good');
+  if(s==='low'){log('⚠ Énergie insuffisante ! Production ralentie, tourelles hors service.','bad');toast('⚠ Énergie insuffisante !','bad');SFX.play('alarm');SFX.say('Énergie insuffisante',{urgent:true,gap:6});}
+  else if(s==='warn'&&lastEnergyState==='ok'){log('⚡ Énergie à la limite.','warn');SFX.say('Énergie faible',{gap:10});}
+  else if(lastEnergyState==='low'){log('⚡ Énergie rétablie.','good');SFX.say('Énergie rétablie',{gap:4});}
   lastEnergyState=s;
  }
 },500);
+/* annonce des nouveaux bâtiments / soldats / véhicules débloqués */
+let known=null;
+function availableSets(P){
+ return {
+  b:B.filter(b=>b.id!=='chantier'&&canReq(P,b.req)).map(b=>b.id),
+  i:U.filter(u=>u.c==='inf'&&sideOk(P,u)&&canReq(P,u.req)).map(u=>u.id),
+  v:U.filter(u=>u.c==='veh'&&sideOk(P,u)&&canReq(P,u.req)).map(u=>u.id)};
+}
+function resetUnlocks(){known=me?availableSets(me):null;}
+setInterval(()=>{
+ if(!G.running||G.over||!me) return;
+ if(!known){resetUnlocks();return;}
+ const now=availableSets(me);
+ const labels={b:['Nouveau bâtiment disponible','🏗 Nouveau bâtiment disponible'],i:['Nouveau soldat disponible','🪖 Nouveau soldat disponible'],v:['Nouveau véhicule disponible','🛡 Nouveau véhicule disponible']};
+ for(const k of ['b','i','v']){
+  const fresh=now[k].filter(id=>!known[k].includes(id));
+  if(fresh.length){
+   SFX.say(labels[k][0],{gap:1});
+   log(`${labels[k][1]} : ${fresh.map(nameOf).join(', ')}.`,'info');
+   fresh.forEach(id=>markNew(id));
+  }
+ }
+ known=now;
+},500);
+function markNew(id){
+ const r=cardRefs.find(c=>c.id===id); if(!r) return;
+ r.el.classList.add('isnew'); clearTimeout(r.newT); r.newT=setTimeout(()=>r.el.classList.remove('isnew'),12000);
+}
+let oreAnnounced=false;
+setInterval(()=>{
+ if(!G.running||G.over){oreAnnounced=false;return;}
+ if(G.ore<=0&&!oreAnnounced){oreAnnounced=true;SFX.say('Minerai épuisé',{gap:30});}
+},1000);
 
 function log(msg,cls=''){
  const el=$('#log'); if(!el) return;
@@ -861,11 +1020,11 @@ $('#main').addEventListener('click',e=>{
  const btn=e.target.closest('button[data-act]'); if(!btn||!me||G.over) return;
  const card=btn.closest('.card'), id=card.dataset.id, kind=card.dataset.kind, act=btn.dataset.act;
  if(kind==='b'){
-  if(act==='buy'){ if(buyBuilding(me,id)) log(id==='chantier'?'🚚 VCM en cours de déploiement…':`🏗 Construction lancée : ${nameOf(id)}.`); }
-  else if(act==='sell'){ if(sellBuilding(me,id)) log(`💰 ${nameOf(id)} vendu(e) (+${fmt(id==='chantier'?1250:BI[id].p/2)} €).`,'warn'); }
+  if(act==='buy'){ if(buyBuilding(me,id)){ log(id==='chantier'?'🚚 VCM en cours de déploiement…':`🏗 Construction lancée : ${nameOf(id)}.`); SFX.play('click'); SFX.say(id==='chantier'?'Déploiement en cours':'Construction en cours',{gap:2}); } }
+  else if(act==='sell'){ if(sellBuilding(me,id)){ log(`💰 ${nameOf(id)} vendu(e) (+${fmt(id==='chantier'?1250:BI[id].p/2)} €).`,'warn'); SFX.play('cash'); SFX.say('Bâtiment vendu',{gap:2}); } }
  }else{
   const k=act==='buy5'?5:1; let ok=0; for(let i=0;i<k;i++) if(buyUnit(me,id)) ok++;
-  if(ok) log(`➕ ${ok} × ${nameOf(id)} en production.`);
+  if(ok){ log(`➕ ${ok} × ${nameOf(id)} en production.`); SFX.play('click'); SFX.say(UI[id].c==='inf'?'Entraînement en cours':'Production en cours',{gap:3}); }
  }
  render();
 });
@@ -873,7 +1032,8 @@ $('#enemies').addEventListener('click',e=>{
  const btn=e.target.closest('button[data-target]'); if(!btn||btn.disabled||G.over) return;
  const tid=btn.dataset.target;
  if(attackPow(me)<=0) return;
- if(G.mode==='solo'){ localAttack(me,ai); }
+ SFX.say('Attaque lancée',{urgent:true,gap:1});
+ if(G.mode==='solo'){ setTimeout(()=>{ if(G.running&&!G.over&&ai) { localAttack(me,ai); render(); } },900); me.lastAttack=G.time; }
  else netAttack(tid);
  render();
 });
@@ -889,9 +1049,12 @@ $('#quitBtn').onclick=()=>{
  setTimeout(()=>{delete $('#quitBtn').dataset.confirm;$('#quitBtn').textContent='Quitter';},3000);
 };
 $('#ovBtn').onclick=backToMenu;
+function updSnd(){$('#sndBtn').textContent=SFX.isOn()?'🔊 Son':'🔇 Muet';}
+$('#sndBtn').onclick=()=>{SFX.init();SFX.setOn(!SFX.isOn());updSnd();if(SFX.isOn())SFX.say('Son activé',{gap:1});};
+updSnd();
 $('#fBtn').onclick=()=>$('#formula').classList.toggle('hidden');
 function backToMenu(){
- G.running=false;G.over=false;me=null;ai=null;
+ G.running=false;G.over=false;me=null;ai=null;SFX.construction(false);try{speechSynthesis.cancel();}catch(e){}
  leaveNet();
  $('#overlay').classList.add('hidden');$('#game').classList.add('hidden');$('#lobby').classList.add('hidden');$('#setup').classList.remove('hidden');
  $('#quitBtn').textContent='Quitter';delete $('#quitBtn').dataset.confirm;
@@ -962,7 +1125,7 @@ function onNet(arg,meta){
   case 'start':
    if(net.inLobby&&!G.running&&Array.isArray(m.players)&&m.players.some(p=>p.id===myId)){
     net.inLobby=false;clearInterval(net.helloT);
-    startGame({mode:'net',name:net.name,camp:net.camp,money:clamp(+m.money,2000,10000),ore:clamp(+m.ore,0,100000),players:m.players});
+    startGame({mode:'net',name:net.name,camp:net.camp,money:clamp(+m.money,2000,10000),ore:clamp(+m.ore,0,500000),players:m.players});
    }
    break;
   case 'st':{
@@ -974,6 +1137,10 @@ function onNet(arg,meta){
   case 'ore':
    if(G.running&&!net.host) G.ore=Math.max(0,+m.ore||0);
    break;
+  case 'incoming':{
+   if(!G.running||G.over||!me.alive) break;
+   const e=net.enemies[m.from]; announceIncoming(e?e.name:String(m.name||'Ennemi').slice(0,18));
+   break;}
   case 'atk':{
    if(!G.running||G.over||!me.alive) break;
    const e=net.enemies[m.from]; const attName=e?e.name:'Ennemi';
@@ -1005,9 +1172,10 @@ function netAttack(tid){
  if(net.pending) return;
  const aid=Math.random().toString(36).slice(2,8);
  me.lastAttack=G.time;
- net.pending={aid,timer:setTimeout(()=>{net.pending=null;log("⚔ L'adversaire n'a pas répondu (déconnecté ?). Attaque annulée.",'warn');},6000)};
- netEmit({t:'atk',to:tid,A:attackPow(me),rep:repairF(me),aid});
- log(`⚔ Vos troupes marchent sur ${net.enemies[tid]?net.enemies[tid].name:'l\'ennemi'}…`,'info');
+ net.pending={aid,timer:setTimeout(()=>{net.pending=null;log("⚔ L'adversaire n'a pas répondu (déconnecté ?). Attaque annulée.",'warn');},(APPROACH+7)*1000)};
+ netEmit({t:'incoming',to:tid,name:me.name,aid});
+ setTimeout(()=>{ if(G.running&&!G.over&&net.pending&&net.pending.aid===aid) netEmit({t:'atk',to:tid,A:attackPow(me),rep:repairF(me),aid}); },APPROACH*1000);
+ log(`⚔ Vos troupes marchent sur ${net.enemies[tid]?net.enemies[tid].name:'l\'ennemi'} (arrivée dans ${APPROACH} s)…`,'info');
 }
 function leaveNet(){
  clearInterval(net.helloT);
@@ -1069,4 +1237,3 @@ $('#goBtn').onclick=()=>{
 </script>
 </body>
 </html>
-
