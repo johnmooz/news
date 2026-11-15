@@ -135,20 +135,70 @@
   .ins{font-family:inherit;font-size:13px;font-weight:600;border:none;border-radius:8px;padding:4px 9px;background:#fff;color:#333;cursor:pointer}
   .ins:hover{background:#fffbe0}
 
-  /* Réseau */
-  .netcode{font-size:52px;font-weight:700;letter-spacing:10px;color:#4d7a2e;text-align:center;margin:6px 0 4px}
-  .lobby ul{list-style:none;padding:0;margin:8px 0 18px}
-  .lobby li{padding:8px 12px;border-radius:10px;background:#f1f5ec;margin-bottom:6px;display:flex;justify-content:space-between}
-  .notice{background:#fff4d6;border:2px solid #f3b600;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:15px}
-  .netbadge{display:inline-block;background:#4d7a2e;color:#fff;border-radius:8px;padding:2px 8px;font-size:13px;margin-left:6px;vertical-align:middle}
-  .tab.gone{opacity:.45;text-decoration:line-through}
-  .card small{display:block;margin-top:8px;color:#4d7a2e;font-weight:500}
+
+  /* Barre d'action en haut de la partie */
+  .actionbar{position:sticky;top:0;z-index:5;background:#fff;border-radius:16px;padding:10px 12px;margin-bottom:12px;
+             box-shadow:0 4px 14px rgba(0,0,0,.08);display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center}
+  .abtop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+  .abtitle{font-size:16px;white-space:nowrap}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .actions .btn{padding:9px 14px;font-size:15px}
+  .actionbar .msg{grid-column:1 / -1;min-height:0}
+  .dice.small{margin:0;min-height:0;gap:5px;justify-content:flex-start}
+  .dice.small .die{width:38px;height:38px;border-radius:9px;box-shadow:inset -3px -3px 0 #e4e4e4,0 2px 5px rgba(0,0,0,.18)}
+  .dice.small .die .pip{width:28px;height:28px;font-size:17px}
+  .dice.small .die.white .pip{font-size:21px}
+  .dice.small .die.white{outline-width:2px;outline-offset:-2px}
+  .dice.small .placeholder{font-size:13px}
+  @media(max-width:700px){
+    header{padding:8px 12px} h1{font-size:22px} .hdr .btn{padding:7px 11px;font-size:14px}
+    main{padding:8px}
+    .actionbar{grid-template-columns:1fr;padding:8px 10px;gap:6px;border-radius:12px;margin-bottom:8px}
+    .actions{justify-content:stretch} .actions .btn{flex:1 1 auto;padding:10px 8px}
+    .dice.small .die{width:32px;height:32px} .dice.small .die .pip{width:24px;height:24px;font-size:15px}
+    .dice.small .die.white .pip{font-size:18px}
+    .abtitle{font-size:14px}
+    .actionbar .msg{font-size:13px}
+    .tabs{margin-bottom:6px;gap:4px} .tab{padding:4px 9px;font-size:13px}
+    .sheet{padding:8px;border-radius:12px}
+    .sheet-top{gap:8px}
+    .row{padding:3px;margin-bottom:6px;border-radius:7px}
+    .pen{gap:4px} .pen .skull{font-size:18px;margin-bottom:0} .pbox{font-size:13px;gap:3px}
+    .pbox span.b{width:24px;height:24px;font-size:16px}
+    .brand{display:none}
+    .bottom{margin:6px -8px -8px;padding:8px;gap:5px;border-radius:0 0 12px 12px}
+    .bcell{border-radius:6px} .eq{font-size:18px} .total{font-size:22px;border-radius:6px}
+    .game{gap:10px}
+  }
+  /* Écran de départ */
+  .setup.wide{max-width:620px}
+  .count{display:flex;gap:8px;margin:4px 0 16px}
+  .count button{font-family:inherit;font-size:20px;font-weight:600;width:52px;height:52px;border-radius:12px;border:2px solid #c9d7bd;background:#fff;color:#4d7a2e;cursor:pointer}
+  .count button.on{background:#4d7a2e;color:#fff;border-color:#4d7a2e}
+  .prow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+  .pnum{width:34px;height:34px;border-radius:50%;background:#e4eedb;color:#4d7a2e;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .prow input{font-family:inherit;font-size:16px;width:100%;padding:9px 12px;border:2px solid #d5dccd;border-radius:10px}
+  .seg{display:flex;border:2px solid #c9d7bd;border-radius:10px;overflow:hidden}
+  .seg button{font-family:inherit;font-size:14px;border:none;background:#fff;padding:9px 11px;cursor:pointer;color:#555;white-space:nowrap}
+  .seg button.on{background:#4d7a2e;color:#fff}
+  @media(max-width:520px){.prow{grid-template-columns:34px 1fr}.seg{grid-column:2}}
+  .alt{margin-top:18px;font-size:14px;color:#666;border-top:1px solid #eee;padding-top:14px}
+  .linkbtn{font-family:inherit;font-size:14px;background:none;border:none;color:#4d7a2e;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
+  .resume{margin:0 0 16px}
+  .hdr{display:flex;gap:8px}
+  .iconbtn{font-size:20px;padding:8px 12px}
+  .tab.ai::before{content:"🤖 "}
+  .thinking{display:inline-block;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.35}}
 </style>
 </head>
 <body>
 <header>
   <h1>Qwantum</h1>
-  <button class="btn light" id="menuBtn">Menu</button>
+  <div class="hdr">
+    <button class="btn light iconbtn" id="soundBtn" title="Son">🔊</button>
+    <button class="btn light" id="newBtn">Nouvelle partie</button>
+  </div>
 </header>
 <main id="app"></main>
 
@@ -174,297 +224,149 @@ const face = (die, f) => ({f, v:DICE_FACES[die][f].v, c:DICE_FACES[die][f].c});
 const MIN_SUM = 2;  // 1 + 1 au minimum
 const MAX_SUM = 6 + DICE_FACES.reduce((a,d)=>a+Math.max(...d.map(x=>x.v)),0); // 6 + plus grande face de chaque dé
 const MAX_PLAYERS = 5;
+let AI_DELAY = 1000;   // temps de réflexion de l'ordinateur (ms)
 
-let S = null;          // partie en cours
-let screen = 'menu';   // 'menu' | 'setup' | 'game'
-let setupMode = 'solo';
-let editRow = null;    // mode feuille : ligne en cours de saisie
-let renaming = null;   // joueur en cours de renommage
+let S = null;            // partie en cours
+let screen = 'setup';    // 'setup' | 'game'
+let setupPlayers = null; // [{name, ai}] sur l'écran de départ
+let editRow = null;      // feuille de score : ligne en cours de saisie
 let sheetErr = '';
 let lastRaw = '';
+let aiTimer = null, rolling = false;
 const cleanText = x => String(x ?? '').replace(/[<>&"]/g, '').slice(0, 160);
 const cleanName = (x, i) => cleanText(x).trim().slice(0, 20) || `Joueur ${i+1}`;
 const $ = s => document.querySelector(s);
 const app = $('#app');
 
-function save(){
-  if (isNet()){ if (NET && NET.role === 'host') broadcast(); return; }
-  try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){}
-}
+function save(){ try{ localStorage.setItem('qwantum', JSON.stringify(S)); }catch(e){} }
 function load(){ try{ return JSON.parse(localStorage.getItem('qwantum')); }catch(e){ return null; } }
-function rememberName(n){ try{ localStorage.setItem('qwantum-name', n); }catch(e){} }
-function lastName(){ try{ return localStorage.getItem('qwantum-name') || ''; }catch(e){ return ''; } }
 const emptyRows = () => [0,1,2,3].map(()=>Array(6).fill(null));
-function newGame(mode, names, extra){
-  S = Object.assign({ mode,
-        players: names.map(name=>({name, rows:emptyRows(), pen:0})),
-        cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], done:[], history:[],
-        over:false, msg:'', rollN:0 }, extra||{});
-  editRow = null; sheetErr = ''; renaming = null;
-}
 
-/* =================== Réseau (capacité « room » de la page claude.ai) =================== */
-let roomP = null;      // promesse de la salle principale
-let NET = null;        // {role:'host'|'guest', code, room, unsub:[], seen:{}, seq, myPeer, name}
-let netNotice = '';
-let localView = 0, lastCurSeen = null, shownRoll = null, netModalHidden = false;
-const isNet = () => !!(S && S.mode === 'net');
-
-function getRoom(){
-  if (!roomP){
-    roomP = (typeof claude !== 'undefined' && claude && typeof claude.use === 'function')
-      ? claude.use('room').catch(()=>null) : Promise.resolve(null);
+/* =================== Sons (synthétisés, aucun fichier) =================== */
+const Sound = (() => {
+  let ctx = null, on = true;
+  try{ on = localStorage.getItem('qwantum-sound') !== 'off'; }catch(e){}
+  function ac(){
+    if (!ctx){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try{ ctx = new C(); }catch(e){ return null; } }
+    if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+    return ctx;
   }
-  return roomP;
-}
-function genCode(){
-  const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  return Array.from({length:4},()=>A[Math.floor(Math.random()*A.length)]).join('');
-}
-async function connectRoom(code){
-  const lobby = await getRoom();
-  if (!lobby) throw new Error('unavailable');
-  return lobby.join('qwantum-' + code.toLowerCase());
-}
-function myIndex(){
-  if (!isNet() || !NET) return -1;
-  if (NET.role === 'host') return 0;
-  return NET.myPeer ? S.players.findIndex(p=>p.peer===NET.myPeer) : -1;
-}
-function leaveNet(){
-  if (NET){
-    (NET.unsub||[]).forEach(u=>{ try{u();}catch(e){} });
-    try{ NET.room.leave(); }catch(e){}
-    clearTimeout(NET.timer);
+  function tone(freq, dur, o = {}){
+    const c = ac(); if (!c || !on) return;
+    const t = c.currentTime + (o.when||0);
+    const osc = c.createOscillator(), g = c.createGain();
+    osc.type = o.type || 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    if (o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(o.vol || 0.15, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g).connect(c.destination); osc.start(t); osc.stop(t + dur + 0.03);
   }
-  NET = null; netNotice = ''; netModalHidden = false;
-  if (isNet()) S = null;
-}
-
-/* ----- Hôte : garde l'état de la partie et le partage dans sa présence ----- */
-function packState(){
-  return { code:S.code, mode:'net',
-    players:S.players.map(p=>({name:p.name, peer:p.peer, rows:p.rows, pen:p.pen, gone:!!p.gone})),
-    cur:S.cur, dice:S.dice, phase:S.phase, usedColor:S.usedColor, wrote:S.wrote, done:S.done,
-    over:S.over, msg:S.msg, rollN:S.rollN };
-}
-function broadcast(){
-  if (!NET || !NET.room) return;
-  NET.room.presence({role:'host', st:packState()}).catch(()=>{});
-}
-async function hostGame(name){
-  const code = genCode();
-  leaveNet();
-  let room;
-  try{ room = await connectRoom(code); }
-  catch(e){ netNotice = "Impossible d'ouvrir une partie en réseau ici."; render(); return; }
-  NET = {role:'host', code, room, unsub:[], seen:{}};
-  newGame('net', [name], {code, phase:'lobby'});
-  S.players[0].peer = 'host';
-  localView = 0; lastCurSeen = null;
-  NET.unsub.push(room.onPeers(hostOnPeers));
-  screen = 'game'; save(); render();
-}
-function hostOnPeers(ch){
-  if (!isNet() || !NET || NET.role !== 'host') return;
-  let changed = false;
-  for (const p of ch.peers){
-    if (p.sameTab || p.kind !== 'viewer') continue;
-    const pr = p.presence || {};
-    if (pr.role !== 'player') continue;
-    let i = S.players.findIndex(q=>q.peer===p.peer);
-    if (i === -1 && S.phase === 'lobby' && S.players.length < MAX_PLAYERS){
-      S.players.push({name:cleanName(pr.name, S.players.length), peer:p.peer, rows:emptyRows(), pen:0});
-      i = S.players.length - 1; changed = true;
-    }
-    if (i === -1) continue;
-    const nm = cleanName(pr.name, i);
-    if (nm !== S.players[i].name){ S.players[i].name = nm; changed = true; }
-    const a = pr.act;
-    if (a && typeof a === 'object' && Number.isInteger(a.n) && a.n > (NET.seen[p.peer]||0)){
-      NET.seen[p.peer] = a.n;
-      applyAction(i, a);
-    }
+  function noise(dur, o = {}){
+    const c = ac(); if (!c || !on) return;
+    const t = c.currentTime + (o.when||0);
+    const len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = o.freq || 2500; f.Q.value = o.q || 1.5;
+    const g = c.createGain(); g.gain.value = o.vol || 0.3;
+    src.connect(f).connect(g).connect(c.destination); src.start(t);
   }
-  for (const p of ch.left){
-    const i = S.players.findIndex(q=>q.peer===p.peer);
-    if (i <= 0) continue;
-    if (S.phase === 'lobby') S.players.splice(i, 1);
-    else { S.players[i].gone = true; S.msg = `${S.players[i].name} a quitté la partie.`; handleGone(); }
-    changed = true;
-  }
-  if (changed){ save(); render(); }
-}
-function handleGone(){
-  if (S.phase === 'lobby' || S.over) return;
-  if (S.players[S.cur].gone && (S.phase === 'roll' || S.phase === 'active')) advanceTurn();
-  else checkAutoEnd();
-}
-
-/* ----- Invité : reçoit l'état de l'hôte et lui envoie ses actions ----- */
-async function joinGame(code, name){
-  leaveNet(); S = null;
-  let room;
-  try{ room = await connectRoom(code); }
-  catch(e){ netNotice = "Impossible de rejoindre une partie en réseau ici."; render(); return; }
-  NET = {role:'guest', code, room, unsub:[], seq:0, myPeer:null, name};
-  netNotice = ''; localView = 0; lastCurSeen = null;
-  room.presence({role:'player', name}).catch(()=>{});
-  NET.unsub.push(room.onPeers(guestOnPeers));
-  NET.timer = setTimeout(()=>{ if (NET && NET.role==='guest' && !S){ netNotice = `Aucune partie trouvée avec le code ${code}. Vérifie le code avec l'hôte.`; render(); } }, 7000);
-  screen = 'game'; render();
-}
-const int = (x, lo, hi, d) => Number.isInteger(x) && x >= lo && x <= hi ? x : d;
-function sanitize(st){
-  const players = (Array.isArray(st.players) ? st.players : []).slice(0, MAX_PLAYERS).map((p,i)=>({
-    name: cleanName(p && p.name, i), peer: String(p && p.peer || '').slice(0, 64), gone: !!(p && p.gone),
-    pen: int(p && p.pen, 0, 5, 0),
-    rows: [0,1,2,3].map(r=>[0,1,2,3,4,5].map(k=>{ const v = p && p.rows && p.rows[r] && p.rows[r][k]; return Number.isInteger(v) ? v : null; }))
-  }));
-  const d = st.dice;
-  const dice = d && typeof d === 'object' ? {
-    white: int(d.white, 1, 6, 1),
-    colored: [0,1,2,3,4,5].map(i=>{ const c = d.colored && d.colored[i]; return face(i, int(c && c.f, 0, 5, 0)); })
-  } : null;
-  const ints = a => Array.isArray(a) ? a.filter(x=>Number.isInteger(x)).slice(0, 10) : [];
-  return { mode:'net', code: cleanText(st.code).slice(0, 8), players,
-    cur: int(st.cur, 0, Math.max(0, players.length-1), 0), dice,
-    phase: ['lobby','roll','active','others'].includes(st.phase) ? st.phase : 'lobby',
-    usedColor: int(st.usedColor, 0, 3, null), wrote: ints(st.wrote), done: ints(st.done),
-    over: !!st.over, msg: cleanText(st.msg), rollN: int(st.rollN, 0, 1e9, 0), history: [], view: 0 };
-}
-function guestOnPeers(ch){
-  if (!NET || NET.role !== 'guest') return;
-  const me = ch.peers.find(p=>p.sameTab); if (me) NET.myPeer = me.peer;
-  const host = ch.peers.find(p=>!p.sameTab && p.presence && p.presence.role==='host' && p.presence.st);
-  if (!host){
-    if (S && !S.over){ netNotice = "L'hôte a quitté la partie : elle ne peut pas continuer."; render(); }
-    return;
-  }
-  const wasOver = S && S.over;
-  S = sanitize(host.presence.st);
-  if (S.over && !wasOver) netModalHidden = false;
-  if (S.phase !== 'lobby' && myIndex() === -1) netNotice = 'La partie a déjà commencé : tu la regardes sans jouer.';
-  else netNotice = '';
-  if (screen === 'game') render();
-}
-function sendAct(a){
-  NET.seq++;
-  NET.room.presence({act:Object.assign({}, a, {n:NET.seq})}).catch(()=>{});
-}
-
-/* =================== Actions de jeu (communes aux modes à dés) =================== */
-// pi : joueur qui agit (null = cet appareil joue pour tout le monde)
-function act(a){
-  if (isNet()){
-    if (myIndex() === -1) return;
-    if (NET.role === 'guest'){ sendAct(a); return; }
-    applyAction(0, a); return;
-  }
-  applyAction(null, a);
-}
-function applyAction(pi, a){
-  if (!S || S.over) return;
-  if (a.t === 'roll'){ if (pi === null || pi === S.cur) roll(); }
-  else if (a.t === 'write'){ const r = a.r; if (Number.isInteger(r) && r >= 0 && r < 4) write(pi === null ? S.view : pi, r); }
-  else if (a.t === 'pass'){
-    if (pi === null || pi === S.cur){ passActive(); return; }
-    if (S.phase === 'others' && !S.wrote.includes(pi) && !S.done.includes(pi)){
-      S.done.push(pi); S.msg = `${S.players[pi].name} n'inscrit rien ce tour-ci.`;
-      save(); render(); checkAutoEnd();
-    }
-  }
-  else if (a.t === 'next'){ if (pi === null || pi === S.cur) endTurn(); }
-}
-function othersPending(){
-  return S.players.map((p,i)=>i).filter(i=>i!==S.cur && !S.players[i].gone && !S.wrote.includes(i) && !S.done.includes(i));
-}
-function checkAutoEnd(){
-  if (isNet() && S.phase === 'others' && !othersPending().length) endTurn();
-}
-
-/* ---------- Menu ---------- */
-function renderMenu(){
-  const canResume = (S && !S.over && S.mode !== 'net') || (NET && (S || NET.role==='guest'));
-  const resumeLabel = NET ? 'partie en réseau' : S && S.mode==='sheet' ? 'feuille de score' : 'jeu automatique';
-  const card = (mode, ico, title, txt, note) => `
-      <button class="card" data-mode="${mode}">
-        <div class="ico">${ico}</div><h3>${title}</h3><p>${txt}</p>${note?`<small>${note}</small>`:''}
-      </button>`;
-  app.innerHTML = `
-  <div class="menu">
-    <h2>Comment veux-tu jouer ?</h2>
-    <p class="sub">Choisis un mode pour commencer une partie.</p>
-    <div class="cards">
-      ${card('solo','👤','Solo','Tu joues seul : la page lance les dés et tu cherches le meilleur score.')}
-      ${card('local','👥','Même appareil','2 à 5 joueurs autour du même écran, chacun son tour.')}
-      ${card('host','📡','Réseau – héberger','Crée une partie et donne son code aux autres joueurs, chacun sur son appareil.')}
-      ${card('join','🔗','Réseau – rejoindre','Tape le code donné par l’hôte pour jouer depuis ton appareil.')}
-      ${card('sheet','📝','Feuille de score','Tu joues avec tes vrais dés et tu notes les chiffres. La feuille vérifie les règles.')}
-    </div>
-    ${canResume ? `<div class="resume"><button class="btn light" id="resume">Reprendre la ${resumeLabel}</button></div>` : ''}
-  </div>`;
-  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ setupMode=b.dataset.mode; netNotice=''; screen='setup'; render(); });
-  const r = $('#resume'); if (r) r.onclick = ()=>{ screen='game'; render(); };
-}
-
-/* ---------- Mise en place ---------- */
-function renderSetup(){
-  const m = setupMode;
-  const titles = {solo:'👤 Solo', local:'👥 Même appareil', sheet:'📝 Feuille de score',
-                  host:'📡 Réseau – héberger', join:'🔗 Réseau – rejoindre'};
-  const net = m === 'host' || m === 'join';
-  let body = '';
-  if (m === 'solo' || net){
-    body = `<label>Ton nom</label><input id="myName" maxlength="20" value="${cleanName(lastName(), 0)}">`;
-    if (m === 'join') body += `<label>Code de la partie</label><input id="code" maxlength="6" placeholder="ex. 7KQ2" autocomplete="off" style="text-transform:uppercase;letter-spacing:4px;font-size:22px">`;
-    if (net) body += `<div class="msg" id="netInfo" style="margin-top:12px">Vérification de la connexion…</div>`;
-  } else {
-    const opts = m === 'local' ? [2,3,4,5] : [1,2,3,4,5];
-    body = `<label>Nombre de joueurs</label>
-      <select id="np">${opts.map(n=>`<option ${n==2?'selected':''}>${n}</option>`).join('')}</select>
-      <div id="names"></div>`;
-  }
-  app.innerHTML = `
-  <div class="setup">
-    <h2>${titles[m]}</h2>
-    ${netNotice ? `<div class="notice">${netNotice}</div>` : ''}
-    ${body}
-    <div style="margin-top:20px;display:flex;gap:10px">
-      <button class="btn light" id="back">◀ Retour</button>
-      <button class="btn" id="start" ${net?'disabled':''}>${m==='host'?'Créer la partie':m==='join'?'Rejoindre':'Commencer'}</button>
-    </div>
-  </div>`;
-  if ($('#np')){
-    const drawNames = () => {
-      const n = +$('#np').value;
-      $('#names').innerHTML = Array.from({length:n},(_,i)=>
-        `<label>Joueur ${i+1}</label><input value="Joueur ${i+1}" maxlength="20" data-i="${i}">`).join('');
-    };
-    $('#np').onchange = drawNames; drawNames();
-  }
-  $('#back').onclick = ()=>{ netNotice=''; screen='menu'; render(); };
-  if (net){
-    getRoom().then(r=>{
-      const info = $('#netInfo'); if (!info) return;
-      if (r){ info.textContent = m==='host' ? 'Prêt : un code sera créé pour les autres joueurs.' : 'Prêt : tape le code de l’hôte.'; $('#start').disabled = false; }
-      else info.innerHTML = '<span class="msg err">Le jeu en réseau marche seulement sur la page Qwantum publiée sur claude.ai, ouverte par des personnes avec qui elle est partagée et connectées à leur compte.</span>';
-    });
-  }
-  $('#start').onclick = () => {
-    if (m === 'solo' || net){
-      const name = cleanName($('#myName').value, 0); rememberName(name);
-      if (m === 'solo'){ leaveNet(); newGame('auto', [name]); screen='game'; save(); render(); return; }
-      if (m === 'host'){ $('#start').disabled = true; hostGame(name); return; }
-      const code = cleanText($('#code').value).toUpperCase().replace(/[^A-Z0-9]/g,'');
-      if (code.length < 3){ $('#netInfo').innerHTML = '<span class="msg err">Tape le code donné par l’hôte.</span>'; return; }
-      $('#start').disabled = true; joinGame(code, name); return;
-    }
-    leaveNet();
-    const names = [...document.querySelectorAll('#names input')].map((x,i)=>cleanName(x.value, i));
-    newGame(m === 'local' ? 'auto' : 'sheet', names);
-    screen = 'game'; save(); render();
+  return {
+    unlock(){ ac(); },
+    isOn(){ return on; },
+    toggle(){ on = !on; try{ localStorage.setItem('qwantum-sound', on ? 'on' : 'off'); }catch(e){} if (on) this.click(); return on; },
+    roll(){   // dés secoués dans le gobelet, puis qui tombent sur la table
+      let t = 0;
+      for (let i=0; i<16; i++){ t += 0.018 + Math.random()*0.035; noise(0.035, {when:t, vol:0.18+Math.random()*0.15, freq:2200+Math.random()*2500, q:2.5}); }
+      for (let i=0; i<7; i++){
+        const w = t + 0.06 + i*0.04 + Math.random()*0.03;
+        noise(0.07, {when:w, vol:0.5, freq:800+Math.random()*900, q:3});
+        tone(150+Math.random()*90, 0.06, {type:'triangle', vol:0.07, when:w});
+      }
+    },
+    write(){ noise(0.06, {vol:0.22, freq:5200, q:0.8}); tone(880, 0.09, {type:'triangle', vol:0.1, when:0.03}); },
+    column(){ [784, 988, 1319].forEach((f,i)=>tone(f, 0.28, {vol:0.13, when:0.12 + i*0.09})); },
+    penalty(){ tone(240, 0.4, {type:'sawtooth', vol:0.07, slide:110}); },
+    pass(){ tone(520, 0.13, {vol:0.07, slide:380}); },
+    turn(){ tone(660, 0.07, {vol:0.06}); tone(990, 0.1, {vol:0.06, when:0.07}); },
+    error(){ tone(170, 0.18, {type:'square', vol:0.04}); },
+    click(){ noise(0.03, {vol:0.3, freq:3200, q:2}); },
+    end(){ [523, 659, 784, 1047, 784, 1047].forEach((f,i)=>tone(f, i===5 ? 0.7 : 0.18, {type:'triangle', vol:0.13, when:i*0.13})); }
   };
+})();
+function completedColumns(p){ let n = 0; for (let j=0;j<6;j++) if (columnValue(p,j)!==null) n++; return n; }
+
+/* =================== Écran de départ =================== */
+function defaultName(i, ai){ return ai ? `Ordi ${i+1}` : `Joueur ${i+1}`; }
+const isDefaultName = (n, i) => n === defaultName(i, true) || n === defaultName(i, false);
+function loadSetup(){
+  try{
+    const s = JSON.parse(localStorage.getItem('qwantum-setup'));
+    if (Array.isArray(s) && s.length >= 1 && s.length <= MAX_PLAYERS)
+      return s.map((p,i)=>({name:cleanName(p.name, i), ai:!!p.ai}));
+  }catch(e){}
+  return [{name:'Joueur 1', ai:false}, {name:'Ordi 2', ai:true}];
+}
+function renderSetup(){
+  if (!setupPlayers) setupPlayers = loadSetup();
+  const n = setupPlayers.length;
+  const canResume = S && !S.over;
+  app.innerHTML = `
+  <div class="setup wide">
+    <h2>Nouvelle partie</h2>
+    ${canResume ? `<div class="resume"><button class="btn light" id="resume">▶ Reprendre la partie en cours</button></div>` : ''}
+    <label>Nombre de joueurs</label>
+    <div class="count">${[1,2,3,4,5].map(k=>`<button data-count="${k}" class="${k===n?'on':''}">${k}</button>`).join('')}</div>
+    <label>Joueurs</label>
+    ${setupPlayers.map((p,i)=>`
+      <div class="prow">
+        <span class="pnum">${i+1}</span>
+        <input data-name="${i}" value="${cleanText(p.name)}" maxlength="20" aria-label="Nom du joueur ${i+1}">
+        <div class="seg" role="group" aria-label="Type du joueur ${i+1}">
+          <button data-type="${i}" data-ai="0" class="${p.ai?'':'on'}">🧑 Humain</button>
+          <button data-type="${i}" data-ai="1" class="${p.ai?'on':''}">🤖 Ordinateur</button>
+        </div>
+      </div>`).join('')}
+    <div style="margin-top:18px"><button class="btn" id="start">🎲 Commencer la partie</button></div>
+    <div class="alt">Tu joues avec de vrais dés ? Ouvre plutôt la <button class="linkbtn" id="sheetStart">📝 feuille de score</button> : tu notes les chiffres et elle vérifie les règles (sans joueur ordinateur).</div>
+  </div>`;
+  const r = $('#resume'); if (r) r.onclick = ()=>{ Sound.unlock(); screen = 'game'; render(); };
+  document.querySelectorAll('[data-name]').forEach(inp=>inp.oninput = ()=>{ setupPlayers[+inp.dataset.name].name = inp.value; });
+  document.querySelectorAll('[data-count]').forEach(b=>b.onclick = ()=>{
+    const k = +b.dataset.count;
+    while (setupPlayers.length < k){ const i = setupPlayers.length; setupPlayers.push({name:defaultName(i, i>0), ai:i>0}); }
+    setupPlayers.length = k;
+    Sound.unlock(); Sound.click(); render();
+  });
+  document.querySelectorAll('[data-type]').forEach(b=>b.onclick = ()=>{
+    const i = +b.dataset.type, ai = b.dataset.ai === '1', p = setupPlayers[i];
+    if (isDefaultName(p.name.trim(), i) || !p.name.trim()) p.name = defaultName(i, ai);
+    p.ai = ai; Sound.unlock(); Sound.click(); render();
+  });
+  const players = () => setupPlayers.map((p,i)=>({name:cleanName(p.name, i), ai:p.ai}));
+  const remember = list => { try{ localStorage.setItem('qwantum-setup', JSON.stringify(list)); }catch(e){} };
+  $('#start').onclick = ()=>{
+    Sound.unlock();
+    const list = players(); remember(list);
+    newGame('auto', list); screen = 'game'; save(); Sound.turn(); render();
+  };
+  $('#sheetStart').onclick = ()=>{
+    Sound.unlock();
+    const list = players().map(p=>({name:p.name, ai:false}));
+    newGame('sheet', list); screen = 'game'; save(); Sound.click(); render();
+  };
+}
+function newGame(mode, players){
+  clearTimeout(aiTimer); aiTimer = null; rolling = false;
+  S = { mode,
+        players: players.map(p=>({name:p.name, ai:!!p.ai, rows:emptyRows(), pen:0})),
+        cur:0, view:0, dice:null, phase:'roll', usedColor:null, wrote:[], done:[], history:[],
+        over:false, dismissed:false, msg:'', rollN:0 };
+  editRow = null; sheetErr = '';
+  if (mode === 'auto') S.view = firstHumanView();
 }
 
 /* ---------- Calculs communs ---------- */
@@ -493,7 +395,7 @@ function isFinished(){
   return S.players.some(q => q.pen>=5 || [0,1,2,3,4,5].every(j=>columnValue(q,j)!==null));
 }
 
-/* ---------- Jeu avec dés automatiques (solo, même appareil, réseau) ---------- */
+/* =================== Partie avec dés automatiques =================== */
 function colorSum(c){
   if (!S.dice) return null;
   const ds = S.dice.colored.filter(d=>d.c===c);
@@ -511,29 +413,41 @@ function candidate(pi, r){
   if (!fitsOrder(row, k, sum.total)) return null;
   return {k, s:sum.total};
 }
+function othersPending(){
+  return S.players.map((p,i)=>i).filter(i=>i!==S.cur && !S.wrote.includes(i) && !S.done.includes(i));
+}
+function firstHumanView(){
+  if (!S.players[S.cur].ai) return S.cur;
+  return S.cur;   // on regarde jouer l'ordinateur
+}
 function randomDice(){
   return { white: 1+Math.floor(Math.random()*6),
     colored: Array.from({length:6},(_,d)=>face(d, Math.floor(Math.random()*6))) };
 }
-function startTurnWith(dice){
-  S.dice = dice; S.phase = 'active'; S.usedColor = null; S.wrote = []; S.done = []; S.msg = '';
-  S.rollN = (S.rollN||0) + 1;
-}
 function roll(){
-  if (S.phase !== 'roll' || S.over) return;
+  if (S.phase !== 'roll' || S.over || rolling) return;
+  rolling = true; clearTimeout(aiTimer);
+  Sound.roll();
   const final = randomDice();
-  if (isNet()){ startTurnWith(final); save(); render(); return; }   // l'animation est jouée chez chacun
   let t = 0;
   const tick = setInterval(()=>{
     S.dice = randomDice(); renderDice(true);
-    if (++t > 6){ clearInterval(tick); startTurnWith(final); shownRoll = S.rollN; save(); render(); }
+    if (++t > 7){
+      clearInterval(tick); rolling = false;
+      S.dice = final; S.phase = 'active'; S.usedColor = null; S.wrote = []; S.done = []; S.msg = '';
+      S.rollN = (S.rollN||0) + 1;
+      S.view = S.cur;
+      save(); render();
+    }
   }, 70);
 }
 function write(pi, r){
   const p = S.players[pi];
   const c = candidate(pi, r); if (!c) return;
+  const before = completedColumns(p);
   p.rows[r][c.k] = c.s; S.wrote.push(pi);
   S.msg = `${p.name} inscrit ${c.s} dans la ligne ${COLORS[r].name.toLowerCase()}.`;
+  Sound.write(); if (completedColumns(p) > before) Sound.column();
   if (pi === S.cur){ S.usedColor = r; goOthers(); return; }
   save(); render(); checkAutoEnd();
 }
@@ -542,28 +456,81 @@ function passActive(){
   const p = S.players[S.cur];
   p.pen = Math.min(5, p.pen+1); S.usedColor = null;
   S.msg = `${p.name} n'inscrit rien et prend une pénalité (−${p.pen}).`;
+  Sound.penalty();
   goOthers();
 }
+function passOther(i){
+  if (S.phase !== 'others' || i === S.cur || S.wrote.includes(i) || S.done.includes(i)) return;
+  S.done.push(i);
+  S.msg = `${S.players[i].name} n'inscrit rien ce tour-ci.`;
+  Sound.pass();
+  save(); render(); checkAutoEnd();
+}
 function goOthers(){
-  if (S.players.length === 1 || (isNet() && !othersPending().length)){ endTurn(); return; }
+  if (S.players.length === 1){ endTurn(); return; }
   S.phase = 'others';
-  if (!isNet()) S.view = (S.cur+1) % S.players.length;
+  const human = othersPending().find(i=>!S.players[i].ai);
+  if (human !== undefined) S.view = human;
   save(); render();
 }
-function endTurn(){
-  if (!S.dice) return;
-  advanceTurn();
+function checkAutoEnd(){
+  if (S.phase === 'others' && !othersPending().length) setTimeout(()=>{ if (S && S.phase==='others' && !othersPending().length) endTurn(); }, 450);
 }
-function advanceTurn(){
-  if (isFinished()){ S.over = true; save(); render(); return; }
-  let n = S.cur;
-  for (let k=0; k<S.players.length; k++){ n = (n+1) % S.players.length; if (!S.players[n].gone) break; }
-  S.cur = n; S.view = n;
+function endTurn(){
+  if (!S.dice || S.over) return;
+  if (isFinished()){ S.over = true; S.dismissed = false; save(); render(); Sound.end(); return; }
+  S.cur = (S.cur+1) % S.players.length; S.view = S.cur;
   S.dice = null; S.phase = 'roll'; S.usedColor = null; S.wrote = []; S.done = [];
+  Sound.turn();
   save(); render();
 }
 
-/* ---------- Mode feuille de score ---------- */
+/* ----- Joueur ordinateur ----- */
+// Valeur d'un coup : on préfère les grands nombres, sans « gaspiller » la place
+// dans la partie croissante, et on récompense une colonne complétée.
+// Réglages trouvés en simulant des milliers de parties entre ordinateurs.
+const AI = {v:0.11, T:[7, 8, 9, 24], gap:3.15, over:1.22, under:0.12, dropGap:1.03, drop:0.47, col:0.24, active:1.6, other:0};
+function moveValue(p, r, k, s){
+  const row = p.rows[r];
+  let u = s * AI.v;
+  if (k <= 3){
+    const t = Math.max(AI.T[k], k ? row[k-1] + AI.gap : 0);
+    u -= Math.max(0, s - t) * AI.over + Math.max(0, t - s) * AI.under;
+  } else {
+    const t = row[k-1] - AI.dropGap;
+    u -= Math.max(0, t - s) * AI.drop;
+  }
+  const filled = p.rows.filter((rw,ri)=>ri!==r && rw[k]!==null).length;
+  if (filled === 3){ const col = p.rows.map((rw,ri)=>ri===r ? s : rw[k]).sort((a,b)=>b-a)[2]; u += col * AI.col; }
+  return u;
+}
+function aiBest(pi){
+  let best = null;
+  for (let r=0; r<4; r++){
+    const c = candidate(pi, r); if (!c) continue;
+    const u = moveValue(S.players[pi], r, c.k, c.s);
+    if (!best || u > best.u) best = {r, u};
+  }
+  return best;
+}
+function scheduleAI(){
+  clearTimeout(aiTimer); aiTimer = null;
+  if (screen !== 'game' || !S || S.mode !== 'auto' || S.over || rolling) return;
+  const cur = S.players[S.cur];
+  let fn = null;
+  if (S.phase === 'roll' && cur.ai) fn = ()=>roll();
+  else if (S.phase === 'active' && cur.ai) fn = ()=>{
+    const b = aiBest(S.cur);
+    if (b && b.u > -(cur.pen+1) * AI.active) write(S.cur, b.r); else passActive();
+  };
+  else if (S.phase === 'others'){
+    const i = othersPending().find(i=>S.players[i].ai);
+    if (i !== undefined) fn = ()=>{ const b = aiBest(i); if (b && b.u > AI.other) write(i, b.r); else passOther(i); };
+  }
+  if (fn) aiTimer = setTimeout(()=>{ aiTimer = null; if (S && !S.over && screen === 'game') fn(); }, AI_DELAY);
+}
+
+/* =================== Feuille de score (vrais dés) =================== */
 function sheetCommit(raw){
   if (raw === '' ) { editRow = null; sheetErr=''; render(); return; }
   lastRaw = raw;
@@ -573,18 +540,20 @@ function sheetCommit(raw){
 function sheetWrite(r, s){
   const p = S.players[S.view], row = p.rows[r];
   const k = row.indexOf(null);
-  if (k === -1){ sheetErr = `La ligne ${COLORS[r].name.toLowerCase()} est déjà complète.`; render(); return; }
+  if (k === -1){ sheetErr = `La ligne ${COLORS[r].name.toLowerCase()} est déjà complète.`; Sound.error(); render(); return; }
   if (!Number.isInteger(s) || s < MIN_SUM || s > MAX_SUM){
-    sheetErr = `Le nombre doit être un entier de ${MIN_SUM} à ${MAX_SUM}.`; render(); return;
+    sheetErr = `Le nombre doit être un entier de ${MIN_SUM} à ${MAX_SUM}.`; Sound.error(); render(); return;
   }
   if (!fitsOrder(row, k, s)){
     sheetErr = `Impossible d'écrire ${s} en ${COLORS[r].name.toLowerCase()} : le nombre doit être ${ruleText(row,k)} (${k<=3?'croissant jusqu’à la 4ᵉ case':'décroissant après la barre'}).`;
-    render(); return;
+    Sound.error(); render(); return;
   }
+  const before = completedColumns(p);
   row[k] = s; S.history.push({pi:S.view, r, k});
   editRow = null; sheetErr = '';
   S.msg = `${p.name} : ${s} inscrit en ${COLORS[r].name.toLowerCase()}.`;
-  if (isFinished()) S.over = true;
+  Sound.write(); if (completedColumns(p) > before) Sound.column();
+  if (isFinished()){ S.over = true; S.dismissed = false; Sound.end(); }
   save(); render();
 }
 // Dés réglables à la main : clic = face suivante du dé
@@ -593,7 +562,7 @@ function cycleDie(i){
   const D = S.sheetDice;
   if (i < 0) D.white = D.white % 6 + 1;
   else D.colored[i] = face(i, (D.colored[i].f + 1) % 6);
-  sheetErr=''; save(); render();
+  sheetErr=''; Sound.click(); save(); render();
 }
 function sheetSum(c){
   const D = S.sheetDice, ds = D.colored.filter(d=>d.c===c);
@@ -606,7 +575,7 @@ function sheetUndo(){
   if (h.type === 'pen') p.pen = h.prev; else p.rows[h.r][h.k] = null;
   S.view = h.pi; S.over = false; S.dismissed = false; editRow = null; sheetErr = '';
   S.msg = 'Dernière action annulée.';
-  save(); render();
+  Sound.pass(); save(); render();
 }
 function sheetPenalty(n){
   const p = S.players[S.view];
@@ -614,22 +583,22 @@ function sheetPenalty(n){
   p.pen = p.pen >= n ? n-1 : n;
   S.history.push({type:'pen', pi:S.view, prev});
   S.msg = `${p.name} : ${p.pen} pénalité${p.pen>1?'s':''} (−${penaltyTotal(p.pen)}).`;
-  if (isFinished()) S.over = true;
+  if (p.pen > prev) Sound.penalty(); else Sound.click();
+  if (isFinished()){ S.over = true; S.dismissed = false; Sound.end(); }
   save(); render();
 }
 
-/* ---------- Rendu ---------- */
-function dieHTML(v, colorHex, white, rolling){
-  return `<div class="die ${white?'white':''} ${rolling?'rolling':''}">
+/* =================== Affichage =================== */
+function dieHTML(v, colorHex, white, rollingNow){
+  return `<div class="die ${white?'white':''} ${rollingNow?'rolling':''}">
     <div class="pip" style="${white?'':`background:${colorHex}`}">${v}${v===6&&white?'.':''}</div></div>`;
 }
-function renderDice(rolling){
+function renderDice(rollingNow){
   const el = $('#dice'); if (!el) return;
-  if (!S.dice){ el.innerHTML = `<span class="placeholder">${S.phase==='roll'?'Les dés n’ont pas encore été lancés.':''}</span>`; return; }
-  el.innerHTML = dieHTML(S.dice.white,null,true,rolling) +
-    S.dice.colored.map(d=>dieHTML(d.v, COLORS[d.c].hex, false, rolling)).join('');
+  if (!S.dice){ el.innerHTML = `<span class="placeholder">Les dés n’ont pas encore été lancés.</span>`; return; }
+  el.innerHTML = dieHTML(S.dice.white,null,true,rollingNow) +
+    S.dice.colored.map(d=>dieHTML(d.v, COLORS[d.c].hex, false, rollingNow)).join('');
 }
-
 function sheetHTML(view, cellFn, readonly, extraCls){
   const rowsHTML = view.rows.map((row,r)=>
     `<div class="row" style="background:${COLORS[r].hex}">${row.map((v,k)=>cellFn(row,r,v,k)).join('')}</div>`).join('');
@@ -647,18 +616,13 @@ function sheetHTML(view, cellFn, readonly, extraCls){
       <div class="bottom">${bottomHTML}</div>
     </div>`;
 }
-function viewIndex(){ return isNet() ? localView : S.view; }
-function canRename(i){ return !isNet() || i === myIndex(); }
 function tabsHTML(markCur){
-  const vi = viewIndex(), me = myIndex();
-  return `<div class="tabs">${S.players.map((p,i)=> renaming===i
-    ? `<input class="tab rename" id="renameInput" maxlength="20" aria-label="Nouveau nom">`
-    : `<button class="tab ${i===vi?'active':''} ${markCur&&i===S.cur?'cur':''} ${p.gone?'gone':''}" data-view="${i}" ${canRename(i)?'title="Double-clic pour renommer"':''}>${p.name}${isNet()&&i===me?' (toi)':''}${S.mode!=='sheet'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}
-    ${renaming===null && canRename(vi) ? `<button class="tab pencil" id="renameBtn">✎ Renommer</button>`:''}</div>`;
+  return `<div class="tabs">${S.players.map((p,i)=>
+    `<button class="tab ${i===S.view?'active':''} ${markCur&&i===S.cur?'cur':''} ${p.ai?'ai':''}" data-view="${i}">${p.name}${S.mode==='auto'&&S.dice&&S.wrote.includes(i)?' ✓':''}</button>`).join('')}</div>`;
 }
 function scoresHTML(){
   return `<div class="scores" style="margin-top:14px"><h3>Scores</h3>
-    <table>${S.players.map(p=>`<tr><td>${p.name}${p.gone?' (parti)':''}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
+    <table>${S.players.map(p=>`<tr><td>${p.ai?'🤖 ':''}${p.name}</td><td>${score(p)}</td></tr>`).join('')}</table></div>`;
 }
 function rulesHTML(){
   const common = `
@@ -669,7 +633,8 @@ function rulesHTML(){
   const auto = `
     <li>7 dés : un dé blanc (1 à 6) et six dés de couleur, chacun avec ses 6 faces réelles (chiffre + couleur).</li>
     <li>Le joueur en cours inscrit dans la ligne d'une couleur : <b>dé blanc + tous les dés de cette couleur</b>. S'il n'inscrit rien, il prend une pénalité.</li>
-    <li>Ensuite, chaque autre joueur peut inscrire <b>une</b> des combinaisons restantes (plusieurs joueurs peuvent prendre la même), sans pénalité s'il n'inscrit rien.</li>`;
+    <li>Ensuite, chaque autre joueur peut inscrire <b>une</b> des combinaisons restantes (plusieurs joueurs peuvent prendre la même), sans pénalité s'il n'inscrit rien. Le tour passe tout seul quand tout le monde a choisi.</li>
+    <li>Les joueurs 🤖 sont joués par l'ordinateur.</li>`;
   const sheet = `
     <li>Règle les 7 dés comme tes vrais dés : clic sur un dé = face suivante (blanc de 1 à 6 ; dés de couleur : leurs 6 vraies faces, chiffre et couleur). Les sommes « dé blanc + dés de la couleur » se calculent toutes seules.</li>
     <li>Clique sur « Inscrire » à côté d'une somme, ou sur la case en pointillés d'une ligne pour taper le nombre que tu veux. La feuille refuse un nombre qui ne respecte pas l'ordre.</li>
@@ -677,42 +642,12 @@ function rulesHTML(){
   return `<details class="rules"><summary>Rappel des règles</summary><ul>${S.mode==='sheet'?sheet:auto}${common}</ul></details>`;
 }
 
-function renderNetWaiting(){
-  app.innerHTML = `<div class="setup lobby">
-    <h2>🔗 Partie ${NET.code}</h2>
-    ${netNotice ? `<div class="notice">${netNotice}</div>` : '<p class="msg">Recherche de la partie…</p>'}
-    <button class="btn light" id="leaveNet">Quitter</button></div>`;
-  $('#leaveNet').onclick = ()=>{ leaveNet(); screen='menu'; render(); };
-}
-function renderLobby(){
-  const host = NET && NET.role === 'host', me = myIndex();
-  app.innerHTML = `<div class="setup lobby">
-    <h2>📡 Salle d'attente</h2>
-    ${netNotice ? `<div class="notice">${netNotice}</div>` : ''}
-    <div class="msg">Code de la partie</div>
-    <div class="netcode">${S.code}</div>
-    <p class="msg">Les autres joueurs ouvrent cette même page Qwantum, choisissent « Réseau – rejoindre » et tapent ce code.</p>
-    <h3>Joueurs (${S.players.length}/${MAX_PLAYERS})</h3>
-    <ul>${S.players.map((p,i)=>`<li><span>${p.name}${i===me?' (toi)':''}</span><span>${i===0?'hôte':''}</span></li>`).join('')}</ul>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn light" id="leaveNet">Quitter</button>
-      ${host ? `<button class="btn" id="startNet">Lancer la partie</button>` : '<span class="msg" style="align-self:center">En attente du lancement par l’hôte…</span>'}
-    </div></div>`;
-  $('#leaveNet').onclick = ()=>{ leaveNet(); screen='menu'; render(); };
-  const st = $('#startNet');
-  if (st) st.onclick = ()=>{ S.phase = 'roll'; S.cur = 0; S.msg = ''; save(); render(); };
-}
-
 function renderAuto(){
-  if (S.phase === 'lobby'){ renderLobby(); return; }
-  const net = isNet(), me = myIndex();
-  if (net && lastCurSeen !== S.cur){ lastCurSeen = S.cur; localView = me >= 0 ? me : S.cur; }
-  if (localView >= S.players.length) localView = 0;
-  const vi = viewIndex();
-  const cur = S.players[S.cur], view = S.players[vi];
-  const mine = i => !net || i === me;
-
-  const canPlayView = mine(vi) && ((vi === S.cur && S.phase === 'active') ||
+  if (S.view >= S.players.length) S.view = 0;
+  const cur = S.players[S.cur], view = S.players[S.view];
+  const vi = S.view;
+  const humanCan = i => !S.players[i].ai;
+  const canPlayView = humanCan(vi) && ((vi === S.cur && S.phase === 'active') ||
                       (vi !== S.cur && S.phase === 'others' && !S.wrote.includes(vi) && !S.done.includes(vi)));
 
   const sums = COLORS.map((c,i)=>{
@@ -730,79 +665,70 @@ function renderAuto(){
   };
   const anyCand = cands.some(Boolean);
   const pending = S.phase === 'others' ? othersPending() : [];
+  const pendingHumans = pending.filter(humanCan);
+  const thinking = n => `<span class="thinking">🤖 ${n} réfléchit…</span>`;
 
   // Boutons
-  let rollOk = S.phase === 'roll' && !S.over && mine(S.cur);
-  let endLabel = 'Tour suivant ▶', endCls = '', endOk = false, endAct = 'next';
+  const rollOk = S.phase === 'roll' && !S.over && !cur.ai && !rolling;
+  let endLabel = 'Tour suivant ▶', endCls = '', endOk = false, endAct = ()=>endTurn();
   if (S.phase === 'active'){
-    endLabel = `Ne rien inscrire (pénalité −${Math.min(5,cur.pen+1)})`; endCls = 'danger'; endAct = 'pass';
-    endOk = mine(S.cur) && !S.over;
+    endLabel = `✕ Ne rien inscrire (−${Math.min(5,cur.pen+1)})`; endCls = 'danger'; endAct = ()=>passActive();
+    endOk = !cur.ai && !S.over;
   } else if (S.phase === 'others'){
-    if (!net) endOk = !S.over;
-    else if (me === S.cur){ endOk = !S.over; endLabel = pending.length ? 'Tour suivant ▶ (sans attendre)' : 'Tour suivant ▶'; }
-    else if (pending.includes(me)){ endOk = true; endLabel = 'Je n’inscris rien ce tour-ci'; endAct = 'pass'; endCls = 'light'; }
+    endOk = !S.over && pendingHumans.length > 0;
+    endLabel = 'Tour suivant ▶';
   }
+  const showPass = S.phase === 'others' && vi !== S.cur && pendingHumans.includes(vi);
 
   // Message d'aide
   let hint = S.msg ? S.msg + ' ' : '';
   const names = ids => ids.map(i=>S.players[i].name).join(', ');
-  if (!net){
-    if (S.phase === 'roll') hint += `${cur.name}, lance les dés.`;
-    else if (S.phase === 'active'){
-      hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
-            : anyCand ? 'Clique sur une case en pointillés pour inscrire la somme.'
-            : 'Aucune case possible : tu dois prendre une pénalité.';
-    } else if (S.phase === 'others'){
-      hint += `Les autres joueurs peuvent inscrire une combinaison restante (sans pénalité s'ils ne le font pas). `;
-      if (S.view === S.cur) hint += 'Choisis un autre joueur dans les onglets.';
-      else if (S.wrote.includes(S.view)) hint += `${view.name} a déjà inscrit ce tour-ci.`;
-      else if (!anyCand) hint += `Aucune case possible pour ${view.name}.`;
-      else hint += `${view.name} : clique sur une case en pointillés.`;
-      if (!pending.length) hint += ' Tout le monde a joué : passe au tour suivant.';
-    }
-  } else {
-    const myCands = me >= 0 ? [0,1,2,3].some(r=>candidate(me, r)) : false;
-    if (S.phase === 'roll') hint += me === S.cur ? 'À toi : lance les dés !' : `${cur.name} va lancer les dés…`;
-    else if (S.phase === 'active'){
-      hint += me === S.cur ? (myCands ? 'Clique sur une case en pointillés de ta feuille pour inscrire la somme.' : 'Aucune case possible : tu dois prendre une pénalité.')
-                           : `${cur.name} choisit sa combinaison…`;
-    } else if (S.phase === 'others'){
-      if (me === S.cur) hint += `Les autres joueurs choisissent : ${names(pending) || 'personne'}.`;
-      else if (pending.includes(me)) hint += myCands ? 'Tu peux inscrire une combinaison restante sur ta feuille, ou ne rien inscrire.'
-                                                     : 'Aucune case possible pour toi : clique sur « Je n’inscris rien ».';
-      else hint += pending.length ? `En attente de : ${names(pending)}.` : '';
-    }
-    if (me >= 0 && vi !== me && canPlayView === false && (S.phase !== 'roll')) hint += ' (Tu regardes la feuille d’un autre joueur.)';
+  if (S.over) hint = 'Partie terminée.';
+  else if (S.phase === 'roll') hint += cur.ai ? thinking(cur.name).replace('réfléchit…','lance les dés…') : `${cur.name}, lance les dés !`;
+  else if (S.phase === 'active'){
+    if (cur.ai) hint += thinking(cur.name);
+    else hint += S.view !== S.cur ? `Retourne sur la feuille de ${cur.name} pour jouer.`
+              : anyCand ? `${cur.name} : clique sur une case en pointillés pour inscrire la somme.`
+              : `Aucune case possible pour ${cur.name} : il faut prendre une pénalité.`;
+  } else if (S.phase === 'others'){
+    hint += 'Les autres joueurs peuvent inscrire une combinaison restante. ';
+    if (showPass) hint += anyCand ? `${view.name} : clique sur une case en pointillés, ou sur « ${view.name} n’inscrit rien ».`
+                                  : `Aucune case possible pour ${view.name}.`;
+    else if (pendingHumans.length) hint += `À choisir : ${names(pendingHumans)} (onglets au-dessus de la feuille).`;
+    const aiPending = pending.filter(i=>S.players[i].ai);
+    if (aiPending.length) hint += ' ' + thinking(S.players[aiPending[0]].name);
   }
 
-  const rolling = S.dice && S.rollN !== shownRoll; shownRoll = S.rollN;
-  const hideModal = net ? netModalHidden : S.dismissed;
-  const title = net ? `Partie ${S.code}<span class="netbadge">réseau</span>` : (S.players.length === 1 ? 'Partie solo' : `Tour de ${cur.name}`);
+  const rollingNow = S.dice && S.rollN !== renderAuto.shownRoll; renderAuto.shownRoll = S.rollN;
 
   app.innerHTML = `
+  <div class="actionbar">
+    <div class="abtop">
+      <div class="abtitle">${S.players.length === 1 ? 'Partie solo' : `Tour de <b>${cur.ai?'🤖 ':''}${cur.name}</b>`}</div>
+      <div class="dice small" id="dice"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="rollBtn" ${rollOk?'':'disabled'}>🎲 Lancer les dés</button>
+      ${showPass ? `<button class="btn light" id="passBtn">✕ ${view.name} n’inscrit rien</button>` : ''}
+      ${S.phase === 'others' && (!endOk || (showPass && pendingHumans.length === 1)) ? '' : `<button class="btn ${endCls}" id="endBtn" ${endOk?'':'disabled'}>${endLabel}</button>`}
+    </div>
+    <div class="msg">${hint}</div>
+  </div>
   <div class="game">
-    <section>${netNotice?`<div class="notice">${netNotice}</div>`:''}${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
+    <section>${tabsHTML(true)}${sheetHTML(view, cellFn, !canPlayView)}${rulesHTML()}</section>
     <aside class="panel">
-      <h3>${title}</h3>
-      ${net ? `<div class="msg">Tour de <b>${cur.name}</b>${S.cur===me?' (toi)':''}</div>` : ''}
-      <div class="dice" id="dice"></div>
+      <h3>Sommes par couleur</h3>
       <div class="sums">${sums}</div>
-      <div class="turnbox">
-        <button class="btn" id="rollBtn" ${rollOk?'':'disabled'}>🎲 Lancer les dés</button>
-        <button class="btn ${endCls}" id="endBtn" ${endOk?'':'disabled'}>${endLabel}</button>
-        <div class="msg">${hint}</div>
-      </div>
       ${scoresHTML()}
-      ${net ? `<div style="margin-top:12px"><button class="btn light" id="leaveNet">Quitter la partie</button></div>` : ''}
     </aside>
   </div>
-  ${S.over && !hideModal ? endModal() : ''}`;
+  ${S.over && !S.dismissed ? endModal() : ''}`;
 
-  renderDice(rolling);
-  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>act({t:'write', r:+el.dataset.write}));
-  $('#rollBtn').onclick = ()=>act({t:'roll'});
-  $('#endBtn').onclick = ()=>act({t:endAct});
-  const ln = $('#leaveNet'); if (ln) ln.onclick = ()=>{ leaveNet(); screen='menu'; render(); };
+  renderDice(rollingNow);
+  document.querySelectorAll('[data-write]').forEach(el=>el.onclick=()=>write(S.view, +el.dataset.write));
+  $('#rollBtn').onclick = ()=>roll();
+  const eb = $('#endBtn'); if (eb) eb.onclick = endAct;
+  const pb = $('#passBtn'); if (pb) pb.onclick = ()=>passOther(S.view);
 }
 
 function renderSheet(){
@@ -870,77 +796,53 @@ function renderSheet(){
     inp.onblur = ()=>{ setTimeout(()=>{ if ($('#cellInput')===inp) sheetCommit(inp.value.trim()); }, 120); };
   }
   $('#undoBtn').onclick = sheetUndo;
-  $('#finishBtn').onclick = ()=>{ S.over = true; save(); render(); };
+  $('#finishBtn').onclick = ()=>{ S.over = true; S.dismissed = false; Sound.end(); save(); render(); };
 }
 
 function render(){
-  if (screen === 'setup'){ renderSetup(); return; }
-  if (screen === 'game' && !S && NET && NET.role === 'guest'){ renderNetWaiting(); return; }
-  if (screen === 'menu' || !S){ screen='menu'; renderMenu(); return; }
+  $('#soundBtn').textContent = Sound.isOn() ? '🔊' : '🔇';
+  if (screen === 'setup' || !S){ screen = 'setup'; clearTimeout(aiTimer); renderSetup(); return; }
   if (S.mode === 'sheet') renderSheet(); else renderAuto();
-  if (S.phase === 'lobby') return;
   document.querySelectorAll('[data-view]').forEach(el=>{
-    el.onclick=()=>{
-      const i = +el.dataset.view;
-      if (isNet()) localView = i; else { S.view = i; S.msg=''; }
-      editRow=null; sheetErr=''; render();
-    };
-    el.ondblclick=()=>{ const i = +el.dataset.view; if (!canRename(i)) return; if (isNet()) localView = i; else S.view = i; startRename(); };
+    el.onclick=()=>{ S.view = +el.dataset.view; if (S.mode==='sheet') S.msg=''; editRow=null; sheetErr=''; render(); };
   });
-  const rb = $('#renameBtn'); if (rb) rb.onclick = startRename;
-  const ri = $('#renameInput');
-  if (ri){
-    const i = renaming; ri.value = S.players[i].name; ri.focus(); ri.select();
-    const done = ok => {
-      if (renaming!==i) return;
-      renaming = null;
-      if (ok){
-        const nm = cleanName(ri.value, i);
-        if (isNet() && NET.role === 'guest'){ NET.room.presence({name:nm}).catch(()=>{}); rememberName(nm); }
-        else { S.players[i].name = nm; if (isNet()) rememberName(nm); save(); }
-      }
-      render();
-    };
-    ri.onkeydown = e=>{ if (e.key==='Enter'){ e.preventDefault(); done(true); } else if (e.key==='Escape') done(false); };
-    ri.onblur = ()=>done(true);
-  }
   const again = $('#again');
-  if (again) again.onclick = ()=>{
-    if (isNet()){            // l'hôte relance avec les mêmes joueurs
-      S.players = S.players.filter(p=>!p.gone);
-      S.players.forEach(p=>{ p.rows = emptyRows(); p.pen = 0; });
-      Object.assign(S, {cur:0, dice:null, phase:'roll', usedColor:null, wrote:[], done:[], over:false, msg:'Nouvelle partie !'});
-      save(); render(); return;
-    }
-    setupMode = S.mode === 'sheet' ? 'sheet' : (S.players.length === 1 ? 'solo' : 'local');
-    S = null; save(); screen = 'setup'; render();
+  if (again) again.onclick = ()=>{   // même joueurs, nouvelle partie
+    newGame(S.mode, S.players.map(p=>({name:p.name, ai:p.ai}))); save(); Sound.turn(); render();
   };
-  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ if (isNet()) leaveNet(); else { S=null; save(); } screen='menu'; render(); };
-  const look = $('#look'); if (look) look.onclick = ()=>{ if (isNet()) netModalHidden = true; else { S.dismissed = true; save(); } render(); };
+  const toMenu = $('#toMenu'); if (toMenu) toMenu.onclick = ()=>{ screen='setup'; setupPlayers = null; render(); };
+  const look = $('#look'); if (look) look.onclick = ()=>{ S.dismissed = true; save(); render(); };
+  scheduleAI();
 }
-function startRename(){ editRow=null; sheetErr=''; renaming = viewIndex(); render(); }
 function endModal(){
   const ranked = [...S.players].sort((a,b)=>score(b)-score(a));
-  const canAgain = !isNet() || (NET && NET.role === 'host');
   return `<div class="overlay"><div class="modal">
     <h2>🏆 Fin de partie</h2>
-    <ol>${ranked.map(p=>`<li><b>${p.name}</b> — ${score(p)} points</li>`).join('')}</ol>
+    <ol>${ranked.map(p=>`<li><b>${p.ai?'🤖 ':''}${p.name}</b> — ${score(p)} points</li>`).join('')}</ol>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="btn light" id="look">Voir les feuilles</button>
-      <button class="btn light" id="toMenu">${isNet()?'Quitter':'Menu'}</button>
-      ${canAgain ? `<button class="btn" id="again">Rejouer</button>` : ''}
+      <button class="btn light" id="toMenu">Nouvelle partie</button>
+      <button class="btn" id="again">Rejouer</button>
     </div>
-    ${isNet() && !canAgain ? '<p class="msg">L’hôte peut relancer une partie avec les mêmes joueurs.</p>' : ''}
   </div></div>`;
 }
 
-$('#menuBtn').onclick = ()=>{ editRow=null; sheetErr=''; renaming=null; screen='menu'; render(); };
+$('#newBtn').onclick = ()=>{ Sound.unlock(); editRow=null; sheetErr=''; setupPlayers = null; screen='setup'; render(); };
+$('#soundBtn').onclick = ()=>{ Sound.unlock(); Sound.toggle(); render(); };
 S = load();
-if (S && (!S.phase || !S.mode || S.mode === 'net')){ S = null; } // sauvegarde incompatible ou partie réseau
-if (S){ if (!S.history) S.history = []; if (!S.done) S.done = []; }
-screen = 'menu';
+if (S && (!S.phase || !S.mode || S.mode === 'net' || !Array.isArray(S.players))) S = null;   // ancienne sauvegarde
+if (S){
+  if (!S.history) S.history = []; if (!S.done) S.done = [];
+  S.players.forEach(p=>{ p.ai = !!p.ai; });
+  if (S.mode === 'auto' && S.phase === 'roll' && S.dice === undefined) S.dice = null;
+}
+screen = 'setup';
 render();
-getRoom();   // prépare la connexion réseau en arrière-plan
 </script>
 </body>
 </html>
+  
+
+
+
+
