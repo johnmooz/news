@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cache tes noisettes</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<liAnk href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f6efe2; --bois:#8a5a35; --bois-fonce:#5b3a21; --orange:#e8781e; --orange-f:#b85a10;
@@ -17,8 +17,10 @@
     background:radial-gradient(circle at 15% 10%,#fbe3c2 0,transparent 40%),radial-gradient(circle at 85% 90%,#e7d6b8 0,transparent 45%),var(--bg);
     display:flex; flex-direction:column; align-items:center; padding:24px 14px 40px;
   }
-  h1{margin:0 0 18px; font-size:clamp(34px,7vw,56px); color:var(--bois-fonce); letter-spacing:1px; display:flex; align-items:center; gap:10px; text-align:center}
+  header{width:min(760px,100%); display:flex; align-items:center; justify-content:center; position:relative; margin-bottom:18px}
+  h1{margin:0; font-size:clamp(30px,7vw,56px); color:var(--bois-fonce); letter-spacing:1px; display:flex; align-items:center; gap:10px; text-align:center}
   h1 svg{width:1em; height:1em; flex:none}
+  .son{position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:22px; padding:8px 12px; background:var(--carte); box-shadow:0 3px 0 #cdb894}
   .carte{background:var(--carte); border-radius:18px; padding:20px; box-shadow:0 6px 18px rgba(60,35,15,.12); width:min(760px,100%)}
   .carte h2{margin:0 0 12px; font-size:20px; color:var(--bois-fonce)}
   button{font-family:inherit; font-size:17px; font-weight:600; border:none; border-radius:14px; padding:12px 22px; cursor:pointer; transition:transform .1s}
@@ -28,47 +30,30 @@
   .b-creme{background:var(--carte); color:var(--bois-fonce); box-shadow:0 4px 0 #cdb894}
   .b-noisette{background:var(--noisette); color:#fff; box-shadow:0 4px 0 #6a3c17}
   .b-lien{background:none; color:var(--bois-fonce); text-decoration:underline; font-size:14px; padding:6px}
-  input[type=text]{font-family:inherit; font-size:16px; padding:10px 12px; border-radius:10px; border:2px solid #e2d2b5; background:#fff; color:#000; width:100%}
-  input[type=text]::placeholder{color:#7a6a58}
-  input[type=text]:focus{outline:none; border-color:var(--orange)}
-  label{font-weight:600; display:block; margin-bottom:6px}
-  .erreur{background:#fbe1dd; color:var(--rouge); border-radius:10px; padding:10px 12px; margin-top:12px; font-weight:600}
+  label, .label{font-weight:600; display:block; margin-bottom:8px}
 
-  /* Accueil */
-  .modes{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px}
-  .mode{display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 12px; background:#f3e9d6; color:var(--encre); box-shadow:0 4px 0 #d9c6a4; border:3px solid transparent}
-  .mode span{font-size:30px}
-  .mode small{font-weight:400; font-size:13px; opacity:.75}
-  .mode.actif{border-color:var(--orange); background:#fde7c8}
-  .panneau{margin-top:16px; display:grid; gap:12px}
-  .ligne{display:flex; gap:10px; flex-wrap:wrap; align-items:end}
-  .ligne > div{flex:1 1 200px}
-  .regles{font-size:14px; line-height:1.5; margin-top:16px; padding-top:12px; border-top:1px dashed #d9c6a4}
-  .regles ul{margin:6px 0 0; padding-left:20px}
-
-  /* Configuration solo */
-  .nb{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px}
-  .nb button{width:48px; padding:10px 0}
+  /* Configuration */
+  .nb{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 20px}
+  .nb button{width:50px; padding:10px 0}
   .nb button.actif{background:var(--orange); color:#fff; box-shadow:0 4px 0 var(--orange-f)}
-  .noms{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin:0 0 20px}
-
-  /* Salon réseau */
-  .code{font-size:clamp(34px,8vw,52px); font-weight:700; letter-spacing:6px; color:var(--orange); text-align:center; background:#fde7c8; border-radius:14px; padding:6px 10px; margin:6px 0 14px}
-  .liste{list-style:none; padding:0; margin:0 0 16px; display:flex; flex-direction:column; gap:6px}
-  .liste li{background:#f3e9d6; border-radius:10px; padding:8px 12px; display:flex; gap:8px; align-items:center}
-  .tag{font-size:12px; font-weight:600; background:var(--noisette); color:#fff; border-radius:8px; padding:1px 8px}
-  .tag.toi{background:var(--orange)}
-  .attente{opacity:.75; font-style:italic}
+  .joueurs-config{display:flex; flex-direction:column; gap:10px; margin:0 0 20px}
+  .ligne-joueur{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#f3e9d6; border-radius:12px; padding:10px 12px}
+  .ligne-joueur .num{font-weight:700; color:var(--noisette); width:22px}
+  .ligne-joueur input{flex:1 1 180px; font-family:inherit; font-size:16px; padding:10px 12px; border-radius:10px; border:2px solid #e2d2b5; background:#fff; color:#000; min-width:0}
+  .ligne-joueur input::placeholder{color:#7a6a58}
+  .ligne-joueur input:focus{outline:none; border-color:var(--orange)}
+  .bascule{display:flex; background:#e6d7bd; border-radius:12px; padding:3px}
+  .bascule button{font-size:15px; padding:8px 12px; border-radius:10px; background:transparent; color:var(--bois-fonce); box-shadow:none}
+  .bascule button.actif{background:var(--carte); box-shadow:0 2px 4px rgba(0,0,0,.15)}
+  .regles{font-size:14px; line-height:1.5; margin-top:18px; padding-top:12px; border-top:1px dashed #d9c6a4}
+  .regles ul{margin:6px 0 0; padding-left:20px}
 
   /* Jeu */
   #jeu{width:min(760px,100%); flex-direction:column; align-items:center; gap:18px; display:flex}
-  .bandeau{background:var(--bois-fonce); color:#f3e7d2; border-radius:12px; padding:6px 14px; font-size:14px}
-  .bandeau b{color:#ffd29a}
   .scores{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%}
   .joueur{background:var(--carte); border-radius:14px; padding:10px 16px; min-width:120px; text-align:center; border:3px solid transparent; box-shadow:0 4px 10px rgba(60,35,15,.1)}
   .joueur.actif{border-color:var(--orange); transform:translateY(-3px)}
-  .joueur.parti{opacity:.45}
-  .joueur .nom{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px}
+  .joueur .nom{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px}
   .joueur .pts{font-size:26px; font-weight:700; color:var(--noisette)}
   .plateau{background:linear-gradient(#3f6b33,#335a29); border:10px solid var(--bois); border-radius:24px; box-shadow:0 12px 30px rgba(60,35,15,.3),inset 0 0 40px rgba(0,0,0,.25); padding:22px 18px; width:100%}
   .tour{color:#f3e7d2; text-align:center; font-size:18px; margin-bottom:16px}
@@ -91,42 +76,33 @@
   .collecte{display:flex; justify-content:center; align-items:center; gap:8px; color:#f3e7d2; font-size:17px; margin-top:22px}
   .collecte b{font-size:26px; color:#ffd29a}
   .boutons{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:16px}
+  .ordi{text-align:center; color:#ffd29a; margin-top:12px; font-weight:600}
+  .ordi span{display:inline-block; animation:pense 1s infinite}
+  @keyframes pense{50%{opacity:.3}}
   .info{text-align:center; margin-top:14px; min-height:24px; font-size:15px; color:#f3e7d2}
   .info.alerte{background:rgba(184,55,43,.9); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600}
   .info.succes{background:rgba(154,91,42,.95); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600}
-  .attente-tour{text-align:center; color:#ffd29a; margin-top:10px; font-weight:600}
   .journal{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; max-height:260px; overflow:auto; font-size:15px}
   .journal li{padding:8px 10px; border-radius:10px; background:#f3e9d6}
   .journal .zero{color:var(--rouge)}
+  .attente{opacity:.7; font-style:italic}
+  @media (max-width:520px){ .son{position:static; transform:none; margin-left:10px} header{justify-content:center} }
 </style>
 </head>
 <body>
-  <h1><span id="logo"></span>Cache tes noisettes</h1>
+  <header>
+    <h1><span id="logo"></span>Cache tes noisettes</h1>
+    <button class="son" id="btnSon" title="Activer / couper le son" aria-label="Activer ou couper le son">🔊</button>
+  </header>
 
-  <!-- ACCUEIL : choix du mode -->
-  <div class="carte" id="accueil">
-    <h2>Choisis un mode de jeu</h2>
-    <div class="modes">
-      <button class="mode" id="mSolo"><span>🐿️</span>Solo<small>Sur cet écran, 1 à 6 joueurs</small></button>
-      <button class="mode" id="mHote"><span>📡</span>Réseau (hôte)<small>Crée une partie et donne le code</small></button>
-      <button class="mode" id="mRejoindre"><span>🔗</span>Réseau (rejoindre)<small>Entre le code de l'hôte</small></button>
-    </div>
-
-    <div class="panneau" id="panHote" hidden>
-      <div class="ligne">
-        <div><label for="nomHote">Ton nom</label><input type="text" id="nomHote" maxlength="20" placeholder="Ton nom"></div>
-        <button class="b-orange" id="btnCreer">Créer la partie</button>
-      </div>
-    </div>
-    <div class="panneau" id="panRejoindre" hidden>
-      <div class="ligne">
-        <div><label for="nomInvite">Ton nom</label><input type="text" id="nomInvite" maxlength="20" placeholder="Ton nom"></div>
-        <div><label for="codeInvite">Code de la partie</label><input type="text" id="codeInvite" maxlength="8" placeholder="ex. K7PM" style="text-transform:uppercase"></div>
-        <button class="b-orange" id="btnRejoindre">Rejoindre</button>
-      </div>
-    </div>
-    <div class="erreur" id="erreurAccueil" hidden></div>
-
+  <!-- CONFIGURATION -->
+  <div class="carte" id="config">
+    <h2>Nouvelle partie</h2>
+    <span class="label">Nombre de joueurs</span>
+    <div class="nb" id="choixNb"></div>
+    <span class="label">Joueurs</span>
+    <div class="joueurs-config" id="joueursConfig"></div>
+    <button class="b-orange" id="btnCommencer">Commencer la partie</button>
     <div class="regles">
       <b>Règles</b>
       <ul>
@@ -140,39 +116,8 @@
     </div>
   </div>
 
-  <!-- CONFIGURATION SOLO -->
-  <div class="carte" id="config" hidden>
-    <h2>Partie solo</h2>
-    <label>Nombre de joueurs</label>
-    <div class="nb" id="choixNb"></div>
-    <label>Noms des joueurs</label>
-    <div class="noms" id="noms"></div>
-    <div class="ligne">
-      <button class="b-orange" id="btnCommencer">Commencer la partie</button>
-      <button class="b-lien" id="btnRetourConfig">← Retour</button>
-    </div>
-  </div>
-
-  <!-- SALON RÉSEAU -->
-  <div class="carte" id="salon" hidden>
-    <h2 id="salonTitre">Salon</h2>
-    <div id="salonCodeBloc">
-      <div>Code de la partie à donner aux autres joueurs :</div>
-      <div class="code" id="salonCode"></div>
-    </div>
-    <label>Joueurs connectés</label>
-    <ul class="liste" id="salonListe"></ul>
-    <div class="ligne">
-      <button class="b-orange" id="btnLancerPartie" hidden>Lancer la partie</button>
-      <span class="attente" id="salonAttente"></span>
-    </div>
-    <div class="erreur" id="erreurSalon" hidden></div>
-    <div style="margin-top:12px"><button class="b-lien" id="btnQuitterSalon">← Quitter le salon</button></div>
-  </div>
-
   <!-- JEU -->
   <div id="jeu" hidden>
-    <div class="bandeau" id="bandeau" hidden></div>
     <div class="scores" id="scores"></div>
     <div class="plateau">
       <div class="tour" id="tour"></div>
@@ -185,14 +130,14 @@
         <button class="b-noisette" id="btnCacher">🌰 Cacher ses noisettes</button>
         <button class="b-creme" id="btnSuivant">Joueur suivant ➜</button>
       </div>
-      <div class="attente-tour" id="attenteTour" hidden></div>
+      <div class="ordi" id="ordi" hidden></div>
       <div class="info" id="info"></div>
     </div>
     <div class="carte">
       <h2>Journal</h2>
       <ul class="journal" id="journal"></ul>
     </div>
-    <button class="b-lien" id="btnQuitter">Quitter la partie</button>
+    <button class="b-lien" id="btnNouvelle">Nouvelle partie</button>
   </div>
 
 <script>
@@ -231,262 +176,174 @@
     </svg>`
   };
   const FACES = ["ecureuil","ecureuil","ecureuil","noisette","noisette","corbeau"];
-  const FACES_OK = new Set(["ecureuil","noisette","corbeau"]);
   const NB_DES = 5;
   const $ = id => document.getElementById(id);
-  const svgFace = f => FACES_OK.has(f) ? SVG[f] : SVG.ecureuil;
   const echapper = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const pluriel = (n, s, p) => n>1 ? p : s;
+  const pl = (n, s, p) => n>1 ? p : s;
   $("logo").innerHTML = SVG.noisette;
 
-  /* =================== Écrans =================== */
-  const ECRANS = ["accueil","config","salon","jeu"];
-  function ecran(nom){ ECRANS.forEach(e => $(e).hidden = (e !== nom)); }
-
-  /* =================== Réseau (capacité "room") =================== */
-  const ROOM = (async () => {
-    try{ if(!window.claude || typeof window.claude.use !== "function") return null; return await window.claude.use("room"); }
-    catch(e){ return null; }
-  })();
-
-  let mode = null;        // "solo" | "hote" | "invite"
-  let salle = null;       // salle nommée
-  let code = "";
-  let monPeer = null;
-  let hotePeer = null;
-  let desabonnements = [];
-  let minuterieEtat = null;
-  let minuterieHote = null;
-
-  function genCode(){
-    const a = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    return Array.from({length:4},()=>a[Math.floor(Math.random()*a.length)]).join("");
-  }
-
-  async function ouvrirSalle(c){
-    const room = await ROOM;
-    if(!room) throw new Error("indisponible");
-    return room.join("cache-" + c.toLowerCase());
-  }
-
-  function erreurAccueil(t){ const e=$("erreurAccueil"); e.textContent=t; e.hidden=!t; }
-  function erreurSalon(t){ const e=$("erreurSalon"); e.textContent=t; e.hidden=!t; }
-  const MSG_INDISPO = "Le mode réseau ne marche que dans la page publiée sur claude.ai, ouverte par des personnes connectées qui ont accès à la page. Il n'est pas disponible ici.";
-
-  function brancherSalle(){
-    desabonnements.push(salle.onPeers(ch => {
-      const moi = ch.peers.find(p => p.sameTab);
-      if(moi) monPeer = moi.peer;
-      if(mode === "hote"){
-        if(S && S.phase === "jeu"){
-          ch.left.forEach(p => joueurParti(p.peer));
-          if(ch.joined.length) diffuser();
-        }
-      } else if(mode === "invite"){
-        if(!hotePeer){
-          const h = ch.peers.find(p => !p.isMe && p.presence && p.presence.role === "hote");
-          if(h) hotePeer = h.peer;
-        }
-        if(hotePeer && ch.left.some(p => p.peer === hotePeer)) hoteParti();
-      }
-      if(!S || S.phase !== "jeu") rendreSalon();
-    }, err => erreurReseau(err)));
-
-    desabonnements.push(salle.on("etat", m => {
-      if(mode !== "invite") return;
-      if(hotePeer && m.peer !== hotePeer) return;
-      const d = m.data;
-      if(!d || typeof d !== "object" || !Array.isArray(d.joueurs) || !Array.isArray(d.des)) return;
-      hotePeer = m.peer;
-      S = d;
-      if(S.phase === "jeu"){ ecran("jeu"); rendu(); }
-    }, err => erreurReseau(err)));
-
-    desabonnements.push(salle.on("action", m => {
-      if(mode !== "hote" || !S || S.phase !== "jeu") return;
-      const j = S.joueurs[S.actif];
-      if(!j || j.peer !== m.peer) return;          // seul le joueur dont c'est le tour peut agir
-      const d = m.data || {};
-      appliquer(String(d.type || ""), Number(d.i));
-    }, err => erreurReseau(err)));
-  }
-
-  function erreurReseau(err){
-    const t = "La connexion réseau a été interrompue" + (err && err.code ? ` (${err.code})` : "") + ".";
-    if(!$("salon").hidden) erreurSalon(t);
-    else if(!$("jeu").hidden){ $("bandeau").hidden=false; $("bandeau").textContent = t; }
-  }
-
-  async function quitterReseau(){
-    desabonnements.forEach(f => { try{ f(); }catch(e){} });
-    desabonnements = [];
-    clearInterval(minuterieEtat); clearTimeout(minuterieHote);
-    if(salle){ try{ await salle.leave(); }catch(e){} }
-    salle = null; hotePeer = null; code = "";
-  }
-
-  async function heberger(){
-    erreurAccueil("");
-    const nom = $("nomHote").value.trim() || "Hôte";
-    $("btnCreer").disabled = true;
+  /* =================== Sons (générés, aucun fichier) =================== */
+  let sonActif = true;
+  try{ sonActif = localStorage.getItem("noisettes-son") !== "off"; }catch(e){}
+  let ctx = null;
+  function audio(){
+    if(!sonActif) return null;
     try{
-      code = genCode();
-      salle = await ouvrirSalle(code);
-    }catch(e){
-      $("btnCreer").disabled = false;
-      erreurAccueil(e.message === "indisponible" ? MSG_INDISPO : `Impossible de créer la partie (${e.code || e.message}).`);
-      return;
+      if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if(ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }catch(e){ return null; }
+  }
+  function note(freq, debut, duree, type="sine", vol=.18, glisse=null){
+    const a = audio(); if(!a) return;
+    const t = a.currentTime + debut;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if(glisse) o.frequency.exponentialRampToValueAtTime(glisse, t + duree);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + duree + 0.02);
+  }
+  function claquement(debut, vol=.25){
+    const a = audio(); if(!a) return;
+    const t = a.currentTime + debut, n = Math.floor(a.sampleRate * .03);
+    const buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/n, 3);
+    const s = a.createBufferSource(); s.buffer = buf;
+    const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800 + Math.random()*1500;
+    const g = a.createGain(); g.gain.value = vol;
+    s.connect(f).connect(g).connect(a.destination); s.start(t);
+  }
+  const SONS = {
+    lancer(){ for(let i=0;i<9;i++) claquement(i*0.045 + Math.random()*0.02, .18 + Math.random()*.15); },
+    clic(){ note(660, 0, .07, "triangle", .12); },
+    cacher(n){ const gamme=[523,659,784,1047,1319]; for(let i=0;i<Math.min(Math.max(n,1),5);i++) note(gamme[i], i*.09, .25, "triangle", .16); },
+    corbeaux(){ note(420, 0, .18, "sawtooth", .12, 260); note(400, .22, .22, "sawtooth", .12, 220); },
+    ecureuils(){ note(500, 0, .5, "square", .08, 140); },
+    tout(){ note(392, 0, .12, "triangle", .14); note(523, .1, .12, "triangle", .14); note(784, .2, .2, "triangle", .14); },
+    tour(){ note(880, 0, .12, "sine", .1); }
+  };
+  function jouerSon(nom, arg){ try{ SONS[nom] && SONS[nom](arg); }catch(e){} }
+  function majBoutonSon(){ $("btnSon").textContent = sonActif ? "🔊" : "🔇"; }
+  $("btnSon").onclick = () => {
+    sonActif = !sonActif;
+    try{ localStorage.setItem("noisettes-son", sonActif ? "on" : "off"); }catch(e){}
+    majBoutonSon(); if(sonActif) jouerSon("clic");
+  };
+  majBoutonSon();
+
+  /* =================== Configuration =================== */
+  let nbJoueurs = 2;
+  let config = [];   // {nom, ordi}
+  function lireConfig(){
+    [...$("joueursConfig").querySelectorAll("input")].forEach((inp,i)=> { if(config[i]) config[i].nom = inp.value; });
+  }
+  function afficherConfig(){
+    while(config.length < 6) config.push({nom:"", ordi: config.length > 0});
+    $("choixNb").innerHTML = "";
+    for(let n=1;n<=6;n++){
+      const b = document.createElement("button");
+      b.className = "b-creme" + (n===nbJoueurs ? " actif" : "");
+      b.textContent = n;
+      b.onclick = () => { lireConfig(); nbJoueurs = n; afficherConfig(); jouerSon("clic"); };
+      $("choixNb").appendChild(b);
     }
-    $("btnCreer").disabled = false;
-    mode = "hote"; S = null;
-    brancherSalle();
-    salle.presence({nom, role:"hote"}).catch(()=>{});
-    minuterieEtat = setInterval(() => { if(S && S.phase==="jeu") diffuser(); }, 3000);
-    ecran("salon"); erreurSalon(""); rendreSalon();
-  }
-
-  async function rejoindre(){
-    erreurAccueil("");
-    const nom = $("nomInvite").value.trim() || "Invité";
-    const c = $("codeInvite").value.trim().toUpperCase();
-    if(!/^[A-Z0-9]{3,8}$/.test(c)){ erreurAccueil("Entre le code donné par l'hôte (lettres et chiffres)."); return; }
-    $("btnRejoindre").disabled = true;
-    try{ salle = await ouvrirSalle(c); }
-    catch(e){
-      $("btnRejoindre").disabled = false;
-      erreurAccueil(e.message === "indisponible" ? MSG_INDISPO : `Impossible de rejoindre la partie (${e.code || e.message}).`);
-      return;
+    const zone = $("joueursConfig");
+    zone.innerHTML = "";
+    for(let i=0;i<nbJoueurs;i++){
+      const c = config[i];
+      const ligne = document.createElement("div");
+      ligne.className = "ligne-joueur";
+      ligne.innerHTML = `<span class="num">${i+1}</span>
+        <input type="text" maxlength="20" aria-label="Nom du joueur ${i+1}">
+        <div class="bascule" role="group" aria-label="Type du joueur ${i+1}">
+          <button type="button" data-t="joueur" class="${c.ordi?"":"actif"}">🙂 Joueur</button>
+          <button type="button" data-t="ordi" class="${c.ordi?"actif":""}">🤖 Ordinateur</button>
+        </div>`;
+      const inp = ligne.querySelector("input");
+      inp.value = c.nom;
+      inp.placeholder = c.ordi ? `Ordi ${i+1}` : `Joueur ${i+1}`;
+      ligne.querySelectorAll(".bascule button").forEach(b => b.onclick = () => {
+        lireConfig(); c.ordi = b.dataset.t === "ordi"; afficherConfig(); jouerSon("clic");
+      });
+      zone.appendChild(ligne);
     }
-    $("btnRejoindre").disabled = false;
-    code = c; mode = "invite"; S = null; hotePeer = null;
-    brancherSalle();
-    salle.presence({nom, role:"invite"}).catch(()=>{});
-    ecran("salon"); erreurSalon(""); rendreSalon();
-    minuterieHote = setTimeout(() => {
-      if(mode === "invite" && !hotePeer) erreurSalon(`Aucun hôte trouvé pour le code ${c}. Vérifie le code avec l'hôte.`);
-    }, 6000);
   }
 
-  function joueursSalon(){
-    if(!salle) return [];
-    const ps = salle.peers().filter(p => p.kind === "viewer" && p.presence && typeof p.presence.nom === "string");
-    // l'hôte d'abord
-    return ps.slice().sort((a,b) => (b.presence.role==="hote") - (a.presence.role==="hote"));
-  }
+  /* =================== Jeu =================== */
+  let S = null;
+  let minuterie = null;
 
-  function rendreSalon(){
-    if(mode !== "hote" && mode !== "invite") return;
-    const liste = joueursSalon();
-    $("salonTitre").textContent = mode === "hote" ? "Ta partie réseau" : "Salon de la partie";
-    $("salonCode").textContent = code;
-    $("salonListe").innerHTML = liste.length ? liste.map(p =>
-      `<li>${p.presence.role==="hote"?"📡":"🐿️"} ${echapper(p.presence.nom.slice(0,20))}
-        ${p.presence.role==="hote"?'<span class="tag">hôte</span>':""}
-        ${p.sameTab?'<span class="tag toi">toi</span>':""}</li>`).join("")
-      : `<li class="attente">Connexion…</li>`;
-    if(liste.some(p => p.presence.role === "hote" && !p.isMe)) erreurSalon("");
-    const assez = liste.length >= 2;
-    $("btnLancerPartie").hidden = mode !== "hote";
-    $("btnLancerPartie").disabled = !assez;
-    $("salonAttente").textContent = mode === "hote"
-      ? (assez ? (liste.length > 6 ? "Seuls les 6 premiers joueurs joueront." : "") : "En attente d'au moins un autre joueur…")
-      : "En attente que l'hôte lance la partie…";
-  }
-
-  function lancerPartieReseau(){
-    const liste = joueursSalon().slice(0,6);
-    if(liste.length < 2) return;
-    nouvellePartie(liste.map(p => ({nom:p.presence.nom.trim().slice(0,20) || "Joueur", score:0, peer:p.peer, parti:false})));
-  }
-
-  function hoteParti(){
-    if(S && S.phase === "jeu"){ $("bandeau").hidden=false; $("bandeau").textContent = "L'hôte a quitté la partie. La partie est terminée."; desactiverTout(); }
-    else erreurSalon("L'hôte a quitté le salon.");
-  }
-
-  function joueurParti(peer){
-    const idx = S.joueurs.findIndex(j => j.peer === peer);
-    if(idx < 0 || S.joueurs[idx].parti) return;
-    S.joueurs[idx].parti = true;
-    if(idx === S.actif){
-      const n = prochain();
-      if(n !== null){ S.actif = n; debutTour(`${S.joueurs[idx].nom} est parti. À ${S.joueurs[n].nom} de jouer !`); }
-    }
-    diffuser(); rendu();
-  }
-
-  function diffuser(){
-    if(mode === "hote" && salle && S) salle.emit("etat", S).catch(e => {
-      if(e && e.code === "not_permitted") erreurReseau(e);
-    });
-  }
-
-  /* =================== État et règles du jeu =================== */
-  let S = null;   // état complet de la partie
-  let dernierLancerVu = -1;
-
-  function nouvellePartie(joueurs){
-    S = {phase:"jeu", joueurs, actif:0, des:[], etat:"debut", numLancer:0, reserve:0, idLancer:0, anim:[], msg:{t:"",s:""}, journal:[]};
+  function nouvellePartie(){
+    lireConfig();
+    const joueurs = config.slice(0, nbJoueurs).map((c,i) => ({
+      nom: c.nom.trim().slice(0,20) || (c.ordi ? `Ordi ${i+1}` : `Joueur ${i+1}`),
+      ordi: c.ordi, score: 0
+    }));
+    S = {joueurs, actif:0, des:[], etat:"debut", numLancer:0, reserve:0, anim:[], msg:{t:"",s:""}, journal:[]};
+    $("config").hidden = true; $("jeu").hidden = false;
     debutTour();
-    ecran("jeu");
-    diffuser(); rendu();
-  }
-
-  function debutTour(texte){
-    S.des = Array.from({length:NB_DES},()=>({face:null, bloque:false, relance:false}));
-    S.etat = "debut"; S.numLancer = 0; S.reserve = 0; S.anim = [];
-    msg(texte || `À ${S.joueurs[S.actif].nom} de jouer : lance les 5 dés !`);
   }
 
   const msg = (t, s="") => { S.msg = {t, s}; };
   const visibles = () => S.des.filter(d=>d.face==="noisette").length;
   const noisettes = () => S.reserve + visibles();
   const tousJoues = () => S.des.every(d=>d.face && d.face!=="ecureuil");
+  const joueurActif = () => S.joueurs[S.actif];
 
-  function prochain(){
-    const n = S.joueurs.length;
-    for(let k=1;k<=n;k++){ const i=(S.actif+k)%n; if(!S.joueurs[i].parti) return i; }
-    return null;
+  function debutTour(){
+    S.des = Array.from({length:NB_DES},()=>({face:null, bloque:false, relance:false}));
+    S.etat = "debut"; S.numLancer = 0; S.reserve = 0; S.anim = [];
+    const j = joueurActif();
+    msg(j.ordi ? `${j.nom} (ordinateur) va jouer.` : `À ${j.nom} de jouer : lance les 5 dés !`);
+    rendu();
+    planifierOrdi(900);
   }
 
   function lancer(indices){
     indices.forEach(i => { S.des[i].face = FACES[Math.floor(Math.random()*6)]; S.des[i].relance = false; });
-    S.numLancer++; S.idLancer++; S.anim = indices;
+    S.numLancer++; S.anim = indices;
+    jouerSon("lancer");
     const tires = indices.map(i=>S.des[i].face);
     indices.forEach(i => { if(S.des[i].face==="corbeau") S.des[i].bloque = true; });
-    const nom = S.joueurs[S.actif].nom;
+    const nom = joueurActif().nom;
     if(tires.every(f=>f==="corbeau")){
+      setTimeout(()=>jouerSon("corbeaux"), 450);
       finTour(0, `Que des corbeaux ! ${nom} termine son tour avec 0 point.`, "alerte");
     } else if(tires.every(f=>f==="ecureuil")){
+      setTimeout(()=>jouerSon("ecureuils"), 450);
       finTour(0, `Que des écureuils ! ${nom} perd toutes les noisettes de ce tour.`, "alerte");
     } else {
       S.etat = "choix";
       S.des.forEach(d => { if(!d.bloque && d.face==="ecureuil") d.relance = true; });
       const n = noisettes();
-      if(tousJoues()) msg(`Tous les dés sont joués ! ${n} ${pluriel(n,"noisette","noisettes")} ce tour. Cache-les, continue ta collecte ou relance tous les dés.`, "succes");
-      else msg(`${n} ${pluriel(n,"noisette","noisettes")} ce tour. Cache-les, ou sélectionne les dés à relancer et continue ta collecte.`);
+      if(tousJoues()){
+        setTimeout(()=>jouerSon("tout"), 450);
+        msg(`Tous les dés sont joués ! ${n} ${pl(n,"noisette","noisettes")} ce tour. Cache-les, continue la collecte ou relance tous les dés.`, "succes");
+      } else msg(`${n} ${pl(n,"noisette","noisettes")} ce tour. Cache-les, ou sélectionne les dés à relancer et continue la collecte.`);
     }
   }
 
   function finTour(points, texte, style){
-    S.joueurs[S.actif].score += points;
+    joueurActif().score += points;
     S.etat = "fin";
     S.des.forEach(d=>d.relance=false);
-    S.journal.unshift({nom:S.joueurs[S.actif].nom, pts:points, n:S.numLancer});
-    S.journal = S.journal.slice(0,10);
+    S.journal.unshift({nom:joueurActif().nom, ordi:joueurActif().ordi, pts:points, n:S.numLancer});
     msg(texte, style);
   }
 
-  // Applique une action (solo, ou hôte pour tout le monde)
+  // Une action, qu'elle vienne d'un humain ou de l'ordinateur
   function appliquer(type, i){
-    if(!S || S.phase !== "jeu") return;
     S.anim = [];
     if(type === "lancer" && S.etat === "debut"){
       lancer(S.des.map((_,k)=>k));
-    } else if(type === "basculer" && S.etat === "choix" && Number.isInteger(i) && S.des[i] && !S.des[i].bloque){
+    } else if(type === "basculer" && S.etat === "choix" && S.des[i] && !S.des[i].bloque){
       S.des[i].relance = !S.des[i].relance;
+      jouerSon("clic");
       const n = S.des.filter(x=>x.relance).length;
-      msg(n ? `${n} ${pluriel(n,"dé sélectionné","dés sélectionnés")} pour la relance.` : "Aucun dé sélectionné : choisis au moins un dé pour continuer la collecte.");
+      msg(n ? `${n} ${pl(n,"dé sélectionné","dés sélectionnés")} pour la relance.` : "Aucun dé sélectionné : choisis au moins un dé pour continuer la collecte.");
     } else if(type === "continuer" && S.etat === "choix" && S.des.some(d=>d.relance)){
       lancer(S.des.map((d,k)=>d.relance?k:-1).filter(k=>k>=0));
     } else if(type === "tout" && S.etat === "choix" && tousJoues()){
@@ -495,49 +352,68 @@
       lancer(S.des.map((_,k)=>k));
     } else if(type === "cacher" && S.etat === "choix" && noisettes() > 0){
       const p = noisettes();
-      finTour(p, `${S.joueurs[S.actif].nom} cache ${p} ${pluriel(p,"noisette","noisettes")} : +${p} ${pluriel(p,"point","points")} !`, "succes");
+      jouerSon("cacher", p);
+      finTour(p, `${joueurActif().nom} cache ${p} ${pl(p,"noisette","noisettes")} : +${p} ${pl(p,"point","points")} !`, "succes");
     } else if(type === "suivant" && S.etat === "fin"){
-      const n = prochain(); if(n === null) return;
-      S.actif = n; debutTour();
+      S.actif = (S.actif + 1) % S.joueurs.length;
+      jouerSon("tour");
+      debutTour();
+      return;
     } else return;
-    diffuser(); rendu();
+    rendu();
+    planifierOrdi(1300);
   }
 
-  function peutJouer(){
-    if(!S || S.phase !== "jeu") return false;
-    if(mode === "solo") return true;
-    const j = S.joueurs[S.actif];
-    return !!j && !!monPeer && j.peer === monPeer && !$("bandeau").textContent.startsWith("L'hôte a quitté");
-  }
-
-  // Un clic du joueur : en invité on envoie l'action à l'hôte
+  // Clic d'un humain : ignoré pendant le tour de l'ordinateur
   function agir(type, i){
-    if(!peutJouer()) return;
-    if(mode === "invite"){
-      salle.emit("action", {type, i}).catch(e => erreurReseau(e));
-    } else appliquer(type, i);
+    if(!S || joueurActif().ordi) return;
+    appliquer(type, i);
   }
 
-  /* =================== Affichage du jeu =================== */
-  function desactiverTout(){ ["btnLancer","btnContinuer","btnTout","btnCacher","btnSuivant"].forEach(b => $(b).disabled = true); }
+  /* =================== Ordinateur =================== */
+  // Probabilité de tout perdre en relançant k dés (que des corbeaux ou que des écureuils)
+  const risque = k => Math.pow(1/6, k) + Math.pow(1/2, k);
 
+  function decisionOrdi(){
+    if(S.etat === "debut") return {type:"lancer"};
+    if(S.etat === "fin") return {type:"suivant"};
+    const n = noisettes();
+    if(tousJoues()){
+      // Relancer les 5 dés est peu risqué (~3 %) : il le fait tant que le butin reste modeste
+      return n < 8 ? {type:"tout"} : {type:"cacher"};
+    }
+    const k = S.des.filter(d => !d.bloque && d.face === "ecureuil").length;
+    const p = risque(k);
+    const gain = (k/3) * (1 - p);              // noisettes espérées
+    const perte = p * n;                       // noisettes qu'il risque de perdre
+    const audace = 0.85 + Math.random()*0.3;   // un peu d'imprévu
+    if(n === 0 || gain * audace > perte) return {type:"continuer", relancer:"ecureuils"};
+    return {type:"cacher"};
+  }
+
+  function planifierOrdi(delai){
+    clearTimeout(minuterie);
+    if(!S || !joueurActif().ordi) { $("ordi").hidden = true; return; }
+    $("ordi").hidden = false;
+    $("ordi").innerHTML = `🤖 ${echapper(joueurActif().nom)} réfléchit<span>…</span>`;
+    minuterie = setTimeout(() => {
+      if(!S || !joueurActif().ordi) return;
+      const d = decisionOrdi();
+      if(d.type === "continuer"){
+        // il ne relance que ses écureuils
+        S.des.forEach(x => { x.relance = !x.bloque && x.face === "ecureuil"; });
+      }
+      appliquer(d.type);
+    }, delai);
+  }
+
+  /* =================== Affichage =================== */
   function rendu(){
-    if(!S || S.phase !== "jeu") return;
-    const reseau = mode === "hote" || mode === "invite";
-    const monTour = peutJouer();
-    const actif = S.joueurs[S.actif] || {nom:"?"};
-
-    if(reseau && !$("bandeau").textContent.startsWith("L'hôte a quitté")){
-      $("bandeau").hidden = false;
-      $("bandeau").innerHTML = `Partie réseau · code <b>${echapper(code)}</b> · ${mode==="hote"?"tu es l'hôte":"invité"}`;
-    } else if(!reseau) $("bandeau").hidden = true;
-
-    $("scores").innerHTML = S.joueurs.map((j,i)=>`<div class="joueur ${i===S.actif?"actif":""} ${j.parti?"parti":""}">
-      <div class="nom">${echapper(j.nom)}${reseau && j.peer===monPeer?" (toi)":""}</div><div class="pts">${Number(j.score)||0}</div></div>`).join("");
-    $("tour").innerHTML = `Tour de <b>${echapper(actif.nom)}</b>${S.numLancer?` — lancer n°${Number(S.numLancer)}`:""}`;
-
-    const animer = S.idLancer !== dernierLancerVu ? (S.anim || []) : [];
-    dernierLancerVu = S.idLancer;
+    const j = joueurActif();
+    const humain = !j.ordi;
+    $("scores").innerHTML = S.joueurs.map((x,i)=>`<div class="joueur ${i===S.actif?"actif":""}">
+      <div class="nom">${x.ordi?"🤖 ":""}${echapper(x.nom)}</div><div class="pts">${x.score}</div></div>`).join("");
+    $("tour").innerHTML = `Tour de <b>${j.ordi?"🤖 ":""}${echapper(j.nom)}</b>${S.numLancer?` — lancer n°${S.numLancer}`:""}`;
 
     $("des").innerHTML = "";
     S.des.forEach((d,i)=>{
@@ -546,14 +422,14 @@
       if(!d.face) cls += " vide";
       else if(d.bloque){ cls += " bloque"; badge = "bloqué"; }
       else if(S.etat==="choix"){
-        if(monTour) cls += " cliquable";
+        if(humain) cls += " cliquable";
         if(d.relance){ cls += " relance"; badge = "à relancer"; }
         else if(d.face==="noisette"){ cls += " garde"; badge = "gardée"; }
       }
-      if(animer.includes(i)) cls += " roule";
+      if(S.anim.includes(i)) cls += " roule";
       el.className = cls;
-      el.innerHTML = svgFace(d.face) + (badge?`<span class="badge">${badge}</span>`:"");
-      if(S.etat==="choix" && !d.bloque && monTour){
+      el.innerHTML = SVG[d.face || "ecureuil"] + (badge?`<span class="badge">${badge}</span>`:"");
+      if(S.etat==="choix" && !d.bloque && humain){
         el.setAttribute("role","button"); el.tabIndex = 0;
         el.onclick = () => agir("basculer", i);
         el.onkeydown = e => { if(e.key==="Enter"||e.key===" "){ e.preventDefault(); agir("basculer", i); } };
@@ -567,85 +443,34 @@
     $("btnCacher").hidden    = S.etat!=="choix";
     $("btnTout").hidden      = !(S.etat==="choix" && tousJoues());
     $("btnSuivant").hidden   = S.etat!=="fin";
-    $("btnLancer").disabled  = !monTour;
-    $("btnTout").disabled    = !monTour;
-    $("btnSuivant").disabled = !monTour;
-    $("btnContinuer").disabled = !monTour || !S.des.some(d=>d.relance);
-    $("btnCacher").disabled    = !monTour || noisettes()===0;
-
-    const at = $("attenteTour");
-    at.hidden = !reseau || monTour;
-    at.textContent = S.joueurs.some(j => j.peer === monPeer) ? `En attente de ${actif.nom}…` : `Tu regardes la partie. Tour de ${actif.nom}.`;
-    if(reseau && monTour && S.etat === "debut") at.hidden = false, at.textContent = "C'est ton tour !";
+    $("btnLancer").disabled  = !humain;
+    $("btnTout").disabled    = !humain;
+    $("btnSuivant").disabled = !humain;
+    $("btnContinuer").disabled = !humain || !S.des.some(d=>d.relance);
+    $("btnCacher").disabled    = !humain || noisettes()===0;
 
     const info = $("info");
-    info.textContent = (S.msg && S.msg.t) || "";
-    info.className = "info " + (S.msg && (S.msg.s==="alerte"||S.msg.s==="succes") ? S.msg.s : "");
+    info.textContent = S.msg.t;
+    info.className = "info " + S.msg.s;
 
     $("journal").innerHTML = S.journal.length ? S.journal.map(h =>
-      `<li><b>${echapper(h.nom)}</b> : ${h.pts ? `+${Number(h.pts)} ${pluriel(h.pts,"point","points")}` : `<span class="zero">0 point</span>`} (${Number(h.n)} ${pluriel(h.n,"lancer","lancers")})</li>`).join("")
+      `<li><b>${h.ordi?"🤖 ":""}${echapper(h.nom)}</b> : ${h.pts ? `+${h.pts} ${pl(h.pts,"point","points")}` : `<span class="zero">0 point</span>`} (${h.n} ${pl(h.n,"lancer","lancers")})</li>`).join("")
       : `<li class="attente">Aucun tour joué pour l'instant.</li>`;
   }
 
-  /* =================== Mode solo : configuration =================== */
-  let nbJoueurs = 1;
-  let nomsSaisis = [];
-  function afficherConfig(){
-    $("choixNb").innerHTML = "";
-    for(let n=1;n<=6;n++){
-      const b = document.createElement("button");
-      b.className = "b-creme" + (n===nbJoueurs ? " actif" : "");
-      b.textContent = n;
-      b.onclick = () => { memoriserNoms(); nbJoueurs = n; afficherConfig(); };
-      $("choixNb").appendChild(b);
-    }
-    $("noms").innerHTML = "";
-    for(let i=0;i<nbJoueurs;i++){
-      const inp = document.createElement("input");
-      inp.type = "text"; inp.placeholder = `Joueur ${i+1}`; inp.value = nomsSaisis[i] || ""; inp.maxLength = 20;
-      $("noms").appendChild(inp);
-    }
-  }
-  function memoriserNoms(){ [...$("noms").querySelectorAll("input")].forEach((inp,i)=> nomsSaisis[i] = inp.value); }
-
   /* =================== Boutons =================== */
-  function choisirMode(m){
-    ["mSolo","mHote","mRejoindre"].forEach(id => $(id).classList.remove("actif"));
-    $("panHote").hidden = m !== "hote";
-    $("panRejoindre").hidden = m !== "invite";
-    erreurAccueil("");
-    if(m === "solo"){ ecran("config"); afficherConfig(); }
-    if(m === "hote"){ $("mHote").classList.add("actif"); $("nomHote").focus(); }
-    if(m === "invite"){ $("mRejoindre").classList.add("actif"); $("nomInvite").focus(); }
-  }
-  $("mSolo").onclick = () => choisirMode("solo");
-  $("mHote").onclick = () => choisirMode("hote");
-  $("mRejoindre").onclick = () => choisirMode("invite");
-  $("btnCreer").onclick = heberger;
-  $("btnRejoindre").onclick = rejoindre;
-  $("codeInvite").onkeydown = e => { if(e.key==="Enter") rejoindre(); };
-  $("btnRetourConfig").onclick = () => ecran("accueil");
-
-  $("btnCommencer").onclick = () => {
-    memoriserNoms();
-    mode = "solo";
-    nouvellePartie(Array.from({length:nbJoueurs},(_,i)=>({nom:(nomsSaisis[i]||"").trim().slice(0,20) || `Joueur ${i+1}`, score:0, peer:null, parti:false})));
-  };
-  $("btnLancerPartie").onclick = lancerPartieReseau;
-  $("btnQuitterSalon").onclick = async () => { await quitterReseau(); mode=null; S=null; ecran("accueil"); };
-
+  $("btnCommencer").onclick = () => { jouerSon("tour"); nouvellePartie(); };
   $("btnLancer").onclick    = () => agir("lancer");
   $("btnContinuer").onclick = () => agir("continuer");
   $("btnTout").onclick      = () => agir("tout");
   $("btnCacher").onclick    = () => agir("cacher");
   $("btnSuivant").onclick   = () => agir("suivant");
-  $("btnQuitter").onclick   = async () => {
-    await quitterReseau();
-    mode = null; S = null; $("bandeau").textContent = ""; $("bandeau").hidden = true;
-    ecran("accueil");
+  $("btnNouvelle").onclick  = () => {
+    clearTimeout(minuterie); S = null;
+    $("jeu").hidden = true; $("config").hidden = false; afficherConfig();
   };
 
-  ecran("accueil");
+  afficherConfig();
 </script>
 </body>
 </html>
