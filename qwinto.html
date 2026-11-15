@@ -1,377 +1,795 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Qwinto – Feuille de score</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qwinto</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#fff;--fg:#222;--panel:#eee;--line:#888;--cell:#fff;--o:#e8622c;--y:#f2d62a;--p:#5b3a8c}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1f;--fg:#eee;--panel:#2b2b31;--line:#aaa;--cell:#fff}}
-:root[data-theme="dark"]{--bg:#1b1b1f;--fg:#eee;--panel:#2b2b31;--line:#aaa;--cell:#fff}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;padding:12px}
-h1{font-size:22px;margin:0 0 10px}
-h1 span{color:var(--o)}
-.sheet{overflow-x:auto;padding-bottom:6px}
-.grid{width:max-content}
-.row{display:flex;gap:2px;padding:4px;margin-bottom:8px;border-radius:4px;width:max-content}
-.row.o{background:var(--o);margin-left:calc(var(--w)*2)}
-.row.y{background:var(--y);margin-left:var(--w)}
-.row.p{background:var(--p)}
-.row.o,.row.y,.row.p{--w:38px}
-.sh{width:36px;height:36px}
-.row.o .sh{background:var(--o)}.row.y .sh{background:var(--y)}.row.p .sh{background:var(--p)}
-.c{width:36px;height:36px;border:2px solid #444;background:var(--cell);color:#111;text-align:center;font:600 15px system-ui;border-radius:50%;padding:0;-moz-appearance:textfield}
-.c::-webkit-outer-spin-button,.c::-webkit-inner-spin-button{-webkit-appearance:none}
-.c.pent{border-radius:0;border:0;clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);background:#cfcfcf;width:36px}
-.c.bad{background:#f66;animation:s .3s}
-@keyframes s{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-.fails{display:flex;align-items:center;gap:6px;margin:6px 0 12px;font-weight:600;font-size:14px}
-.f{width:38px;height:38px;border:2px solid var(--line);border-radius:6px;background:var(--cell);color:#c00;font:700 22px system-ui;cursor:pointer}
-.final{background:var(--panel);border-radius:6px;padding:10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-weight:700}
-.final small{width:100%;font-size:13px;opacity:.8}
-.b{min-width:40px;height:40px;border:2px solid var(--line);border-radius:6px;background:var(--cell);color:#111;display:flex;align-items:center;justify-content:center;font-size:18px}
-.b.o{border-color:var(--o)}.b.y{border-color:var(--y)}.b.p{border-color:var(--p)}
-.d{width:40px;height:40px;background:var(--line);clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);display:flex;align-items:center;justify-content:center}
-.d i{width:36px;height:36px;background:var(--cell);color:#111;font:700 16px system-ui;font-style:normal;clip-path:inherit;display:flex;align-items:center;justify-content:center;padding-top:4px}
-.tot{min-width:70px;font-size:22px}
-#msg{min-height:20px;font-size:13px;color:#d33;margin:2px 0 6px}
-button.r{margin-top:10px;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;font-weight:600}
-select{padding:6px 8px;border-radius:6px;font-size:15px}
-#tabs{display:flex;flex-wrap:wrap;gap:6px}
-.tab{padding:7px 12px;border-radius:6px;border:2px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;font-weight:600}
-.tab.on{background:var(--o);border-color:var(--o);color:#fff}
-#dice{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;font-weight:600}
-.dw{position:relative}
-.die{width:46px;height:46px;border-radius:9px;border:2px solid rgba(0,0,0,.35);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;cursor:pointer}
-.die.s{width:40px;height:40px;padding:5px}
-.pip{border-radius:50%;margin:1px}.pip.on{background:currentColor}
-.z{grid-area:1/1/4/4;display:flex;align-items:center;justify-content:center;font:700 18px system-ui}
-.pick{position:absolute;top:100%;left:0;z-index:5;display:flex;flex-wrap:wrap;gap:4px;width:196px;padding:6px;margin-top:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
-#start{text-align:center;padding:24px 0}
-#start p{margin:0 0 14px;font-weight:600}
-.mode{display:block;width:100%;max-width:340px;margin:10px auto;padding:14px;border-radius:10px;border:2px solid var(--line);background:var(--panel);color:var(--fg);font:700 17px system-ui;cursor:pointer}
-.mode small{display:block;font-weight:400;font-size:13px;margin-top:4px;opacity:.8}
-#game[hidden],#start[hidden],#auto[hidden],#over[hidden],#netp[hidden],#hostui[hidden],#joinui[hidden]{display:none}
-#auto{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;padding:10px;background:var(--panel);border-radius:8px;font-weight:600}
-#auto button,.menu{padding:9px 14px;border-radius:6px;border:2px solid var(--line);background:var(--cell);color:#111;font-weight:700;cursor:pointer}
-#auto button:disabled{opacity:.4;cursor:default}
-#over{margin:12px 0;padding:12px;border-radius:8px;border:2px solid var(--o);background:var(--panel);font-weight:600;line-height:1.6}
-#netp{max-width:520px}
-#netp h2{font-size:18px;margin:12px 0 4px}
-#netp p{margin:10px 0 4px;font-weight:600}
-#netp textarea{display:block;width:100%;height:96px;margin-bottom:6px;font:11px/1.3 monospace;word-break:break-all;border-radius:6px;padding:6px}
-#netst{min-height:20px;font-size:14px;font-weight:600;color:var(--o)}
+    :root {
+        --bg: #020617;
+        --card: rgba(30, 41, 59, 0.7);
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #6366f1;
+        --o: #f97316; --y: #eab308; --p: #a855f7;
+        --cell: min(46px, calc((100vw - 64px) / 12));
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    button:disabled { cursor: default; }
+    #app { max-width: 860px; margin: 0 auto; padding: 12px 16px 40px; }
+
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .top .right { display: flex; gap: 8px; }
+    .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+    .back:hover { color: var(--text); }
+    .icon-btn {
+        background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+        padding: 6px 12px; font-size: 14px;
+    }
+    .icon-btn:hover { border-color: rgba(99,102,241,.5); }
+
+    .card {
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+        padding: 20px; backdrop-filter: blur(12px);
+    }
+    .title {
+        margin: 0; font-size: 40px; font-weight: 800; letter-spacing: -0.02em;
+        background: linear-gradient(90deg, var(--o), var(--y), var(--p));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .sub { margin: 4px 0 18px; color: var(--muted); font-size: 14px; }
+    h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 22px 0 10px; }
+
+    /* ---------- Menu de démarrage ---------- */
+    .count { display: flex; gap: 8px; flex-wrap: wrap; }
+    .count button {
+        width: 48px; height: 48px; border-radius: 12px; font-size: 18px; font-weight: 700;
+        background: #0f172a; border: 1px solid #334155;
+    }
+    .count button.on { background: var(--accent); border-color: var(--accent); }
+    .plist { display: flex; flex-direction: column; gap: 10px; }
+    .prow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
+        width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+        background: #1e293b; font-size: 13px; font-weight: 700; color: var(--muted); flex: none;
+    }
+    .prow input {
+        flex: 1 1 160px; min-width: 0; padding: 10px 12px; border-radius: 10px; font: inherit;
+        background: #0f172a; border: 1px solid #334155; color: var(--text);
+    }
+    .prow input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .seg { display: flex; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 3px; }
+    .seg button { background: none; border: 0; border-radius: 8px; padding: 7px 12px; font-size: 14px; color: var(--muted); }
+    .seg button.on { background: #334155; color: var(--text); }
+    .primary {
+        background: var(--accent); border: 0; border-radius: 12px; padding: 12px 22px;
+        font-weight: 700; color: #fff; transition: filter .15s, transform .1s;
+    }
+    .primary:hover:not(:disabled) { filter: brightness(1.1); }
+    .primary:active:not(:disabled) { transform: scale(.98); }
+    .primary:disabled { opacity: .4; }
+    .secondary {
+        background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 12px 18px; font-weight: 600;
+    }
+    .secondary:hover:not(:disabled) { border-color: #64748b; }
+    .secondary:disabled { opacity: .4; }
+    .danger { border-color: rgba(239,68,68,.5); color: #fca5a5; }
+    .big { width: 100%; margin-top: 24px; font-size: 17px; padding: 14px; }
+    .rules { margin-top: 18px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .rules summary { cursor: pointer; color: var(--text); }
+    .rules ul { padding-left: 20px; }
+
+    /* ---------- Joueurs ---------- */
+    .players { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .pbtn {
+        flex: 1 1 130px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+        background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; text-align: left;
+        transition: border-color .2s;
+    }
+    .pbtn .line { display: flex; width: 100%; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .pname { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pscore { font-weight: 800; font-variant-numeric: tabular-nums; }
+    .pmeta { font-size: 12px; color: var(--muted); }
+    .pmeta .x { color: #f87171; }
+    .pbtn.view { border-color: #64748b; background: rgba(51,65,85,.6); }
+    .pbtn.dec { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+    /* ---------- Dés ---------- */
+    .table { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .dice { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .die {
+        width: 68px; height: 68px; border-radius: 16px; border: 0; padding: 10px;
+        display: grid; place-items: center; position: relative;
+        transition: transform .15s, opacity .2s, outline-color .2s;
+        outline: 3px solid transparent; outline-offset: 4px;
+        box-shadow: inset 0 -4px 0 rgba(0,0,0,.25);
+    }
+    .die.o { background: var(--o); } .die.y { background: var(--y); } .die.p { background: var(--p); }
+    .die.ring { outline-color: #fff; }
+    .die.dim { opacity: .25; }
+    .die:not(:disabled):hover { transform: translateY(-2px); }
+    .die .q { font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,.9); }
+    .pips { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 100%; height: 100%; }
+    .pips i { width: 10px; height: 10px; border-radius: 50%; place-self: center; }
+    .pips i.on { background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.3); }
+    .die.shake { animation: shake .14s infinite; }
+    @keyframes shake { 0% { transform: rotate(-8deg); } 50% { transform: rotate(8deg) translateY(-3px); } 100% { transform: rotate(-8deg); } }
+    .sum { font-size: 40px; font-weight: 800; min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
+    .msg { text-align: center; font-size: 15px; min-height: 22px; }
+    .msg b { color: #fff; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .log { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; min-height: 20px; }
+
+    /* ---------- Feuille ---------- */
+    .sheet-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+    .sheet-title h3 { margin: 0; font-size: 16px; }
+    .sheet-wrap { overflow-x: auto; }
+    .grid { display: grid; grid-template-columns: repeat(12, var(--cell)); gap: 4px; justify-content: center; }
+    .slot { height: var(--cell); }
+    .cell {
+        height: var(--cell); border-radius: 8px; display: grid; place-items: center;
+        font-weight: 800; font-size: calc(var(--cell) * .42); font-variant-numeric: tabular-nums;
+        border: 2px solid; position: relative;
+    }
+    .cell.o { border-color: var(--o); background: color-mix(in srgb, var(--o) 14%, #0f172a); }
+    .cell.y { border-color: var(--y); background: color-mix(in srgb, var(--y) 14%, #0f172a); }
+    .cell.p { border-color: var(--p); background: color-mix(in srgb, var(--p) 14%, #0f172a); }
+    .cell.filled.o { background: color-mix(in srgb, var(--o) 60%, #0f172a); }
+    .cell.filled.y { background: color-mix(in srgb, var(--y) 60%, #0f172a); }
+    .cell.filled.p { background: color-mix(in srgb, var(--p) 60%, #0f172a); }
+    .cell.penta { border: 0; border-radius: 0; clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); }
+    .cell.penta.o { background: color-mix(in srgb, var(--o) 40%, #0f172a); }
+    .cell.penta.y { background: color-mix(in srgb, var(--y) 40%, #0f172a); }
+    .cell.penta.p { background: color-mix(in srgb, var(--p) 40%, #0f172a); }
+    .cell.penta.filled.o { background: var(--o); } .cell.penta.filled.y { background: var(--y); } .cell.penta.filled.p { background: var(--p); }
+    .cell.valid { cursor: pointer; animation: pulse .8s infinite alternate; }
+    .cell.valid .ghost { opacity: 0; color: #fff; transition: opacity .1s; }
+    .cell.valid:hover .ghost, .cell.valid:focus .ghost { opacity: .8; }
+    .cell.valid:focus { outline: none; }
+    @keyframes pulse { from { filter: brightness(1); } to { filter: brightness(1.9); } }
+    .cell.just { animation: pop .35s ease-out; }
+    @keyframes pop { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+
+    .under { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .misses { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+    .misses span.box {
+        width: 26px; height: 26px; border-radius: 6px; border: 2px solid #475569; display: grid; place-items: center;
+        color: #f87171; font-weight: 800;
+    }
+    .breakdown { font-size: 13px; color: var(--muted); }
+    .breakdown b { color: var(--text); }
+
+    /* ---------- Fin de partie ---------- */
+    .overlay {
+        position: fixed; inset: 0; background: rgba(2,6,23,.8); backdrop-filter: blur(4px);
+        display: grid; place-items: center; padding: 16px; z-index: 10;
+    }
+    .end { max-width: 560px; width: 100%; text-align: center; }
+    .end h2 { font-size: 26px; text-transform: none; letter-spacing: 0; color: var(--text); margin: 0 0 4px; }
+    .end table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .end th { color: var(--muted); font-weight: 600; font-size: 12px; padding: 6px 4px; }
+    .end td { padding: 8px 4px; border-top: 1px solid var(--line); }
+    .end td.name { text-align: left; font-weight: 600; }
+    .end td.tot { font-weight: 800; font-size: 16px; }
+    .end .actions { margin-top: 8px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .die.shake, .cell.valid, .cell.just { animation: none; }
+        .cell.valid { filter: brightness(1.6); }
+    }
 </style>
 </head>
 <body>
-<h1>Q<span>win</span>to – Feuille de score</h1>
-
-<div id="start"><p>Choisis le mode de jeu :</p>
-<button class="mode" data-m="manual">Jeu manuel<small>Tu saisis les dés et les nombres toi-même</small></button>
-<button class="mode" data-m="auto">Jeu automatique<small>Plusieurs joueurs sur le même appareil, lancer de dés et fin de partie automatiques</small></button>
-<button class="mode" data-m="solo">Solo<small>1 joueur : lance les dés et bats ton score</small></button>
-<button class="mode" data-m="host">Réseau (hôte)<small>Crée la partie et envoie le code à ton adversaire</small></button>
-<button class="mode" data-m="join">Réseau (rejoindre)<small>Colle le code reçu de l'hôte</small></button></div>
-
-<div id="netp" hidden>
-<button class="menu" id="netback">⬅ Retour</button>
-<h2 id="nettitle"></h2>
-<div id="hostui" hidden>
-<p>1. Envoie ce code à l'invité :</p>
-<textarea id="hcode" readonly></textarea><button class="menu" id="hcopy">Copier le code</button>
-<p>2. Colle ici la réponse de l'invité :</p>
-<textarea id="hans"></textarea><button class="menu" id="hgo">Connecter</button>
-</div>
-<div id="joinui" hidden>
-<p>1. Colle ici le code de l'hôte :</p>
-<textarea id="jcode"></textarea><button class="menu" id="jgo">Générer la réponse</button>
-<p>2. Envoie cette réponse à l'hôte :</p>
-<textarea id="jans" readonly></textarea><button class="menu" id="jcopy">Copier la réponse</button>
-</div>
-<p id="netst"></p>
-</div>
-
-<div id="game" hidden>
-<div class="bar"><button class="menu" id="menu">⬅ Mode</button><label id="npl">Joueurs : <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select></label><div id="tabs"></div></div>
-<div id="auto" hidden><span id="turn"></span><button id="roll">🎲 Lancer les dés</button><button id="pass">Passer (✕ dé raté)</button></div>
-<div id="dice"></div>
-<div class="sheet"><div class="grid" id="grid"></div></div>
-<div id="msg"></div>
-<div id="over" hidden></div>
-<div class="fails">Dés ratés (−5 chacun) :
-<button class="f" data-i="0"></button><button class="f" data-i="1"></button><button class="f" data-i="2"></button><button class="f" data-i="3"></button></div>
-<div class="final">
-<small>Score final : lignes (orange, jaune, violet) + losanges − dés ratés</small>
-<div class="b o" id="so">0</div><div class="b y" id="sy">0</div><div class="b p" id="sp">0</div>
-<span>+</span>
-<div class="d"><i id="d0"></i></div><div class="d"><i id="d1"></i></div><div class="d"><i id="d2"></i></div><div class="d"><i id="d3"></i></div><div class="d"><i id="d4"></i></div>
-<span>−</span><div class="b" id="sf">0</div><span>=</span><div class="b tot" id="tot">0</div>
-</div>
-<button class="r" id="reset">Nouvelle partie</button>
-</div>
+<div id="app"></div>
 
 <script>
-const rows=[{k:'o',sh:3,pent:[1,5]},{k:'y',sh:5,pent:[7]},{k:'p',sh:4,pent:[2,9]}];
-const players=Array.from({length:4},()=>({vals:rows.map(()=>Array(10).fill(null)),fails:[0,0,0,0],total:0}));
-let cur=0,vals=players[0].vals,fails=players[0].fails;
-let mode='manual',isAuto=false,isNet=false,me=0,turn=0,rolled=false,over=false;
-const inputs=[], grid=document.getElementById('grid'), msg=document.getElementById('msg');
-const $=id=>document.getElementById(id);
+/* =========================================================
+   Données du jeu
+   ========================================================= */
+const COLORS = {
+    o: { name: 'Orange' },
+    y: { name: 'Jaune'  },
+    p: { name: 'Violet' },
+};
+// Feuille de score : 12 colonnes, 3 lignes décalées, 9 cases par ligne
+const ROWS = [
+    { key: 'o', cols: [2, 3, 4, 6, 7, 8, 9, 10, 11] },
+    { key: 'y', cols: [1, 2, 3, 4, 5, 7, 8, 9, 10] },
+    { key: 'p', cols: [0, 1, 2, 3, 5, 6, 7, 8, 9] },
+];
+const ROW_BY = Object.fromEntries(ROWS.map(r => [r.key, r]));
+// Colonnes bonus (pentagones) : colonne -> ligne dont la case donne la valeur du bonus
+const PENTA = { 2: 'o', 3: 'p', 7: 'y', 8: 'o', 9: 'p' };
+const SUBSETS = [['o'], ['y'], ['p'], ['o', 'y'], ['o', 'p'], ['y', 'p'], ['o', 'y', 'p']];
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const MAX_MISSES = 4;
 
-rows.forEach((r,ri)=>{
-  const d=document.createElement('div'); d.className='row '+r.k; inputs[ri]=[];
-  for(let i=0;i<10;i++){
-    if(i===r.sh){const s=document.createElement('div');s.className='sh';d.appendChild(s);continue;}
-    const e=document.createElement('input'); e.type='number'; e.min=1; e.max=18; e.inputMode='numeric';
-    e.className='c'+(r.pent.includes(i)?' pent':'');
-    e.addEventListener('change',()=>onChange(ri,i,e));
-    e.addEventListener('click',()=>{
-      if(over||e.value!=='')return;
-      if(isNet&&cur!==me)return;
-      if(isAuto&&!myTurn()){msg.textContent="Ce n'est pas ton tour.";return;}
-      if(isAuto&&!rolled){msg.textContent="Lance d'abord les dés.";return;}
-      if(dice[ri]===0){msg.textContent='Le dé '+dnm[ri]+' est à 0 : impossible de jouer sur la ligne '+dnm[ri]+'.';e.blur();return;}
-      const t=diceTotal();
-      if(t>0){e.value=t;const ok=onChange(ri,i,e);e.blur();if(ok&&isAuto)afterPlace();}
-      else if(isAuto)msg.textContent='Total 0 : tu dois passer.';
-    });
-    inputs[ri][i]=e; d.appendChild(e);
-  }
-  grid.appendChild(d);
+/* =========================================================
+   Sons (générés avec Web Audio, aucun fichier nécessaire)
+   ========================================================= */
+let actx = null;
+let muted = false;
+try { muted = localStorage.getItem('qwinto-muted') === '1'; } catch (e) {}
+
+function audio() {
+    if (!actx) {
+        try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+    }
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+}
+function tone(freq, dur = 0.12, { type = 'sine', vol = 0.15, at = 0, to = null } = {}) {
+    if (muted) return;
+    const c = audio(); if (!c) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+}
+let noiseBuf = null;
+function click(at = 0, vol = 0.3) {
+    if (muted) return;
+    const c = audio(); if (!c) return;
+    if (!noiseBuf) {
+        noiseBuf = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    }
+    const t = c.currentTime + at;
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = noiseBuf;
+    f.type = 'bandpass'; f.frequency.value = 1500 + Math.random() * 2500; f.Q.value = 1.5;
+    g.gain.value = vol;
+    s.connect(f).connect(g).connect(c.destination);
+    s.start(t);
+}
+const SFX = {
+    select:   () => tone(660, 0.08, { type: 'triangle', vol: 0.12 }),
+    unselect: () => tone(440, 0.08, { type: 'triangle', vol: 0.12 }),
+    roll:     () => { for (let k = 0; k < 10; k++) click(k * 0.055 + Math.random() * 0.02, 0.25 + Math.random() * 0.2); },
+    place:    () => { tone(523, 0.09, { type: 'triangle' }); tone(784, 0.14, { type: 'triangle', at: 0.07 }); },
+    bonus:    () => { [659, 880, 1175].forEach((f, k) => tone(f, 0.14, { type: 'triangle', at: k * 0.07 })); },
+    row:      () => { [523, 659, 784, 1047, 1319].forEach((f, k) => tone(f, 0.16, { type: 'triangle', at: k * 0.07 })); },
+    miss:     () => tone(220, 0.4, { type: 'sawtooth', vol: 0.07, to: 90 }),
+    pass:     () => tone(392, 0.07, { vol: 0.07 }),
+    error:    () => tone(140, 0.14, { type: 'square', vol: 0.05 }),
+    turn:     () => { tone(587, 0.1, { vol: 0.08 }); tone(880, 0.16, { vol: 0.08, at: 0.09 }); },
+    end:      () => { [523, 659, 784, 1047, 784, 1047].forEach((f, k) => tone(f, k === 5 ? 0.6 : 0.2, { type: 'triangle', at: k * 0.14, vol: 0.12 })); },
+};
+
+/* =========================================================
+   Règles : validité, score
+   ========================================================= */
+function colValue(p, rk, col) {
+    const i = ROW_BY[rk].cols.indexOf(col);
+    return i < 0 ? undefined : p.sheet[rk][i];
+}
+function isValid(p, rk, i, s) {
+    const row = p.sheet[rk];
+    if (row[i] != null) return false;
+    // Les nombres doivent augmenter de gauche à droite
+    for (let j = 0; j < i; j++) if (row[j] != null && row[j] >= s) return false;
+    for (let j = i + 1; j < 9; j++) if (row[j] != null && row[j] <= s) return false;
+    // Pas deux nombres identiques dans une même colonne
+    const col = ROW_BY[rk].cols[i];
+    for (const r of ROWS) if (r.key !== rk && colValue(p, r.key, col) === s) return false;
+    return true;
+}
+function columnComplete(p, col) {
+    return ROWS.every(r => { const i = r.cols.indexOf(col); return i >= 0 && p.sheet[r.key][i] != null; });
+}
+function fullRows(p) { return ROWS.filter(r => p.sheet[r.key].every(v => v != null)).length; }
+function score(p) {
+    const rows = {}; let total = 0;
+    for (const r of ROWS) {
+        const a = p.sheet[r.key];
+        const n = a.filter(v => v != null).length;
+        rows[r.key] = n === 9 ? a[8] : n; // ligne complète = dernier nombre, sinon nombre de cases
+        total += rows[r.key];
+    }
+    let bonus = 0;
+    for (const c in PENTA) if (columnComplete(p, +c)) bonus += colValue(p, PENTA[c], +c);
+    total += bonus - 5 * p.misses;
+    return { rows, bonus, total };
+}
+
+/* =========================================================
+   Ordinateur : heuristique simple
+   ========================================================= */
+// Coût d'une case : écart entre la somme et la valeur "idéale" pour cette position
+function moveCost(p, rk, i, s) {
+    const row = p.sheet[rk];
+    let L = 0, eL = 0, R = 19, eR = 0;
+    for (let j = i - 1; j >= 0; j--) { if (row[j] != null) { L = row[j]; break; } eL++; }
+    for (let j = i + 1; j < 9; j++) { if (row[j] != null) { R = row[j]; break; } eR++; }
+    const ideal = L + (R - L) * (eL + 1) / (eL + eR + 2);
+    let cost = Math.abs(s - ideal);
+    if (row.filter(v => v != null).length === 8) cost -= 3;            // termine la ligne
+    const col = ROW_BY[rk].cols[i];
+    if (PENTA[col] && ROWS.every(r => r.key === rk || colValue(p, r.key, col) != null)) cost -= 1.5; // termine un bonus
+    return cost;
+}
+function bestMove(p, s, colours) {
+    let best = null;
+    for (const rk of colours) for (let i = 0; i < 9; i++) {
+        if (!isValid(p, rk, i, s)) continue;
+        const c = moveCost(p, rk, i, s);
+        if (!best || c < best.cost) best = { rk, i, cost: c };
+    }
+    return best;
+}
+function expectedCost(p, sub) {
+    let total = 0, n = 0;
+    (function rec(k, sum) {
+        if (k === sub.length) { const b = bestMove(p, sum, sub); total += b ? Math.min(b.cost, 6) : 6; n++; return; }
+        for (let f = 1; f <= 6; f++) rec(k + 1, sum + f);
+    })(0, 0);
+    return total / n;
+}
+
+/* =========================================================
+   État
+   ========================================================= */
+const $app = document.getElementById('app');
+let screen = 'setup';
+let G = null;
+let gameCounter = 0;
+let setup = loadSetup();
+
+function loadSetup() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('qwinto-setup')); } catch (e) {}
+    if (!s || !Array.isArray(s.players) || s.players.length !== 6) {
+        s = { count: 2, players: Array.from({ length: 6 }, (_, i) => ({ name: i === 0 ? 'Joueur 1' : `Ordi ${i + 1}`, cpu: i > 0 })) };
+    }
+    return s;
+}
+function saveSetup() { try { localStorage.setItem('qwinto-setup', JSON.stringify(setup)); } catch (e) {} }
+
+function newGame(players) {
+    G = {
+        token: ++gameCounter,
+        players: players.map(p => ({ name: p.name, cpu: p.cpu, sheet: { o: Array(9).fill(null), y: Array(9).fill(null), p: Array(9).fill(null) }, misses: 0 })),
+        active: 0, deciding: 0, viewing: 0,
+        phase: 'choose',          // choose | rolled | passive | over
+        sel: new Set(['o', 'y', 'p']),
+        rolled: [], dice: {}, sum: 0, rolls: 0, rolling: false,
+        queue: [], log: [], just: null,
+    };
+    screen = 'game';
+    render();
+    startTurn();
+}
+function addLog(t) { G.log.push(t); if (G.log.length > 4) G.log.shift(); }
+function later(fn, ms) {
+    const tok = G.token;
+    setTimeout(() => { if (G && G.token === tok && G.phase !== 'over' && screen === 'game') fn(); }, ms);
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const colourList = ks => ks.map(k => COLORS[k].name.toLowerCase()).join(', ');
+
+/* =========================================================
+   Déroulement d'un tour
+   ========================================================= */
+function startTurn() {
+    const p = G.players[G.active];
+    if (p.cpu) later(cpuChoose, 900); else SFX.turn();
+}
+function toggleDie(k) {
+    if (G.phase !== 'choose' || G.rolling) return;
+    if (G.sel.has(k)) {
+        if (G.sel.size === 1) { SFX.error(); return; } // au moins un dé
+        G.sel.delete(k); SFX.unselect();
+    } else { G.sel.add(k); SFX.select(); }
+    render();
+}
+function roll() {
+    if (G.rolling) return;
+    const first = G.phase === 'choose';
+    const reroll = G.phase === 'rolled' && G.rolls < 2;
+    if (!first && !reroll) return;
+    if (first) G.rolled = [...G.sel];
+    G.rolling = true; G.just = null;
+    SFX.roll();
+    const tok = G.token; let n = 0;
+    const iv = setInterval(() => {
+        if (!G || G.token !== tok) { clearInterval(iv); return; }
+        G.rolled.forEach(k => G.dice[k] = 1 + Math.floor(Math.random() * 6));
+        render();
+        if (++n >= 8) { clearInterval(iv); finishRoll(); }
+    }, 70);
+}
+function finishRoll() {
+    G.dice = {};
+    G.rolled.forEach(k => G.dice[k] = 1 + Math.floor(Math.random() * 6));
+    G.sum = G.rolled.reduce((a, k) => a + G.dice[k], 0);
+    G.rolls++; G.rolling = false; G.phase = 'rolled';
+    G.deciding = G.viewing = G.active;
+    const p = G.players[G.active];
+    addLog(`${p.name} ${G.rolls === 2 ? 'relance' : 'lance'} (${colourList(G.rolled)}) : ${G.sum}`);
+    render();
+    if (p.cpu) later(cpuAfterRoll, 1000);
+}
+function place(rk, i) {
+    if (G.rolling || (G.phase !== 'rolled' && G.phase !== 'passive')) return;
+    const p = G.players[G.deciding];
+    if (!G.rolled.includes(rk) || !isValid(p, rk, i, G.sum)) { SFX.error(); return; }
+    const before = fullRows(p);
+    p.sheet[rk][i] = G.sum;
+    const col = ROW_BY[rk].cols[i];
+    if (fullRows(p) > before) SFX.row();
+    else if (PENTA[col] && columnComplete(p, col)) SFX.bonus();
+    else SFX.place();
+    G.just = { player: G.deciding, rk, i };
+    addLog(`${p.name} inscrit ${G.sum} en ${COLORS[rk].name.toLowerCase()}`);
+    advance();
+}
+function takeMiss() {
+    if (G.rolling || G.phase !== 'rolled') return;
+    const p = G.players[G.active];
+    p.misses++;
+    SFX.miss();
+    addLog(`${p.name} prend une croix (${p.misses}/${MAX_MISSES})`);
+    advance();
+}
+function passTurn() {
+    if (G.rolling || G.phase !== 'passive') return;
+    SFX.pass();
+    addLog(`${G.players[G.deciding].name} passe`);
+    advance();
+}
+// Après le joueur actif, les autres joueurs peuvent aussi inscrire la somme (sans pénalité s'ils passent)
+function advance() {
+    if (G.phase === 'rolled') {
+        G.phase = 'passive';
+        G.queue = [];
+        for (let k = 1; k < G.players.length; k++) G.queue.push((G.active + k) % G.players.length);
+    }
+    nextPassive();
+}
+function nextPassive() {
+    while (G.queue.length) {
+        const i = G.queue.shift();
+        const p = G.players[i];
+        if (!bestMove(p, G.sum, G.rolled)) continue; // aucune case possible : on saute ce joueur
+        G.deciding = i;
+        if (!p.cpu) G.viewing = i;
+        render();
+        if (p.cpu) later(cpuPassive, 700); else SFX.turn();
+        return;
+    }
+    endOfRoll();
+}
+function endOfRoll() {
+    if (G.players.some(p => fullRows(p) >= 2 || p.misses >= MAX_MISSES)) { endGame(); return; }
+    // On garde l'affichage un instant si le joueur qui vient de jouer est un humain
+    const delay = G.players.some(p => !p.cpu) && G.players[G.active].cpu ? 900 : 0;
+    const go = () => {
+        G.active = (G.active + 1) % G.players.length;
+        G.phase = 'choose'; G.rolls = 0; G.rolled = []; G.dice = {}; G.sum = 0;
+        G.sel = new Set(['o', 'y', 'p']);
+        G.deciding = G.viewing = G.active;
+        G.just = null;
+        render();
+        startTurn();
+    };
+    if (delay) { G.phase = 'wait'; render(); later(go, delay); } else go();
+}
+function endGame() {
+    G.phase = 'over';
+    render();
+    SFX.end();
+}
+
+/* ---------- Ordinateur ---------- */
+function cpuChoose() {
+    const p = G.players[G.active];
+    let best = null;
+    for (const sub of SUBSETS) {
+        const c = expectedCost(p, sub);
+        if (!best || c < best.c - 1e-9) best = { sub, c };
+    }
+    G.sel = new Set(best.sub);
+    SFX.select();
+    render();
+    later(roll, 700);
+}
+function cpuAfterRoll() {
+    const p = G.players[G.active];
+    const b = bestMove(p, G.sum, G.rolled);
+    if (G.rolls < 2 && (!b || b.cost > 2.5)) { roll(); return; }
+    if (b && b.cost < 6) place(b.rk, b.i); else takeMiss();
+}
+function cpuPassive() {
+    const p = G.players[G.deciding];
+    const b = bestMove(p, G.sum, G.rolled);
+    if (b && b.cost <= 1.2) place(b.rk, b.i); else passTurn();
+}
+
+/* =========================================================
+   Affichage
+   ========================================================= */
+function render() {
+    if (screen === 'setup') renderSetup();
+    else renderGame();
+}
+function topBar(inGame) {
+    return `<header class="top">
+        <a href="index.html" class="back">← Portail</a>
+        <div class="right">
+            <button class="icon-btn" data-action="mute" aria-label="${muted ? 'Activer' : 'Couper'} le son">${muted ? '🔇' : '🔊'}</button>
+            ${inGame ? '<button class="icon-btn" data-action="menu">Menu</button>' : ''}
+        </div>
+    </header>`;
+}
+
+function renderSetup() {
+    $app.innerHTML = `${topBar(false)}
+    <section class="card">
+        <h1 class="title">Qwinto</h1>
+        <p class="sub">Jeu de dés · 1 à 6 joueurs</p>
+
+        <h2>Nombre de joueurs</h2>
+        <div class="count">
+            ${[1, 2, 3, 4, 5, 6].map(n => `<button data-action="count" data-n="${n}" class="${n === setup.count ? 'on' : ''}" aria-pressed="${n === setup.count}">${n}</button>`).join('')}
+        </div>
+
+        <h2>Joueurs</h2>
+        <div class="plist">
+            ${setup.players.slice(0, setup.count).map((p, i) => `
+            <div class="prow">
+                <span class="badge">${i + 1}</span>
+                <input data-name="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Nom du joueur ${i + 1}">
+                <div class="seg" role="group" aria-label="Type du joueur ${i + 1}">
+                    <button data-action="type" data-i="${i}" data-cpu="0" class="${!p.cpu ? 'on' : ''}" aria-pressed="${!p.cpu}">👤 Humain</button>
+                    <button data-action="type" data-i="${i}" data-cpu="1" class="${p.cpu ? 'on' : ''}" aria-pressed="${p.cpu}">🤖 Ordinateur</button>
+                </div>
+            </div>`).join('')}
+        </div>
+
+        <button class="primary big" data-action="start">Commencer la partie</button>
+
+        <details class="rules">
+            <summary>Règles du jeu</summary>
+            <ul>
+                <li>À ton tour, choisis les dés à lancer (orange, jaune, violet) : les dés entourés seront lancés. Tu peux relancer une fois.</li>
+                <li>Inscris la somme dans une ligne de la couleur d'un des dés lancés. Dans chaque ligne, les nombres doivent augmenter de gauche à droite (tu peux laisser des cases vides).</li>
+                <li>Interdit : deux nombres identiques dans une même colonne.</li>
+                <li>Si tu ne peux ou ne veux rien inscrire, tu prends une croix (−5 points). Les autres joueurs peuvent aussi inscrire ta somme, sans pénalité s'ils passent.</li>
+                <li>Ligne complète : vaut son dernier nombre. Ligne incomplète : 1 point par case remplie. Colonne à pentagone complète : bonus égal au nombre du pentagone.</li>
+                <li>La partie s'arrête dès qu'un joueur a rempli 2 lignes ou pris ${MAX_MISSES} croix.</li>
+            </ul>
+        </details>
+    </section>`;
+}
+
+function pipsHTML(v) {
+    return `<span class="pips">${Array.from({ length: 9 }, (_, k) => `<i class="${PIPS[v].includes(k) ? 'on' : ''}"></i>`).join('')}</span>`;
+}
+
+function renderGame() {
+    const P = G.players;
+    const act = P[G.active], dec = P[G.deciding];
+    const humanDeciding = !dec.cpu && !G.rolling && G.phase !== 'over' && G.phase !== 'wait';
+
+    // --- Boutons joueurs ---
+    const players = P.map((p, i) => {
+        const s = score(p).total;
+        const isDec = i === G.deciding && G.phase !== 'over' && G.phase !== 'wait';
+        return `<button class="pbtn ${i === G.viewing ? 'view' : ''} ${isDec ? 'dec' : ''}" data-action="view" data-i="${i}" aria-label="Voir la feuille de ${esc(p.name)}">
+            <span class="line"><span class="pname">${i === G.active ? '🎲 ' : ''}${esc(p.name)}</span><span class="pscore">${s} pts</span></span>
+            <span class="pmeta">${p.cpu ? '🤖 Ordinateur' : '👤 Humain'} · <span class="x">${'✗'.repeat(p.misses) || '—'}</span></span>
+        </button>`;
+    }).join('');
+
+    // --- Dés ---
+    const canToggle = G.phase === 'choose' && !act.cpu && !G.rolling;
+    const dice = ['o', 'y', 'p'].map(k => {
+        const ringed = G.phase === 'choose' && !G.rolling ? G.sel.has(k) : G.rolled.includes(k);
+        const val = G.rolled.includes(k) ? G.dice[k] : null;
+        const dim = !ringed && G.phase !== 'choose';
+        return `<button class="die ${k} ${ringed ? 'ring' : ''} ${dim ? 'dim' : ''} ${G.rolling && G.rolled.includes(k) ? 'shake' : ''}"
+            data-action="die" data-k="${k}" ${canToggle ? '' : 'disabled'} aria-pressed="${ringed}" aria-label="Dé ${COLORS[k].name}${val ? ' : ' + val : ''}">
+            ${val ? pipsHTML(val) : `<span class="q">${COLORS[k].name}</span>`}
+        </button>`;
+    }).join('');
+    const showSum = G.rolled.length && !G.rolling && G.phase !== 'choose';
+
+    // --- Message et actions ---
+    let msg = '', actions = '';
+    const name = `<b>${esc(dec.name)}</b>`;
+    if (G.phase === 'choose') {
+        if (G.rolling) msg = 'Les dés roulent…';
+        else if (act.cpu) msg = `${name} choisit ses dés…`;
+        else {
+            msg = `${name}, entoure les dés à lancer puis lance.`;
+            actions = `<button class="primary" data-action="roll">🎲 Lancer les dés</button>`;
+        }
+    } else if (G.phase === 'rolled') {
+        if (G.rolling) msg = 'Les dés roulent…';
+        else if (act.cpu) msg = `${name} réfléchit…`;
+        else {
+            const any = bestMove(act, G.sum, G.rolled);
+            msg = any
+                ? `${name}, inscris <b>${G.sum}</b> dans une ligne ${colourList(G.rolled)}, ou prends une croix.`
+                : `${name}, aucune case possible pour <b>${G.sum}</b> : relance ou prends une croix.`;
+            actions = (G.rolls < 2 ? `<button class="secondary" data-action="roll">🔁 Relancer (1 fois)</button>` : '')
+                    + `<button class="secondary danger" data-action="miss">✗ Croix (−5)</button>`;
+        }
+    } else if (G.phase === 'passive') {
+        if (dec.cpu) msg = `${name} décide s'il prend le <b>${G.sum}</b>…`;
+        else {
+            msg = `${name}, tu peux aussi inscrire <b>${G.sum}</b> (${colourList(G.rolled)}), ou passer.`;
+            actions = `<button class="secondary" data-action="pass">Passer</button>`;
+        }
+    } else if (G.phase === 'wait') {
+        msg = 'Joueur suivant…';
+    }
+
+    $app.innerHTML = `${topBar(true)}
+    <nav class="players" aria-label="Joueurs">${players}</nav>
+
+    <section class="card table">
+        <div class="dice">${dice}<div class="sum" aria-live="polite">${showSum ? '= ' + G.sum : ''}</div></div>
+        <div class="msg" aria-live="polite">${msg}</div>
+        ${actions ? `<div class="actions">${actions}</div>` : ''}
+        <div class="log">${G.log.map(esc).join(' · ')}</div>
+    </section>
+
+    ${renderSheet(G.viewing, humanDeciding)}
+    ${G.phase === 'over' ? renderEnd() : ''}`;
+}
+
+function renderSheet(idx, humanDeciding) {
+    const p = G.players[idx];
+    const interactive = humanDeciding && idx === G.deciding && (G.phase === 'rolled' || G.phase === 'passive');
+    let cells = '';
+    for (const row of ROWS) {
+        for (let c = 0; c < 12; c++) {
+            const i = row.cols.indexOf(c);
+            if (i < 0) { cells += '<div class="slot"></div>'; continue; }
+            const v = p.sheet[row.key][i];
+            const penta = PENTA[c] === row.key;
+            const valid = interactive && G.rolled.includes(row.key) && isValid(p, row.key, i, G.sum);
+            const just = G.just && G.just.player === idx && G.just.rk === row.key && G.just.i === i;
+            const attrs = valid
+                ? `data-action="place" data-rk="${row.key}" data-i="${i}" role="button" tabindex="0" aria-label="Inscrire ${G.sum} en ${COLORS[row.key].name}, case ${i + 1}"`
+                : '';
+            cells += `<div class="cell ${row.key} ${penta ? 'penta' : ''} ${v != null ? 'filled' : ''} ${valid ? 'valid' : ''} ${just ? 'just' : ''}" ${attrs}>${v ?? (valid ? `<span class="ghost">${G.sum}</span>` : '')}</div>`;
+        }
+    }
+    const s = score(p);
+    const boxes = Array.from({ length: MAX_MISSES }, (_, k) => `<span class="box">${k < p.misses ? '✗' : ''}</span>`).join('');
+    return `<section class="card">
+        <div class="sheet-title">
+            <h3>Feuille de ${esc(p.name)}${idx !== G.deciding && G.phase !== 'over' ? ' <span class="pmeta">(consultation)</span>' : ''}</h3>
+            <span class="pscore">${s.total} pts</span>
+        </div>
+        <div class="sheet-wrap"><div class="grid">${cells}</div></div>
+        <div class="under">
+            <div class="misses">Lancers ratés ${boxes}</div>
+            <div class="breakdown">Orange <b>${s.rows.o}</b> · Jaune <b>${s.rows.y}</b> · Violet <b>${s.rows.p}</b> · Bonus <b>${s.bonus}</b> · Croix <b>−${5 * p.misses}</b></div>
+        </div>
+    </section>`;
+}
+
+function renderEnd() {
+    const reasons = G.players
+        .filter(p => fullRows(p) >= 2 || p.misses >= MAX_MISSES)
+        .map(p => fullRows(p) >= 2 ? `${esc(p.name)} a rempli 2 lignes` : `${esc(p.name)} a pris ${MAX_MISSES} croix`);
+    const ranked = G.players.map(p => ({ p, s: score(p) })).sort((a, b) => b.s.total - a.s.total);
+    const medals = ['🥇', '🥈', '🥉'];
+    let rank = 0;
+    const rows = ranked.map((r, k) => {
+        if (k === 0 || r.s.total < ranked[k - 1].s.total) rank = k;
+        return `<tr>
+            <td>${medals[rank] || rank + 1}</td>
+            <td class="name">${esc(r.p.name)}${r.p.cpu ? ' 🤖' : ''}</td>
+            <td>${r.s.rows.o}</td><td>${r.s.rows.y}</td><td>${r.s.rows.p}</td>
+            <td>${r.s.bonus}</td><td>−${5 * r.p.misses}</td>
+            <td class="tot">${r.s.total}</td>
+        </tr>`;
+    }).join('');
+    const winners = ranked.filter(r => r.s.total === ranked[0].s.total).map(r => esc(r.p.name));
+    return `<div class="overlay" role="dialog" aria-modal="true" aria-label="Fin de partie">
+        <section class="card end">
+            <h2>${G.players.length === 1 ? `Score final : ${ranked[0].s.total} pts` : winners.length > 1 ? `Égalité : ${winners.join(' et ')} !` : `${winners[0]} gagne !`}</h2>
+            <p class="sub">Fin de partie : ${reasons.join(', ')}.</p>
+            <table>
+                <thead><tr><th></th><th style="text-align:left">Joueur</th><th>Or.</th><th>Ja.</th><th>Vi.</th><th>Bonus</th><th>Croix</th><th>Total</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="actions">
+                <button class="primary" data-action="again">Rejouer</button>
+                <button class="secondary" data-action="tomenu">Menu</button>
+            </div>
+        </section>
+    </div>`;
+}
+
+/* =========================================================
+   Événements
+   ========================================================= */
+function humanCanAct() {
+    return G && !G.rolling && G.phase !== 'over' && G.phase !== 'wait' && !G.players[G.deciding].cpu;
+}
+function startFromSetup() {
+    const players = setup.players.slice(0, setup.count).map((p, i) => ({
+        name: p.name.trim() || (p.cpu ? `Ordi ${i + 1}` : `Joueur ${i + 1}`),
+        cpu: p.cpu,
+    }));
+    saveSetup();
+    audio(); // débloque le son (il faut une action de l'utilisateur)
+    newGame(players);
+}
+function toMenu() {
+    if (G) G.token = -1;
+    G = null; screen = 'setup';
+    render();
+}
+
+$app.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el || el.disabled) return;
+    const a = el.dataset.action;
+
+    switch (a) {
+        case 'mute':
+            muted = !muted;
+            try { localStorage.setItem('qwinto-muted', muted ? '1' : '0'); } catch (err) {}
+            if (!muted) SFX.select();
+            render();
+            break;
+        case 'count':
+            setup.count = +el.dataset.n; saveSetup(); SFX.select(); render();
+            break;
+        case 'type': {
+            const i = +el.dataset.i, p = setup.players[i];
+            p.cpu = el.dataset.cpu === '1';
+            if (/^(Joueur|Ordi) \d$/.test(p.name)) p.name = `${p.cpu ? 'Ordi' : 'Joueur'} ${i + 1}`;
+            saveSetup(); SFX.select(); render();
+            break;
+        }
+        case 'start': startFromSetup(); break;
+        case 'die':   if (humanCanAct() && G.deciding === G.active) toggleDie(el.dataset.k); break;
+        case 'roll':  if (humanCanAct() && G.deciding === G.active) roll(); break;
+        case 'miss':  if (humanCanAct() && G.phase === 'rolled') takeMiss(); break;
+        case 'pass':  if (humanCanAct() && G.phase === 'passive') passTurn(); break;
+        case 'place': if (humanCanAct()) place(el.dataset.rk, +el.dataset.i); break;
+        case 'view':  G.viewing = +el.dataset.i; render(); break;
+        case 'menu':
+            if (G.phase === 'over' || window.confirm('Quitter la partie en cours ?')) toMenu();
+            break;
+        case 'tomenu': toMenu(); break;
+        case 'again':  newGame(G.players.map(p => ({ name: p.name, cpu: p.cpu }))); break;
+    }
 });
-function onChange(ri,i,e){
-  const raw=e.value.trim();
-  if(raw===''){vals[ri][i]=null;calc();return;}
-  const v=Number(raw); let err='';
-  if(!Number.isInteger(v)||v<1||v>18) err='Entrez un nombre entre 1 et 18.';
-  else for(let j=0;j<10;j++){
-    const w=vals[ri][j]; if(w===null||j===i) continue;
-    if(j<i&&w>=v){err='Règle : un nombre doit être plus grand que ceux à sa gauche ('+w+').';break;}
-    if(j>i&&w<=v){err='Règle : un nombre doit être plus petit que ceux à sa droite ('+w+').';break;}
-  }
-  if(err){e.classList.add('bad');msg.textContent=err;e.value=vals[ri][i]??'';setTimeout(()=>e.classList.remove('bad'),400);return false;}
-  msg.textContent=''; vals[ri][i]=v; calc(); return true;
-}
-function rowScore(ri){
-  const r=rows[ri]; const idx=[...Array(10).keys()].filter(i=>i!==r.sh);
-  const f=idx.filter(i=>vals[ri][i]!==null);
-  return f.length===9?vals[ri][idx[8]]:f.length;
-}
-function calc(){
-  const s=[0,1,2].map(rowScore);
-  ['so','sy','sp'].forEach((id,k)=>$(id).textContent=s[k]);
-  const pv=[];rows.forEach((r,ri)=>r.pent.forEach(i=>pv.push(vals[ri][i])));
-  pv.forEach((v,k)=>$('d'+k).textContent=v??'');
-  const fp=fails.reduce((a,b)=>a+b,0)*5, pt=pv.reduce((a,b)=>a+(b||0),0);
-  $('sf').textContent=fp;
-  const T=s[0]+s[1]+s[2]+pt-fp;$('tot').textContent=T;players[cur].total=T;drawTabs();
-  if(isNet&&cur===me)sendState();
-}
-document.querySelectorAll('.f').forEach(b=>b.addEventListener('click',()=>{
-  if(isAuto)return; const i=+b.dataset.i; fails[i]=fails[i]?0:1; b.textContent=fails[i]?'✕':''; calc();
-}));
-
-const np=$('np'),tabs=$('tabs');
-function drawTabs(){
-  const n=+np.value;tabs.innerHTML='';
-  for(let k=0;k<n;k++){
-    const b=document.createElement('button');b.className='tab'+(k===cur?' on':'');
-    b.textContent='J'+(k+1)+(isNet&&k===me?' (toi)':'')+' : '+players[k].total;
-    b.onclick=()=>{if(!isAuto||isNet)pick(k);};
-    tabs.appendChild(b);
-  }
-}
-function pick(k){cur=k;vals=players[k].vals;fails=players[k].fails;
- rows.forEach((r,ri)=>inputs[ri].forEach((e,i)=>{e.value=vals[ri][i]??'';}));
- document.querySelectorAll('.f').forEach((b,i)=>b.textContent=fails[i]?'✕':'');
- msg.textContent='';calc();}
-np.onchange=()=>{if(isAuto){newGame();return;}if(cur>=+np.value)cur=0;pick(cur);};
-
-/* ---- Dés ---- */
-const dice=[0,0,0],dcol=['var(--o)','var(--y)','var(--p)'],dnm=['orange','jaune','violet'];
-const PIPS={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-function face(n){let h='';for(let q=0;q<9;q++)h+='<span class="pip'+(PIPS[n].includes(q)?' on':'')+'"></span>';return h;}
-function diceTotal(){return dice[0]+dice[1]+dice[2];}
-const dbox=$('dice');
-function drawDice(open){dbox.innerHTML='<span>Dés :</span>';dice.forEach((v,k)=>{const w=document.createElement('div');w.className='dw';
- const b=document.createElement('button');b.className='die';b.style.background=dcol[k];b.style.color=k===1?'#111':'#fff';b.title='Dé '+dnm[k];b.innerHTML=face(v);b.onclick=()=>{if(!isAuto)drawDice(open===k?-1:k);};w.appendChild(b);
- if(open===k){const p=document.createElement('div');p.className='pick';for(let n=0;n<=6;n++){const o=document.createElement('button');o.className='die s';o.style.background=dcol[k];o.style.color=k===1?'#111':'#fff';o.innerHTML=face(n);o.onclick=()=>{dice[k]=n;drawDice(-1);};p.appendChild(o);}w.appendChild(p);}
- dbox.appendChild(w);});
- const t=document.createElement('span');t.textContent='Total : '+diceTotal();dbox.appendChild(t);}
-
-/* ---- Parties ---- */
-function myTurn(){return !isNet||turn===me;}
-function newGame(){
-  players.forEach(p=>{p.vals.forEach(a=>a.fill(null));p.fails.fill(0);p.total=0;});
-  dice.fill(0);rolled=false;over=false;turn=0;
-  $('over').hidden=true;
-  inputs.forEach(a=>a.forEach(e=>{e.value='';e.readOnly=isAuto;}));
-  drawDice(-1);pick(isNet?me:0);updateAuto();
-}
-$('reset').addEventListener('click',()=>{newGame();if(isNet)send({t:'new'});});
-
-/* ---- Mode automatique / solo / réseau ---- */
-const turnEl=$('turn'),rollB=$('roll'),passB=$('pass'),overEl=$('over');
-function updateAuto(){
-  if(!isAuto)return;
-  const mine=myTurn();
-  if(over)turnEl.textContent='Partie terminée';
-  else if(!mine)turnEl.textContent='Tour de J'+(turn+1)+' (adversaire) — '+(rolled?'il joue…':'il lance les dés…');
-  else turnEl.textContent='Tour de J'+(turn+1)+(isNet?' (toi)':'')+' — '+(rolled?'place le total ou passe':'lance les dés');
-  rollB.disabled=over||rolled||!mine;passB.disabled=over||!rolled||!mine;
-}
-rollB.onclick=()=>{
-  if(over||rolled||!myTurn())return;
-  if(isNet&&cur!==me)pick(me);
-  for(let k=0;k<3;k++)dice[k]=Math.floor(Math.random()*7);
-  rolled=true;drawDice(-1);updateAuto();
-  msg.textContent=diceTotal()===0?'Total 0 : tu dois passer.':'';
-  if(isNet)send({t:'roll',dice:dice.slice()});
-};
-passB.onclick=()=>{
-  if(over||!rolled||!myTurn())return;
-  if(isNet&&cur!==me)pick(me);
-  const i=fails.indexOf(0);
-  if(i>=0){fails[i]=1;document.querySelectorAll('.f')[i].textContent='✕';}
-  calc();
-  if(fails.every(x=>x===1)){endGame('4 dés ratés pour J'+(cur+1));return;}
-  nextTurn();
-};
-function afterPlace(){
-  const full=rows.filter((r,ri)=>vals[ri].filter(v=>v!==null).length===9).length;
-  if(full>=2){endGame('J'+(cur+1)+' a terminé 2 lignes');return;}
-  nextTurn();
-}
-function nextTurn(){
-  turn=(turn+1)%(+np.value);rolled=false;dice.fill(0);
-  if(isNet)send({t:'turn',turn});
-  drawDice(-1);pick(isNet?me:turn);updateAuto();
-}
-function endGame(reason,remote){
-  over=true;calc();updateAuto();
-  const n=+np.value,sc=players.slice(0,n).map(p=>p.total);
-  let h='🏁 Fin de partie : '+reason+'.<br>'+sc.map((s,k)=>'J'+(k+1)+(isNet&&k===me?' (toi)':'')+' : '+s).join(' · ');
-  if(n>1){
-    const best=Math.max(...sc),w=sc.map((s,k)=>s===best?'J'+(k+1):null).filter(Boolean);
-    h+='<br>'+(w.length>1?'Égalité : ':'Vainqueur : ')+w.join(', ');
-  }
-  overEl.hidden=false;overEl.innerHTML=h;
-  if(isNet&&!remote)send({t:'end',reason});
-}
-
-/* ---- Réseau (WebRTC, échange de codes manuel) ---- */
-let pc=null,dc=null;
-const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
-const netst=$('netst');
-function enc(d){return btoa(JSON.stringify(d));}
-function dec(s){return JSON.parse(atob(s.trim()));}
-function gathered(p){return new Promise(res=>{
-  if(p.iceGatheringState==='complete')return res();
-  const t=setTimeout(res,5000);
-  p.addEventListener('icegatheringstatechange',()=>{if(p.iceGatheringState==='complete'){clearTimeout(t);res();}});
-});}
-function send(o){try{if(dc&&dc.readyState==='open')dc.send(JSON.stringify(o));}catch(_){}}
-function sendState(){const P=players[me];send({t:'state',p:me,vals:P.vals,fails:P.fails,total:P.total});}
-function closeNet(){
-  try{if(dc){dc.onclose=null;dc.close();}}catch(_){}
-  try{if(pc)pc.close();}catch(_){}
-  dc=null;pc=null;
-}
-function setupDC(ch,m){
-  dc=ch;
-  ch.onopen=()=>{netst.textContent='Connecté !';startMode(m);};
-  ch.onmessage=ev=>{try{onNet(JSON.parse(ev.data));}catch(_){}};
-  ch.onclose=()=>{if(isNet&&!over){over=true;msg.textContent='Connexion perdue.';updateAuto();}};
-  if(ch.readyState==='open')ch.onopen();
-}
-function onNet(m){
-  if(m.t==='state'){
-    const P=players[m.p];
-    for(let r=0;r<3;r++)for(let i=0;i<10;i++)P.vals[r][i]=m.vals[r][i];
-    for(let i=0;i<4;i++)P.fails[i]=m.fails[i];
-    P.total=m.total;
-    if(cur===m.p)pick(cur);else drawTabs();
-  }else if(m.t==='roll'){
-    for(let k=0;k<3;k++)dice[k]=m.dice[k];
-    rolled=true;drawDice(-1);updateAuto();msg.textContent='';
-  }else if(m.t==='turn'){
-    turn=m.turn;rolled=false;dice.fill(0);drawDice(-1);pick(me);updateAuto();
-  }else if(m.t==='end'){
-    endGame(m.reason,true);
-  }else if(m.t==='new'){
-    newGame();
-  }
-}
-function showNet(role){
-  $('start').hidden=true;$('netp').hidden=false;
-  $('hostui').hidden=role!=='host';$('joinui').hidden=role!=='join';
-  $('nettitle').textContent=role==='host'?'Réseau – hôte':'Réseau – rejoindre';
-  ['hcode','hans','jcode','jans'].forEach(id=>$(id).value='');
-  netst.textContent='';
-}
-async function hostBegin(){
-  showNet('host');closeNet();
-  try{
-    pc=new RTCPeerConnection(ICE);
-    setupDC(pc.createDataChannel('qwinto'),'host');
-    $('hcode').value='Génération du code…';
-    await pc.setLocalDescription(await pc.createOffer());
-    await gathered(pc);
-    $('hcode').value=enc(pc.localDescription);
-  }catch(e){netst.textContent='Le réseau (WebRTC) n\'est pas disponible dans ce navigateur.';}
-}
-function joinBegin(){
-  showNet('join');closeNet();
-  try{
-    pc=new RTCPeerConnection(ICE);
-    pc.ondatachannel=e=>setupDC(e.channel,'join');
-  }catch(e){netst.textContent='Le réseau (WebRTC) n\'est pas disponible dans ce navigateur.';}
-}
-$('hgo').onclick=async()=>{
-  try{await pc.setRemoteDescription(dec($('hans').value));netst.textContent='Connexion en cours…';}
-  catch(e){netst.textContent='Réponse invalide.';}
-};
-$('jgo').onclick=async()=>{
-  try{
-    await pc.setRemoteDescription(dec($('jcode').value));
-    await pc.setLocalDescription(await pc.createAnswer());
-    $('jans').value='Génération de la réponse…';
-    await gathered(pc);
-    $('jans').value=enc(pc.localDescription);
-    netst.textContent="Envoie la réponse à l'hôte, puis attends la connexion…";
-  }catch(e){netst.textContent='Code invalide.';}
-};
-function copyEl(el){
-  el.select();
-  try{navigator.clipboard.writeText(el.value).catch(()=>document.execCommand('copy'));}
-  catch(_){try{document.execCommand('copy');}catch(__){}}
-  netst.textContent='Copié (ou sélectionné : fais Ctrl+C).';
-}
-$('hcopy').onclick=()=>copyEl($('hcode'));
-$('jcopy').onclick=()=>copyEl($('jans'));
-$('netback').onclick=()=>{closeNet();$('netp').hidden=true;$('start').hidden=false;};
-
-/* ---- Démarrage ---- */
-function startMode(m){
-  mode=m;isAuto=(m!=='manual');isNet=(m==='host'||m==='join');me=(m==='join'?1:0);
-  $('start').hidden=true;$('netp').hidden=true;$('game').hidden=false;
-  $('auto').hidden=!isAuto;
-  if(m==='solo')np.value='1';else if(isNet)np.value='2';
-  $('npl').hidden=(m==='solo'||isNet);
-  newGame();
-}
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{
-  const m=b.dataset.m;
-  if(m==='host')hostBegin();else if(m==='join')joinBegin();else startMode(m);
+$app.addEventListener('input', e => {
+    const i = e.target.dataset.name;
+    if (i != null) { setup.players[+i].name = e.target.value; saveSetup(); }
 });
-$('menu').onclick=()=>{
-  closeNet();mode='manual';isAuto=false;isNet=false;
-  $('game').hidden=true;$('start').hidden=false;
-};
+$app.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.cell[data-action]')) {
+        e.preventDefault(); e.target.click();
+    }
+});
+
+render();
 </script>
 </body>
 </html>
