@@ -1,0 +1,38 @@
+KUNG-FU TEMPLE - Edition Windows
+================================
+
+Lancez KungFuTemple.exe (Windows 10/11, 64 bits). Aucune installation.
+
+Commandes clavier
+  Q / D ou flèches       marcher
+  S ou flèche bas        s'accroupir
+  Z, flèche haut ou L    sauter
+  M                      coup de pied
+  K                      coup de poing
+  Q/D en alternance      se libérer d'un agrippeur
+  Échap / Entrée         pause
+  F11 ou Alt+Entrée      plein écran
+
+Manette Xbox
+  Croix / stick gauche   déplacement     A   sauter / valider
+  X  coup de pied   B  coup de poing   Start  pause
+
+Codes secrets (à taper pendant la partie) :
+  gungun   pistolet à la place du poing (K pour tirer)
+  riotgun  mitraillette (maintenir K)
+  life     vie à 100 %
+  boom     tous les ennemis à l'écran sont éliminés
+
+Options (menu principal) : difficulté, graphismes HD ou rétro NES,
+filtre CRT, volume musique / effets, plein écran.
+
+Sauvegarde (options + meilleurs scores) et journal affichage_log.txt :
+  %APPDATA%\KungFuTemple\save.json
+
+Windows SmartScreen peut afficher « Windows a protégé votre ordinateur »
+car l'exécutable n'est pas signé : cliquez « Informations
+complémentaires » puis « Exécuter quand même ».
+
+Recompiler depuis les sources (Go 1.22+) :
+  set GOOS=windows
+  go build -ldflags "-H windowsgui -s -w" -o KungFuTemple.exe .
