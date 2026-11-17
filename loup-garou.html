@@ -69,6 +69,7 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 .chip.on.ambigu{border-color:#b07ce0;background:rgba(110,50,150,.28)}
 .camp-label{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;color:var(--muted);margin:14px 0 6px;text-transform:uppercase}
 .camp-label:first-child{margin-top:0}
+.roles-grid>.stepper{grid-column:1/-1;justify-self:start}
 .stepper{display:inline-flex;white-space:nowrap;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;border:1px solid #e05050;background:rgba(160,30,30,.22)}
 .stepper button{width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:var(--ink);font-size:1.1rem}
 .stepper b{min-width:18px;text-align:center;font-size:1.15rem}
@@ -92,6 +93,16 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 #gList{flex-direction:column}
 .game-row{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)}
 .game-row small{color:var(--muted)}
+.kind{width:42px;height:42px;flex-shrink:0;border-radius:8px;border:1px solid var(--gold);background:rgba(255,255,255,.08);font-size:1.25rem;padding:0}
+.kind.bot{background:rgba(120,170,255,.28);border-color:#8ab4ff}
+.pass-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,8vw,2.6rem);color:var(--gold2);text-align:center;text-shadow:0 0 14px rgba(255,140,40,.5)}
+.pick-title{color:var(--gold2);font-size:1.2rem;text-align:center}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;width:100%}
+.pick{padding:12px 8px;border-radius:10px;border:1px solid rgba(232,183,90,.5);background:rgba(255,255,255,.06);color:var(--ink);font-family:'Alegreya',serif;font-size:1rem}
+.pick:hover{background:rgba(232,183,90,.22)}
+.mtext{text-align:center;font-size:1.08rem;line-height:1.45;width:100%}
+.mbtns{display:flex;flex-direction:column;gap:10px;width:100%;align-items:center}
+.talk{text-align:left;margin:8px auto;padding-left:20px;color:var(--ink);line-height:1.55;max-width:560px}
 .check{display:flex;gap:8px;align-items:center;margin-top:12px;cursor:pointer}
 .check input{width:18px;height:18px;accent-color:var(--gold)}
 .hint{font-size:.88rem;color:var(--muted);font-style:italic;text-align:center;line-height:1.4}
@@ -194,6 +205,31 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 #menu .mh{font-family:'Cinzel',serif;color:var(--gold2);padding:6px 10px 8px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:4px}
 #menu button{background:none;border:none;color:var(--ink);text-align:left;padding:9px 10px;border-radius:8px;font-family:'Alegreya',serif;font-size:1rem}
 #menu button:hover{background:rgba(232,183,90,.15)}
+.prows{display:flex;flex-direction:column;gap:10px}
+.prow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.prow.isbot{background:rgba(120,170,255,.08);border-color:rgba(138,180,255,.3)}
+.pnum{width:20px;text-align:right;font-family:'Cinzel',serif;color:var(--muted)}
+.prow input.white{flex:1 1 140px}
+.avbtn{position:relative;border:none;background:none;padding:0;border-radius:50%;line-height:0}
+.avbtn:disabled{cursor:default}
+.avedit{position:absolute;right:-4px;bottom:-4px;background:var(--gold);color:#2a1606;border-radius:50%;width:19px;height:19px;font-size:.72rem;display:flex;align-items:center;justify-content:center;line-height:1}
+.seg{display:inline-flex;border:1px solid var(--gold);border-radius:10px;overflow:hidden;flex-shrink:0}
+.seg button{border:none;background:transparent;color:var(--muted);padding:9px 11px;font-size:.82rem}
+.seg button.on{background:var(--gold);color:#2a1606;font-weight:700}
+.seg button[data-kind=b].on{background:#8ab4ff;color:#0d1a33}
+.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;flex-shrink:0;vertical-align:middle;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.35)}
+.av svg{width:100%;height:100%;display:block}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:10px;width:100%;justify-items:center}
+.avpick{border:3px solid transparent;background:none;border-radius:50%;padding:2px;line-height:0}
+.avpick:hover{border-color:rgba(232,183,90,.5)}
+.avpick.on{border-color:var(--gold2);box-shadow:0 0 14px rgba(255,200,90,.6)}
+.avpick.used{opacity:.35}
+.sav{position:absolute;top:-14px;left:-14px;z-index:4;line-height:0}
+.lover{left:auto!important;right:-8px}
+.pick{display:flex;align-items:center;gap:8px}
+.phead{display:flex;align-items:center;justify-content:center;gap:12px}
+.modal .modal-inner > .av{margin:4px auto}
+.snd{position:fixed;right:14px;bottom:14px;z-index:25;width:46px;height:46px;border-radius:50%;border:1px solid var(--gold);background:rgba(14,12,24,.85);font-size:1.3rem;padding:0;box-shadow:0 4px 14px rgba(0,0,0,.5)}
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;z-index:30;background:#1d1626;border:1px solid var(--gold);color:var(--gold2);padding:10px 18px;border-radius:30px;transition:.35s;font-family:'Cinzel',serif;font-size:.92rem;text-align:center;max-width:90vw;pointer-events:none}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 .win h2{font-family:'Cinzel Decorative',serif;font-size:clamp(1.8rem,7vw,2.6rem);color:var(--gold2);text-align:center;text-shadow:0 0 20px rgba(255,140,40,.6)}
@@ -209,24 +245,26 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 <section id="home" class="screen">
   <div class="title">Loup-Garou</div>
   <div class="subtitle">La nuit tombe sur le village… Qui se cache parmi vous ?</div>
-  <div class="modes">
-    <button class="mode" id="mSolo"><span class="mi">🔥</span><b>Solo</b><small>Un seul appareil, que l'on se passe autour du feu</small></button>
-    <button class="mode" id="mHost" disabled><span class="mi">📡</span><b>Hôte</b><small>Tu es le meneur : les autres joueurs rejoignent depuis leur appareil</small></button>
-    <button class="mode" id="mFind" disabled><span class="mi">🔍</span><b>Chercher une partie</b><small>Rejoindre la partie d'un hôte</small></button>
+  <div class="modes" style="max-width:420px;margin:0 auto">
+    <button class="mode" id="mSolo"><span class="mi">🔥</span><b>Nouvelle partie</b><small>De 1 à 12 joueurs sur un seul appareil. Chaque place peut être tenue par un humain ou par un ordinateur.</small></button>
   </div>
-  <div class="netstatus" id="netStatus"><span class="dots">Connexion au réseau</span></div>
 </section>
 
 <!-- ============ SOLO : RÉGLAGES ============ -->
 <section id="setup" class="screen hidden">
-  <div class="title sm">Partie solo</div>
+  <div class="title sm">Nouvelle partie</div>
   <div class="panel">
     <h2>Nombre de joueurs</h2>
     <div class="count-row" id="countRow"></div>
   </div>
   <div class="panel">
-    <h2>Noms des joueurs</h2>
-    <div class="names" id="names"></div>
+    <h2>Joueurs</h2>
+    <div class="row" style="justify-content:flex-start;margin-bottom:12px">
+      <button class="btn" id="allHum">👤 Tous humains</button>
+      <button class="btn" id="allBot">🤖 Moi + des ordinateurs</button>
+    </div>
+    <div class="prows" id="names"></div>
+    <p class="hint" style="margin-top:10px">Pour chaque joueur, choisis <b>Humain</b> ou <b>Ordinateur</b>. Touche le personnage d'un humain pour le changer. Le jeu fait lui-même le meneur.</p>
   </div>
   <div class="panel">
     <h2>Composition des cartes</h2>
@@ -236,57 +274,11 @@ button{font-family:'Cinzel',serif;cursor:pointer}
   <button class="btn back" data-home>← Retour</button>
 </section>
 
-<!-- ============ HÔTE : SALON ============ -->
-<section id="hostLobby" class="screen hidden">
-  <div class="title sm">Héberger une partie</div>
-  <div class="panel">
-    <h2>Code de la partie</h2>
-    <div class="code" id="hCode">····</div>
-    <p class="hint">Tes amis ouvrent cette même page sur leur appareil, choisissent « Chercher une partie », puis rejoignent la partie portant ce code.<br>
-    Pour qu'ils y aient accès, invite-les avec le bouton « Partager » de Claude : ils doivent être connectés à leur compte Claude (un lien public ne suffit pas pour jouer en réseau).</p>
-  </div>
-  <div class="panel">
-    <h2>Meneur de jeu</h2>
-    <input class="white" id="hName" maxlength="18" placeholder="Ton nom" style="width:100%">
-    <label class="check"><input type="checkbox" id="hPlay" checked> Je joue aussi (je reçois une carte)</label>
-    <p class="hint">L'appareil de l'hôte connaît toutes les cartes : décoche si tu veux seulement animer la partie.</p>
-  </div>
-  <div class="panel">
-    <h2>Joueurs connectés (<span id="hCount">0</span>/12)</h2>
-    <div class="plist" id="hList"></div>
-  </div>
-  <div class="panel">
-    <h2>Composition des cartes</h2>
-    <div class="comp" id="hComp"></div>
-  </div>
-  <button class="big-btn" id="hStart" disabled>🃏 Distribuer les cartes</button>
-  <button class="btn back" data-home>← Fermer le salon</button>
-</section>
-
-<!-- ============ CHERCHER UNE PARTIE ============ -->
-<section id="search" class="screen hidden">
-  <div class="title sm">Rejoindre une partie</div>
-  <div id="sJoin">
-    <div class="panel">
-      <h2>Ton nom</h2>
-      <input class="white" id="gName" maxlength="18" placeholder="Ton nom" style="width:100%">
-    </div>
-    <div class="panel">
-      <h2>Parties disponibles</h2>
-      <div class="plist" id="gList"></div>
-    </div>
-  </div>
-  <div id="sWait" class="hidden"><div class="panel" id="sWaitBox"></div></div>
-  <button class="btn back" data-home>← Retour</button>
-</section>
-
 <!-- ============ JEU ============ -->
 <section id="game" class="hidden">
   <div class="topbar">
     <div class="small-title">Loup-Garou</div>
     <div class="btns">
-      <span class="code sm hidden" id="codeChip"></span>
-      <button class="btn hidden" id="viewBtn">👁 Vue meneur</button>
       <button class="btn" id="newBtn">↺ Nouvelle partie</button>
     </div>
   </div>
@@ -300,11 +292,11 @@ button{font-family:'Cinzel',serif;cursor:pointer}
 </section>
 
 <div class="modal hidden" id="modal"><div class="modal-inner" id="modalInner"></div></div>
-<div id="menu" class="hidden"></div>
 <div id="toast"></div>
+<button id="sndBtn" class="snd" title="Activer / couper le son">🔊</button>
 
 <script>
-window.addEventListener("error",function(e){var el=document.getElementById("netStatus");if(el)el.innerHTML="⚠ Erreur du script : "+String(e&&e.message||e).replace(/</g,"&lt;");});
+window.addEventListener("error",function(e){var d=document.createElement("div");d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99;background:#7a1010;color:#fff;padding:8px 12px;font:14px sans-serif";d.textContent="⚠ Erreur du script : "+String(e&&e.message||e);document.body&&document.body.appendChild(d);});
 </script>
 <script>
 (function(){
@@ -361,8 +353,110 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const clean=s=>String(s||"").replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b\u200c\u200e\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,"").trim().slice(0,18);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),4000);}
-const SCREENS=["home","setup","hostLobby","search","game"];
-function show(id){SCREENS.forEach(s=>$(s).classList.toggle("hidden",s!==id));window.scrollTo(0,0);}
+/* =============================================================
+   SONS (synthétisés en direct, aucun fichier audio)
+   ============================================================= */
+const SND=(function(){
+  let ctx=null,out=null,wet=null,noiseBuf=null,on=true,fireWanted=false,fireOn=false,fireTimer=null,fireRumble=null;
+  try{ on=localStorage.getItem("lg-sound")!=="off"; }catch(e){}
+  function init(){
+    if(ctx){ if(ctx.state==="suspended") ctx.resume().catch(()=>{}); return ctx; }
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null;
+    try{ ctx=new AC(); }catch(e){ return null; }
+    out=ctx.createGain(); out.gain.value=on?.9:0; out.connect(ctx.destination);
+    const len=ctx.sampleRate*2; noiseBuf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const d=noiseBuf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const conv=ctx.createConvolver(), il=Math.floor(ctx.sampleRate*2.8), ir=ctx.createBuffer(2,il,ctx.sampleRate);
+    for(let c=0;c<2;c++){const ch=ir.getChannelData(c);for(let i=0;i<il;i++) ch[i]=(Math.random()*2-1)*Math.pow(1-i/il,3);}
+    conv.buffer=ir; wet=ctx.createGain(); wet.gain.value=.35; wet.connect(conv); conv.connect(out);
+    return ctx;
+  }
+  const T=(d=0)=>ctx.currentTime+d;
+  function env(g,t,a,peak,hold,rel){ g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(peak,t+a); g.gain.setValueAtTime(peak,t+a+hold); g.gain.exponentialRampToValueAtTime(.0001,t+a+hold+rel); }
+  function bus(rev){ const g=ctx.createGain(); g.gain.value=.0001; g.connect(out); if(rev) g.connect(wet); return g; }
+  function osc(type,f,t,stop,dest){ const o=ctx.createOscillator(); o.type=type; o.frequency.setValueAtTime(f,t); o.connect(dest); o.start(t); o.stop(stop); return o; }
+  function noise(t,stop,dest){ const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.loop=true; s.connect(dest); s.start(t,Math.random()*1.5); s.stop(stop); return s; }
+  function filt(type,f,q,dest){ const b=ctx.createBiquadFilter(); b.type=type; b.frequency.value=f; if(q!=null) b.Q.value=q; b.connect(dest); return b; }
+  function lfo(rate,depth,param,t,stop){ const l=ctx.createOscillator(); l.frequency.value=rate; const g=ctx.createGain(); g.gain.value=depth; l.connect(g); g.connect(param); l.start(t); l.stop(stop); }
+
+  function howlOne(t,p,amp){
+    const g=bus(true); env(g,t,.4,amp,1.5,1.3);
+    const lp=filt("lowpass",1300,1,g);
+    [0,8].forEach(det=>{
+      const o=osc(det?"sawtooth":"triangle",260*p,t,t+3.6,lp); o.detune.value=det;
+      o.frequency.exponentialRampToValueAtTime(540*p,t+.65); o.frequency.setValueAtTime(540*p,t+1.6);
+      o.frequency.exponentialRampToValueAtTime(380*p,t+3.3);
+      lfo(5.5,9*p,o.frequency,t,t+3.6);
+    });
+  }
+  const LIB={
+    flip(t){ const g=bus(); env(g,t,.01,.22,.04,.12); const bp=filt("bandpass",700,1.2,g);
+      bp.frequency.setValueAtTime(700,t); bp.frequency.exponentialRampToValueAtTime(3500,t+.18); noise(t,t+.3,bp); },
+    howl(t){ howlOne(t,1,.2); howlOne(t+1.9,.84,.09); },
+    owl(t){ [0,.5].forEach(k=>{const g=bus(true); env(g,t+k,.05,.16,.12,.3); const o=osc("sine",430,t+k,t+k+.6,g); o.frequency.exponentialRampToValueAtTime(350,t+k+.4);}); },
+    birds(t){ for(let k=0;k<9;k++){ const tt=t+k*.16+Math.random()*.25, f=2600+Math.random()*1600;
+      const g=bus(true); env(g,tt,.01,.07,.04,.07); const o=osc("sine",f,tt,tt+.2,g);
+      o.frequency.exponentialRampToValueAtTime(f*1.35,tt+.06); o.frequency.exponentialRampToValueAtTime(f*.9,tt+.14);} },
+    devour(t){
+      const g=bus(true); env(g,t,.15,.4,1.1,.4);
+      const lp=filt("lowpass",520,2,g), am=ctx.createGain(); am.gain.value=.6; am.connect(lp);
+      const o=osc("sawtooth",72,t,t+2,am); o.frequency.linearRampToValueAtTime(96,t+.6); o.frequency.linearRampToValueAtTime(68,t+1.6);
+      lfo(23,.45,am.gain,t,t+2);
+      const gn=bus(); env(gn,t,.2,.18,1,.4); noise(t,t+2,filt("lowpass",700,1,gn));
+      for(let k=0;k<5;k++){ const tc=t+.9+k*.22+Math.random()*.1;
+        const g2=bus(true); env(g2,tc,.004,.45,.03,.09); noise(tc,tc+.2,filt("bandpass",1100+Math.random()*900,.8,g2));
+        const g3=bus(); env(g3,tc,.004,.4,.02,.12); const th=osc("sine",130,tc,tc+.25,g3); th.frequency.exponentialRampToValueAtTime(55,tc+.15); }
+    },
+    knell(t){ const f=130; [[.5,.35,4],[1,.5,3.5],[1.19,.25,2.5],[1.56,.2,2],[2,.18,1.8],[2.51,.12,1.3],[3.01,.08,1]].forEach(([m,a,dec])=>{
+      const g=bus(true); env(g,t,.005,a*.5,.01,dec); osc("sine",f*m,t,t+dec+.1,g); }); },
+    shot(t){ const g=bus(true); env(g,t,.002,.9,.02,.35); const lp=filt("lowpass",5000,.7,g);
+      lp.frequency.setValueAtTime(5000,t); lp.frequency.exponentialRampToValueAtTime(300,t+.3); noise(t,t+.5,lp);
+      const g2=bus(); env(g2,t,.002,.7,.03,.25); const o=osc("sine",90,t,t+.4,g2); o.frequency.exponentialRampToValueAtTime(38,t+.25); },
+    drum(t){ for(let k=0;k<30;k++){ const tt=t+k*.045, a=.04+.2*k/30;
+        const g=bus(); env(g,tt,.002,a,.005,.05); noise(tt,tt+.08,filt("highpass",1400,.7,g)); }
+      const te=t+1.42, g=bus(true); env(g,te,.003,.7,.05,.6); const o=osc("sine",110,te,te+.9,g); o.frequency.exponentialRampToValueAtTime(65,te+.5);
+      const g2=bus(true); env(g2,te,.002,.35,.02,.25); noise(te,te+.4,filt("lowpass",2500,.7,g2)); },
+    fanfare(t){ [[392,0,.16],[523,.18,.16],[659,.36,.16],[784,.54,.34],[659,.92,.14],[784,1.08,.7]].forEach(([f,s,d])=>{
+      const g=bus(true); env(g,t+s,.02,.16,d,.2); osc("triangle",f,t+s,t+s+d+.3,g);
+      const g2=bus(); env(g2,t+s,.02,.04,d,.15); osc("square",f,t+s,t+s+d+.25,g2); }); },
+    wolfwin(t){ [[440,0],[415,.35],[349,.7],[330,1.05]].forEach(([f,s])=>{
+      const g=bus(true); env(g,t+s,.03,.14,.25,.4); osc("sawtooth",f/2,t+s,t+s+.8,filt("lowpass",900,1,g)); });
+      howlOne(t+1.6,1,.2); }
+  };
+  function fireStart(){
+    if(!ctx||fireOn||!on) return; fireOn=true;
+    const g=ctx.createGain(); g.gain.setValueAtTime(.0001,T()); g.gain.exponentialRampToValueAtTime(.13,T(1.5)); g.connect(out);
+    const lp=filt("lowpass",320,.7,g), n=noise(T(),T(86400),lp);
+    const l=ctx.createOscillator(); l.frequency.value=.3; const lg=ctx.createGain(); lg.gain.value=120; l.connect(lg); lg.connect(lp.frequency); l.start();
+    fireRumble={g,n,l};
+    const crack=()=>{ if(!fireOn) return;
+      const t=T(.02), amp=Math.random()<.1?.3:.06+Math.random()*.12, dur=.004+Math.random()*.02;
+      const gg=ctx.createGain(); gg.connect(out); gg.gain.setValueAtTime(amp,t); gg.gain.exponentialRampToValueAtTime(.0001,t+dur+.03);
+      noise(t,t+dur+.05,filt("bandpass",1500+Math.random()*4000,1+Math.random()*3,gg));
+      fireTimer=setTimeout(crack,25+Math.random()*(Math.random()<.3?60:280)); };
+    crack();
+  }
+  function fireStop(){
+    fireOn=false; clearTimeout(fireTimer);
+    if(fireRumble){ const {g,n,l}=fireRumble; fireRumble=null;
+      try{ g.gain.cancelScheduledValues(T()); g.gain.setValueAtTime(Math.max(g.gain.value,.0001),T()); g.gain.exponentialRampToValueAtTime(.0001,T(.8)); n.stop(T(1)); l.stop(T(1)); }catch(e){} }
+  }
+  document.addEventListener("pointerdown",()=>{ if(on&&init()&&fireWanted) fireStart(); },true);
+  document.addEventListener("visibilitychange",()=>{ if(!ctx) return; if(document.hidden) ctx.suspend().catch(()=>{}); else if(on) ctx.resume().catch(()=>{}); });
+  return {
+    play(name,delay){ if(!on||!init()||!LIB[name]) return; try{ LIB[name](T(delay||0)); }catch(e){} },
+    fire(want){ fireWanted=want; if(!ctx) return; (want&&on)?fireStart():fireStop(); },
+    toggle(){ on=!on; try{localStorage.setItem("lg-sound",on?"on":"off");}catch(e){}
+      if(on){ if(init()){ out.gain.value=.9; if(fireWanted) fireStart(); } } else { if(out) out.gain.value=0; fireStop(); }
+      return on; },
+    isOn:()=>on
+  };
+})();
+
+const SCREENS=["home","setup","game"];
+function show(id){SCREENS.forEach(s=>$(s).classList.toggle("hidden",s!==id));window.scrollTo(0,0);SND.fire(id==="game");}
+$("sndBtn").textContent=SND.isOn()?"🔊":"🔇";
+$("sndBtn").onclick=()=>{ $("sndBtn").textContent=SND.toggle()?"🔊":"🔇"; };
 
 /* =============================================================
    DÉCOR
@@ -438,7 +532,6 @@ function renderComp(el){
     <div class="camp-label">Personnages solitaires / ambigus</div><div class="roles-grid">${SPECIALS.ambigu.map(chip).join("")}</div>
     <div class="summary"><b>${total} carte${total>1?"s":""}</b>${picked.has("voleur")?" (dont 2 au centre pour le Voleur)":""}${parts.length?" : "+parts.join(" · "):""}${err?`<br><span class="err">⚠ ${err}</span>`:""}</div>`;
   $("startBtn").disabled=!!err;
-  $("hStart").disabled=!!err;
 }
 document.addEventListener("click",e=>{
   const comp=e.target.closest(".comp"); if(!comp) return;
@@ -451,81 +544,112 @@ document.addEventListener("click",e=>{
 
 /* =============================================================
    ÉTAT GLOBAL
-   MODE : home | solo | host | find | guest
-   S    : partie jouée sur cet appareil (solo ou hôte)
    ============================================================= */
-let MODE="home", S=null, H=null, GU=null;
+let MODE="home", S=null;
+
+/* =============================================================
+   AVATARS : têtes de robots pour les ordinateurs, personnages pour les humains
+   ============================================================= */
+const BOT_COLORS=["#e5534b","#3d8bd9","#43a86b","#e0952f","#9466d6","#d65c9e","#2fb3b3","#8a9a3b","#d9733b","#5b6fd6","#b8455f","#4d9e7a"];
+const HUMAN_AV=["🧔🏻","👩🏼‍🦰","👨🏾‍🦱","👵🏻","👴🏽","🧕🏽","👩🏻‍🌾","🧑🏽‍🍳","🧙🏻‍♂️","🧝🏼‍♀️","🤠","👸🏼","🤴🏾","🧛🏻","🧚🏼","👩🏿‍🦱","🧑🏻‍🎤","🥷🏽","👨🏼‍⚕️","🧑🏾‍🌾"];
+const HUMAN_BG=["#f4d9a6","#c9e4c5","#f6c1b8","#c8d7f0","#e6cdf2","#f3e3a1","#bfe6e3","#f2c9dc","#d9d2c3","#cfe0a8"];
+function robotSVG(k){
+  const c=BOT_COLORS[k%BOT_COLORS.length], v=k%4, m=Math.floor(k/4)%3, dark="#1f2a36", metal="#e9eef3", edge="#6b7785";
+  const eyes=[
+    `<circle cx="25" cy="30" r="5" fill="${dark}"/><circle cx="39" cy="30" r="5" fill="${dark}"/><circle cx="25" cy="30" r="2.2" fill="${c}"/><circle cx="39" cy="30" r="2.2" fill="${c}"/>`,
+    `<rect x="19" y="25" width="26" height="9" rx="4.5" fill="${dark}"/><rect x="22" y="28" width="20" height="3" rx="1.5" fill="${c}"/>`,
+    `<rect x="20" y="26" width="9" height="9" rx="1.5" fill="${dark}"/><rect x="35" y="26" width="9" height="9" rx="1.5" fill="${dark}"/><rect x="23" y="29" width="3" height="3" fill="${c}"/><rect x="38" y="29" width="3" height="3" fill="${c}"/>`,
+    `<circle cx="32" cy="30" r="8" fill="${dark}"/><circle cx="32" cy="30" r="3.6" fill="${c}"/><circle cx="34" cy="28" r="1.2" fill="#fff"/>`
+  ][v];
+  const mouth=[
+    `<rect x="23" y="39" width="18" height="5" rx="2" fill="${edge}"/><path d="M27 39v5M32 39v5M37 39v5" stroke="${metal}" stroke-width="1.2"/>`,
+    `<path d="M24 39q8 6 16 0" fill="none" stroke="${edge}" stroke-width="2.4" stroke-linecap="round"/>`,
+    `<circle cx="26" cy="41" r="1.6" fill="${edge}"/><circle cx="32" cy="41" r="1.6" fill="${edge}"/><circle cx="38" cy="41" r="1.6" fill="${edge}"/>`
+  ][m];
+  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="${c}"/>
+    <line x1="32" y1="9" x2="32" y2="17" stroke="${metal}" stroke-width="2.5"/><circle cx="32" cy="8" r="3.5" fill="#ffd54a"/>
+    <rect x="10" y="26" width="6" height="12" rx="2" fill="#9aa7b4"/><rect x="48" y="26" width="6" height="12" rx="2" fill="#9aa7b4"/>
+    <rect x="15" y="16" width="34" height="33" rx="8" fill="${metal}" stroke="${edge}" stroke-width="2"/>${eyes}${mouth}
+    <rect x="22" y="49" width="20" height="8" rx="2" fill="#9aa7b4"/></svg>`;
+}
+function avatarHTML(av,size){
+  if(!av) return "";
+  const st=`width:${size}px;height:${size}px`;
+  if(av.bot) return `<span class="av" style="${st}">${robotSVG(av.k)}</span>`;
+  const a=((av.a%HUMAN_AV.length)+HUMAN_AV.length)%HUMAN_AV.length;
+  return `<span class="av" style="${st};background:${HUMAN_BG[a%HUMAN_BG.length]};font-size:${Math.round(size*.62)}px">${HUMAN_AV[a]}</span>`;
+}
 
 /* =============================================================
    ACCUEIL
    ============================================================= */
 $("mSolo").onclick=()=>{MODE="solo";compN=6;touched=false;defaults(6);renderSetup();show("setup");};
-$("mHost").onclick=hostOpen;
-$("mFind").onclick=findOpen;
-document.querySelectorAll("[data-home]").forEach(b=>b.onclick=leaveAll);
-$("newBtn").onclick=()=>{ if(MODE==="solo") {S=null;closeModal();document.body.classList.remove("day");MODE="solo";renderSetup();show("setup");} else leaveAll(); };
-function leaveAll(){
-  setP(null);
-  S=null;H=null;GU=null;MODE="home";
-  closeModal();$("menu").classList.add("hidden");
-  document.body.classList.remove("day");
-  show("home"); updateNetStatus();
-}
+document.querySelectorAll("[data-home]").forEach(b=>b.onclick=goHome);
+$("newBtn").onclick=()=>{S=null;CUR=null;closeModal();document.body.classList.remove("day");renderSetup();show("setup");};
+function goHome(){S=null;CUR=null;closeModal();document.body.classList.remove("day");MODE="home";show("home");}
 
 /* =============================================================
-   SOLO : RÉGLAGES
+   RÉGLAGES : humain ou ordinateur pour chaque joueur
    ============================================================= */
-let names=Array(12).fill("");
+let names=Array(12).fill(""), bots=Array(12).fill(false), avs=Array.from({length:12},(_,i)=>i);
+function botIndex(i){let k=0;for(let j=0;j<i;j++) if(bots[j]) k++;return k;}
+function avOf(i){return bots[i]?{bot:true,k:botIndex(i)}:{bot:false,a:avs[i]};}
 function renderSetup(){
   $("countRow").innerHTML=Array.from({length:12},(_,i)=>`<button class="${i+1===compN?"on":""}" data-n="${i+1}">${i+1}</button>`).join("");
-  $("names").innerHTML=Array.from({length:compN},(_,i)=>`<label><span>${i+1}</span><input data-i="${i}" maxlength="18" placeholder="Joueur ${i+1}" value="${esc(names[i])}"></label>`).join("");
+  $("names").innerHTML=Array.from({length:compN},(_,i)=>`<div class="prow ${bots[i]?"isbot":""}">
+      <span class="pnum">${i+1}</span>
+      <button class="avbtn" data-av="${i}" ${bots[i]?"disabled":""} title="${bots[i]?"Ordinateur":"Choisir mon personnage"}">${avatarHTML(avOf(i),46)}${bots[i]?"":`<span class="avedit">✎</span>`}</button>
+      <input class="white" data-i="${i}" maxlength="18" placeholder="${bots[i]?"Ordi":"Joueur"} ${i+1}" value="${esc(names[i])}">
+      <div class="seg"><button data-kind="h" data-p="${i}" class="${bots[i]?"":"on"}">👤 Humain</button><button data-kind="b" data-p="${i}" class="${bots[i]?"on":""}">🤖 Ordinateur</button></div>
+    </div>`).join("");
   renderComp($("sComp"));
 }
 $("countRow").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;compN=+b.dataset.n;touched=false;defaults(compN);renderSetup();});
+$("names").addEventListener("click",e=>{
+  const k=e.target.closest("[data-kind]");
+  if(k){ bots[+k.dataset.p]=k.dataset.kind==="b"; renderSetup(); return; }
+  const a=e.target.closest("[data-av]");
+  if(a&&!a.disabled) openAvatarPicker(+a.dataset.av);
+});
+$("allHum").onclick=()=>{bots.fill(false);renderSetup();};
+$("allBot").onclick=()=>{bots.fill(true);bots[0]=false;renderSetup();};
 $("names").addEventListener("input",e=>{if(e.target.dataset.i!=null) names[+e.target.dataset.i]=e.target.value;});
+function openAvatarPicker(i){
+  const used=new Set(Array.from({length:compN},(_,j)=>j).filter(j=>j!==i&&!bots[j]).map(j=>avs[j]));
+  openModal(`<div class="who">Joueur ${i+1}${clean(names[i])?` · <b>${esc(clean(names[i]))}</b>`:""}</div>
+    <h2 class="pick-title">Choisis ton personnage</h2>
+    <div class="avgrid">${HUMAN_AV.map((_,a)=>`<button class="avpick ${a===avs[i]?"on":""} ${used.has(a)?"used":""}" data-a="${a}">${avatarHTML({bot:false,a},58)}</button>`).join("")}</div>
+    <p class="hint">Les personnages estompés sont déjà pris par un autre joueur.</p>
+    <button class="btn" id="avCancel">Annuler</button>`);
+  $("modalInner").querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{avs[i]=+b.dataset.a;closeModal();renderSetup();});
+  $("avCancel").onclick=closeModal;
+}
 $("startBtn").onclick=()=>{
   const {cards,err}=deckInfo(); if(err) return;
   shuffle(cards);
-  S={players:Array.from({length:compN},(_,i)=>({name:clean(names[i])||`Joueur ${i+1}`,role:cards[i],dead:false,seen:false,lover:false})),
-     center:cards.slice(compN),turn:0,phase:"reveal",view:false,night:1,isDay:false,done:{},winner:null};
+  S={players:Array.from({length:compN},(_,i)=>({name:clean(names[i])||(bots[i]?`Ordi ${i+1}`:`Joueur ${i+1}`),bot:bots[i],av:avOf(i),
+       role:cards[i],dead:false,seen:false})),
+     center:cards.slice(compN),turn:0,phase:"reveal",night:1,isDay:false,winner:null,
+     lovers:null,know:{},potions:{heal:true,poison:true},lastProtect:null,powersLost:false,ppView:null};
   MODE="solo"; enterGame();
 };
 
 /* =============================================================
-   ÉCRAN DE JEU (commun)
+   ÉCRAN DE JEU
    ============================================================= */
-function enterGame(){
-  show("game"); document.body.classList.remove("day");
-  $("codeChip").classList.toggle("hidden",MODE==="solo");
-  $("codeChip").textContent=MODE==="host"?H.code:MODE==="guest"?GU.code:"";
-  $("newBtn").textContent=MODE==="solo"?"↺ Nouvelle partie":"✕ Quitter";
-  layout(); renderPanel();
-}
-function changed(){ renderSeats(); renderPanel(); pubHost(); }
+function enterGame(){ show("game"); document.body.classList.remove("day"); layout(); renderPanel(); }
+function changed(){ renderSeats(); renderPanel(); }
 
 let geom={};
 function seatsVM(){
-  if(MODE==="guest"){
-    const hs=GU&&GU.hs; if(!hs||!Array.isArray(hs.pl)) return [];
-    const reveal=hs.ph==="reveal";
-    return hs.pl.map((s,i)=>{
-      const me=s.p===myPeer;
-      return {name:clean(s.n)+(me?" (toi)":""), face:roleOk(s.x)?s.x:null, dead:!!s.d, gone:!!s.g, lover:false, me,
-        active:reveal&&hs.t===i, seen:reveal&&!!s.s,
-        clickable: me && !!GU.role && (!reveal || GU.sentSeen)};
-    });
-  }
   if(!S) return [];
-  return S.players.map((p,i)=>({name:p.name+(p.me?" (toi)":""), face:(S.view||S.phase==="over"||(S.net&&p.dead))?p.role:null,
-    dead:p.dead, gone:!!p.gone, lover:p.lover, me:!!p.me,
-    active:S.phase==="reveal"&&i===S.turn, seen:S.phase==="reveal"&&p.seen, clickable:S.phase!=="reveal"}));
+  return S.players.map((p,i)=>({name:p.name, av:p.av,
+    face:(S.phase==="over"||p.dead||p.revealed)?p.role:null, dead:p.dead,
+    lover:S.phase==="over"&&!!S.lovers&&S.lovers.includes(i),
+    active:S.phase==="reveal"&&i===S.turn, seen:S.phase==="reveal"&&p.seen,
+    clickable:S.phase==="over"||(S.phase!=="reveal"&&!p.bot)}));
 }
-function centerVM(){
-  if(MODE==="guest"){const hs=GU&&GU.hs; if(!hs) return []; const n=Math.min(2,Number(hs.cc)||0);
-    return Array.from({length:n},(_,k)=>(Array.isArray(hs.xc)&&roleOk(hs.xc[k]))?hs.xc[k]:null);}
-  if(!S) return [];
-  return S.center.map(r=>(S.phase==="over"||S.view)?r:null);
-}
+function centerVM(){ return S?S.center.map(r=>S.phase==="over"?r:null):[]; }
 function layout(){
   if($("game").classList.contains("hidden")) return;
   const n=Math.max(1,seatsVM().length);
@@ -547,13 +671,13 @@ function renderSeats(){
   const stage=$("stage");
   stage.querySelectorAll(".seat").forEach(s=>s.remove());
   const vm=seatsVM(), n=vm.length; if(!n||!geom.size) return;
-  const {size,cw,ch,R}=geom;
+  const {size,cw,ch,R}=geom, as=Math.max(28,Math.round(cw*.46));
   vm.forEach((v,i)=>{
     const a=(-90+360*i/n)*Math.PI/180;
     const d=document.createElement("div");
-    d.className="seat"+(v.active?" active":"")+(v.seen?" seen":"")+(v.dead?" dead":"")+(v.gone?" gone":"")+(v.me?" me":"")+(v.clickable?" clickable":"");
+    d.className="seat"+(v.active?" active":"")+(v.seen?" seen":"")+(v.dead?" dead":"")+(v.clickable?" clickable":"");
     d.style.left=(size/2+Math.cos(a)*R)+"px"; d.style.top=(size/2+Math.sin(a)*R+10)+"px"; d.dataset.i=i;
-    d.innerHTML=`<div class="mini" style="width:${cw}px;height:${ch}px">${v.lover?'<span class="lover">❤️</span>':""}${v.face?miniFace(v.face,cw,ch):BACK_SVG}</div><div class="pname">${v.gone?"📵 ":""}${esc(v.name)}</div>`;
+    d.innerHTML=`<div class="sav">${avatarHTML(v.av,as)}</div><div class="mini" style="width:${cw}px;height:${ch}px">${v.lover?'<span class="lover">❤️</span>':""}${v.face?miniFace(v.face,cw,ch):BACK_SVG}</div><div class="pname">${esc(v.name)}</div>`;
     stage.appendChild(d);
   });
   const cc=$("centerCards"), sw=Math.round(cw*.55), sh=Math.round(sw*1.4);
@@ -562,62 +686,21 @@ function renderSeats(){
 }
 
 /* =============================================================
-   ÉTAPES DU MENEUR
-   ============================================================= */
-function getSteps(){
-  const has=r=>S.players.some(p=>p.role===r&&!p.dead);
-  const st=[];
-  if(!S.isDay){
-    if(S.night===1){
-      if(has("voleur")) st.push(["🎭","Le Voleur se réveille et peut échanger sa carte.","Déjà fait lors de la révélation des cartes."]);
-      if(has("cupidon")){ st.push(["💘","Cupidon se réveille et désigne deux amoureux.","Touchez leurs cartes → « Lier par Cupidon »."]); st.push(["❤️","Les Amoureux se réveillent et se reconnaissent.",""]); }
-    }
-    if(has("voyante")) st.push(["🔮","La Voyante se réveille et désigne un joueur dont elle veut voir la carte.",""]);
-    if(has("salvateur")) st.push(["🛡️","Le Salvateur se réveille et protège un joueur.",""]);
-    st.push(["🐺","Les Loups-Garous se réveillent et choisissent une victime.",""]);
-    if(has("gml")) st.push(["👹","Le Grand Méchant Loup peut dévorer une seconde victime.","Seulement si aucun loup n'est encore mort."]);
-    if(has("sorciere")) st.push(["🧪","La Sorcière se réveille : potion de guérison ? potion d'empoisonnement ?",""]);
-  } else {
-    st.push(["☀️","Le village se réveille et découvre les victimes de la nuit.","Touchez leur carte → « Éliminer »."]);
-    st.push(["🗣️","Débat : chacun accuse, se défend, bluffe…",""]);
-    st.push(["🗳️","Vote du village.","En cas d'égalité, le Bouc Émissaire est éliminé."+(has("idiot")?" L'Idiot du Village condamné est épargné.":"")]);
-    if(has("chasseur")) st.push(["🏹","Si le Chasseur meurt, il tire sur le joueur de son choix.",""]);
-  }
-  return st;
-}
-function stepKey(){return (S.isDay?"j":"n")+S.night;}
-function stepLine(){
-  if(!S) return "";
-  if(S.phase==="reveal") return "Distribution des cartes…";
-  if(S.phase==="ready") return "Tout le monde connaît son rôle. La nuit va tomber…";
-  if(S.phase==="over") return "Fin de la partie : toutes les cartes sont révélées.";
-  const done=S.done[stepKey()]||{};
-  const st=getSteps(), i=st.findIndex((s,k)=>!done[k]);
-  if(i<0) return S.isDay?"Le soleil se couche sur le village…":"Le jour va bientôt se lever…";
-  return st[i][0]+" "+st[i][1];
-}
-
-/* =============================================================
    PANNEAU DU BAS
    ============================================================= */
 function renderPanel(){
-  if(MODE==="guest") return renderGuestPanel();
   if(!S) return;
   const P=$("panel");
-  $("viewBtn").classList.toggle("hidden",S.phase==="reveal"||S.phase==="over");
-  $("viewBtn").textContent=S.view?"🙈 Cacher les rôles":"👁 Vue meneur";
   if(S.phase==="reveal"){
     const p=S.players[S.turn];
-    if(S.net && !p.me){
-      P.innerHTML=`<div class="panel"><h3>C'est au tour de ${esc(p.name)}</h3>
-        <p>${p.gone?"📵 Ce joueur semble déconnecté.":`<span class="dots">${esc(p.name)} découvre sa carte sur son appareil</span>`}</p>
-        ${p.gone?`<div class="row"><button class="btn" id="skipBtn">Passer ce joueur</button></div>`:""}
-        <p class="hint" style="text-align:center">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
-      if(p.gone) $("skipBtn").onclick=()=>{p.seen=true;advanceTurn();changed();};
+    if(p.bot){
+      P.innerHTML=`<div class="panel"><div class="phead">${avatarHTML(p.av,48)}<h3>${esc(p.name)} regarde sa carte…</h3></div><p class="hint" style="text-align:center">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
+      clearTimeout(window._botT); window._botT=setTimeout(botReveal,900);
       return;
     }
-    P.innerHTML=`<div class="panel"><h3>${p.me?"C'est ton tour !":"C'est au tour de "+esc(p.name)}</h3>
-      <p>${p.me?"Découvre ta carte en toute discrétion.":`Passe l'appareil à <b>${esc(p.name)}</b>. Les autres joueurs détournent les yeux…`}</p>
+    const solo1=humanCount()===1;
+    P.innerHTML=`<div class="panel"><div class="phead">${avatarHTML(p.av,48)}<h3>${solo1?"C'est ton tour, "+esc(p.name)+" !":"C'est au tour de "+esc(p.name)}</h3></div>
+      <p>${solo1?"Découvre ta carte en toute discrétion.":`Passe l'appareil à <b>${esc(p.name)}</b>. Les autres joueurs détournent les yeux…`}</p>
       <div class="row"><button class="big-btn" style="max-width:360px" id="seeBtn">🃏 Révéler ma carte</button></div>
       <p class="hint" style="text-align:center;margin-top:10px">Joueur ${S.turn+1} sur ${S.players.length}</p></div>`;
     $("seeBtn").onclick=()=>openCard(S.turn,"turn");
@@ -625,30 +708,25 @@ function renderPanel(){
   }
   if(S.phase==="ready"){
     P.innerHTML=`<div class="panel"><h3>🌙 Tout le monde connaît son rôle</h3>
-      <p>Les cartes sont face cachée autour du feu. Le meneur de jeu peut ouvrir la première nuit.</p>
-      <div class="row"><button class="btn solid" id="goBtn">Commencer la partie</button></div></div>`;
-    $("goBtn").onclick=()=>{S.phase="play";changed();};
+      <p>Le jeu va mener la partie : nuits, débats et votes.${aliveHumans().length>1?" Gardez l'appareil au centre de la table.":""}</p>
+      <div class="row"><button class="big-btn" style="max-width:360px" id="goBtn">🌙 Commencer la partie</button></div></div>`;
+    const go=()=>{ if(!S||S.phase!=="ready") return; S.phase="play"; renderPanel(); ppLoop(); };
+    $("goBtn").onclick=go;
+    if(humanCount()===0) setTimeout(go,1500);
     return;
   }
   if(S.phase==="play"){
-    const steps=getSteps(), key=stepKey();
-    S.done[key]=S.done[key]||{};
-    P.innerHTML=`<div class="panel"><h3>${S.isDay?"☀️ Jour "+S.night:"🌙 Nuit "+S.night}</h3>
-      <ol class="steps">${steps.map((s,i)=>`<li class="${S.done[key][i]?"done":""}" data-k="${i}"><input type="checkbox" ${S.done[key][i]?"checked":""}><span class="e">${s[0]}</span><span>${s[1]}${s[2]?`<small>${s[2]}</small>`:""}</span></li>`).join("")}</ol>
-      <p class="hint">Touchez la carte d'un joueur pour revoir son rôle, l'éliminer ou le lier par Cupidon.${S.net?" Les joueurs voient l'étape en cours sur leur appareil.":""}</p>
-      <div class="row"><button class="btn solid" id="nextBtn">${S.isDay?"🌙 La nuit tombe":"☀️ Le jour se lève"}</button><button class="btn red" id="endBtn">Révéler toutes les cartes</button></div></div>`;
-    P.querySelectorAll(".steps li").forEach(li=>li.onclick=ev=>{ev.preventDefault();const k=li.dataset.k;S.done[key][k]=!S.done[key][k];renderPanel();pubHost();});
-    $("nextBtn").onclick=()=>{if(S.isDay){S.isDay=false;S.night++;}else S.isDay=true;document.body.classList.toggle("day",S.isDay);changed();};
-    $("endBtn").onclick=()=>{S.phase="over";S.view=false;document.body.classList.remove("day");changed();};
+    const v=S.ppView;
+    if(!v){ P.innerHTML=`<div class="panel"><h3>${S.isDay?"☀️ Jour":"🌙 Nuit"} ${S.night}</h3><p class="dots">La partie continue</p></div>`; return; }
+    P.innerHTML=`<div class="panel"><h3>${v.title}</h3>${v.html}<div class="row" style="margin-top:12px"><button class="btn solid" id="ppBtn">${v.btn}</button></div>${humanCount()===0?`<p class="hint" style="text-align:center">Partie entre ordinateurs : elle avance toute seule.</p>`:""}</div>`;
+    $("ppBtn").onclick=()=>{ if(S.ppView!==v) return; S.ppView=null; renderPanel(); v.res(); };
     return;
   }
   if(S.phase==="over"){
     P.innerHTML=`<div class="panel"><h3>Toutes les cartes sont révélées</h3><p>Merci d'avoir joué à Loup-Garou !</p>
-      <div class="row">${S.net
-        ?`<button class="btn solid" id="againBtn">Nouvelle manche (même salon)</button><button class="btn" id="quitBtn">Quitter</button>`
-        :`<button class="btn solid" id="againBtn">Rejouer avec les mêmes joueurs</button><button class="btn" id="quitBtn">Changer les réglages</button>`}</div></div>`;
-    if(S.net){ $("againBtn").onclick=hostRelobby; $("quitBtn").onclick=leaveAll; }
-    else { $("againBtn").onclick=()=>$("startBtn").click(); $("quitBtn").onclick=()=>{S=null;renderSetup();show("setup");}; }
+      <div class="row"><button class="btn solid" id="againBtn">Rejouer avec les mêmes joueurs</button><button class="btn" id="quitBtn">Changer les réglages</button></div></div>`;
+    $("againBtn").onclick=()=>$("startBtn").click();
+    $("quitBtn").onclick=()=>{S=null;CUR=null;renderSetup();show("setup");};
   }
 }
 function advanceTurn(){ if(S.turn>=S.players.length-1) S.phase="ready"; else S.turn++; }
@@ -662,14 +740,14 @@ function frontHTML(r){
 }
 function setFront(r){ $("bigcard").querySelector(".front").outerHTML=frontHTML(r); }
 function openCardFor(o){
-  $("modalInner").innerHTML=`<div class="who">Carte de <b>${esc(o.name)}</b></div>
+  $("modalInner").innerHTML=`<div class="who">${o.av?avatarHTML(o.av,34)+" ":""}Carte de <b>${esc(o.name)}</b></div>
     <div class="bigcard" id="bigcard"><div class="inner"><div class="face back">${BACK_SVG}</div>${frontHTML(o.role)}</div></div>
     <div class="extra" id="extra"></div><div class="row" id="mActions"></div>`;
   $("modal").classList.remove("hidden");
   const A=$("mActions");
   A.innerHTML=`<button class="big-btn" style="min-width:240px" id="flipBtn">👁 Révéler ma carte</button>`+(o.mode==="review"?`<button class="btn" id="cancelBtn">Annuler</button>`:"");
   if(o.mode==="review") $("cancelBtn").onclick=closeModal;
-  $("flipBtn").onclick=()=>{ $("bigcard").classList.add("flipped"); A.innerHTML=""; setTimeout(()=>afterFlip(o),650); };
+  $("flipBtn").onclick=()=>{ SND.play("flip"); $("bigcard").classList.add("flipped"); A.innerHTML=""; setTimeout(()=>afterFlip(o),650); };
 }
 function afterFlip(o){
   const X=$("extra"), A=$("mActions");
@@ -694,423 +772,328 @@ function afterFlip(o){
 function showHide(o){
   const A=$("mActions");
   A.innerHTML=`<button class="big-btn" style="min-width:240px" id="hideBtn">🙈 Cacher ma carte${o.suffix||""}</button>`;
-  $("hideBtn").onclick=()=>{
+  $("hideBtn").onclick=ev=>{
+    if(ev.currentTarget.disabled) return; ev.currentTarget.disabled=true;
+    SND.play("flip");
     $("bigcard").classList.remove("flipped");
     setTimeout(()=>{closeModal(); o.onHide&&o.onHide();},500);
   };
 }
 function closeModal(){$("modal").classList.add("hidden");$("modalInner").innerHTML="";}
-
-/* Carte d'un joueur de cet appareil (solo / hôte) */
 function openCard(i,mode){
   const p=S.players[i];
-  openCardFor({name:p.name, role:p.role, mode,
-    suffix: mode==="turn"&&!S.net ? (i===S.players.length-1?" et terminer":" et passer") : "",
+  openCardFor({name:p.name, av:p.av, role:p.role, mode,
+    suffix: mode==="turn" ? (i===S.players.length-1?" et terminer":" et passer") : "",
     thief: (mode==="turn"&&p.role==="voleur"&&!p.thiefDone&&S.center.length===2)?S.center.slice():null,
     onSwap:k=>{const nr=S.center[k]; S.center[k]="voleur"; p.role=nr; p.thiefDone=true; renderSeats(); return nr;},
     onKeep:()=>{p.thiefDone=true; p.role="villageois"; renderSeats(); return "villageois";},
     onHide:()=>{ if(mode==="turn"){p.seen=true; advanceTurn();} changed(); }
   });
 }
-
-/* =============================================================
-   MENU JOUEUR (solo / hôte) et clic sur une carte
-   ============================================================= */
 $("stage").addEventListener("click",e=>{
-  const seat=e.target.closest(".seat"); if(!seat) return;
+  const seat=e.target.closest(".seat"); if(!seat||!S||S.phase==="reveal") return;
   const i=+seat.dataset.i;
-  if(MODE==="guest"){
-    const v=seatsVM()[i];
-    if(v&&v.me&&v.clickable) openCardFor({name:GU.name,role:GU.role,mode:"review"});
-    return;
-  }
-  if(!S||S.phase==="reveal") return;
-  e.stopPropagation();
-  if(S.phase==="over"){openCard(i,"review");return;}
-  const p=S.players[i], m=$("menu");
-  const lovers=S.players.filter(q=>q.lover).length;
-  m.innerHTML=`<div class="mh">${esc(p.name)}</div>
-    <button data-a="see">🃏 Revoir sa carte (en privé)</button>
-    <button data-a="kill">${p.dead?"✨ Ramener à la vie":"💀 Éliminer"}</button>
-    ${p.lover?`<button data-a="love">💔 Délier</button>`:(lovers<2&&S.players.some(q=>q.role==="cupidon")?`<button data-a="love">❤️ Lier par Cupidon</button>`:"")}`;
-  m.classList.remove("hidden");
-  const r=seat.getBoundingClientRect(), mw=210;
-  const x=Math.min(window.innerWidth-mw-8,Math.max(8,r.left+r.width/2-mw/2));
-  let y=r.bottom+6; if(y+180>window.innerHeight) y=Math.max(8,r.top-180);
-  m.style.left=x+"px"; m.style.top=y+"px";
-  m.onclick=ev=>{
-    const b=ev.target.closest("button"); if(!b) return;
-    m.classList.add("hidden");
-    if(b.dataset.a==="see") openCard(i,"review");
-    if(b.dataset.a==="love"){p.lover=!p.lover;renderSeats();}
-    if(b.dataset.a==="kill") toggleDead(i);
-  };
+  if(S.phase==="over"||!S.players[i].bot) openCard(i,"review");
 });
-document.addEventListener("click",e=>{if(!e.target.closest("#menu")) $("menu").classList.add("hidden");});
-$("viewBtn").onclick=()=>{S.view=!S.view;renderSeats();renderPanel();};
-
-function toggleDead(i){
-  const p=S.players[i];
-  p.dead=!p.dead;
-  const msgs=[];
-  if(p.dead){
-    msgs.push(`${p.name} est éliminé(e)… C'était : ${ROLES[p.role].icon} ${ROLES[p.role].name}`);
-    if(p.lover){const o=S.players.find(q=>q.lover&&q!==p);if(o&&!o.dead){o.dead=true;msgs.push(`💔 ${o.name} meurt de chagrin.`);}}
-    if(p.role==="chasseur") msgs.push("🏹 Le Chasseur tire une dernière fois !");
-  } else S.winner=null;
-  changed(); toast(msgs.join(" — ")||`${p.name} revient à la vie.`);
-  if(p.dead) setTimeout(checkWin,700);
-}
-function checkWin(){
-  const alive=S.players.filter(p=>!p.dead);
-  let w=null;
-  if(alive.length===0) w="n";
-  else if(alive.length===2&&alive.every(p=>p.lover)) w="a";
-  else if(!alive.some(p=>isWolf(p.role))) w="v";
-  else if(alive.every(p=>isWolf(p.role))) w="l";
-  if(!w) return;
-  S.winner=w; pubHost();
-  showWin(w,true);
-}
-function showWin(w,meneur){
+function showWin(w){
+  SND.play(w==="l"?"wolfwin":"fanfare",.3);
   const res=WINS[w]; if(!res) return;
   $("modalInner").innerHTML=`<div class="win"><div class="emo">${res.e}</div><h2>${res.t}</h2></div><p class="hint" style="font-size:1.05rem">${res.s}</p>
-    <div class="row">${meneur?`<button class="btn solid" id="wReveal">Révéler toutes les cartes</button><button class="btn" id="wCont">Continuer</button>`:`<button class="btn solid" id="wCont">Fermer</button>`}</div>`;
+    <div class="row"><button class="btn solid" id="wCont">Fermer</button></div>`;
   $("modal").classList.remove("hidden");
-  if(meneur) $("wReveal").onclick=()=>{closeModal();S.phase="over";S.view=false;document.body.classList.remove("day");changed();};
   $("wCont").onclick=closeModal;
 }
 
 /* =============================================================
-   RÉSEAU : salle en direct + chiffrement des rôles
+   PASSE ET JOUE : le jeu est le meneur, des ordinateurs peuvent jouer
    ============================================================= */
-let room=null, db=null, roomState="wait", dbState="wait", dbWrite="unknown";
-let lastP="", lastBody=undefined, seq=0, dbDocs=[], dbBusy=false, dbPending=undefined;
-const myPeer=(()=>{const a="abcdefghijkmnpqrstuvwxyz23456789";let s="p";for(let i=0;i<11;i++)s+=a[Math.floor(Math.random()*a.length)];return s;})();
-const STALE=5*60*1000;
+let CUR=null;
+const hang=()=>new Promise(()=>{});
+const P=i=>S.players[i];
+const humanCount=()=>S.players.filter(p=>!p.bot).length;
+const aliveIdx=()=>S.players.map((p,i)=>i).filter(i=>!S.players[i].dead);
+const aliveHumans=()=>aliveIdx().filter(i=>!P(i).bot);
+const aliveBots=()=>aliveIdx().filter(i=>P(i).bot);
+const rnd=a=>a&&a.length?a[Math.floor(Math.random()*a.length)]:null;
+const roleOf=i=>P(i).role;
+const powers=r=>!(S.powersLost&&["voyante","sorciere","salvateur","chasseur"].includes(r));
+const partner=i=>(S.lovers&&S.lovers.includes(i))?S.lovers.find(j=>j!==i):null;
+const label=i=>`${avatarHTML(P(i).av,24)} ${esc(P(i).name)}`;
+const roleTag=r=>`${ROLES[r].icon} ${ROLES[r].name}`;
+const gmlAllowed=()=>!S.players.some(p=>p.dead&&isWolf(p.role));
+function majority(arr){
+  if(!arr.length) return null;
+  const c={}; arr.forEach(x=>c[x]=(c[x]||0)+1);
+  const m=Math.max(...Object.values(c));
+  return rnd(Object.keys(c).filter(k=>c[k]===m).map(Number));
+}
+function openModal(html){ $("modalInner").innerHTML=html; $("modal").classList.remove("hidden"); }
+function headFor(i){ return `<div class="who">${avatarHTML(P(i).av,30)} <b>${esc(P(i).name)}</b> · ${roleTag(roleOf(i))} · ${S.isDay?"Jour":"Nuit"} ${S.night}</div>`; }
 
-/* Publie l'état de cet appareil sur les deux canaux (salle en direct + base partagée) */
-function setP(obj){
-  const body=obj?{...obj,id:myPeer}:null;
-  const s=JSON.stringify(body); if(s===lastP) return; lastP=s; lastBody=body;
-  sendAll();
-}
-function sendAll(){
-  if(lastBody===undefined) return;
-  const full=lastBody?{...lastBody,v:++seq,ts:Date.now()}:null;
-  if(room) room.presence({lg:full}).catch(()=>{});
-  if(db&&dbState!=="off"){dbPending=full;dbFlush();}
-}
-async function dbFlush(){
-  if(dbBusy||dbPending===undefined||!db) return;
-  dbBusy=true; const body=dbPending; dbPending=undefined;
-  try{ const ref=db.doc("lg/"+myPeer); if(body) await ref.set(body); else await ref.delete(); if(body) dbWrite="ok"; }
-  catch(e){ if(body) dbWrite="ro"; }
-  dbBusy=false; updateNetStatus();
-  if(dbPending!==undefined) dbFlush();
-}
-/* Tous les appareils visibles, fusionnés depuis les deux canaux */
-function netPeers(){
-  const m=new Map(), now=Date.now();
-  const put=lg=>{
-    if(!lg||typeof lg!=="object"||typeof lg.id!=="string") return;
-    const o=m.get(lg.id);
-    if(!o||(Number(lg.v)||0)>(Number(o.lg.v)||0)) m.set(lg.id,{peer:lg.id,me:lg.id===myPeer,lg});
-  };
-  if(room&&room.connected()) room.peers().forEach(p=>{if(p.kind==="viewer"&&p.presence) put(p.presence.lg);});
-  dbDocs.forEach(d=>{ if(Math.abs(now-(Number(d.ts)||0))<STALE) put(d); });
-  return [...m.values()];
-}
-function netReady(){ return !!(room&&room.connected()) || dbState==="ok"; }
-function updateNetStatus(){
-  const el=$("netStatus"), noCrypto=!(window.crypto&&crypto.subtle);
-  const rOk=!!(room&&room.connected()), dOk=dbState==="ok";
-  const ok=(rOk||dOk)&&!noCrypto;
-  $("mHost").disabled=!ok; $("mFind").disabled=!ok;
-  const det=`<small>Salle en direct : ${rOk?"✓":(roomState==="off"||roomState==="slow")?"✗":"…"} · Base partagée : ${dOk?(dbWrite==="ro"?"lecture seule":"✓"):(dbState==="off"||dbState==="slow")?"✗":"…"}</small>`;
-  const dead=s=>s==="off"||s==="slow";
-  if(ok) el.innerHTML=`✓ Réseau prêt<br>${det}`;
-  else if(noCrypto||(dead(roomState)&&dead(dbState)))
-    el.innerHTML=`⚠ Le jeu en réseau n'est pas disponible ici : seul le mode Solo fonctionne.<br>${det}<br><small>Ouvre la page depuis son lien claude.ai, connecté à ton compte Claude, puis recharge-la.</small>`;
-  else el.innerHTML=`<span class="dots">Connexion au réseau</span><br>${det}`;
-}
-(function initNet(){
-  const c=(window.claude&&typeof window.claude.use==="function")?window.claude:null;
-  if(!c){ roomState="off"; dbState="off"; updateNetStatus(); return; }
-  c.use("room").then(r=>{
-    room=r; if(!r){roomState="off";updateNetStatus();return;}
-    r.onPeers(()=>onNet(),()=>{roomState="off";onNet();});
-    r.onConnection(ok=>{ if(ok){roomState="ok";sendAll();} else if(roomState!=="off") roomState="wait"; onNet(); },()=>{roomState="off";onNet();});
-    sendAll();
-  }).catch(()=>{roomState="off";updateNetStatus();});
-  c.use("db").then(d=>{
-    db=d; if(!d){dbState="off";updateNetStatus();return;}
-    try{
-      d.collection("lg").orderBy("ts","desc").limit(300).onSnapshot(snap=>{
-        dbDocs=snap.docs.filter(x=>x.exists).map(x=>x.data()).filter(Boolean);
-        dbState="ok"; onNet();
-      },()=>{dbState="off";onNet();});
-    }catch(e){dbState="off";}
-    sendAll(); updateNetStatus();
-  }).catch(()=>{dbState="off";updateNetStatus();});
-})();
-setTimeout(()=>{
-  if(!(room&&room.connected())&&roomState!=="off") roomState="slow";
-  if(dbState==="wait") dbState="slow";
-  updateNetStatus();
-},12000);
-/* Signe de vie toutes les minutes sur la base partagée (pour repérer les appareils partis) */
-setInterval(()=>{ if(lastBody&&db&&dbState==="ok"){dbPending={...lastBody,v:++seq,ts:Date.now()};dbFlush();} },60000);
-setInterval(()=>{ if(MODE!=="home"&&MODE!=="solo") onNet(); },15000);
-window.addEventListener("pagehide",()=>{ if(lastBody){ lastBody=null; lastP="null"; if(room) room.presence({lg:null}).catch(()=>{}); if(db) db.doc("lg/"+myPeer).delete().catch(()=>{}); } });
-
-function onNet(){
-  updateNetStatus();
-  if(MODE==="find") renderGames();
-  else if(MODE==="guest") guestSync();
-  else if(MODE==="host"){ if(S) hostSync(); else hostLobbyUpdate(); }
-}
-function sendWarning(){
-  return (dbWrite==="ro"&&!(room&&room.connected()))
-    ?`<p class="hint" style="color:#ffb3a8">⚠ Ton appareil voit les parties mais ne peut pas envoyer d'informations. Demande à l'hôte de t'inviter avec le rôle « Éditeur » (bouton Partager de Claude).</p>`:"";
-}
-
-/* --- Chiffrement : chaque joueur ne peut lire que SA carte --- */
-const b64=buf=>{let s="";new Uint8Array(buf).forEach(b=>s+=String.fromCharCode(b));return btoa(s);};
-const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function genKeys(){
-  const kp=await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},false,["deriveKey"]);
-  return {priv:kp.privateKey,pub:b64(await crypto.subtle.exportKey("raw",kp.publicKey))};
-}
-async function sharedKey(priv,pubB64){
-  const pk=await crypto.subtle.importKey("raw",unb64(pubB64),{name:"ECDH",namedCurve:"P-256"},false,[]);
-  return crypto.subtle.deriveKey({name:"ECDH",public:pk},priv,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
-}
-async function encrypt(key,obj){
-  const iv=crypto.getRandomValues(new Uint8Array(12));
-  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,new TextEncoder().encode(JSON.stringify(obj)));
-  return {i:b64(iv),d:b64(ct)};
-}
-async function decrypt(key,e){
-  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(e.i)},key,unb64(e.d));
-  return JSON.parse(new TextDecoder().decode(pt));
-}
-
-/* =============================================================
-   HÔTE
-   ============================================================= */
-function randCode(){const A="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
-function hostName(){return clean($("hName").value)||"Meneur";}
-async function hostOpen(){
-  if(!netReady()) return;
-  MODE="host"; S=null;
-  H={code:randCode(), keys:await genKeys(), sk:{}};
-  compN=-1; touched=false;
-  $("hCode").textContent=H.code;
-  show("hostLobby");
-  hostLobbyUpdate();
-}
-$("hName").addEventListener("input",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
-$("hPlay").addEventListener("change",()=>{ if(MODE==="host"&&!S) hostLobbyUpdate(); });
-function lobbyGuests(){
-  if(!H) return [];
-  return netPeers().filter(p=>!p.me&&!p.lg.h&&p.lg.c===H.code&&typeof p.lg.k==="string")
-    .slice(0,$("hPlay").checked?11:12);
-}
-function hostLobbyUpdate(){
-  if(!H||S) return;
-  const g=lobbyGuests(), play=$("hPlay").checked;
-  const list=(play?[{n:hostName()+" (toi)",me:1}]:[]).concat(g.map(p=>({n:clean(p.lg.n)||"Joueur"})));
-  $("hList").innerHTML=list.length?list.map(x=>`<span class="pchip ${x.me?"me":""}">${esc(x.n)}</span>`).join(""):`<p class="hint">En attente de joueurs…</p>`;
-  if(!g.length) $("hList").innerHTML+=`<p class="hint" style="width:100%">Aucun joueur connecté pour l'instant<span class="dots"></span></p>`;
-  $("hCount").textContent=list.length;
-  if(list.length!==compN){
-    compN=list.length;
-    if(!touched) defaults(compN); else wolves=Math.min(wolves,Math.max(compN,1));
-    renderComp($("hComp"));
-  }
-  setP({h:1,c:H.code,n:hostName(),ph:"lobby",pl:g.map(p=>({p:p.peer,n:clean(p.lg.n)||"Joueur"}))});
-}
-$("hStart").onclick=async()=>{
-  const g=lobbyGuests(), play=$("hPlay").checked;
-  compN=g.length+(play?1:0);
-  const {cards,err}=deckInfo(); if(err) {renderComp($("hComp")); return;}
-  $("hStart").disabled=true;
-  shuffle(cards);
-  const seats=[]; if(play) seats.push({peer:myPeer,name:hostName(),me:true});
-  g.forEach(p=>seats.push({peer:p.peer,name:clean(p.lg.n)||"Joueur",k:p.lg.k}));
-  S={net:"host",players:seats.map((s,i)=>({...s,role:cards[i],dead:false,seen:false,lover:false,gone:false})),
-     center:cards.slice(compN),turn:0,phase:"reveal",view:false,night:1,isDay:false,done:{},winner:null};
-  try{ for(const p of S.players) if(!p.me) await encFor(p); }
-  catch(e){ toast("Erreur de chiffrement : impossible de distribuer les cartes."); S=null; $("hStart").disabled=false; return; }
-  enterGame(); pubHost();
-};
-async function encFor(p){
-  if(!H.sk[p.peer]) H.sk[p.peer]=await sharedKey(H.keys.priv,p.k);
-  const payload={r:p.role};
-  if(p.role==="voleur"&&!p.thiefDone&&S.center.length===2) payload.c=S.center.slice();
-  p.e=await encrypt(H.sk[p.peer],payload);
-}
-function pubHost(){
-  if(MODE!=="host"||!S||!H) return;
-  setP({h:1,c:H.code,n:hostName(),ph:S.phase,pk:H.keys.pub,t:S.turn,cc:S.center.length,ni:S.night,dy:S.isDay?1:0,
-    st:stepLine(),w:S.winner||null,
-    pl:S.players.map(p=>({p:p.peer,n:p.name,d:p.dead?1:0,s:p.seen?1:0,g:p.gone?1:0,
-      x:(p.dead||S.phase==="over")?p.role:null,e:p.me?null:(p.e||null)})),
-    xc:S.phase==="over"?S.center:null});
-}
-function hostSync(){
-  if(MODE!=="host"||!S) return;
-  const peers=netPeers(); let ch=false;
-  S.players.forEach((p,i)=>{
-    if(p.me) return;
-    const q=peers.find(x=>x.peer===p.peer), lg=q&&q.lg;
-    const gone=!(lg&&lg.c===H.code);
-    if(gone!==p.gone){p.gone=gone;ch=true;}
-    if(gone) return;
-    if(S.phase==="reveal"&&i===S.turn){
-      if(p.role==="voleur"&&!p.thiefDone&&typeof lg.th==="number"){
-        if(lg.th>=0&&lg.th<S.center.length){const k=lg.th,nr=S.center[k];S.center[k]="voleur";p.role=nr;}
-        else p.role="villageois";
-        p.thiefDone=true; ch=true;
-        encFor(p).then(pubHost).catch(()=>{});
-      }
-      if(lg.s===1&&!p.seen){p.seen=true;advanceTurn();ch=true;}
-    }
+function passTo(i){
+  if(S!==CUR) return hang();
+  return new Promise(res=>{
+    if(humanCount()<=1) return res();
+    openModal(`<div class="who">${S.isDay?"☀️":"🌙"} Passe l'appareil à</div>${avatarHTML(P(i).av,96)}<div class="pass-name">${esc(P(i).name)}</div>
+      <p class="hint">Les autres joueurs détournent les yeux…</p>
+      <button class="big-btn" id="pOk">Je suis ${esc(P(i).name)}</button>`);
+    $("pOk").onclick=()=>{closeModal();res();};
   });
-  if(ch){renderSeats();renderPanel();pubHost();}
 }
-function hostRelobby(){
-  S=null; closeModal(); document.body.classList.remove("day");
-  compN=-1; show("hostLobby"); $("hStart").disabled=false; hostLobbyUpdate();
+function pick(i,o){
+  if(S!==CUR) return hang();
+  return new Promise(res=>{
+    openModal(`${headFor(i)}<h2 class="pick-title">${o.title}</h2>${o.text?`<p class="hint">${o.text}</p>`:""}
+      <div class="pick-grid">${o.options.map(j=>`<button class="pick" data-j="${j}">${label(j)}${j===i?" (toi)":""}</button>`).join("")}</div>
+      ${o.skip?`<button class="btn" id="pSkip">${o.skip}</button>`:""}`);
+    $("modalInner").querySelectorAll(".pick").forEach(b=>b.onclick=()=>{closeModal();res(+b.dataset.j);});
+    if(o.skip) $("pSkip").onclick=()=>{closeModal();res(null);};
+  });
+}
+function choose(i,html,labels){
+  if(S!==CUR) return hang();
+  return new Promise(res=>{
+    openModal(`${headFor(i)}<div class="mtext">${html}</div><div class="mbtns">${labels.map((l,k)=>`<button class="${k===0?"big-btn":"btn"}" data-k="${k}">${l}</button>`).join("")}</div>`);
+    $("modalInner").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{closeModal();res(+b.dataset.k);});
+  });
+}
+const info=(i,html,btn)=>choose(i,html,[btn||"Continuer"]);
+function publicStep(title,html,btn){
+  if(S!==CUR) return hang();
+  return new Promise(res=>{
+    S.ppView={title,html,btn,res}; renderSeats(); renderPanel();
+    if(humanCount()===0) setTimeout(()=>{ if(S&&S.ppView&&S.ppView.res===res){S.ppView=null;res();} },2600);
+  });
 }
 
-/* =============================================================
-   INVITÉ (Chercher une partie)
-   ============================================================= */
-function findOpen(){
-  if(!netReady()) return;
-  MODE="find"; GU=null;
-  $("sJoin").classList.remove("hidden"); $("sWait").classList.add("hidden");
-  show("search"); renderGames();
-}
-function hostsList(){
-  return netPeers().filter(p=>!p.me&&p.lg.h===1&&typeof p.lg.c==="string");
-}
-function renderGames(){
-  const hs=hostsList();
-  $("gList").innerHTML=hs.length?hs.map(p=>{
-    const lg=p.lg, n=Array.isArray(lg.pl)?lg.pl.length:0, open=lg.ph==="lobby";
-    return `<div class="game-row"><div><b>${esc(clean(lg.n))}</b><span class="code sm">${esc(String(lg.c).slice(0,6))}</span><br>
-      <small>${open?`${n} joueur${n>1?"s":""} déjà inscrit${n>1?"s":""}`:"Partie en cours"}</small></div>
-      ${open?`<button class="btn solid" data-join="${esc(String(lg.c).slice(0,6))}">Rejoindre</button>`:""}</div>`;
-  }).join(""):`<p class="hint">Aucune partie pour l'instant<span class="dots"></span><br>Demande à l'hôte d'ouvrir cette page et de choisir « Hôte ».</p>`;
-}
-$("gList").addEventListener("click",e=>{const b=e.target.closest("[data-join]"); if(b) joinGame(b.dataset.join);});
-async function joinGame(code){
-  const name=clean($("gName").value);
-  if(!name){ $("gName").focus(); toast("Entre d'abord ton nom"); return; }
-  const keys=await genKeys();
-  GU={code,name,keys,p:{c:code,n:name,k:keys.pub},role:null,center:null,iv:null,sk:null,skFor:null,
-      lastW:null,dead:{},inGame:false,sentSeen:false,thiefDone:false,hs:null,lostTimer:null};
-  MODE="guest";
-  $("sJoin").classList.add("hidden"); $("sWait").classList.remove("hidden");
-  setP(GU.p); guestSync();
-}
-function guestReset(){
-  Object.assign(GU,{role:null,center:null,iv:null,dead:{},inGame:false,sentSeen:false,thiefDone:false,lastW:null});
-  GU.p={c:GU.code,n:GU.name,k:GU.keys.pub}; setP(GU.p);
-}
-function waitBox(html){
-  if(GU.inGame){ GU.inGame=false; closeModal(); document.body.classList.remove("day"); }
-  if($("search").classList.contains("hidden")) show("search");
-  $("sJoin").classList.add("hidden"); $("sWait").classList.remove("hidden");
-  $("sWaitBox").innerHTML=html;
-}
-async function guestSync(){
-  if(MODE!=="guest"||!GU) return;
-  const hp=netPeers().find(p=>!p.me&&p.lg.h===1&&p.lg.c===GU.code);
-  if(!hp){
-    GU.hs=null;
-    if(GU.inGame){ renderGuestPanel(); }
-    else waitBox(`<h2>Partie introuvable</h2><p class="hint">L'hôte a fermé la partie ou s'est déconnecté.</p>`);
-    return;
+/* ---- Révélation automatique d'un ordinateur ---- */
+function botReveal(){
+  if(!S||S.phase!=="reveal") return;
+  const p=S.players[S.turn]; if(!p||!p.bot) return;
+  if(p.role==="voleur"&&!p.thiefDone&&S.center.length===2){
+    if(S.center.every(isWolf)||Math.random()<.5){const k=Math.floor(Math.random()*2),nr=S.center[k];S.center[k]="voleur";p.role=nr;}
+    else p.role="villageois";
+    p.thiefDone=true;
   }
-  const hs=hp.lg; GU.hs=hs;
-  const pl=Array.isArray(hs.pl)?hs.pl:[];
-  const idx=pl.findIndex(s=>s&&s.p===myPeer);
-  if(hs.ph==="lobby"){
-    if(GU.inGame||GU.role) guestReset();
-    waitBox(`<h2>Partie de ${esc(clean(hs.n))} <span class="code sm">${esc(GU.code)}</span></h2>
-      <p style="margin:10px 0">${idx>=0?`✓ Tu es inscrit(e) sous le nom <b>${esc(GU.name)}</b>.<br><span class="dots">En attente que le meneur distribue les cartes</span>`
-        :`<span class="dots">Connexion à la partie</span><br><small class="hint">Si rien ne se passe, la partie est peut-être complète (12 joueurs).</small>`}</p>${sendWarning()}
-      <div class="plist">${pl.map(s=>`<span class="pchip ${s.p===myPeer?"me":""}">${esc(clean(s.n))}</span>`).join("")}</div>`);
-    return;
-  }
-  if(idx<0){
-    waitBox(`<h2>Partie déjà commencée</h2><p class="hint">La partie de ${esc(clean(hs.n))} a commencé sans toi. Attends la prochaine manche ou choisis une autre partie.</p>`);
-    return;
-  }
-  const me=pl[idx];
-  if(me.e&&typeof me.e.i==="string"&&me.e.i!==GU.iv&&typeof hs.pk==="string"){
-    try{
-      if(!GU.sk||GU.skFor!==hs.pk){GU.sk=await sharedKey(GU.keys.priv,hs.pk);GU.skFor=hs.pk;}
-      const data=await decrypt(GU.sk,me.e);
-      if(roleOk(data.r)){
-        GU.iv=me.e.i; GU.role=data.r;
-        GU.center=(Array.isArray(data.c)&&data.c.length===2&&data.c.every(roleOk))?data.c:null;
-      }
-    }catch(e){}
-  }
-  pl.forEach(s=>{
-    if(s.d&&!GU.dead[s.p]){ GU.dead[s.p]=1;
-      if(GU.inGame) toast(`${clean(s.n)} est éliminé(e)${roleOk(s.x)?` — c'était ${ROLES[s.x].icon} ${ROLES[s.x].name}`:""}`); }
-    if(!s.d) delete GU.dead[s.p];
-  });
-  if(!GU.inGame){ GU.inGame=true; pl.forEach(s=>{if(s.d)GU.dead[s.p]=1;}); enterGame(); }
-  document.body.classList.toggle("day",!!hs.dy);
-  renderSeats(); renderGuestPanel();
-  if(hs.w&&WINS[hs.w]&&hs.w!==GU.lastW){GU.lastW=hs.w;showWin(hs.w,false);}
-  if(!hs.w) GU.lastW=null;
+  p.seen=true; advanceTurn(); changed();
 }
-function renderGuestPanel(){
-  const P=$("panel"); $("viewBtn").classList.add("hidden");
-  const hs=GU&&GU.hs;
-  if(!hs){ P.innerHTML=`<div class="panel"><h3>📵 Le meneur s'est déconnecté</h3><p class="dots">En attente de son retour</p></div>`; return; }
-  const pl=hs.pl||[], idx=pl.findIndex(s=>s.p===myPeer), me=pl[idx]||{};
-  if(hs.ph==="reveal"){
-    const cur=pl[hs.t]||{};
-    if(hs.t===idx&&!GU.sentSeen){
-      P.innerHTML=`<div class="panel"><h3>C'est ton tour, ${esc(GU.name)} !</h3><p>Découvre ta carte en toute discrétion.</p>
-        <div class="row"><button class="big-btn" style="max-width:360px" id="seeBtn" ${GU.role?"":"disabled"}>${GU.role?"🃏 Révéler ma carte":"Réception de ta carte…"}</button></div></div>`;
-      if(GU.role) $("seeBtn").onclick=guestTurnCard;
-    } else if(hs.t===idx){
-      P.innerHTML=`<div class="panel"><h3>Carte vue ✓</h3><p class="dots">Le meneur passe au joueur suivant</p></div>`;
-    } else {
-      P.innerHTML=`<div class="panel"><h3>C'est au tour de ${esc(clean(cur.n))}</h3>
-        <p>${GU.sentSeen?"Tu connais déjà ton rôle : touche ta carte pour le revoir.":`<span class="dots">Ton tour va venir</span>`}</p>
-        <p class="hint" style="text-align:center">Joueur ${Number(hs.t)+1} sur ${pl.length}</p></div>`;
+
+/* ---- Nuit : actions des humains (phase A puis B) ---- */
+async function nightA(i,N){
+  const r=roleOf(i), others=aliveIdx().filter(j=>j!==i);
+  if(r==="cupidon"&&S.night===1&&!S.lovers&&aliveIdx().length>=2){
+    const a=await pick(i,{title:"💘 Choisis le premier amoureux",options:aliveIdx()});
+    const b=await pick(i,{title:"💘 Choisis le second amoureux",text:`Premier amoureux : ${esc(P(a).name)}`,options:aliveIdx().filter(j=>j!==a)});
+    S.lovers=[a,b];
+    return info(i,`<p>💘 <b>${esc(P(a).name)}</b> et <b>${esc(P(b).name)}</b> sont désormais liés par l'amour.</p>`);
+  }
+  if(isWolf(r)){
+    const pack=aliveIdx().filter(j=>j!==i&&isWolf(roleOf(j)));
+    const prey=aliveIdx().filter(j=>!isWolf(roleOf(j)));
+    if(!prey.length) return info(i,"<p>Il n'y a plus personne à dévorer.</p>");
+    const prev=N.wolfVotes.map(v=>`${esc(P(v.by).name)} → ${esc(P(v.t).name)}`).join(", ");
+    const t=await pick(i,{title:"🐺 Choisis la victime de cette nuit",
+      text:`Ta meute : ${pack.length?pack.map(j=>label(j)).join(", "):"tu chasses seul(e)"}${prev?`<br>Votes de la meute : ${prev}`:""}`,options:prey});
+    N.wolfVotes.push({by:i,t});
+    if(r==="gml"&&gmlAllowed()&&prey.length>1){
+      N.gml=await pick(i,{title:"👹 Seconde victime (Grand Méchant Loup)",options:prey.filter(j=>j!==t),skip:"Pas de seconde victime"});
     }
     return;
   }
-  const head=hs.ph==="play"?(hs.dy?"☀️ Jour ":"🌙 Nuit ")+(Number(hs.ni)||1):hs.ph==="over"?"🃏 Fin de la partie":"🌙 Tout le monde connaît son rôle";
-  P.innerHTML=`<div class="panel"><h3>${head}</h3><p class="step">${esc(String(hs.st||"").slice(0,200))}</p>
-    <p>${me.d?"💀 Tu as été éliminé(e). Tu peux suivre la partie en silence.":hs.ph==="over"?"Toutes les cartes sont révélées.":"Touche ta carte pour revoir ton rôle."}</p>
-    ${hs.ph==="over"?`<div class="row"><button class="btn" id="qBtn">Quitter</button></div><p class="hint" style="text-align:center">Le meneur peut lancer une nouvelle manche.</p>`:""}</div>`;
-  if(hs.ph==="over") $("qBtn").onclick=leaveAll;
+  if(r==="voyante"&&powers(r)&&others.length){
+    const t=await pick(i,{title:"🔮 Quel joueur veux-tu espionner ?",options:others});
+    return info(i,`<p><b>${esc(P(t).name)}</b> est :</p><div class="thief">${miniFace(roleOf(t),100,140)}</div>`);
+  }
+  if(r==="salvateur"&&powers(r)){
+    const opts=aliveIdx().filter(j=>j!==S.lastProtect);
+    N.protect=await pick(i,{title:"🛡️ Qui veux-tu protéger cette nuit ?",
+      text:S.lastProtect!=null&&!P(S.lastProtect).dead?`Tu ne peux pas protéger ${esc(P(S.lastProtect).name)} deux nuits de suite.`:"",options:opts});
+    return;
+  }
+  return info(i,`<p class="hint">Rien à faire pour toi cette nuit.<br>Garde les yeux fermés…</p>`);
 }
-function guestTurnCard(){
-  if(!GU.role) return;
-  openCardFor({name:GU.name, role:GU.role, mode:"turn",
-    thief:(GU.role==="voleur"&&GU.center&&!GU.thiefDone)?GU.center.slice():null,
-    onSwap:k=>{GU.thiefDone=true; const nr=GU.center[k]; GU.role=nr; GU.p={...GU.p,th:k}; setP(GU.p); return nr;},
-    onKeep:()=>{GU.thiefDone=true; GU.role="villageois"; GU.p={...GU.p,th:-1}; setP(GU.p); return "villageois";},
-    onHide:()=>{GU.sentSeen=true; GU.p={...GU.p,s:1}; setP(GU.p); renderSeats(); renderGuestPanel();}
-  });
+function hasB(i){
+  const r=roleOf(i);
+  return (S.night===1&&S.lovers&&S.lovers.includes(i)) || (r==="sorciere"&&powers(r)&&(S.potions.heal||S.potions.poison));
+}
+async function nightB(i,N){
+  const r=roleOf(i); let did=false;
+  if(S.night===1&&S.lovers&&S.lovers.includes(i)){
+    did=true;
+    await info(i,`<p>💘 Cupidon t'a frappé(e) de sa flèche !<br>Tu es amoureux(se) de <b>${esc(P(partner(i)).name)}</b>.</p>
+      <p class="hint">Si l'un de vous meurt, l'autre meurt de chagrin. Vous gagnez ensemble si vous êtes les deux derniers survivants.</p>`);
+  }
+  if(r==="sorciere"&&powers(r)&&(S.potions.heal||S.potions.poison)){
+    did=true;
+    const v=N.victim;
+    if(v==null) await info(i,"<p>Personne n'a été attaqué cette nuit.</p>");
+    else if(S.potions.heal){
+      const k=await choose(i,`<p>🐺 Cette nuit, les loups ont attaqué <b>${esc(P(v).name)}</b>.</p>`,["🧪 Utiliser la potion de guérison","Ne rien faire"]);
+      if(k===0){N.healed=true;S.potions.heal=false;}
+    } else await info(i,`<p>🐺 Les loups ont attaqué <b>${esc(P(v).name)}</b>.</p><p class="hint">Ta potion de guérison est déjà utilisée.</p>`);
+    if(S.potions.poison){
+      const t=await pick(i,{title:"☠️ Utiliser la potion d'empoisonnement ?",options:aliveIdx().filter(j=>j!==i),skip:"Garder la potion"});
+      if(t!=null){N.poison=t;S.potions.poison=false;}
+    }
+  }
+  if(!did) await info(i,`<p class="hint">Rien à faire pour toi.<br>Garde les yeux fermés…</p>`);
 }
 
-/* ============================================================= */
-updateNetStatus();
+/* ---- Nuit : actions des ordinateurs ---- */
+function botsNightA(N){
+  aliveBots().forEach(i=>{
+    const r=roleOf(i);
+    if(r==="cupidon"&&S.night===1&&!S.lovers){const al=shuffle(aliveIdx().slice()); if(al.length>=2) S.lovers=[al[0],al[1]];}
+    if(r==="voyante"&&powers(r)){const k=S.know[i]||(S.know[i]={}); const t=rnd(aliveIdx().filter(j=>j!==i&&!(j in k))); if(t!=null) k[t]=roleOf(t);}
+    if(r==="salvateur"&&powers(r)) N.protect=rnd(aliveIdx().filter(j=>j!==S.lastProtect));
+  });
+  const prey=aliveIdx().filter(j=>!isWolf(roleOf(j)));
+  const botWolves=aliveBots().filter(i=>isWolf(roleOf(i)));
+  if(botWolves.length&&prey.length){
+    let t=majority(N.wolfVotes.map(v=>v.t));
+    if(t==null){const opts=prey.filter(j=>!botWolves.some(w=>partner(w)===j)); t=rnd(opts.length?opts:prey);}
+    botWolves.forEach(i=>N.wolfVotes.push({by:i,t}));
+  }
+  N.victim=majority(N.wolfVotes.map(v=>v.t));
+  const g=aliveBots().find(i=>roleOf(i)==="gml");
+  if(g!=null&&gmlAllowed()&&Math.random()<.7) N.gml=rnd(prey.filter(j=>j!==N.victim&&j!==partner(g)));
+  if(N.gml===N.victim) N.gml=null;
+}
+function botsNightB(N){
+  const s=aliveBots().find(i=>roleOf(i)==="sorciere"); if(s==null||!powers("sorciere")) return;
+  if(S.potions.heal&&N.victim!=null&&Math.random()<(N.victim===s||N.victim===partner(s)?.95:.45)){N.healed=true;S.potions.heal=false;}
+  if(S.potions.poison&&Math.random()<.15){const t=rnd(aliveIdx().filter(j=>j!==s&&j!==partner(s)&&!(N.healed&&j===N.victim)));if(t!=null){N.poison=t;S.potions.poison=false;}}
+}
+function nightDeaths(N){
+  const d=[];
+  const hit=t=>{ if(t==null||t===N.protect) return;
+    if(roleOf(t)==="ancien"&&!P(t).shieldUsed){P(t).shieldUsed=true;return;}
+    d.push(t); };
+  if(!N.healed) hit(N.victim);
+  hit(N.gml);
+  if(N.poison!=null) d.push(N.poison);
+  S.lastProtect=N.protect;
+  return [...new Set(d)];
+}
+
+/* ---- Morts en chaîne : amoureux, chasseur ---- */
+const CAUSE={night:"est mort(e) cette nuit.",grief:"meurt de chagrin.",shot:"est abattu(e) par le Chasseur.",vote:"est éliminé(e) par le village."};
+function botVoteTarget(i){
+  const others=aliveIdx().filter(j=>j!==i&&j!==partner(i));
+  if(!others.length) return null;
+  if(isWolf(roleOf(i))){const v=others.filter(j=>!isWolf(roleOf(j)));return rnd(v.length?v:others);}
+  const k=S.know[i]||{};
+  const w=others.filter(j=>k[j]&&isWolf(k[j])); if(w.length) return rnd(w);
+  const pool=others.filter(j=>!(k[j]&&!isWolf(k[j]))&&!P(j).revealed);
+  return rnd(pool.length?pool:others);
+}
+async function processDeaths(list,cause,base){
+  const out=[], q=list.map(i=>({i,cause})); let k=0; base=base||0;
+  while(q.length){
+    const c=q.shift(), p=P(c.i); if(p.dead) continue;
+    p.dead=true; renderSeats();
+    SND.play("knell",base+1.3*k++);
+    out.push(`💀 <b>${esc(p.name)}</b> ${CAUSE[c.cause]} C'était : ${roleTag(p.role)}.`);
+    const o=partner(c.i); if(o!=null&&!P(o).dead) q.push({i:o,cause:"grief"});
+    if(p.role==="chasseur"&&powers("chasseur")){
+      const opts=aliveIdx(); if(!opts.length) continue;
+      let t;
+      if(p.bot){ t=(S.intent&&S.intent[c.i]!=null&&!P(S.intent[c.i]).dead)?S.intent[c.i]:botVoteTarget(c.i); if(t==null) t=rnd(opts); }
+      else { await passTo(c.i); t=await pick(c.i,{title:"🏹 Tu es mort(e) ! Sur qui tires-tu ta dernière balle ?",options:opts}); }
+      SND.play("shot",p.bot?base+1.3*k:0);
+      out.push(`🏹 ${esc(p.name)}, le Chasseur, tire sur <b>${esc(P(t).name)}</b> !`);
+      q.push({i:t,cause:"shot"});
+    }
+  }
+  return out;
+}
+
+/* ---- Jour : débat et vote ---- */
+const LINES=["Je trouve <b>%</b> bien trop silencieux…","<b>%</b> me paraît louche.","Je voterai contre <b>%</b>.","Cette nuit, j'ai cru voir <b>%</b> rôder près de la forêt…","Je ne fais pas confiance à <b>%</b>.","<b>%</b> cache quelque chose, j'en suis sûr(e)."];
+function botLine(i,t){
+  if(t==null) return "Je ne sais vraiment pas quoi penser…";
+  const k=S.know[i]||{};
+  if(k[t]&&isWolf(k[t])&&!isWolf(roleOf(i))) return `J'ai des informations : <b>${esc(P(t).name)}</b> est un Loup-Garou !`;
+  return rnd(LINES).replace("%",esc(P(t).name));
+}
+async function dayPhase(){
+  S.intent={};
+  aliveBots().forEach(i=>S.intent[i]=botVoteTarget(i));
+  const talk=aliveBots().map(i=>`<li>${label(i)} : « ${botLine(i,S.intent[i])} »</li>`).join("");
+  await publicStep(`🗣️ Débat — Jour ${S.night}`,`<p>Discutez entre vous : qui est le Loup-Garou ?</p>${talk?`<ul class="talk">${talk}</ul>`:""}`,"🗳️ Passer au vote");
+  const votes=[];
+  for(const i of aliveHumans().filter(i=>!P(i).noVote)){
+    await passTo(i);
+    const t=await pick(i,{title:"🗳️ Contre qui votes-tu ?",options:aliveIdx().filter(j=>j!==i),skip:"Ne pas voter"});
+    if(t!=null) votes.push({by:i,t});
+  }
+  const hp=majority(votes.map(v=>v.t));
+  aliveBots().filter(i=>!P(i).noVote).forEach(i=>{
+    let t=S.intent[i];
+    if(hp!=null&&hp!==i&&hp!==partner(i)&&Math.random()<.4&&!(isWolf(roleOf(i))&&isWolf(roleOf(hp)))) t=hp;
+    if(t==null||P(t).dead) t=botVoteTarget(i);
+    if(t!=null) votes.push({by:i,t});
+  });
+  const cnt={}; votes.forEach(v=>cnt[v.t]=(cnt[v.t]||0)+1);
+  const max=Math.max(0,...Object.values(cnt));
+  const top=Object.keys(cnt).filter(k=>cnt[k]===max).map(Number);
+  let cond=null, note="";
+  if(!votes.length) note="Personne n'a voté : personne n'est éliminé.";
+  else if(top.length===1) cond=top[0];
+  else { const b=aliveIdx().find(j=>roleOf(j)==="bouc");
+    if(b!=null){cond=b;note="⚖️ Égalité ! Le Bouc Émissaire est sacrifié.";} else note="⚖️ Égalité : personne n'est éliminé aujourd'hui."; }
+  SND.play("drum");
+  const tally=`<ul class="talk">${votes.map(v=>`<li>${label(v.by)} → ${esc(P(v.t).name)}</li>`).join("")}</ul>`;
+  let msgs=[];
+  if(cond!=null){
+    const p=P(cond);
+    if(p.role==="idiot"&&!p.revealed){ p.revealed=true; p.noVote=true; renderSeats();
+      msgs.push(`🤪 <b>${esc(p.name)}</b> est l'Idiot du Village ! Il est épargné, mais perd son droit de vote.`); }
+    else {
+      const anc=p.role==="ancien";
+      if(anc) S.powersLost=true;
+      msgs=await processDeaths([cond],"vote",1.7);
+      if(anc) msgs.push("😱 Le village a tué l'Ancien : tous les villageois perdent leurs pouvoirs !");
+    }
+  }
+  await publicStep("🗳️ Résultat du vote",`${tally}${note?`<p class="step">${note}</p>`:""}${msgs.map(m=>`<p class="step">${m}</p>`).join("")}`,"Continuer");
+}
+function ppWin(){
+  const alive=aliveIdx(); let w=null;
+  if(!alive.length) w="n";
+  else if(alive.length===2&&S.lovers&&alive.every(i=>S.lovers.includes(i))) w="a";
+  else if(!alive.some(i=>isWolf(roleOf(i)))) w="v";
+  else if(alive.every(i=>isWolf(roleOf(i)))) w="l";
+  if(!w) return false;
+  S.winner=w; S.phase="over"; S.ppView=null; document.body.classList.remove("day");
+  renderSeats(); renderPanel(); showWin(w);
+  return true;
+}
+async function ppLoop(){
+  CUR=S; const G=S;
+  while(S===G){
+    S.isDay=false; document.body.classList.remove("day");
+    SND.play("howl",.2); SND.play("owl",4.2);
+    await publicStep(`🌙 Nuit ${S.night}`,`<p class="step">La nuit tombe sur Thiercelieux. Tout le village s'endort…</p>${aliveHumans().length>1?`<p class="hint" style="text-align:center">Chaque joueur va recevoir l'appareil à tour de rôle, qu'il ait un pouvoir ou non.</p>`:""}`,"🌙 Fermer les yeux");
+    const N={wolfVotes:[],victim:null,gml:null,protect:null,healed:false,poison:null};
+    for(const i of aliveHumans()){ await passTo(i); await nightA(i,N); }
+    botsNightA(N);
+    if(aliveHumans().some(hasB)) for(const i of aliveHumans()){ await passTo(i); await nightB(i,N); }
+    botsNightB(N);
+    const dead=nightDeaths(N);
+    S.isDay=true; document.body.classList.add("day");
+    SND.play("birds");
+    const eaten=dead.some(i=>i===N.victim||i===N.gml);
+    if(eaten) SND.play("devour",.9);
+    const msgs=await processDeaths(dead,"night",eaten?2.8:1);
+    await publicStep(`☀️ Jour ${S.night}`,msgs.length?msgs.map(m=>`<p class="step">${m}</p>`).join(""):`<p class="step">🌅 Miracle : personne n'est mort cette nuit !</p>`,"Continuer");
+    if(ppWin()) return;
+    await dayPhase();
+    if(ppWin()) return;
+    S.night++;
+  }
+}
+
 })();
 </script>
 </body>
