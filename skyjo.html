@@ -97,11 +97,11 @@ button{font-family:inherit}
 .board-head .name{font-weight:bold;font-size:17px}
 .board-head .pts{font-size:13px;background:rgba(0,0,0,.25);padding:3px 8px;border-radius:20px;white-space:nowrap}
 .badge{font-size:11px;background:#e8452c;color:#fff;border-radius:10px;padding:2px 7px;margin-left:6px;text-shadow:none}
-.grid{display:grid;grid-template-columns:repeat(4,var(--card-w));grid-template-rows:repeat(3,var(--card-h));gap:6px}
+.grid{display:grid;grid-template-columns:repeat(4,var(--card-w));grid-template-rows:repeat(3,calc(var(--card-w) * 1.42));gap:6px}
 
 /* ---------- Cartes ---------- */
 .card{
-  width:var(--card-w);height:var(--card-h);border-radius:var(--radius);position:relative;overflow:hidden;
+  width:var(--card-w);height:calc(var(--card-w) * 1.42);border-radius:var(--radius);position:relative;overflow:hidden;
   box-shadow:0 2px 5px rgba(0,0,0,.35);border:2px solid #fff;user-select:none;
   transition:transform .15s, box-shadow .15s;
 }
@@ -164,7 +164,7 @@ button{font-family:inherit}
 .card.back .w2{top:24%;transform:rotate(180deg)}
 
 .slot-empty{
-  width:var(--card-w);height:var(--card-h);border-radius:var(--radius);
+  width:var(--card-w);height:calc(var(--card-w) * 1.42);border-radius:var(--radius);
   border:2px dashed rgba(255,255,255,.45);
 }
 .clickable{cursor:pointer}
@@ -223,6 +223,47 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
 .board-head .name{display:flex;align-items:center;gap:7px}
 .scores .av{margin-right:6px}
 #status .sbtn{width:auto;margin:0 0 0 8px;padding:6px 14px;font-size:14px;display:inline-block}
+
+/* ---------- Skyjo Action ---------- */
+.kind-btns button{font-size:17px;padding:12px 4px}
+.kind-btns small{display:block;font-weight:normal;font-size:12px;opacity:.85;margin-top:2px}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:#5a4030;cursor:pointer}
+.chk input{width:18px;height:18px}
+.card.back .wa{position:absolute;left:0;right:0;top:44%;text-align:center;font-weight:900;color:#ff3d9a;
+  font-size:calc(var(--card-w) * .15);-webkit-text-stroke:.5px #fff;letter-spacing:.5px}
+.card.act{
+  background-image:radial-gradient(circle at 50% 40%, rgba(255,230,245,.9) 0, rgba(255,230,245,.3) 30%, transparent 58%), var(--mosaic),
+    linear-gradient(160deg,#ff6cb8,#d6338a);
+  background-size:100% 100%, 46px 46px, 100% 100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%;
+}
+.card.act .aicon{font-size:calc(var(--card-w) * .42);line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+.card.act .aname{font-size:calc(var(--card-w) * .15);font-weight:bold;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);text-align:center;line-height:1.05;padding:0 3px}
+.card.actback{background:var(--hex), linear-gradient(135deg,#ff86c8,#c2186b);background-size:12px 12px,100% 100%;display:flex;align-items:center;justify-content:center}
+.card.actback .aw{color:#fff;font-weight:900;font-size:calc(var(--card-w) * .19);-webkit-text-stroke:.8px #7a0f45;transform:rotate(-55deg)}
+.card.mini{--card-w:34px}
+.card.mini .aname{display:none}
+.card.fresh{opacity:.5}
+.hand-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;min-height:calc(34px * 1.42);align-items:center}
+.hand-empty{font-size:12px;color:rgba(255,255,255,.8);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.act-row{display:flex;gap:6px}
+.act-row .card, .act-row .slot-empty{--card-w: clamp(44px, 7vw, 62px)}
+#actDeck .card, #actDeck .slot-empty{--card-w: clamp(44px, 7vw, 62px)}
+.act-wrap{display:flex;gap:10px;align-items:flex-end}
+.card.picked{box-shadow:0 0 0 3px #ffd23f, 0 0 14px #ffd23f !important;transform:translateY(-5px)}
+.badge.pw{background:#8a3cb4}
+.extra{color:#22a14a;font-weight:bold}
+.players.many{--card-w: clamp(34px, 4.4vw, 50px)}
+.players.many .board{padding:8px}
+.players.many .board-head .name{font-size:15px}
+.choice-row{display:flex;justify-content:center;gap:10px;margin:10px 0 16px;flex-wrap:wrap}
+.choice-row .card, .choice-row .slot-empty{--card-w:76px}
+.cardbtn{border:none;background:none;padding:0;cursor:pointer;border-radius:10px}
+.cardbtn:hover .card{transform:translateY(-6px);box-shadow:0 0 0 3px #2f6fe0}
+.hint{font-size:13px;color:#7a6250}
+.linkbtn{display:block;margin:12px auto 0;background:none;border:none;color:#7a6250;text-decoration:underline;cursor:pointer;font-size:14px}
+.modal-btns .primary:disabled{opacity:.45;cursor:not-allowed}
+.table{flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -233,36 +274,31 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     <h1 class="logo">SKYJO</h1>
     <p class="sub">Le jeu de cartes</p>
 
-    <div id="setupForm">
-      <div id="verBox">
-        <div class="label">Version</div>
-        <div class="count-btns mode-btns" id="modeBtns">
-          <button data-m="classic" class="sel">Classique<small>150 cartes</small></button>
-          <button data-m="ext">Avec extension<small>+ 13, −4 et Étoiles</small></button>
-        </div>
-      </div>
-
-      <div id="soloBox">
-        <div class="label">Nombre de joueurs</div>
-        <div class="count-btns" id="countBtns">
-          <button data-n="1">1</button><button data-n="2" class="sel">2</button><button data-n="3">3</button><button data-n="4">4</button>
-        </div>
-        <div class="label">Joueurs <span style="font-weight:normal;color:#7a6250;font-size:13px">— clique sur le personnage pour le changer</span></div>
-        <div class="names" id="names"></div>
-      </div>
-
-      <div class="err hidden" id="setupErr"></div>
-      <button class="primary" id="startBtn">Commencer la partie</button>
-
-      <details class="rules">
-        <summary>Rappel des règles</summary>
-        <p>Chacun a 12 cartes face cachée (4 × 3). Au premier tour, chaque joueur retourne 2 cartes ; celui qui a le plus de points commence.</p>
-        <p>À ton tour : prends la carte de la défausse <i>ou</i> pioche une carte, puis clique sur une de tes cartes pour l'échanger (la carte remplacée part à la défausse). Tu peux aussi simplement retourner une de tes cartes cachées. Une carte piochée peut aussi être défaussée : tu retournes alors une carte cachée.</p>
-        <p>3 cartes identiques visibles dans une même colonne sont éliminées. Dès qu'un joueur a tout dévoilé, les autres jouent un dernier tour. Le moins de points gagne ; la partie s'arrête quand un joueur atteint 100.</p>
-        <p><b>Extension</b> (+14 cartes) : 10 cartes <b>13</b> — quand tu en retournes une dans ta grille, tu regardes secrètement une de tes cartes cachées. 1 carte <b>−4</b>. 3 cartes <b>Étoile</b> — jokers qui complètent n'importe quelle colonne, mais valent 20 points si elles sont encore dans ta grille en fin de manche.</p>
-        <p><b>Ordinateur</b> : chaque joueur peut être un humain ou l'ordinateur (tête de robot). L'ordinateur joue tout seul, à son tour.</p>
-      </details>
+    <div class="label">Jeu</div>
+    <div class="count-btns kind-btns" id="kindBtns">
+      <button data-k="classic" class="sel">SkyJo Classique<small>le jeu de base</small></button>
+      <button data-k="action">SkyJo Action<small>cartes Action et Étoiles</small></button>
     </div>
+    <label class="chk" id="extRow"><input type="checkbox" id="extChk"> Ajouter l'extension (cartes 13, −4 et Étoiles)</label>
+
+    <div class="label">Nombre de joueurs</div>
+    <div class="count-btns" id="countBtns">
+      <button data-n="1">1</button><button data-n="2" class="sel">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
+    </div>
+    <div class="label">Joueurs <span style="font-weight:normal;color:#7a6250;font-size:13px">— clique sur le personnage pour le changer</span></div>
+    <div class="names" id="names"></div>
+
+    <div class="err hidden" id="setupErr"></div>
+    <button class="primary" id="startBtn">Commencer la partie</button>
+
+    <details class="rules">
+      <summary>Rappel des règles</summary>
+      <p><b>Skyjo Classique</b> : chacun a 12 cartes face cachée (4 × 3). Au premier tour, chaque joueur retourne 2 cartes ; celui qui a le plus de points commence. À ton tour : prends la carte de la défausse <i>ou</i> pioche une carte, puis clique sur une de tes cartes pour l'échanger (la carte remplacée part à la défausse). Tu peux aussi défausser la carte piochée et retourner une carte cachée, ou simplement retourner une carte cachée. 3 cartes identiques visibles dans une colonne sont éliminées. Dès qu'un joueur a tout dévoilé, les autres jouent un dernier tour. Le moins de points gagne ; la partie s'arrête quand un joueur atteint 100.</p>
+      <p><b>Extension</b> (+14 cartes) : 10 cartes 13 — quand tu en retournes une, tu regardes secrètement une de tes cartes cachées. 1 carte −4. 3 cartes Étoile — jokers pour compléter une colonne, mais 20 points si elles restent dans ta grille.</p>
+      <p><b>SkyJo Action</b> : pouvoir Skyjo élargi — 3 cartes identiques en colonne <i>ou</i> 4 en ligne sont éliminées, mais une seule fois par manche. Les <b>Étoiles</b> valent 0 et servent de joker ; révéler ou piocher une Étoile donne une carte Action gratuite. Une colonne d'Étoiles gardée vaut −10, une ligne −15. À ton tour, tu peux aussi <b>prendre</b> une carte Action (rangée ou pioche Action) ou <b>jouer</b> une carte Action que tu as depuis au moins un tour. Chaque carte Action encore en main en fin de manche vaut +10 points. Plus de carte Action jouable une fois le dernier tour lancé.</p>
+      <p>Cartes Action : 🔍 Regard · 🔄 Permutation · 🤝 Échange · ✋ Vol · 🛡️ Bouclier · ⏩ Rejouer · 🃏 Pioche 3 (passe la souris sur une carte pour son effet).</p>
+      <p><b>Ordinateur</b> : chaque joueur peut être un humain ou l'ordinateur (tête de robot). L'ordinateur joue tout seul, à son tour.</p>
+    </details>
   </div>
 </section>
 
@@ -289,6 +325,11 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       <div class="big" id="hand"></div>
       <div class="hand-actions" id="handActions"></div>
     </div>
+    <div class="pile hidden" id="actPile">
+      <div class="lbl">Cartes Action</div>
+      <div class="act-wrap"><div id="actDeck"></div><div class="act-row" id="actRow"></div></div>
+      <div class="count" id="actDeckCount"></div>
+    </div>
   </div>
   <div class="players" id="players"></div>
 </section>
@@ -305,19 +346,32 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   document.documentElement.style.setProperty('--hex', `url("data:image/svg+xml,${encodeURIComponent(hex)}")`);
 
   const $ = s => document.querySelector(s);
-  const ROWS = 3, COLS = 4, END_SCORE = 100;
-  const STAR = 'S';                         // carte Étoile (joker, 20 points)
-  const pts = v => v===STAR ? 20 : v;
+  const ROWS = 3, COLS = 4, END_SCORE = 100, MAX_PLAYERS = 6;
+  const STAR = 'S';                       // carte Étoile (joker)
+  let MODE = 'classic';                   // 'classic' | 'ext' | 'action' : version de la partie en cours
+  // Étoile : 20 points avec l'extension classique, 0 point dans Skyjo Action
+  const pts = v => v===STAR ? (MODE==='action' ? 0 : 20) : v;
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+  // ---------- Cartes Action (Skyjo Action) ----------
+  const ACTIONS = {
+    regard:   {icon:'🔍', name:'Regard',      desc:"Regarde en secret une ligne ou une colonne de cartes (dans ta grille ou celle d'un adversaire)."},
+    permut:   {icon:'🔄', name:'Permutation', desc:'Échange la place de deux cartes de ta grille (elles restent visibles ou cachées).'},
+    echange:  {icon:'🤝', name:'Échange',     desc:"Échange une de tes cartes avec une carte d'un adversaire (elles restent visibles ou cachées).", attack:true},
+    vol:      {icon:'✋', name:'Vol',         desc:"Vole une carte Action d'un adversaire. Tu pourras la jouer à ton prochain tour.", attack:true},
+    bouclier: {icon:'🛡️', name:'Bouclier',    desc:"Garde-la : elle bloque automatiquement un Échange ou un Vol contre toi. Ou joue-la pour rejouer un tour."},
+    rejouer:  {icon:'⏩', name:'Rejouer',     desc:'Tu joues deux tours de plus, à la suite.'},
+    pioche3:  {icon:'🃏', name:'Pioche 3',    desc:'Pioche 3 cartes, garde celle que tu veux (comme une carte piochée) et défausse les autres.'},
+  };
+  const ACTION_COUNTS = {regard:3, permut:3, echange:3, vol:3, bouclier:3, rejouer:3, pioche3:3};   // 21 cartes
 
   // =====================================================================
   //  PERSONNAGES
   // =====================================================================
   const AVATARS = ['🦊','🐼','🐸','🐱','🐶','🦁','🐵','🐧','🦄','🐻','🐯','🐨','🐰','🐙','🦉','🐲'];
   const AV_BG = ['#ffe2c4','#e4e8ff','#d9f5d0','#fff3b8','#ffd9e3','#d6f2ff'];
-  const BOT_COLORS = ['#e8452c','#2f6fe0','#22a14a','#8a3cb4'];
+  const BOT_COLORS = ['#e8452c','#2f6fe0','#22a14a','#8a3cb4','#f08a1c','#159c9c'];
   const ROBOT_SVG = '<svg viewBox="0 0 40 40"><line x1="20" y1="5" x2="20" y2="11" stroke="#fff" stroke-width="2.5"/><circle cx="20" cy="4.5" r="3" fill="#ffd23f"/><rect x="3" y="18" width="4.5" height="8" rx="2" fill="#fff"/><rect x="32.5" y="18" width="4.5" height="8" rx="2" fill="#fff"/><rect x="7" y="11" width="26" height="22" rx="6" fill="#fff"/><circle cx="14.5" cy="20" r="3.4" fill="#2b2b2b"/><circle cx="25.5" cy="20" r="3.4" fill="#2b2b2b"/><circle cx="15.6" cy="18.9" r="1.1" fill="#fff"/><circle cx="26.6" cy="18.9" r="1.1" fill="#fff"/><rect x="13" y="26.5" width="14" height="3.2" rx="1.6" fill="#2b2b2b"/></svg>';
-  // p : {avatar, bot, color}
   function avatarHTML(p, cls=''){
     if(p.bot) return `<span class="av bot ${cls}" style="background:${p.color||BOT_COLORS[0]}">${ROBOT_SVG}</span>`;
     const i = Math.max(0, AVATARS.indexOf(p.avatar));
@@ -337,8 +391,8 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   // =====================================================================
   //  ACCUEIL
   // =====================================================================
-  let gameMode = 'classic', nbPlayers = 2;
-  const cfg = [0,1,2,3].map(i => ({name:'Joueur '+(i+1), avatar:AVATARS[i], bot:false}));
+  let gameKind = 'classic', withExt = false, nbPlayers = 2;
+  const cfg = [0,1,2,3,4,5].map(i => ({name:'Joueur '+(i+1), avatar:AVATARS[i], bot:false}));
 
   function renderNames(){
     const list = colorBots(cfg.slice(0, nbPlayers).map(c => ({...c})));
@@ -368,75 +422,83 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     const a = e.target.closest('.avbtn');
     if(a && !a.disabled){ const i = +a.dataset.i; pickAvatar(cfg[i].avatar, av => { cfg[i].avatar = av; renderNames(); }); }
   });
-
   function pick(groupSel, btn){ document.querySelectorAll(groupSel+' button').forEach(x => x.classList.toggle('sel', x===btn)); }
   $('#countBtns').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
     nbPlayers = +b.dataset.n; pick('#countBtns', b); renderNames();
   });
-  $('#modeBtns').addEventListener('click', e => {
+  $('#kindBtns').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
-    gameMode = b.dataset.m; pick('#modeBtns', b);
+    gameKind = b.dataset.k; pick('#kindBtns', b);
+    $('#extRow').classList.toggle('hidden', gameKind!=='classic');
   });
+  $('#extChk').addEventListener('change', e => { withExt = e.target.checked; });
   function setErr(msg){ const e = $('#setupErr'); e.textContent = msg; e.classList.toggle('hidden', !msg); }
   renderNames();
 
-  $('#startBtn').addEventListener('click', () => { setErr(''); startSolo(); });
+  $('#startBtn').addEventListener('click', () => { setErr(''); startGame(); });
 
-  function showSetup(){
-    $('#game').classList.add('hidden'); $('#setup').classList.remove('hidden');
-  }
+  function showSetup(){ $('#game').classList.add('hidden'); $('#setup').classList.remove('hidden'); }
   function showGame(){ $('#setup').classList.add('hidden'); $('#game').classList.remove('hidden'); }
-
-  function leaveGame(){
-    stopBot(); S = null; VIEW = null;
-    hideModal(); showSetup();
-  }
+  function leaveGame(){ stopBot(); S = null; VIEW = null; hideModal(); showSetup(); }
 
   // =====================================================================
   //  LOGIQUE DU JEU
   // =====================================================================
-  let S = null;      // état complet (solo / hôte)
-  let VIEW = null;   // ce qui est affiché (identique pour tous, cartes cachées masquées)
+  let S = null;      // état complet de la partie
+  let VIEW = null;   // ce qui est affiché
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
   function buildDeck(mode){
-    const d = [];
-    for(let i=0;i<5;i++) d.push(-2);
-    for(let i=0;i<10;i++) d.push(-1);
-    for(let i=0;i<15;i++) d.push(0);
-    for(let v=1;v<=12;v++) for(let i=0;i<10;i++) d.push(v);
-    if(mode === 'ext'){                    // extension : +14 cartes
-      for(let i=0;i<10;i++) d.push(13);
-      d.push(-4);
-      for(let i=0;i<3;i++) d.push(STAR);
+    const d = [], add = (v,n) => { for(let i=0;i<n;i++) d.push(v); };
+    if(mode === 'action'){
+      // Skyjo Action : 129 cartes Numéro et Étoile (+ 21 cartes Action à part = 150)
+      add(-2,5); add(-1,10); add(0,10);
+      for(let v=1;v<=12;v++) add(v,8);
+      add(STAR,8);
+    } else {
+      add(-2,5); add(-1,10); add(0,15);
+      for(let v=1;v<=12;v++) add(v,10);          // 150 cartes
+      if(mode === 'ext'){ add(13,10); add(-4,1); add(STAR,3); }   // + 14 cartes
     }
-    return shuffle(d);                     // 150 cartes (164 avec l'extension)
+    return shuffle(d);
+  }
+  function buildActionDeck(){
+    const d = [];
+    Object.entries(ACTION_COUNTS).forEach(([t,n]) => { for(let i=0;i<n;i++) d.push(t); });
+    return shuffle(d);
   }
   function newGame(list, mode){
     return { players: list.map(p => ({name:p.name, avatar:p.avatar, bot:!!p.bot, color:p.color||null,
-                                      total:0, grid:null, revealed:0})),
+                                      total:0, grid:null, revealed:0, hand:[], powerUsed:false})),
              round:0, mode };
   }
-  function startSolo(){
+  function startGame(){
     const list = colorBots(cfg.slice(0, nbPlayers).map((c,i) => ({
       name: c.name.trim() || ((c.bot ? 'Robot ' : 'Joueur ') + (i+1)), avatar:c.avatar, bot:c.bot })));
     stopBot();
-    S = newGame(list, gameMode);
+    const mode = gameKind==='action' ? 'action' : (withExt ? 'ext' : 'classic');
+    S = newGame(list, mode);
     showGame(); startRound();
   }
   function startRound(){
     stopBot();
+    MODE = S.mode;
     S.round++;
     S.deck = buildDeck(S.mode);
     S.players.forEach(p => {
       p.grid = [];
       for(let c=0;c<COLS;c++){ const col=[]; for(let r=0;r<ROWS;r++) col.push({v:S.deck.pop(), up:false}); p.grid.push(col); }
-      p.revealed = 0;
+      p.revealed = 0; p.hand = []; p.powerUsed = false;
     });
     S.discard = [S.deck.pop()];
+    if(S.mode === 'action'){
+      S.actDeck = buildActionDeck(); S.actDiscard = [];
+      S.actRow = [0,1,2,3].map(() => S.actDeck.pop());
+    } else { S.actDeck = []; S.actDiscard = []; S.actRow = []; }
     S.phase = 'reveal'; S.current = 0;
     S.drawn = null; S.mustFlip = false; S.finisher = null; S.peek = null; S.result = null;
+    S.bonus = null; S.op = null; S.choose3 = null; S.extra = 0; S.botPlan = null;
     S.fx = new Set(); S.poof = new Set();
     update();
   }
@@ -446,7 +508,6 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   const allRevealed = p => cardsOf(p).every(c=>c.up);
   const hasHidden = p => cardsOf(p).some(c=>!c.up);
   const cur = () => S.players[S.current];
-
   const notify = toast;
 
   function refillDeck(){
@@ -457,33 +518,89 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     notify('La pioche est vide : la défausse est mélangée');
   }
 
-  function checkColumns(pi){
-    const p = S.players[pi]; let removed = false;
+  // ---------- Lignes et colonnes identiques ----------
+  const colCells = (p,c) => p.grid[c];
+  const rowCells = (p,r) => [0,1,2,3].map(c => p.grid[c][r]);
+  // Valeurs (hors Étoiles) d'une rangée entièrement visible, sinon null
+  function lineVals(cells){
+    if(cells.some(x => !x || !x.up)) return null;
+    return new Set(cells.filter(x => x.v!==STAR).map(x => x.v));
+  }
+  function clearCells(pi, list){
+    const p = S.players[pi];
+    list.forEach(([c,r]) => { S.discard.push(p.grid[c][r].v); p.grid[c][r] = null; S.poof.add(`${pi}-${c}-${r}`); });
+  }
+  function checkLines(pi){
+    const p = S.players[pi];
+    if(MODE !== 'action'){
+      // Skyjo classique : chaque colonne de 3 cartes identiques est éliminée
+      let removed = false;
+      for(let c=0;c<COLS;c++){
+        const vals = lineVals(colCells(p,c));
+        if(vals && vals.size <= 1){ clearCells(pi, [0,1,2].map(r => [c,r])); removed = true; }
+      }
+      if(removed) notify(`${p.name} élimine une colonne !`);
+      return;
+    }
+    // Skyjo Action : colonne de 3 ou ligne de 4 identiques, une seule fois par manche.
+    // Une rangée composée uniquement d'Étoiles est gardée pour son bonus.
+    if(p.powerUsed) return;
     for(let c=0;c<COLS;c++){
-      const col = p.grid[c];
-      // Les Étoiles sont des jokers : il suffit que les autres cartes soient identiques
-      const vals = col.every(x => x && x.up) ? new Set(col.filter(x => x.v!==STAR).map(x => x.v)) : null;
-      if(vals && vals.size <= 1){
-        col.forEach(x => S.discard.push(x.v));
-        p.grid[c] = [null,null,null];
-        for(let r=0;r<ROWS;r++) S.poof.add(`${pi}-${c}-${r}`);
-        removed = true;
+      const vals = lineVals(colCells(p,c));
+      if(vals && vals.size === 1){
+        clearCells(pi, [0,1,2].map(r => [c,r])); p.powerUsed = true;
+        notify(`⚡ Skyjo ! ${p.name} élimine une colonne (pouvoir utilisé pour cette manche)`); return;
       }
     }
-    if(removed) notify(`${p.name} élimine une colonne !`);
+    for(let r=0;r<ROWS;r++){
+      const vals = lineVals(rowCells(p,r));
+      if(vals && vals.size === 1){
+        clearCells(pi, [0,1,2,3].map(c => [c,r])); p.powerUsed = true;
+        notify(`⚡ Skyjo ! ${p.name} élimine une ligne (pouvoir utilisé pour cette manche)`); return;
+      }
+    }
+  }
+  function roundScore(p){
+    let s = cardsOf(p).reduce((a,x) => a + pts(x.v), 0);
+    if(MODE === 'action'){
+      s += 10 * p.hand.length;                                              // cartes Action gardées
+      const allStars = cells => cells.every(x => x && x.v===STAR);
+      for(let c=0;c<COLS;c++) if(allStars(colCells(p,c))) s -= 10;          // colonne d'Étoiles
+      for(let r=0;r<ROWS;r++) if(allStars(rowCells(p,r))) s -= 15;          // ligne d'Étoiles
+    }
+    return s;
   }
 
-  // Toutes les actions de jeu passent par ici (clic d'un joueur ou ordinateur)
+  // ---------- Toutes les actions de jeu passent par ici ----------
   function applyAction(seat, a){
     if(!S || !a || seat !== S.current) return;
     if(S.phase!=='reveal' && S.phase!=='play') return;
+    if(S.bonus){ if(a.t==='takeAction') onTakeAction(a.k); return; }
+    if(S.peek){
+      if(a.t==='card' && a.p===seat) onCard(seat, a.c|0, a.r|0);
+      if(a.t==='peekdone' && S.peek.shown) peekDone();
+      return;
+    }
+    if(S.choose3){ if(a.t==='pick3') onPick3(a.i|0); return; }
+    if(S.op){
+      switch(a.t){
+        case 'card': onOpCard(a.p|0, a.c|0, a.r|0); break;
+        case 'steal': onOpSteal(a.p|0, a.k|0); break;
+        case 'lookDir': if(S.op.t==='regard' && S.op.step==='dir'){ S.op.dir = a.dir==='row' ? 'row' : 'col'; S.op.step = 'show'; update(); } break;
+        case 'lookDone': if(S.op.t==='regard' && S.op.step==='show') lookDone(); break;
+        case 'cancelOp': cancelOp(); break;
+      }
+      return;
+    }
     switch(a.t){
-      case 'card': onCard(seat, a.c|0, a.r|0); break;
+      case 'card': if(a.p===seat) onCard(seat, a.c|0, a.r|0); break;
       case 'deck': onDeck(); break;
       case 'discard': onDiscard(); break;
       case 'handDiscard': if(S.drawn && S.drawn.from==='deck' && !S.mustFlip) discardDrawn(); break;
       case 'handCancel': if(S.drawn && S.drawn.from==='discard') cancelDrawn(); break;
-      case 'peekdone': if(S.peek && S.peek.shown) peekDone(); break;
+      case 'takeAction': if(canTakeAction()) onTakeAction(a.k); break;
+      case 'playAction': onPlayAction(a.k|0, false); break;
+      case 'dropAction': onPlayAction(a.k|0, true); break;
     }
   }
 
@@ -491,7 +608,7 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     const p = cur(), card = p.grid[c] && p.grid[c][r];
     if(!card) return;
 
-    // Pouvoir de la carte 13 : regarder secrètement une carte cachée
+    // Pouvoir de la carte 13 (extension) : regarder secrètement une carte cachée
     if(S.peek){
       if(card.up || S.peek.shown) return;
       S.peek.shown = true;
@@ -523,9 +640,10 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     afterFlip(card, endTurn);
   }
 
-  // Après avoir retourné une carte de sa grille : une carte 13 déclenche le pouvoir
+  // Après avoir retourné une carte de sa grille
   function afterFlip(card, next){
-    if(card.v === 13 && hasHidden(cur())){
+    if(card.v === STAR && MODE === 'action'){ grantBonus(next); return; }      // Étoile : une carte Action gratuite
+    if(card.v === 13 && MODE === 'ext' && hasHidden(cur())){
       S.peek = {next, shown:false};
       update();
       notify(`Carte 13 : ${cur().name} regarde secrètement une de ses cartes cachées`);
@@ -549,21 +667,22 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   }
 
   function onDeck(){
-    if(S.phase!=='play' || S.drawn || S.mustFlip || S.peek) return;
+    if(S.phase!=='play' || S.drawn || S.mustFlip) return;
     refillDeck();
     if(!S.deck.length) return;
     S.drawn = {v:S.deck.pop(), from:'deck'}; S.fx.add('hand');
-    update();
+    if(S.drawn.v === STAR && MODE === 'action') grantBonus(null); else update();
   }
   function onDiscard(){
-    if(S.phase!=='play' || S.mustFlip || S.peek) return;
+    if(S.phase!=='play' || S.mustFlip) return;
     if(S.drawn){
       if(S.drawn.from === 'deck') discardDrawn(); else cancelDrawn();
       return;
     }
     if(!S.discard.length) return;
     S.drawn = {v:S.discard.pop(), from:'discard'}; S.fx.add('hand');
-    update();
+    if(S.drawn.v === STAR && MODE === 'action'){ S.drawn.from = 'deck'; grantBonus(null); }   // l'Étoile ne peut plus être reposée
+    else update();
   }
   function discardDrawn(){
     S.discard.push(S.drawn.v); S.drawn = null; S.fx.add('discard');
@@ -571,13 +690,144 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   }
   function cancelDrawn(){ S.discard.push(S.drawn.v); S.drawn = null; update(); }
 
+  // ---------- Cartes Action ----------
+  function drawAction(){
+    if(!S.actDeck.length && S.actDiscard.length){ S.actDeck = shuffle(S.actDiscard); S.actDiscard = []; }
+    return S.actDeck.pop() || null;
+  }
+  const actionsLeft = () => S.actDeck.length + S.actDiscard.length + S.actRow.filter(Boolean).length > 0;
+  const freeTurn = () => S.phase==='play' && !S.drawn && !S.mustFlip && !S.op && !S.choose3 && !S.bonus && !S.peek;
+  const canTakeAction = () => MODE==='action' && freeTurn() && actionsLeft();
+  const canUseActions = () => MODE==='action' && freeTurn() && S.finisher===null;
+
+  // Une Étoile révélée ou piochée donne une carte Action
+  function grantBonus(next){
+    if(!actionsLeft()){ next ? next() : update(); return; }
+    S.bonus = {next};
+    notify(`⭐ Étoile ! ${cur().name} gagne une carte Action`);
+    update();
+  }
+  function onTakeAction(k){
+    const t = k==='deck' ? drawAction() : S.actRow[k];
+    if(!t) return;
+    if(k!=='deck') S.actRow[k] = drawAction();
+    cur().hand.push({t, fresh:true});
+    if(S.bonus){ const next = S.bonus.next; S.bonus = null; next ? next() : update(); }
+    else { notify(`${cur().name} prend une carte Action`); endTurn(); }
+  }
+  function onPlayAction(k, drop){
+    const p = cur(), card = p.hand[k];
+    if(!card || card.fresh || !canUseActions()) return;
+    if(!drop && card.t==='vol' && !stealTargets(S.current).length) return;
+    p.hand.splice(k,1); S.actDiscard.push(card.t);
+    const A = ACTIONS[card.t];
+    if(drop){ notify(`${p.name} défausse ${A.icon} ${A.name} sans l'utiliser`); endTurn(); return; }
+    notify(`${p.name} joue ${A.icon} ${A.name}`);
+    switch(card.t){
+      case 'rejouer': S.extra += 2; endTurn(); break;
+      case 'bouclier': S.extra += 1; endTurn(); break;
+      case 'pioche3': {
+        const cs = [];
+        for(let i=0;i<3;i++){ refillDeck(); if(S.deck.length) cs.push(S.deck.pop()); }
+        if(!cs.length){ endTurn(); break; }
+        S.choose3 = cs; update(); break;
+      }
+      default: S.op = {t:card.t, step:0, first:null}; update();
+    }
+  }
+  function cancelOp(){
+    const t = S.op.t;
+    const i = S.actDiscard.lastIndexOf(t); if(i>=0) S.actDiscard.splice(i,1);
+    cur().hand.push({t, fresh:false});
+    S.op = null; update();
+  }
+  function onPick3(i){
+    const cs = S.choose3; if(i<0 || i>=cs.length) return;
+    const v = cs[i];
+    cs.forEach((x,k) => { if(k!==i) S.discard.push(x); });
+    S.choose3 = null;
+    S.drawn = {v, from:'deck'}; S.fx.add('hand'); S.fx.add('discard');
+    if(v === STAR) grantBonus(null); else update();
+  }
+  const stealTargets = me => S.players.map((q,i) => i).filter(i => i!==me && S.players[i].hand.length);
+
+  // Attaque (Échange, Vol) : un Bouclier de la cible la bloque
+  function attack(tpi, fn){
+    const t = S.players[tpi];
+    const si = t.hand.findIndex(h => h.t==='bouclier');
+    S.op = null;
+    if(si >= 0){
+      t.hand.splice(si,1); S.actDiscard.push('bouclier');
+      notify(`🛡️ ${t.name} se protège avec son Bouclier !`);
+    } else fn();
+    endTurn();
+  }
+  function onOpCard(pi, c, r){
+    const op = S.op, me = S.current;
+    const cell = S.players[pi] && S.players[pi].grid[c] && S.players[pi].grid[c][r];
+    if(!cell) return;
+    if(op.t==='regard'){
+      if(op.step!==0) return;
+      op.target = {p:pi, c, r}; op.step = 'dir'; update();
+    } else if(op.t==='permut'){
+      if(pi!==me) return;
+      if(!op.first){ op.first = {c, r}; update(); return; }
+      if(op.first.c===c && op.first.r===r){ op.first = null; update(); return; }
+      swapOwn(me, op.first, {c, r}); S.op = null; endTurn();
+    } else if(op.t==='echange'){
+      if(pi===me){ op.first = (op.first && op.first.c===c && op.first.r===r) ? null : {c, r}; update(); return; }
+      if(!op.first) return;
+      const first = op.first;
+      attack(pi, () => exchange(me, first, pi, {c, r}));
+    }
+  }
+  function onOpSteal(tpi, k){
+    const me = S.current;
+    if(S.op.t!=='vol' || tpi===me) return;
+    const card = S.players[tpi].hand[k]; if(!card) return;
+    attack(tpi, () => {
+      S.players[tpi].hand.splice(k,1);
+      cur().hand.push({t:card.t, fresh:true});
+      notify(`${cur().name} vole ${ACTIONS[card.t].icon} ${ACTIONS[card.t].name} à ${S.players[tpi].name}`);
+    });
+  }
+  function swapOwn(pi, a, b){
+    const g = S.players[pi].grid, t = g[a.c][a.r];
+    g[a.c][a.r] = g[b.c][b.r]; g[b.c][b.r] = t;
+    S.fx.add(`${pi}-${a.c}-${a.r}`); S.fx.add(`${pi}-${b.c}-${b.r}`);
+  }
+  function exchange(me, a, tpi, b){
+    const ga = S.players[me].grid, gb = S.players[tpi].grid;
+    const A = ga[a.c][a.r], B = gb[b.c][b.r];
+    A.known = false; B.known = false;
+    ga[a.c][a.r] = B; gb[b.c][b.r] = A;
+    S.fx.add(`${me}-${a.c}-${a.r}`); S.fx.add(`${tpi}-${b.c}-${b.r}`);
+    notify(`${S.players[me].name} échange une carte avec ${S.players[tpi].name}`);
+    checkLines(tpi);
+  }
+  function lookCells(op){
+    const p = S.players[op.target.p];
+    return op.dir==='row' ? [0,1,2,3].map(c => ({c, r:op.target.r, x:p.grid[c][op.target.r]}))
+                          : [0,1,2].map(r => ({c:op.target.c, r, x:p.grid[op.target.c][r]}));
+  }
+  function lookDone(){
+    const op = S.op;
+    if(op.target.p === S.current) lookCells(op).forEach(o => { if(o.x) o.x.known = true; });
+    S.op = null; endTurn();
+  }
+
   function endTurn(){
     const pi = S.current, p = cur();
-    checkColumns(pi);
+    checkLines(pi);
+    p.hand.forEach(h => h.fresh = false);
     if(S.finisher === null && allRevealed(p)){
       S.finisher = pi;
       if(S.players.length > 1) notify(`${p.name} a tout dévoilé : dernier tour pour les autres !`);
     }
+    if(S.extra > 0 && S.finisher === null){
+      S.extra--; update(); return;                 // Rejouer / Bouclier : même joueur
+    }
+    S.extra = 0;
     const next = (pi + 1) % S.players.length;
     if(S.finisher !== null && next === S.finisher){ S.phase = 'ending'; update(); setTimeout(endRound, 700); return; }
     S.current = next;
@@ -589,9 +839,9 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     S.drawn = null;
     S.players.forEach((p,pi) => {
       p.grid.forEach((col,c) => col.forEach((x,r) => { if(x && !x.up){ x.up = true; S.fx.add(`${pi}-${c}-${r}`); } }));
-      checkColumns(pi);
+      checkLines(pi);
     });
-    const scores = S.players.map(p => cardsOf(p).reduce((s,x)=>s+pts(x.v),0));
+    const scores = S.players.map(roundScore);
     scores.forEach((s,i) => S.players[i].total += s);
     const single = S.players.length === 1;
     const over = single || S.players.some(p => p.total >= END_SCORE);
@@ -601,22 +851,28 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       round:S.round, over, single,
       winners: S.players.filter(p => p.total===minTotal).map(p => p.name),
       rows: S.players.map((p,i) => ({ name:p.name, avatar:p.avatar, bot:p.bot, color:p.color, score:scores[i], total:p.total,
+        actions: MODE==='action' ? p.hand.length : 0,
         win: over ? p.total===minTotal : scores[i]===minRound, fin: i===S.finisher && !single }))
     };
     S.phase = over ? 'over' : 'roundEnd';
     update();
   }
 
-  // Construit la vue partagée (les cartes cachées n'y sont jamais dévoilées)
+  // Vue affichée (les cartes cachées n'y sont jamais dévoilées)
   function makeView(){
     const v = {
       phase:S.phase, round:S.round, mode:S.mode, current:S.current, finisher:S.finisher,
-      mustFlip:S.mustFlip, peek:!!S.peek,
+      mustFlip:S.mustFlip, peek:!!S.peek, bonus:!!S.bonus, extra:S.extra,
+      op: S.op ? {t:S.op.t, step:S.op.step, first:S.op.first, target:S.op.target||null, dir:S.op.dir||null} : null,
+      choose3: S.choose3 ? [...S.choose3] : null,
+      canTake: canTakeAction(), canUse: canUseActions(),
       drawn: S.drawn ? {v:S.drawn.v, from:S.drawn.from} : null,
       deckCount:S.deck.length, discardLen:S.discard.length,
       discardTop: S.discard.length ? S.discard[S.discard.length-1] : null,
+      actRow:[...S.actRow], actDeckCount:S.actDeck.length,
       players: S.players.map(p => ({
         name:p.name, avatar:p.avatar, bot:p.bot, color:p.color, total:p.total, revealed:p.revealed, visible:visibleSum(p),
+        powerUsed:p.powerUsed, hand:p.hand.map(h => ({t:h.t, fresh:h.fresh})),
         grid: p.grid.map(col => col.map(x => x ? {up:x.up, v: x.up ? x.v : null} : null))
       })),
       result:S.result, fx:[...S.fx], poof:[...S.poof]
@@ -647,30 +903,43 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   }
 
   const EST_HIDDEN = 5;                                       // valeur moyenne d'une carte inconnue
-  const est = x => (x.up || x.known) ? pts(x.v) : EST_HIDDEN; // l'ordinateur se souvient des cartes vues avec un 13
+  const est = x => (x.up || x.known) ? pts(x.v) : EST_HIDDEN; // l'ordinateur se souvient des cartes qu'il a vues
   function hiddenCells(p){
     const out = [];
     p.grid.forEach((col,c) => col.forEach((x,r) => { if(x && !x.up) out.push({c,r}); }));
     return out;
   }
-  const estTotal = p => cardsOf(p).reduce((s,x) => s + est(x), 0);
+  function allCells(p){
+    const out = [];
+    p.grid.forEach((col,c) => col.forEach((x,r) => { if(x) out.push({c,r,x}); }));
+    return out;
+  }
+  const handCost = p => MODE==='action' ? 10*p.hand.length : 0;
+  const estTotal = p => cardsOf(p).reduce((s,x) => s + est(x), 0) + handCost(p);
   // Meilleur score estimé des adversaires (avec seulement ce qui est visible)
   function othersBest(pi){
     let m = Infinity;
-    S.players.forEach((q,i) => { if(i!==pi) m = Math.min(m, cardsOf(q).reduce((s,x) => s + (x.up ? pts(x.v) : EST_HIDDEN), 0)); });
+    S.players.forEach((q,i) => { if(i!==pi) m = Math.min(m, cardsOf(q).reduce((s,x) => s + (x.up ? pts(x.v) : EST_HIDDEN), 0) + handCost(q)); });
     return m;
+  }
+  // La rangée (autres cartes + x) serait-elle éliminée ?
+  function wouldClear(others, x){
+    if(!others.every(y => y && y.up)) return false;
+    const vals = new Set([...others.map(y => y.v), x].filter(v => v!==STAR));
+    return MODE==='action' ? vals.size === 1 : vals.size <= 1;
   }
   // Points gagnés en posant la carte x à la place (c, r)
   function placeGain(pi, c, r, x){
-    const p = S.players[pi], col = p.grid[c], target = col[r];
+    const p = S.players[pi], target = p.grid[c][r];
     if(!target) return -Infinity;
-    const others = col.filter((y,k) => k!==r);
-    if(others.every(y => y && y.up)){
-      const vals = new Set([...others.map(y => y.v), x].filter(v => v!==STAR));
-      if(vals.size <= 1) return col.reduce((s,y) => s + est(y), 0) + 4;   // la colonne disparaît
-    }
+    const canClear = MODE!=='action' || !p.powerUsed;
+    const colOthers = p.grid[c].filter((y,k) => k!==r);
+    if(canClear && wouldClear(colOthers, x)) return p.grid[c].reduce((s,y) => s + est(y), 0) + 4;
+    const rowOthers = [0,1,2,3].filter(cc => cc!==c).map(cc => p.grid[cc][r]);
+    if(MODE==='action' && canClear && wouldClear(rowOthers, x)) return rowOthers.reduce((s,y) => s + est(y), 0) + est(target) + 4;
     let g = est(target) - pts(x);
-    if(x!==STAR && others.some(y => y && y.up && y.v===x)) g += 2.5;      // prépare une colonne
+    if(x===STAR && MODE==='action') g += 1.5;                                // joker utile
+    if(x!==STAR && colOthers.some(y => y && y.up && y.v===x)) g += 2.5;      // prépare une colonne
     // Ne pas terminer la manche si on n'est pas sûr d'être devant
     if(!target.up && hiddenCells(p).length===1){
       const after = estTotal(p) - est(target) + pts(x);
@@ -687,6 +956,91 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     }));
     return best;
   }
+  // Choix d'une carte Action (bonus Étoile)
+  function botPickAction(){
+    const order = ['pioche3','rejouer','echange','regard','bouclier','vol','permut'];
+    let bestK = null, bestRank = 99;
+    S.actRow.forEach((t,k) => { if(t && order.indexOf(t) < bestRank){ bestRank = order.indexOf(t); bestK = k; } });
+    if(bestK!==null && bestRank <= 3) return bestK;
+    if(S.actDeck.length || S.actDiscard.length) return 'deck';
+    return bestK;
+  }
+  // Une permutation qui compléterait une rangée ?
+  function findSwap(pi){
+    const p = S.players[pi];
+    if(p.powerUsed) return null;
+    const cells = allCells(p).filter(o => o.x.up);
+    for(const a of cells) for(const b of cells){
+      if(a===b || a.x.v===b.x.v) continue;
+      swapOwn(pi, a, b);
+      let ok = false;
+      for(let c=0;c<COLS && !ok;c++){ const v = lineVals(colCells(p,c)); if(v && v.size===1) ok = true; }
+      for(let r=0;r<ROWS && !ok;r++){ const v = lineVals(rowCells(p,r)); if(v && v.size===1) ok = true; }
+      swapOwn(pi, a, b);
+      if(ok){ S.fx = new Set(); return {a:{c:a.c,r:a.r}, b:{c:b.c,r:b.r}}; }
+    }
+    S.fx = new Set();
+    return null;
+  }
+  // Faut-il jouer une carte Action ce tour-ci ?
+  function botChooseAction(pi){
+    const p = S.players[pi];
+    const nearEnd = S.players.some(q => hiddenCells(q).length <= 2);
+    const noShield = i => !S.players[i].hand.some(h => h.t==='bouclier');
+    let best = null;
+    p.hand.forEach((h,k) => {
+      if(h.fresh) return;
+      let v = 0, plan = {k};
+      switch(h.t){
+        case 'rejouer': v = 6; break;
+        case 'pioche3': v = 4; break;
+        case 'bouclier': v = nearEnd ? 2 : 0; break;
+        case 'regard': {
+          const col = [0,1,2,3].map(c => ({c, n:p.grid[c].filter(x => x && !x.up && !x.known).length})).sort((a,b) => b.n-a.n)[0];
+          plan.c = col.c; v = col.n >= 2 ? 3 : (nearEnd ? 1 : 0); break;
+        }
+        case 'echange': {
+          const mine = allCells(p).filter(o => o.x.up || o.x.known).sort((a,b) => est(b.x)-est(a.x))[0];
+          let theirs = null;
+          S.players.forEach((q,i) => {
+            if(i===pi || !noShield(i)) return;
+            allCells(q).filter(o => o.x.up).forEach(o => { if(!theirs || pts(o.x.v) < pts(theirs.x.v)) theirs = {...o, p:i}; });
+          });
+          if(mine && theirs){
+            const g = est(mine.x) - pts(theirs.x.v);
+            if(g >= 5){ v = g; Object.assign(plan, {a:{c:mine.c,r:mine.r}, tp:theirs.p, b:{c:theirs.c,r:theirs.r}}); }
+          }
+          if(!v && nearEnd){ v = 1; plan.drop = true; }
+          break;
+        }
+        case 'vol': {
+          const t = stealTargets(pi).filter(noShield)[0];
+          if(t!==undefined){ v = 3; plan.tp = t; plan.sk = 0; }
+          else if(nearEnd){ v = 1; plan.drop = true; }
+          break;
+        }
+        case 'permut': {
+          const sw = findSwap(pi);
+          if(sw){ v = 8; Object.assign(plan, sw); }
+          else if(nearEnd){ v = 1; plan.drop = true; }
+          break;
+        }
+      }
+      if(nearEnd && h.t!=='bouclier') v += 1;
+      if(!best || v > best.v) best = {v, plan};
+    });
+    const threshold = nearEnd ? 1 : 3;
+    return best && best.v >= threshold ? best.plan : null;
+  }
+  function botResolveOp(){
+    const pi = S.current, op = S.op, plan = S.botPlan || {};
+    if(op.t==='regard'){ op.target = {p:pi, c:plan.c||0, r:0}; op.dir = 'col'; op.step = 'show'; lookDone(); }
+    else if(op.t==='permut' && plan.a){ swapOwn(pi, plan.a, plan.b); S.op = null; endTurn(); }
+    else if(op.t==='echange' && plan.a){ attack(plan.tp, () => exchange(pi, plan.a, plan.tp, plan.b)); }
+    else if(op.t==='vol' && plan.tp!==undefined){ onOpSteal(plan.tp, plan.sk||0); }
+    else cancelOp();
+    S.botPlan = null;
+  }
   function botStep(){
     const pi = S.current, p = cur(), hidden = hiddenCells(p);
     const flipOne = () => {
@@ -694,19 +1048,30 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       const pref = hidden.filter(h => p.grid[h.c].some(y => y && y.up));
       const pool = pref.length && Math.random() < .6 ? pref : hidden;
       const h = pool[Math.floor(Math.random()*pool.length)];
-      applyAction(pi, {t:'card', c:h.c, r:h.r});
+      applyAction(pi, {t:'card', p:pi, c:h.c, r:h.r});
     };
+    if(S.bonus){ const k = botPickAction(); applyAction(pi, {t:'takeAction', k}); return; }
+    if(S.choose3){
+      let bi = 0, bg = -Infinity;
+      S.choose3.forEach((x,i) => { const b = bestPlace(pi, x); if(b && b.g > bg){ bg = b.g; bi = i; } });
+      applyAction(pi, {t:'pick3', i:bi}); return;
+    }
+    if(S.op){ botResolveOp(); return; }
     if(S.peek || S.phase==='reveal' || S.mustFlip){ flipOne(); return; }
     if(S.drawn){
       const x = S.drawn.v, best = bestPlace(pi, x);
-      if(S.drawn.from==='discard' || best.g > 0.5 || !hidden.length){ applyAction(pi, {t:'card', c:best.c, r:best.r}); return; }
+      if(S.drawn.from==='discard' || best.g > 0.5 || !hidden.length){ applyAction(pi, {t:'card', p:pi, c:best.c, r:best.r}); return; }
       // Défausser puis retourner la dernière carte finirait la manche : on évite si on n'est pas devant
       if(hidden.length===1 && estTotal(p) >= othersBest(pi)){
         const bv = bestPlace(pi, x, true);
-        if(bv && bv.g > -8){ applyAction(pi, {t:'card', c:bv.c, r:bv.r}); return; }
+        if(bv && bv.g > -8){ applyAction(pi, {t:'card', p:pi, c:bv.c, r:bv.r}); return; }
       }
       applyAction(pi, {t:'handDiscard'});
       return;
+    }
+    if(canUseActions()){
+      const plan = botChooseAction(pi);
+      if(plan){ S.botPlan = plan; applyAction(pi, {t: plan.drop ? 'dropAction' : 'playAction', k:plan.k}); return; }
     }
     if(S.discard.length){
       const top = S.discard[S.discard.length-1], best = bestPlace(pi, top);
@@ -722,24 +1087,30 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   function colorClass(v){ return v<0?'c-dblue':v===0?'c-lblue':v<=4?'c-green':v<=8?'c-yellow':v<=12?'c-red':'c-purple'; }
   const STAR_SVG = '<svg viewBox="0 0 100 95"><path d="M50 3l13.5 29.5 32 3.5-24 21.8 6.8 31.7L50 73.3 21.7 89.5l6.8-31.7-24-21.8 32-3.5z" fill="#f7d33a" stroke="#d9a800" stroke-width="4" stroke-linejoin="round"/></svg>';
   function faceHTML(v, extra=''){
-    if(v === STAR) return `<div class="card face c-star ${extra}"><span class="corner tl">20</span><span class="star">${STAR_SVG}</span><span class="corner br">20</span></div>`;
+    if(v === STAR){ const sv = pts(STAR); return `<div class="card face c-star ${extra}"><span class="corner tl">${sv}</span><span class="star">${STAR_SVG}</span><span class="corner br">${sv}</span></div>`; }
     if(v === 13) return `<div class="card face c-purple ${extra}"><span class="corner tl">13</span><span class="eye tr"></span><span class="num two">13</span><span class="eye bl"></span><span class="corner br">13</span></div>`;
     const u = (v===6||v===9) ? ' ul' : '';
     const two = String(v).length >= 2 ? ' two' : '';
     return `<div class="card face ${colorClass(v)} ${extra}"><span class="corner tl${u}">${v}</span><span class="num${two}${u}">${v}</span><span class="corner br${u}">${v}</span></div>`;
   }
-  function backHTML(extra=''){ return `<div class="card back ${extra}"><span class="word w2">SKYJO</span><span class="word w1">SKYJO</span></div>`; }
-
-  // Siège du joueur devant cet écran (en solo : le joueur dont c'est le tour)
-  function mySeat(v){
-    return v.players[v.current].bot ? -1 : v.current;
+  function backHTML(extra=''){
+    return `<div class="card back ${extra}"><span class="word w2">SKYJO</span>${MODE==='action'?'<span class="wa">ACTION</span>':''}<span class="word w1">SKYJO</span></div>`;
   }
+  function actionHTML(t, extra=''){
+    const a = ACTIONS[t];
+    return `<div class="card act ${extra}" title="${esc(a.name)} : ${esc(a.desc)}"><span class="aicon">${a.icon}</span><span class="aname">${esc(a.name)}</span></div>`;
+  }
+  function actionBackHTML(extra=''){ return `<div class="card actback ${extra}"><span class="aw">ACTION</span></div>`; }
+
+  // Siège du joueur devant l'écran : le joueur humain dont c'est le tour
+  function mySeat(v){ return v.players[v.current].bot ? -1 : v.current; }
 
   function statusHTML(v){
     const mine = v.current===mySeat(v);
     const p = v.players[v.current], n = `${avatarHTML(p,'sm')} <b>${esc(p.name)}</b>`;
     const lead = `${n}, `;
     const last = (v.finisher!==null && v.phase==='play') ? '<span class="last">Dernier tour ! </span>' : '';
+    const more = v.extra > 0 ? ` <span class="extra">(+${v.extra} tour${v.extra>1?'s':''})</span>` : '';
     if(v.phase==='ending') return 'Fin de la manche…';
     if(v.phase==='roundEnd' || v.phase==='over'){
       const scoresBtn = '<button class="primary sbtn alt" data-s="scores">Scores</button>';
@@ -748,22 +1119,34 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     }
     if(!mine){
       if(v.peek) return `👁 ${n} regarde secrètement une de ses cartes…`;
+      if(v.bonus) return `⭐ ${n} choisit une carte Action…`;
       if(v.phase==='reveal') return `${n} retourne 2 cartes…`;
-      return p.bot ? `${last}${n} réfléchit…` : `${last}C'est au tour de ${n}…`;
+      return p.bot ? `${last}${n} réfléchit…${more}` : `${last}C'est au tour de ${n}…`;
     }
-    if(v.peek) return `👁 ${lead}'clique sur une de tes cartes cachées pour la regarder secrètement'`;
-    if(v.phase==='reveal') return `${lead}'retourne 2 de tes cartes' (${p.revealed}/2)`;
-    if(v.mustFlip) return `${last}${lead}'retourne une de tes cartes cachées'`;
-    if(v.drawn) return `${last}${lead}'clique sur la carte à remplacer'` + (v.drawn.from==='deck' ? ' — ou défausse la carte piochée' : '');
-    return `${last}${lead}'pioche, prends la défausse ou retourne une carte'`;
+    if(v.bonus) return `⭐ ${lead}Étoile ! choisis une carte Action (dans la rangée ou la pioche Action)`;
+    if(v.peek) return `👁 ${lead}clique sur une de tes cartes cachées pour la regarder secrètement`;
+    if(v.phase==='reveal') return `${lead}retourne 2 de tes cartes (${p.revealed}/2)`;
+    if(v.choose3) return `🃏 ${lead}choisis une des 3 cartes`;
+    if(v.op){
+      if(v.op.t==='regard') return `🔍 ${lead}clique sur une carte (chez toi ou un adversaire) pour regarder sa ligne ou sa colonne`;
+      if(v.op.t==='permut') return v.op.first ? `🔄 ${lead}clique sur la deuxième carte à échanger` : `🔄 ${lead}clique sur la première de tes cartes à déplacer`;
+      if(v.op.t==='echange') return v.op.first ? `🤝 ${lead}clique sur la carte d'un adversaire à prendre` : `🤝 ${lead}clique sur la carte de ta grille à donner`;
+      if(v.op.t==='vol') return `✋ ${lead}clique sur la carte Action d'un adversaire à voler`;
+    }
+    if(v.mustFlip) return `${last}${lead}retourne une de tes cartes cachées${more}`;
+    if(v.drawn) return `${last}${lead}clique sur la carte à remplacer` + (v.drawn.from==='deck' ? ' — ou défausse la carte piochée' : '') + more;
+    const actTxt = v.mode==='action' ? (v.finisher===null ? ', prends ou joue une carte Action' : ', prends une carte Action') : '';
+    return `${last}${lead}pioche, prends la défausse, retourne une carte${actTxt}${more}`;
   }
 
   let resultKey = null;
   function renderView(v){
+    MODE = v.mode;
     const fx = new Set(v.fx), poof = new Set(v.poof);
     const seat = mySeat(v);
     const myTurn = (v.phase==='reveal' || v.phase==='play') && v.current===seat;
-    const playing = myTurn && v.phase==='play' && !v.mustFlip && !v.peek;
+    const busy = v.mustFlip || v.peek || v.bonus || v.op || v.choose3;
+    const playing = myTurn && v.phase==='play' && !busy;
 
     $('#status').innerHTML = statusHTML(v);
 
@@ -777,38 +1160,81 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       : faceHTML(v.discardTop, (canDiscard?'clickable ':'') + (fx.has('discard')?'flip':''));
     // Main
     $('#hand').innerHTML = v.drawn ? faceHTML(v.drawn.v, fx.has('hand')?'flip':'') : '<div class="slot-empty"></div>';
-    $('#handActions').innerHTML = (playing && v.drawn)
-      ? (v.drawn.from==='deck' ? '<button data-h="handDiscard">Défausser</button>' : '<button data-h="handCancel">Reposer</button>')
-      : '';
+    let ha = '';
+    if(myTurn && v.op) ha = '<button data-h="cancelOp">Annuler l\'action</button>';
+    else if(playing && v.drawn) ha = v.drawn.from==='deck' ? '<button data-h="handDiscard">Défausser</button>' : '<button data-h="handCancel">Reposer</button>';
+    $('#handActions').innerHTML = ha;
+
+    // Cartes Action (Skyjo Action)
+    const isAction = v.mode==='action';
+    $('#actPile').classList.toggle('hidden', !isAction);
+    if(isAction){
+      const canTake = myTurn && (v.bonus || (v.canTake && !v.drawn));
+      $('#actDeck').innerHTML = v.actDeckCount ? actionBackHTML(canTake?'clickable':'') : '<div class="slot-empty"></div>';
+      $('#actDeckCount').textContent = `${v.actDeckCount} cartes`;
+      $('#actRow').innerHTML = v.actRow.map((t,k) => t ? actionHTML(t, (canTake?'clickable':'')).replace('<div class="card', `<div data-k="${k}" class="card`) : '<div class="slot-empty"></div>').join('');
+    }
 
     // Joueurs
     const box = $('#players'); box.innerHTML = '';
+    box.classList.toggle('many', v.players.length > 4);
     v.players.forEach((p,pi) => {
       const active = pi===v.current && (v.phase==='reveal' || v.phase==='play');
       const b = document.createElement('div');
       b.className = 'board' + (active?' active':'');
       const totalTxt = v.players.length>1 || v.round>1 ? ` · total ${p.total}` : '';
-      const badges = pi===v.finisher ? '<span class="badge">a fini</span>' : '';
+      const badges = (pi===v.finisher ? '<span class="badge">a fini</span>' : '')
+        + (isAction && p.powerUsed ? '<span class="badge pw" title="Pouvoir Skyjo déjà utilisé cette manche">⚡</span>' : '');
       b.innerHTML = `<div class="board-head"><span class="name">${avatarHTML(p)}${esc(p.name)}${badges}</span>
         <span class="pts">${p.visible} pts visibles${totalTxt}</span></div>`;
       const g = document.createElement('div'); g.className = 'grid';
       for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
         const card = p.grid[c][r], key = `${pi}-${c}-${r}`;
-        let clickable = false;
-        if(myTurn && pi===v.current && card){
-          if(v.peek || v.phase==='reveal' || v.mustFlip) clickable = !card.up;
-          else if(v.drawn) clickable = true;
-          else clickable = !card.up;
+        let clickable = false, picked = false;
+        if(myTurn && card){
+          if(v.bonus || v.choose3) clickable = false;
+          else if(v.op){
+            const own = pi===v.current;
+            if(v.op.t==='regard') clickable = v.op.step===0;
+            else if(v.op.t==='permut') clickable = own;
+            else if(v.op.t==='echange') clickable = own || !!v.op.first;
+            picked = own && v.op.first && v.op.first.c===c && v.op.first.r===r;
+          }
+          else if(pi===v.current){
+            if(v.peek || v.phase==='reveal' || v.mustFlip) clickable = !card.up;
+            else if(v.drawn) clickable = true;
+            else clickable = !card.up;
+          }
         }
-        const cls = (clickable?'clickable ':'') + (fx.has(key)?'flip':'');
+        const cls = (clickable?'clickable ':'') + (picked?'picked ':'') + (fx.has(key)?'flip':'');
         const wrap = document.createElement('div');
         wrap.innerHTML = !card ? `<div class="slot-empty ${poof.has(key)?'poof':''}"></div>` : card.up ? faceHTML(card.v, cls) : backHTML(cls);
         const el = wrap.firstElementChild;
-        if(clickable) el.addEventListener('click', () => act({t:'card', c, r}));
+        if(clickable) el.addEventListener('click', () => act({t:'card', p:pi, c, r}));
         g.appendChild(el);
       }
-      b.appendChild(g); box.appendChild(b);
+      b.appendChild(g);
+      // Cartes Action du joueur
+      if(isAction){
+        const h = document.createElement('div'); h.className = 'hand-row';
+        if(!p.hand.length) h.innerHTML = '<span class="hand-empty">Aucune carte Action</span>';
+        p.hand.forEach((card,k) => {
+          const own = pi===v.current;
+          const canPlay = myTurn && own && v.canUse && !card.fresh;
+          const canSteal = myTurn && !own && v.op && v.op.t==='vol';
+          const wrap = document.createElement('div');
+          wrap.innerHTML = actionHTML(card.t, 'mini ' + (card.fresh?'fresh ':'') + ((canPlay||canSteal)?'clickable':''));
+          const el = wrap.firstElementChild;
+          if(canPlay) el.addEventListener('click', () => showActionMenu(k, card.t));
+          if(canSteal) el.addEventListener('click', () => act({t:'steal', p:pi, k}));
+          h.appendChild(el);
+        });
+        b.appendChild(h);
+      }
+      box.appendChild(b);
     });
+
+    syncModals(v, myTurn);
 
     // Résultats de fin de manche
     if(v.result){
@@ -823,8 +1249,52 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     }
   }
 
+  // Fenêtres liées à l'état du jeu (Pioche 3, Regard)
+  function syncModals(v, myTurn){
+    const want = !myTurn ? null
+      : v.choose3 ? 'pick3'
+      : (v.op && v.op.t==='regard' && v.op.step==='dir') ? 'lookdir'
+      : (v.op && v.op.t==='regard' && v.op.step==='show') ? 'lookshow'
+      : null;
+    if(want === modalKind) return;
+    if(['pick3','lookdir','lookshow','actmenu'].includes(modalKind) && want !== modalKind) hideModal();
+    if(want==='pick3'){
+      modalKind = 'pick3';
+      showModal(`<h2>🃏 Pioche 3</h2><p>Choisis la carte à garder. Tu pourras ensuite la poser dans ta grille ou la défausser.</p>
+        <div class="choice-row">${v.choose3.map((x,i) => `<button class="cardbtn" data-act="pick3" data-i="${i}">${faceHTML(x)}</button>`).join('')}</div>`);
+    } else if(want==='lookdir'){
+      modalKind = 'lookdir';
+      const tp = v.players[v.op.target.p];
+      showModal(`<h2>🔍 Regard</h2><p>Regarder la ligne ou la colonne de cette carte chez ${esc(tp.name)} ?</p>
+        <div class="modal-btns"><button class="primary" data-act="lookrow">Ligne</button><button class="primary" data-act="lookcol">Colonne</button></div>
+        <button class="linkbtn" data-act="cancelop">Annuler</button>`);
+    } else if(want==='lookshow'){
+      modalKind = 'lookshow';
+      const cells = lookCells(S.op), tp = S.players[S.op.target.p];
+      showModal(`<h2>🔍 Regard secret</h2><p>${S.op.dir==='row'?'Ligne':'Colonne'} de ${esc(tp.name)}. Mémorise-la !</p>
+        <div class="choice-row">${cells.map(o => o.x ? faceHTML(o.x.v) : '<div class="slot-empty"></div>').join('')}</div>
+        <div class="modal-btns"><button class="primary" data-act="lookdone">J'ai mémorisé</button></div>`);
+    }
+  }
+  function showActionMenu(k, t){
+    const a = ACTIONS[t];
+    const noTarget = t==='vol' && !stealTargets(S.current).length;
+    modalKind = 'actmenu';
+    showModal(`<h2>${a.icon} ${esc(a.name)}</h2>
+      <div class="peek-card">${actionHTML(t)}</div>
+      <p>${esc(a.desc)}${noTarget ? '<br><b>Aucun adversaire n\'a de carte Action à voler.</b>' : ''}</p>
+      <p class="hint">Jouer ou défausser une carte Action compte comme ton tour. Chaque carte Action gardée en fin de manche vaut +10 points.</p>
+      <div class="modal-btns">
+        <button class="primary alt" data-act="close">Annuler</button>
+        <button class="primary alt" data-act="dropaction" data-k="${k}">Défausser</button>
+        <button class="primary" data-act="playaction" data-k="${k}" ${noTarget?'disabled':''}>Jouer</button>
+      </div>`);
+  }
+
   $('#deck').addEventListener('click', e => { if(e.target.closest('.clickable')) act({t:'deck'}); });
   $('#discard').addEventListener('click', e => { if(e.target.closest('.clickable')) act({t:'discard'}); });
+  $('#actDeck').addEventListener('click', e => { if(e.target.closest('.clickable')) act({t:'takeAction', k:'deck'}); });
+  $('#actRow').addEventListener('click', e => { const c = e.target.closest('.clickable[data-k]'); if(c) act({t:'takeAction', k:+c.dataset.k}); });
   $('#handActions').addEventListener('click', e => {
     const b = e.target.closest('button'); if(b) act({t:b.dataset.h});
   });
@@ -857,8 +1327,8 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
       <div class="modal-btns"><button class="primary" data-act="peekdone">J'ai mémorisé</button></div>`);
   }
   function showResultModal(v){
-    const r = v.result, auth = true;
-    const rows = r.rows.map(x => `<tr class="${x.win?'win':''}"><td>${avatarHTML(x,'sm')}${esc(x.name)}${x.fin?' <span class="badge">a fini</span>':''}</td><td>${x.score}</td><td>${x.total}</td></tr>`).join('');
+    const r = v.result;
+    const rows = r.rows.map(x => `<tr class="${x.win?'win':''}"><td>${avatarHTML(x,'sm')}${esc(x.name)}${x.fin?' <span class="badge">a fini</span>':''}</td><td>${x.score}${x.actions?` <small title="cartes Action gardées">(dont ${x.actions}×10)</small>`:''}</td><td>${x.total}</td></tr>`).join('');
     let title, sub, btns;
     if(r.single){
       title = 'Manche terminée'; sub = `Ton score : ${r.rows[0].score} points`;
@@ -868,15 +1338,9 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
     } else {
       title = `Fin de la manche ${r.round}`; sub = `La partie s'arrête quand un joueur atteint ${END_SCORE} points.`;
     }
-    if(r.over){
-      btns = auth ? `<button class="primary alt" data-act="setup">Menu</button><button class="primary" data-act="replay">Rejouer</button>`
-                  : `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="setup">Quitter</button>`;
-      if(!auth) sub += " L'hôte peut relancer une partie.";
-    } else {
-      btns = auth ? `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="next">Manche suivante</button>`
-                  : `<button class="primary" data-act="close">Voir les cartes</button>`;
-      if(!auth) sub += " L'hôte lance la manche suivante.";
-    }
+    btns = r.over
+      ? `<button class="primary alt" data-act="setup">Menu</button><button class="primary" data-act="replay">Rejouer</button>`
+      : `<button class="primary alt" data-act="close">Voir les cartes</button><button class="primary" data-act="next">Manche suivante</button>`;
     modalKind = 'result';
     showModal(`<h2>${title}</h2><p>${sub}</p>
       <table class="scores"><tr><th>Joueur</th><th>Manche</th><th>Total</th></tr>${rows}</table>
@@ -885,10 +1349,16 @@ table.scores tr.win td{font-weight:bold;color:#22a14a}
   $('#modal').addEventListener('click', e => {
     const av = e.target.closest('button[data-av]');
     if(av){ hideModal(); if(avatarCallback) avatarCallback(av.dataset.av); avatarCallback = null; return; }
-    const b = e.target.closest('button[data-act]'); if(!b) return;
+    const b = e.target.closest('button[data-act]'); if(!b || b.disabled) return;
     const a = b.dataset.act;
     if(a==='peekdone'){ hideModal(); act({t:'peekdone'}); }
     else if(a==='close'){ hideModal(); }
+    else if(a==='pick3'){ hideModal(); act({t:'pick3', i:+b.dataset.i}); }
+    else if(a==='lookrow' || a==='lookcol'){ hideModal(); act({t:'lookDir', dir: a==='lookrow' ? 'row' : 'col'}); }
+    else if(a==='lookdone'){ hideModal(); act({t:'lookDone'}); }
+    else if(a==='cancelop'){ hideModal(); act({t:'cancelOp'}); }
+    else if(a==='playaction'){ hideModal(); act({t:'playAction', k:+b.dataset.k}); }
+    else if(a==='dropaction'){ hideModal(); act({t:'dropAction', k:+b.dataset.k}); }
     else if(a==='next'){ hideModal(); if(S && S.phase==='roundEnd') startRound(); }
     else if(a==='replay'){ hideModal(); if(S){ S.players.forEach(p => p.total = 0); S.round = 0; startRound(); } }
     else if(a==='setup'){ leaveGame(); }
