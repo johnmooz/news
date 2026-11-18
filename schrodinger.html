@@ -33,6 +33,10 @@ header h1{margin:0;font-size:clamp(1.5rem,4vw,2.3rem);letter-spacing:.5px}
 header h1 span{color:var(--heis)}
 header .sub{color:var(--muted);font-size:.95rem}
 #quitBtn{position:absolute;right:14px;top:14px}
+#sound{position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:6px;background:#fff;border-radius:12px;padding:4px 10px 4px 4px;box-shadow:0 4px 0 #cdb89a}
+#sndBtn{background:none;padding:4px 6px;font-size:1.3rem;line-height:1;box-shadow:none}
+#sndVol{width:80px;accent-color:var(--heis)}
+@media(max-width:600px){#sndVol{display:none}#sound{padding:4px}}
 .hidden{display:none!important}
 input.txt{font-family:inherit;font-size:1.05rem;font-weight:600;padding:.6em .8em;border:2px solid #e3cfac;border-radius:10px;background:#fff6e6;color:var(--name);caret-color:var(--name);-webkit-text-fill-color:var(--name);width:100%}
 input.txt::placeholder{color:#b49a7c;-webkit-text-fill-color:#b49a7c;font-weight:500}
@@ -70,6 +74,14 @@ code{background:#f1e3c8;padding:2px 8px;border-radius:6px;font-size:1.05rem;font
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row > *{flex:1}
 .err{color:var(--red);font-weight:600;margin-top:10px}
+.seatrow{display:flex;align-items:center;gap:10px}
+.seatrow .boticon{width:34px;text-align:center;font-size:1.6rem;flex-shrink:0}
+.seatrow svg{flex-shrink:0}
+.seatrow input{flex:1;min-width:0;width:auto}
+.kind2{display:flex;background:#f1e3c8;border-radius:12px;padding:3px;flex-shrink:0}
+.kind2 button{background:none;color:var(--muted);padding:.45em .7em;font-size:.88rem;border-radius:9px;box-shadow:none}
+.kind2 button.on{background:#fff;color:var(--name);box-shadow:0 2px 0 #d9c4a2}
+@media(max-width:520px){.seatrow{flex-wrap:wrap}.seatrow input{flex:1;min-width:0}.kind2{width:100%;justify-content:stretch}.kind2 button{flex:1}}
 
 /* ---------- GAME LAYOUT ---------- */
 #game{max-width:1200px;margin:0 auto;padding:8px 12px 30px;display:grid;grid-template-columns:260px 1fr;gap:16px}
@@ -175,54 +187,19 @@ code{background:#f1e3c8;padding:2px 8px;border-radius:6px;font-size:1.05rem;font
   <h1>Les Chats de <span>Schrödinger</span></h1>
   <div class="sub">Vivant ? Mort ? Ou… la boîte est vide ? <button class="linkbtn" onclick="showRules()">Règles</button></div>
   <button id="quitBtn" class="btn ghost small hidden" onclick="askQuit()">Quitter</button>
+  <div id="sound"><button id="sndBtn" title="Activer / couper le son" onclick="Sound.toggle()">🔊</button>
+    <input id="sndVol" type="range" min="0" max="1" step="0.05" title="Volume" oninput="Sound.setVolume(+this.value)"></div>
 </header>
-<div id="conn" class="hidden"></div>
 
-<!-- MENU -->
-<section id="menu" class="screen">
-  <h2>Choisissez un mode de jeu</h2>
-  <div class="modes">
-    <button class="mode" onclick="openSolo()"><span class="ico">🤖</span><b>Solo</b><small>Vous contre des robots</small></button>
-    <button class="mode" onclick="openLocal()"><span class="ico">🖥️</span><b>Même écran</b><small>2 à 6 joueurs se passent l'ordinateur</small></button>
-    <button class="mode" onclick="openHost()"><span class="ico">📡</span><b>Réseau (hôte)</b><small>Créer une partie sur le réseau local</small></button>
-    <button class="mode" onclick="openJoin()"><span class="ico">🔗</span><b>Réseau (rejoindre)</b><small>Rejoindre la partie d'un autre PC</small></button>
-  </div>
-  <div id="netNote" class="note hidden"></div>
-</section>
-
-<!-- SOLO -->
-<section id="solo" class="screen hidden">
-  <button class="back" onclick="toMenu()">← Menu</button>
-  <h2>🤖 Partie solo</h2>
-  <div class="field"><div>Votre nom</div><input class="txt" id="soloName" maxlength="16" placeholder="Votre nom"></div>
-  <div>Nombre de robots adversaires</div>
-  <div class="counts" id="botCounts"></div>
-  <button class="btn purple wide" onclick="startSolo()">Commencer la partie</button>
-</section>
-
-<!-- LOCAL -->
-<section id="setup" class="screen hidden">
-  <button class="back" onclick="toMenu()">← Menu</button>
-  <h2>🖥️ Même écran</h2>
+<!-- CONFIGURATION -->
+<section id="setup" class="screen">
+  <h2>Nouvelle partie</h2>
   <div>Nombre de joueurs</div>
   <div class="counts" id="counts"></div>
   <div class="names" id="names"></div>
+  <div id="setupErr"></div>
   <div class="deckinfo" id="deckinfo"></div>
-  <button class="btn purple wide" onclick="startLocal()">Commencer la partie</button>
-</section>
-
-<!-- HÔTE -->
-<section id="host" class="screen hidden">
-  <button class="back" onclick="leaveHost()">← Menu</button>
-  <h2>📡 Héberger une partie</h2>
-  <div id="hostBody"></div>
-</section>
-
-<!-- REJOINDRE -->
-<section id="join" class="screen hidden">
-  <button class="back" onclick="leaveClient()">← Menu</button>
-  <h2>🔗 Rejoindre une partie</h2>
-  <div id="joinBody"></div>
+  <button class="btn purple wide" onclick="startGame()">Commencer la partie</button>
 </section>
 
 <!-- JEU -->
@@ -343,9 +320,9 @@ function load(k,d){ try{ const v = localStorage.getItem('csd_'+k); return v===nu
 
 /* =====================================================================
    MOTEUR DU JEU (exécuté par l'ordinateur qui fait autorité :
-   solo, même écran, ou hôte réseau)
+   1 humain contre l'IA, ou plusieurs humains sur le même écran)
    ===================================================================== */
-let MODE = null;      // 'solo' | 'local' | 'host' | 'client'
+let MODE = null;      // 'solo' (1 humain + IA) | 'local' (plusieurs humains sur le même écran)
 let S = null;         // état complet (autorité uniquement)
 let uid = 0;
 
@@ -362,11 +339,12 @@ function nextAlive(i){
   return i;
 }
 function matchesBet(c, bet){ return bet >= 0 && (c.t === BOARD[bet].t || c.t === 'heis'); }
-function turnPhase(){ return MODE === 'local' ? 'pass' : 'turn'; }
+// Écran « passez l'ordinateur » seulement quand plusieurs humains partagent l'écran
+function turnPhase(){ return MODE === 'local' && !S.players[S.current].isBot ? 'pass' : 'turn'; }
 
 function createGame(seats, starter){
   S = {
-    players: seats.map(s => ({name:s.name, isBot:!!s.isBot, clientId:s.clientId||null, away:false, lives:3, hand:[], table:[]})),
+    players: seats.map(s => ({name:s.name, isBot:!!s.isBot, away:false, lives:3, hand:[], table:[]})),
     handSize:6, dir:-1, round:0, starter: starter ?? 0, log:[], result:null, winner:null, seq:0, gid: Math.random().toString(36).slice(2)
   };
   newRound();
@@ -487,14 +465,15 @@ function viewFor(i){
 
 function afterChange(){
   S.seq++;
-  if (MODE === 'host') broadcastState();
-  ME = MODE === 'local' ? S.current : 0;
+  // Qui regarde l'écran : le joueur humain dont c'est le tour (même écran), ou l'unique humain (solo)
+  if (MODE === 'local') ME = S.players[S.current].isBot ? -1 : S.current;
+  else ME = S.players.findIndex(p => !p.isBot);
   applyView(viewFor(ME));
   scheduleBot();
 }
 
 /* =====================================================================
-   ROBOTS
+   IA
    ===================================================================== */
 let botTimer = null;
 function binom(n,k){ let r=1; for (let i=1;i<=k;i++) r = r*(n-k+i)/i; return r; }
@@ -547,7 +526,7 @@ function botStep(){
 }
 function scheduleBot(){
   clearTimeout(botTimer);
-  if (!S || MODE === 'client') return;
+  if (!S) return;
   const p = S.players[S.current];
   if (!p || !isAuto(p) || !['turn','reveal','exchange','drawn'].includes(S.phase)) return;
   const delay = S.phase === 'turn' ? 1300 + Math.random()*900 : 750;
@@ -562,7 +541,7 @@ const U = {sel:null, chosen:new Set(), key:''};
 let modalKey = '', rulesOpen = false, quitOpen = false;
 
 function applyView(v){
-  if (MODE === 'client' && V && v.gid === V.gid && v.seq < V.seq) return;
+  try { Sound.onView(v); } catch(e){}
   V = v;
   const key = `${V.round}-${V.current}-${V.phase}-${ME}`;
   if (key !== U.key){ U.sel = null; U.chosen = new Set(); U.key = key; }
@@ -581,8 +560,7 @@ function renderPlayers(){
     const out = p.lives <= 0;
     let tags = '';
     if (MODE !== 'local' && i === ME) tags += `<span class="tag me">vous</span>`;
-    if (p.isBot) tags += `<span class="tag bot">robot</span>`;
-    if (p.away) tags += `<span class="tag away">déconnecté</span>`;
+    if (p.isBot) tags += `<span class="tag bot">IA</span>`;
     if (!out && i === V.current && !['challenge','over'].includes(V.phase)) tags += `<span class="tag">joue</span>`;
     if (i === V.lastBettor && V.bet >= 0) tags += `<span class="tag bet">dernier pari</span>`;
     const lives = [0,1,2].map(k => lifeSVG(k < p.lives)).join('');
@@ -631,6 +609,13 @@ function renderHand(){
   const cur = V.players[V.current];
   const me = V.players[ME];
   const z = $('handzone');
+  // Tour d'une IA sur un écran partagé : on ne montre la main de personne
+  if (!me){
+    $('handtitle').innerHTML = `Au tour de <span style="color:var(--heis)">${esc(cur.name)}</span>`;
+    z.innerHTML = `<p class="hint">${['challenge','over'].includes(V.phase) ? 'Révélation des cartes…' : `<b>${esc(cur.name)}</b> (IA) <span class="thinking">réfléchit…</span>`}</p>
+      <div id="hand">${'x'.repeat(['challenge','over'].includes(V.phase) ? 0 : cur.handCount).split('').map(()=>backHTML()).join('')}</div>`;
+    return;
+  }
   const hand = me.hand || [];
 
   // Mode même écran : écran de confidentialité
@@ -641,7 +626,7 @@ function renderHand(){
       <button class="btn purple" onclick="doAction({type:'ready'})">Je suis ${esc(cur.name)}, je suis prêt·e</button></div>`;
     return;
   }
-  // Éliminé (solo / réseau) : spectateur
+  // Éliminé (solo) : spectateur
   if (MODE !== 'local' && me.lives <= 0){
     $('handtitle').textContent = 'Vous êtes éliminé·e';
     z.innerHTML = `<p class="hint">Vous regardez la fin de la partie.${!['challenge','over'].includes(V.phase) ? ` C'est au tour de <b>${esc(cur.name)}</b>.` : ''}</p>`;
@@ -703,10 +688,10 @@ function isAutoView(p){ return p.isBot || p.away; }
 function renderModal(){
   if (rulesOpen || quitOpen) return;
   if (!['challenge','over'].includes(V.phase)){ $('modal').classList.add('hidden'); modalKey=''; return; }
-  const key = V.phase + V.round + (V.phase==='over' ? 'o' : '') + (MODE==='client' ? '' : 'a');
+  const key = V.phase + V.round + (V.phase==='over' ? 'o' : '') + '';
   if (key === modalKey) return;
   modalKey = key;
-  const authority = MODE !== 'client';
+  const authority = true;
   if (V.phase === 'over'){
     const w = V.players[V.winner];
     const iWon = MODE !== 'local' && V.winner === ME;
@@ -714,7 +699,7 @@ function renderModal(){
       <h2>🎉 ${iWon ? 'Vous remportez la partie !' : esc(w.name) + ' remporte la partie !'}</h2>
       <p>Son chat est bien vivant… pour l'instant.</p>
       <div class="row" style="justify-content:center">
-        ${authority ? `<button class="btn purple" onclick="rematch()">Rejouer avec les mêmes joueurs</button>` : `<p class="hint">L'hôte peut relancer une partie.</p>`}
+        <button class="btn purple" onclick="rematch()">Rejouer avec les mêmes joueurs</button>
         <button class="btn ghost" onclick="quitGame()">Retour au menu</button></div>`;
     $('modal').classList.remove('hidden');
     return;
@@ -749,80 +734,78 @@ function renderModal(){
 function pickCell(i){ if (canPick(i)){ U.sel = i; render(); } }
 function confirmBet(){ if (U.sel !== null) doAction({type:'bet', cell:U.sel}); }
 function doAction(a){
-  if (MODE === 'client'){ netSend('host', {type:'action', action:a}); return; }
-  const seat = MODE === 'local' ? S.current : 0;
+  const seat = MODE === 'local' ? S.current : ME;
   engineAct(seat, a);
 }
 function rematch(){
-  const seats = S.players.filter(p => !(p.clientId && p.away)).map(p => ({name:p.name, isBot:p.isBot, clientId:p.clientId}));
+  const seats = S.players.map(p => ({name:p.name, isBot:p.isBot}));
   if (seats.length < 2){ quitGame(); return; }
   modalKey = '';
-  createGame(seats, MODE === 'local' ? 0 : Math.floor(Math.random()*seats.length));
+  createGame(seats, Math.floor(Math.random()*seats.length));
   afterChange();
 }
 
 /* =====================================================================
-   ÉCRANS / MENUS
+   CONFIGURATION DE LA PARTIE
    ===================================================================== */
-const SCREENS = ['menu','solo','setup','host','join','game'];
+const SCREENS = ['setup','game'];
 function showScreen(id){
   SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
   $('quitBtn').classList.toggle('hidden', id !== 'game');
 }
-function toMenu(){ showScreen('menu'); renderMenuNote(); }
+function toMenu(){ renderSetup(); showScreen('setup'); }
 
-function renderMenuNote(){
-  const n = $('netNote');
-  if (NET.available){
-    n.classList.add('hidden');
-  } else {
-    n.classList.remove('hidden');
-    n.innerHTML = `ℹ️ Les modes <b>Réseau</b> fonctionnent avec l'application Windows (<b>Chats-de-Schrodinger.exe</b>), qui contient le serveur de jeu.`;
+let setupN = 4, setupSeats = [];
+(function loadSetup(){
+  try { const j = JSON.parse(load('setup', 'null')); if (j && Array.isArray(j.seats)){ setupN = Math.min(6, Math.max(2, j.n|0)); setupSeats = j.seats; } } catch(e){}
+  const bots = shuffle(BOT_NAMES.slice());
+  for (let i = 0; i < 6; i++){
+    if (!setupSeats[i] || typeof setupSeats[i].name !== 'string')
+      setupSeats[i] = i === 0 ? {name: load('name','') || 'Joueur 1', bot:false} : {name: bots[i-1], bot:true};
   }
+})();
+function saveSetup(){ store('setup', JSON.stringify({n:setupN, seats:setupSeats})); }
+function setCount(n){ setupN = n; saveSetup(); renderSetup(); }
+function setKind(i, bot){
+  const s = setupSeats[i];
+  // un nom par défaut suit le type choisi
+  if (bot && /^Joueur \d$/.test(s.name)){ const used = setupSeats.map(x => x.name); s.name = BOT_NAMES.find(b => !used.includes(b)) || s.name; }
+  else if (!bot && BOT_NAMES.includes(s.name)) s.name = `Joueur ${i+1}`;
+  s.bot = bot; saveSetup(); renderSetup();
 }
-
-/* ---- Solo ---- */
-let botCount = +load('bots', 3) || 3;
-function openSolo(){
-  $('soloName').value = load('name', '');
-  renderBotCounts();
-  showScreen('solo');
-}
-function renderBotCounts(){
-  $('botCounts').innerHTML = [1,2,3,4,5].map(n => `<button class="${n===botCount?'on':''}" onclick="botCount=${n};renderBotCounts()">${n}</button>`).join('');
-}
-function botSeats(n, taken=[]){
-  const names = shuffle(BOT_NAMES.filter(b => !taken.includes(b)));
-  return Array.from({length:n}, (_,i) => ({name:names[i] || 'Robot '+(i+1), isBot:true}));
-}
-function startSolo(){
-  const name = cleanName($('soloName').value, 'Vous');
-  store('name', name); store('bots', botCount);
-  MODE = 'solo';
-  createGame([{name}, ...botSeats(botCount, [name])], Math.floor(Math.random()*(botCount+1)));
-  afterChange();
-}
-
-/* ---- Même écran ---- */
-let setupN = 4;
-const setupNames = ['Joueur 1','Joueur 2','Joueur 3','Joueur 4','Joueur 5','Joueur 6'];
-function openLocal(){ renderSetup(); showScreen('setup'); }
 function renderSetup(){
-  $('counts').innerHTML = [2,3,4,5,6].map(n => `<button class="${n===setupN?'on':''}" onclick="setupN=${n};renderSetup()">${n}</button>`).join('');
-  $('names').innerHTML = Array.from({length:setupN},(_,i) =>
-    `<label>${lifeSVG(true,'width="34" height="34"')}<input class="txt" maxlength="16" value="${esc(setupNames[i])}" oninput="setupNames[${i}]=this.value" placeholder="Nom du joueur ${i+1}"></label>`).join('');
+  $('counts').innerHTML = [2,3,4,5,6].map(n => `<button class="${n===setupN?'on':''}" onclick="setCount(${n})">${n}</button>`).join('');
+  $('names').innerHTML = setupSeats.slice(0, setupN).map((s,i) => `
+    <div class="seatrow">
+      ${s.bot ? `<span class="boticon">🤖</span>` : lifeSVG(true,'width="34" height="34"')}
+      <input class="txt" maxlength="16" value="${esc(s.name)}" oninput="setupSeats[${i}].name=this.value;saveSetup()" placeholder="Nom du joueur ${i+1}">
+      <div class="kind2">
+        <button class="${!s.bot?'on':''}" onclick="setKind(${i},false)">👤 Humain</button>
+        <button class="${s.bot?'on':''}" onclick="setKind(${i},true)">🤖 IA</button>
+      </div>
+    </div>`).join('');
+  const humans = setupSeats.slice(0, setupN).filter(s => !s.bot).length;
+  $('setupErr').innerHTML = humans === 0
+    ? `<div class="err">Il faut au moins un joueur humain.</div>`
+    : `<div class="note">${humans === 1 ? 'Vous jouez contre l\'ordinateur : vos cartes restent affichées.' : `${humans} joueurs humains se passent l'ordinateur : chacun valide qu'il est prêt avant de voir ses cartes.`}</div>`;
   $('deckinfo').innerHTML = Object.keys(DECK_DEF).map(t => `<div>${typeBadge(t,26)}${DECK_DEF[t]} × ${TNAME[t]}</div>`).join('');
 }
-function startLocal(){
-  MODE = 'local';
-  createGame(Array.from({length:setupN}, (_,i) => ({name: cleanName(setupNames[i], `Joueur ${i+1}`)})), 0);
+function startGame(){
+  const seats = setupSeats.slice(0, setupN).map((s,i) => ({name: cleanName(s.name, s.bot ? 'IA '+(i+1) : `Joueur ${i+1}`), isBot: !!s.bot}));
+  const humans = seats.filter(s => !s.isBot).length;
+  if (!humans){ renderSetup(); return; }
+  // noms en double : on les numérote
+  const seen = {};
+  seats.forEach(s => { if (seen[s.name]) s.name = (s.name + ' ' + (++seen[s.name])).slice(0,16); else seen[s.name] = 1; });
+  MODE = humans >= 2 ? 'local' : 'solo';
+  createGame(seats, Math.floor(Math.random()*seats.length));
   afterChange();
 }
 
-/* ---- Quitter ---- */
+
 function askQuit(){
   quitOpen = true;
-  const what = MODE === 'host' ? 'La partie sera arrêtée pour tous les joueurs connectés.' : MODE === 'client' ? 'Un robot jouera à votre place.' : '';
+  const what = 'La partie en cours sera perdue.';
   $('modalbox').innerHTML = `<h2 style="margin-top:0">Quitter la partie ?</h2><p>${what}</p>
     <div class="row" style="justify-content:center"><button class="btn red" onclick="quitOpen=false;quitGame()">Quitter</button>
     <button class="btn ghost" onclick="closeQuit()">Continuer à jouer</button></div>`;
@@ -832,8 +815,6 @@ function closeQuit(){ quitOpen = false; modalKey = ''; $('modal').classList.add(
 function quitGame(){
   clearTimeout(botTimer);
   $('modal').classList.add('hidden'); modalKey = ''; quitOpen = false;
-  if (MODE === 'host') stopHosting(true);
-  if (MODE === 'client') leaveClient();
   S = null; V = null; MODE = null;
   toMenu();
 }
@@ -855,247 +836,235 @@ function showRules(){
 function closeRules(){ rulesOpen = false; modalKey = ''; $('modal').classList.add('hidden'); if (V && $('game').offsetParent !== null) renderModal(); }
 
 /* =====================================================================
-   RÉSEAU
-   L'exe contient un petit serveur : il sert cette page et relaie les
-   messages (flux SSE + POST). La partie elle-même tourne sur l'hôte.
+   SONS — tout est synthétisé en direct (Web Audio), aucun fichier.
+   Les sons sont déclenchés par les changements de la « vue » : ils
+   fonctionnent donc pareil avec un ou plusieurs joueurs humains.
    ===================================================================== */
-const NET = {available:false, ips:[], port:0, es:null, streamId:null, myId:null, connected:false};
-const L = {seats:[]};     // salon de l'hôte
-let joinName = '', joined = false;
+const Sound = (() => {
+  let ctx = null, master = null, noiseBuf = null;
+  let muted = load('mute', '0') === '1';
+  let vol = Math.min(1, Math.max(0, parseFloat(load('vol', '0.7'))));
+  if (isNaN(vol)) vol = 0.7;
+  let snap = null;   // ce qu'on a vu la dernière fois (pour détecter les changements)
 
-function sessionId(){
-  let id = null;
-  try { id = sessionStorage.getItem('csd_id'); } catch(e){}
-  if (!id){ id = 'p' + Math.random().toString(36).slice(2,10); try { sessionStorage.setItem('csd_id', id); } catch(e){} }
-  return id;
-}
-async function detectNet(){
-  if (!/^https?:$/.test(location.protocol)) return;
-  try {
-    const r = await fetch('/api/info', {cache:'no-store'});
-    if (!r.ok) return;
-    const j = await r.json();
-    if (j.app !== 'chats-schrodinger') return;
-    NET.available = true; NET.ips = j.ips || []; NET.port = j.port;
-    NET.myId = sessionId();
-    openStream(NET.myId);
-  } catch(e){}
-}
-function openStream(id){
-  if (NET.es){ NET.es.close(); NET.es = null; }
-  NET.streamId = id;
-  const es = new EventSource('/api/events?id=' + encodeURIComponent(id));
-  NET.es = es;
-  es.onopen = () => { NET.connected = true; setConn(''); onStreamOpen(); };
-  es.onerror = () => { NET.connected = false; if (MODE === 'client' || joined) setConn('Connexion à l\'hôte perdue… nouvelle tentative'); };
-  es.onmessage = e => { try { const m = JSON.parse(e.data); onNet(m.from, m.data); } catch(err){} };
-}
-function setConn(t){ $('conn').textContent = t; $('conn').classList.toggle('hidden', !t); }
-async function netSend(to, data){
-  try {
-    const r = await fetch('/api/send', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({from: NET.streamId, to, data})});
-    return r.ok;
-  } catch(e){ return false; }
-}
-function onStreamOpen(){
-  if (joined && joinName) netSend('host', {type:'hello', name:joinName});
-}
-function onNet(from, d){
-  if (!d) return;
-  if (NET.streamId === 'host') return hostOnNet(from, d);
-  return clientOnNet(from, d);
-}
-
-/* ---------------- HÔTE ---------------- */
-function openHost(){
-  if (!NET.available){ $('hostBody').innerHTML = noNetHTML(); showScreen('host'); return; }
-  if (onHostServer()){
-    $('hostBody').innerHTML = `<div class="note warn">Vous êtes connecté·e au PC <code>${esc(location.host)}</code>. Pour héberger une partie, lancez l'application <b>Chats-de-Schrodinger.exe</b> sur votre propre PC. Pour jouer avec ce PC, choisissez plutôt <b>Réseau (rejoindre)</b>.</div>`;
-    showScreen('host'); return;
-  }
-  L.seats = [{name: load('name','') || 'Hôte', kind:'host'}];
-  openStream('host');
-  renderHostLobby(true);
-  showScreen('host');
-}
-function noNetHTML(){
-  return `<div class="note warn">Le jeu en réseau fonctionne uniquement avec l'application Windows <b>Chats-de-Schrodinger.exe</b>, qui contient le serveur de jeu. Lancez la partie depuis l'application.</div>`;
-}
-function hostAddrs(){
-  return NET.ips.length ? NET.ips.map(ip => `${ip}:${NET.port}`) : [`(adresse IP de ce PC):${NET.port}`];
-}
-function renderHostLobby(full){
-  if (full){
-    const addrs = hostAddrs();
-    $('hostBody').innerHTML = `
-      <div class="field"><div>Votre nom</div><input class="txt" id="hostName" maxlength="16" value="${esc(L.seats[0].name)}" oninput="L.seats[0].name=cleanName(this.value,'Hôte');store('name',L.seats[0].name);renderSeats();broadcastLobby()"></div>
-      <div class="note">Les autres joueurs (même réseau Wi-Fi / box) choisissent <b>Réseau (rejoindre)</b> et tapent :<br>
-        ${addrs.map(a => `<code>${esc(a)}</code>`).join(' ou ')}<br>
-        <small>Sans l'application, ils peuvent aussi ouvrir <b>http://${esc(addrs[0])}</b> dans un navigateur (PC, tablette, téléphone).</small></div>
-      <div class="note">🛡️ Si Windows affiche une alerte du pare-feu, cliquez <b>Autoriser</b> (réseaux privés), sinon les autres ne pourront pas se connecter.</div>
-      <div>Joueurs (${'<span id="seatCount"></span>'}/6)</div>
-      <div class="seats" id="seats"></div>
-      <div class="row"><button class="btn ghost" id="addBot" onclick="hostAddBot()">+ Ajouter un robot</button>
-        <button class="btn purple" id="hostStart" onclick="hostStart()">Lancer la partie</button></div>
-      <div id="hostErr"></div>`;
-  }
-  renderSeats();
-}
-function renderSeats(){
-  if (!$('seats')) return;
-  $('seats').innerHTML = L.seats.map((s,i) => `<div class="seat">${lifeSVG(true)}<span class="nm">${esc(s.name)}</span>
-      <span class="kind">${s.kind==='host'?'hôte (vous)':s.kind==='bot'?'robot':'en réseau'}</span>
-      ${s.kind!=='host' ? `<button class="btn ghost small" onclick="hostRemove(${i})">Retirer</button>` : ''}</div>`).join('')
-    + (L.seats.length < 2 ? `<div class="hint"><span class="thinking">En attente de joueurs…</span></div>` : '');
-  $('seatCount').textContent = L.seats.length;
-  $('addBot').disabled = L.seats.length >= 6;
-  $('hostStart').disabled = L.seats.length < 2;
-}
-function hostAddBot(){
-  if (L.seats.length >= 6) return;
-  const taken = L.seats.map(s => s.name);
-  L.seats.push({...botSeats(1, taken)[0], kind:'bot'});
-  renderSeats(); broadcastLobby();
-}
-function hostRemove(i){
-  const s = L.seats[i]; if (!s || s.kind === 'host') return;
-  if (s.kind === 'remote') netSend(s.clientId, {type:'refused', reason:'L\'hôte vous a retiré de la partie.'});
-  L.seats.splice(i,1); renderSeats(); broadcastLobby();
-}
-function broadcastLobby(){
-  const list = L.seats.map(s => ({name:s.name, kind:s.kind}));
-  for (const s of L.seats) if (s.kind === 'remote') netSend(s.clientId, {type:'lobby', seats:list});
-}
-function broadcastState(){
-  S.players.forEach((p,i) => {
-    if (p.clientId && !p.away) netSend(p.clientId, {type:'state', view:viewFor(i), me:i});
-  });
-}
-function hostStart(){
-  if (L.seats.length < 2) return;
-  MODE = 'host';
-  createGame(L.seats.map(s => ({name:s.name, isBot:s.kind==='bot', clientId:s.kind==='remote'?s.clientId:null})),
-             Math.floor(Math.random()*L.seats.length));
-  afterChange();
-}
-function hostOnNet(from, d){
-  const name = cleanName(d.name, 'Joueur');
-  if (d.type === 'hello'){
-    if (S && MODE === 'host'){
-      const i = S.players.findIndex(p => p.clientId === from);
-      if (i >= 0){
-        if (S.players[i].away){ S.players[i].away = false; addLog(`${S.players[i].name} est de retour.`); }
-        afterChange();
-      } else netSend(from, {type:'refused', reason:'La partie a déjà commencé. Attendez la prochaine partie.'});
-      return;
+  function unlock(){
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : vol;
+      const comp = ctx.createDynamicsCompressor();
+      master.connect(comp); comp.connect(ctx.destination);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
     }
-    if (!$('seats')) return;
-    const s = L.seats.find(x => x.clientId === from);
-    if (s) s.name = name;
-    else if (L.seats.length >= 6){ netSend(from, {type:'refused', reason:'La partie est complète (6 joueurs).'}); return; }
-    else L.seats.push({name, kind:'remote', clientId:from});
-    renderSeats(); broadcastLobby();
-    return;
+    if (ctx.state === 'suspended') ctx.resume();
   }
-  if (d.type === 'leave' || d.type === 'bye'){
-    if (S && MODE === 'host'){
-      const p = S.players.find(p => p.clientId === from);
-      if (p && !p.away){ p.away = true; addLog(`${p.name} s'est déconnecté·e : un robot joue à sa place.`); afterChange(); }
-      return;
-    }
-    const i = L.seats.findIndex(x => x.clientId === from);
-    if (i >= 0){ L.seats.splice(i,1); renderSeats(); broadcastLobby(); }
-    return;
-  }
-  if (d.type === 'action' && S && MODE === 'host'){
-    const i = S.players.findIndex(p => p.clientId === from);
-    if (i < 0 || S.players[i].away) return;
-    if (d.action && d.action.type === 'next') return;   // seul l'hôte passe à la manche suivante
-    engineAct(i, d.action);
-  }
-}
-function stopHosting(notify){
-  if (notify) for (const s of (S ? S.players : L.seats)) if (s.clientId) netSend(s.clientId, {type:'hostgone'});
-  L.seats = [];
-  if (NET.available) openStream(NET.myId);
-}
-function leaveHost(){ stopHosting(true); toMenu(); }
+  const ok = () => ctx && ctx.state === 'running' && !muted && vol > 0;
+  const T = (delay=0) => ctx.currentTime + 0.02 + delay;
+  const rnd = (a, b) => a + Math.random()*(b-a);
 
-/* ---------------- CLIENT ---------------- */
-function onHostServer(){
-  return NET.available && !['localhost','127.0.0.1','[::1]'].includes(location.hostname);
-}
-function openJoin(){
-  if (onHostServer() || (NET.available && location.hash === '#join')) renderJoinName();
-  else renderJoinAddr();
-  showScreen('join');
-}
-function renderJoinAddr(err=''){
-  $('joinBody').innerHTML = `
-    <div class="field"><div>Adresse de l'hôte (affichée sur son écran)</div>
-      <input class="txt" id="joinAddr" placeholder="ex. 192.168.1.20:8765" value="${esc(load('lastHost',''))}"></div>
-    <button class="btn purple wide" onclick="goToHost()">Se connecter</button>
-    ${err ? `<div class="err">${esc(err)}</div>` : ''}
-    <div class="note">Les deux ordinateurs doivent être sur le même réseau (même box ou Wi-Fi). L'hôte doit d'abord cliquer sur <b>Réseau (hôte)</b>.</div>`;
-  const inp = $('joinAddr');
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') goToHost(); });
-  inp.focus();
-}
-function goToHost(){
-  let a = $('joinAddr').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-  if (!/^[a-zA-Z0-9.\-]+(:\d{1,5})?$/.test(a)) return renderJoinAddr('Adresse invalide. Exemple : 192.168.1.20:8765');
-  if (!/:\d+$/.test(a)) a += ':8765';
-  store('lastHost', a);
-  location.href = `http://${a}/#join`;
-}
-function renderJoinName(err=''){
-  $('joinBody').innerHTML = `
-    <div class="note">Connecté au serveur <code>${esc(location.host)}</code></div>
-    <div class="field"><div>Votre nom</div><input class="txt" id="joinNameInp" maxlength="16" value="${esc(load('name',''))}" placeholder="Votre nom"></div>
-    <button class="btn purple wide" onclick="doJoin()">Rejoindre la partie</button>
-    ${err ? `<div class="err">${esc(err)}</div>` : ''}`;
-  const inp = $('joinNameInp');
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
-}
-async function doJoin(){
-  joinName = cleanName($('joinNameInp').value, 'Joueur');
-  store('name', joinName);
-  if (!NET.connected) return renderJoinName('Connexion au serveur en cours… réessayez dans un instant.');
-  const ok = await netSend('host', {type:'hello', name:joinName});
-  if (!ok) return renderJoinName('Aucune partie n\'est hébergée ici pour l\'instant. Demandez à l\'hôte de cliquer sur « Réseau (hôte) ».');
-  joined = true; MODE = 'client';
-  $('joinBody').innerHTML = `<p class="hint"><span class="thinking">Connexion…</span></p>`;
-}
-function clientOnNet(from, d){
-  if (!joined) return;
-  if (d.type === 'lobby'){
-    if (V) return;
-    $('joinBody').innerHTML = `<p>Vous êtes dans le salon. <span class="thinking">En attente que l'hôte lance la partie…</span></p>
-      <div class="seats">${d.seats.map(s => `<div class="seat">${lifeSVG(true)}<span class="nm">${esc(s.name)}</span><span class="kind">${s.kind==='host'?'hôte':s.kind==='bot'?'robot':'en réseau'}</span></div>`).join('')}</div>`;
-    showScreen('join');
-  } else if (d.type === 'state'){
-    if (V && d.view.round !== V.round) modalKey = '';
-    ME = d.me;
-    applyView(d.view);
-  } else if (d.type === 'refused'){
-    joined = false; MODE = null; V = null;
-    $('modal').classList.add('hidden');
-    showScreen('join'); renderJoinName(d.reason);
-  } else if (d.type === 'hostgone'){
-    joined = false; MODE = null; V = null; modalKey = '';
-    $('modal').classList.add('hidden');
-    showScreen('join'); renderJoinName('L\'hôte a arrêté la partie.');
+  function envelope(g, t, attack, peak, dur, release){
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + attack);
+    g.gain.setValueAtTime(peak, Math.max(t + attack, t + dur - release));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   }
-}
-function leaveClient(){
-  if (joined) netSend('host', {type:'bye'});
-  joined = false; V = null;
-  if (MODE === 'client') MODE = null;
-  setConn('');
-  if (onHostServer()){ toMenu(); return; }
-  toMenu();
-}
+  function noise(t, dur, {type='bandpass', freq=2000, q=1, peak=.3, attack=.005, release=null}={}){
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    src.loopStart = Math.random(); src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(); envelope(g, t, attack, peak, dur, release ?? dur*0.7);
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start(t, Math.random()); src.stop(t + dur + .05);
+    return {f, g};
+  }
+  function tone(t, freq, dur, {type='sine', peak=.2, attack=.005, release=null, glideTo=null}={}){
+    const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+    const g = ctx.createGain(); envelope(g, t, attack, peak, dur, release ?? dur*0.8);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  }
+
+  /* --- Miaulement : onde en dents de scie filtrée par deux « formants »
+         qui glissent de « i » à « a » puis « ou » : mi-a-ou ! --- */
+  const MOODS = {
+    happy: {dur:.70, f:[480, 780, 520], peak:.5,  vib:6, vibAmt:14},
+    chirp: {dur:.28, f:[420, 720, 680], peak:.4,  vib:28, vibAmt:40, trill:true},
+    sad:   {dur:1.15,f:[660, 720, 320], peak:.45, vib:5, vibAmt:18},
+    angry: {dur:.85, f:[360, 620, 340], peak:.55, vib:9, vibAmt:30, growl:true},
+    curious:{dur:.55,f:[430, 520, 760], peak:.42, vib:7, vibAmt:12},
+  };
+  function meow(mood='happy', {delay=0, pitch=null, level=1}={}){
+    if (!ok()) return;
+    const m = MOODS[mood], t = T(delay), p = pitch ?? rnd(.88, 1.15), dur = m.dur * rnd(.9, 1.12);
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(m.f[0]*p, t);
+    o.frequency.linearRampToValueAtTime(m.f[1]*p, t + dur*.32);
+    o.frequency.exponentialRampToValueAtTime(m.f[2]*p, t + dur);
+    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+    lfo.frequency.value = m.vib; lfoG.gain.value = m.vibAmt; lfo.connect(lfoG); lfoG.connect(o.frequency);
+    const amp = ctx.createGain(); envelope(amp, t, .04, m.peak*level, dur, dur*.35);
+    const formant = (fr, q, g) => {
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = q;
+      f.frequency.setValueAtTime(fr[0], t);
+      f.frequency.linearRampToValueAtTime(fr[1], t + dur*.38);
+      f.frequency.linearRampToValueAtTime(fr[2], t + dur);
+      const gn = ctx.createGain(); gn.gain.value = g;
+      o.connect(f); f.connect(gn); gn.connect(amp);
+    };
+    formant([380, 900, 480], 5, 1.4);     // F1
+    formant([2300, 1350, 850], 7, .8);    // F2
+    formant([3000, 2600, 2400], 9, .25);  // un peu de brillance
+    let out = amp;
+    if (m.trill){                          // « mrrrp » roulé
+      const tr = ctx.createGain(), trl = ctx.createOscillator(), trg = ctx.createGain();
+      tr.gain.value = .55; trl.type = 'square'; trl.frequency.value = 30; trg.gain.value = .45;
+      trl.connect(trg); trg.connect(tr.gain); amp.connect(tr); out = tr;
+      trl.start(t); trl.stop(t + dur + .05);
+    }
+    out.connect(master);
+    if (m.growl) noise(t, dur*.9, {type:'bandpass', freq:900, q:.8, peak:.12*level, attack:.05});
+    o.start(t); lfo.start(t); o.stop(t + dur + .05); lfo.stop(t + dur + .05);
+  }
+
+  function hiss(delay=0){            // « Pfffhh ! » : le chat crache
+    if (!ok()) return;
+    const t = T(delay);
+    noise(t, .08, {type:'bandpass', freq:1800, q:.7, peak:.35});
+    const {f} = noise(t + .05, .75, {type:'highpass', freq:2600, q:.5, peak:.32, attack:.04, release:.4});
+    f.frequency.linearRampToValueAtTime(4200, t + .8);
+  }
+  function purr(delay=0, dur=1.6){   // ronronnement
+    if (!ok()) return;
+    const t = T(delay);
+    const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = rnd(48, 58);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420;
+    const am = ctx.createGain(); am.gain.value = .5;
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 24; lg.gain.value = .5;
+    lfo.connect(lg); lg.connect(am.gain);
+    const g = ctx.createGain(); envelope(g, t, .25, .5, dur, .5);
+    o.connect(lp); lp.connect(am); am.connect(g); g.connect(master);
+    [o, lfo].forEach(n => { n.start(t); n.stop(t + dur + .05); });
+  }
+  function flick(delay=0, level=1){  // carte qui glisse / se retourne
+    if (!ok()) return;
+    const t = T(delay);
+    noise(t, .045, {type:'bandpass', freq:rnd(2300, 3400), q:1.4, peak:.32*level, attack:.002, release:.04});
+    tone(t, rnd(180, 240), .05, {type:'triangle', peak:.08*level});
+  }
+  function shuffle(delay=0){ for (let i=0;i<9;i++) flick(delay + i*.045 + rnd(0,.015), .8); }
+  function pop(delay=0){             // la pelote rebondit sur une case
+    if (!ok()) return;
+    const t = T(delay);
+    tone(t, 240, .13, {type:'sine', peak:.35, glideTo:760});
+    tone(t + .08, 520, .18, {type:'triangle', peak:.12, glideTo:360});
+  }
+  function tick(){ if (ok()) tone(T(), 1500, .03, {type:'sine', peak:.06}); }
+  function bell(delay=0){
+    if (!ok()) return;
+    const t = T(delay);
+    [[1318,.22],[1976,.1],[2637,.05]].forEach(([f,p]) => tone(t, f, .9, {peak:p, release:.85}));
+  }
+  function sparkle(delay=0){         // carte Heisenberg
+    if (!ok()) return;
+    for (let i=0;i<7;i++) tone(T(delay + i*.06), rnd(1800, 3600), .22, {peak:.07, type:'sine'});
+  }
+  function fanfare(delay=0){
+    if (!ok()) return;
+    [523, 659, 784, 1046].forEach((f,i) => tone(T(delay + i*.13), f, i===3 ? .9 : .2, {type:'triangle', peak:.22}));
+    [659, 784, 1318].forEach(f => tone(T(delay + .39), f, .9, {type:'sine', peak:.08}));
+  }
+  function sadTrombone(delay=0){
+    if (!ok()) return;
+    [392, 370, 349].forEach((f,i) => tone(T(delay + i*.35), f, .34, {type:'sawtooth', peak:.07}));
+    tone(T(delay + 1.05), 330, .9, {type:'sawtooth', peak:.07, glideTo:300});
+  }
+
+  /* --- Ce qui déclenche les sons --- */
+  function onView(v){
+    if (!ctx) { snap = take(v); return; }
+    const s = snap;
+    const local = MODE === 'local';
+    if (!s || s.gid !== v.gid){
+      if (v.phase !== 'over'){ shuffle(); meow('curious', {delay:.6}); }
+    } else if (v.round !== s.round){
+      shuffle(.1);
+    } else {
+      if (v.bet !== s.bet && v.bet >= 0){
+        pop();
+        if (v.lastBettor !== ME || local) { if (Math.random() < .35) meow('chirp', {delay:.18, level:.7}); }
+      }
+      let added = 0, heis = false;
+      v.players.forEach((p,i) => {
+        const before = s.tables[i] || 0;
+        if (p.table.length > before){ added += p.table.length - before; if (p.table.slice(before).some(c => c.t === 'heis')) heis = true; }
+      });
+      for (let k=0; k<Math.min(added,6); k++) flick(k*.09);
+      if (heis) sparkle(.15);
+      const fresh = (v.fresh || []).join();
+      if (fresh && fresh !== s.fresh) for (let k=0; k<v.fresh.length; k++) flick(.05 + k*.08, .8);
+      if (v.phase === 'challenge' && s.phase !== 'challenge' && v.result) challenge(v);
+      if (v.phase === 'over' && s.phase !== 'over') over(v);
+    }
+    // À votre tour !
+    const turnKey = `${v.gid}-${v.round}-${v.current}-${v.bet}`;
+    if (!local && v.current === ME && v.phase === 'turn' && v.players[ME] && v.players[ME].lives > 0 && (!s || s.turnKey !== turnKey || s.phase !== 'turn')){
+      bell(.25); meow('chirp', {delay:.45, level:.8});
+    }
+    if (local && v.phase === 'pass' && (!s || s.phase !== 'pass' || s.current !== v.current)) bell(.2);
+    snap = take(v); snap.turnKey = turnKey;
+  }
+  function take(v){
+    return {gid:v.gid, round:v.round, bet:v.bet, phase:v.phase, current:v.current,
+            tables:v.players.map(p => p.table.length), fresh:(v.fresh||[]).join()};
+  }
+  function challenge(v){
+    const R = v.result, local = MODE === 'local';
+    hiss(0);
+    meow('angry', {delay:.12, level:.9});                // « Menteur ! »
+    const nCards = R.rows.reduce((a,r) => a + r.hand.length, 0);
+    for (let k=0; k<Math.min(nCards,14); k++) flick(.75 + k*.07, .7);
+    if (R.rows.some(r => r.hand.some(c => c.t === 'heis'))) sparkle(1.2);
+    const tv = 1.9;
+    if (R.holds){ purr(tv, 1.4); meow('happy', {delay:tv + .2}); }   // le parieur disait vrai
+    else meow('angry', {delay:tv, pitch:1.15});                      // menteur démasqué
+    const meLost = !local && R.loser === ME;
+    meow('sad', {delay:tv + 1.1, level: meLost ? 1.1 : .8, pitch: meLost ? .95 : null});  // une vie perdue
+    if (R.eliminated){ meow('sad', {delay:tv + 2.3, pitch:.75}); tone(T(tv + 2.3), 110, 1.2, {type:'triangle', peak:.15, glideTo:70}); }
+  }
+  function over(v){
+    const iLost = MODE !== 'local' && v.winner !== ME;
+    if (iLost){ sadTrombone(.2); meow('sad', {delay:1.6}); }
+    else { fanfare(.2); meow('happy', {delay:.9, pitch:1.1}); meow('happy', {delay:1.5, pitch:1.3}); purr(1.4, 2); }
+  }
+
+  function updateUI(){
+    $('sndBtn').textContent = muted || vol === 0 ? '🔇' : vol < .4 ? '🔉' : '🔊';
+    $('sndVol').value = vol;
+  }
+  function toggle(){
+    unlock(); muted = !muted; store('mute', muted ? '1' : '0');
+    if (master) master.gain.value = muted ? 0 : vol;
+    updateUI(); if (!muted) setTimeout(() => meow('chirp'), 60);
+  }
+  function setVolume(x){
+    unlock(); vol = x; store('vol', String(x));
+    if (x > 0 && muted){ muted = false; store('mute','0'); }
+    if (master) master.gain.value = muted ? 0 : vol;
+    updateUI();
+  }
+  // Les navigateurs n'autorisent le son qu'après un premier clic
+  document.addEventListener('pointerdown', e => {
+    unlock();
+    if (e.target.closest('button, .card.can, .cell.pick, .counts button')) tick();
+  }, true);
+  document.addEventListener('keydown', unlock, true);
+  updateUI();
+  return {onView, toggle, setVolume, meow, unlock, hiss, purr, flick, shuffle, pop, bell, sparkle, fanfare, sadTrombone};
+})();
 
 /* =====================================================================
    DÉMARRAGE
@@ -1105,11 +1074,7 @@ $('modal').addEventListener('click', e => {
   if (rulesOpen) closeRules();
   else if (quitOpen) closeQuit();
 });
-(async () => {
-  await detectNet();
-  renderMenuNote();
-  if (NET.available && location.hash === '#join'){ openJoin(); }
-})();
+toMenu();
 </script>
 </body>
 </html>
