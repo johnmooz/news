@@ -23,7 +23,7 @@
     background-attachment:fixed;
     min-height:100vh;
   }
-  button{font-family:inherit;cursor:pointer}
+  button{font-family:inherit;cursor:pointer;user-select:none;-webkit-user-select:none}
   .hidden{display:none !important}
   .nm{color:#1c7ed6;font-weight:600}
 
@@ -66,11 +66,13 @@
     font-size:22px;font-weight:600;color:var(--ink);transition:.15s;
   }
   .seg button.on{background:var(--card-back);border-color:var(--card-back);color:#fff;transform:translateY(-2px);box-shadow:0 4px 0 #3e30b0}
-  .names{display:grid;gap:10px}
+  .names{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
   .name-row{display:flex;align-items:center;gap:10px}
   .dot{width:16px;height:16px;border-radius:50%;flex:none}
+  .name-row select.kind{height:46px;border-radius:14px;border:3px solid #ece7ff;font:inherit;font-size:15px;padding:0 8px;color:var(--ink);background:#fff;outline:none;flex:none;width:138px}
+  .name-row select.kind:focus{border-color:var(--card-back2)}
   .name-row input{
-    flex:1;height:46px;border-radius:14px;border:3px solid #ece7ff;padding:0 14px;
+    flex:1;min-width:0;height:46px;border-radius:14px;border:3px solid #ece7ff;padding:0 14px;
     font:inherit;font-size:17px;color:#1c7ed6;font-weight:600;outline:none;
   }
   .name-row input:focus{border-color:var(--card-back2)}
@@ -387,15 +389,26 @@ setupDims('hw','hh','hinfo','hostBtn');
 /* ================= Jeu local : configuration ================= */
 let nbPlayers=2;
 let savedNames=Array.from({length:MAX_PLAYERS},(_,i)=>'Joueur '+(i+1));
+let savedKinds=Array(MAX_PLAYERS).fill('human');
+const KINDS=[['human','👤 Humain'],['ai1','🤖 IA facile'],['ai2','🤖 IA moyenne'],['ai3','🤖 IA difficile']];
 function renderNames(){
   const box=$('names');
-  box.querySelectorAll('input').forEach((inp,i)=>savedNames[i]=inp.value);
+  box.querySelectorAll('.name-row').forEach((r,i)=>{ savedNames[i]=r.querySelector('input').value; savedKinds[i]=r.querySelector('select').value; });
   box.innerHTML='';
   for(let i=0;i<nbPlayers;i++){
     const row=document.createElement('div'); row.className='name-row';
     row.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>`;
     const inp=document.createElement('input'); inp.maxLength=16; inp.value=savedNames[i]; inp.placeholder='Joueur '+(i+1);
-    row.appendChild(inp); box.appendChild(row);
+    const sel=document.createElement('select'); sel.className='kind';
+    KINDS.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.appendChild(o)});
+    sel.value=savedKinds[i];
+    sel.addEventListener('change',()=>{
+      // nom par défaut adapté : « Joueur 3 » <-> « IA 3 »
+      const isAI=sel.value!=='human';
+      if(isAI && inp.value.trim()==='Joueur '+(i+1)) inp.value='IA '+(i+1);
+      if(!isAI && inp.value.trim()==='IA '+(i+1)) inp.value='Joueur '+(i+1);
+    });
+    row.appendChild(inp); row.appendChild(sel); box.appendChild(row);
   }
 }
 $('nbPlayers').addEventListener('click',e=>{
@@ -409,8 +422,9 @@ renderNames();
 function startLocal(){
   MODE='local';
   const names=[...$('names').querySelectorAll('input')].map((inp,i)=>cleanName(inp.value,'Joueur '+(i+1)));
+  const kinds=[...$('names').querySelectorAll('select.kind')].map(x=>x.value);
   const W=+$('w').value, H=+$('h').value;
-  beginGame({names,W,H,deck:makeDeck(W,H)});
+  beginGame({names,kinds,W,H,deck:makeDeck(W,H)});
 }
 $('startBtn').addEventListener('click',()=>{ ac(); startLocal(); });
 
@@ -429,10 +443,52 @@ function makeDeck(W,H){
 }
 
 const isMe=i=>MODE==='local'||i===NET.seat;
+const isAI=i=>MODE==='local'&&S.players&&S.players[i]&&!!S.players[i].ai;
+
+/* ================= IA ================= */
+// probabilité de mémoriser une carte vue, selon le niveau
+const AI_MEMORY={ai1:.3,ai2:.65,ai3:.95};
+function aiObserve(i,pair){
+  S.players.forEach(p=>{ if(p.ai && Math.random()<p.mem) p.memory.set(i,pair); });
+}
+function aiForget(idxs){ S.players.forEach(p=>{ if(p.ai) idxs.forEach(i=>p.memory.delete(i)); }); }
+function scheduleAI(){
+  if(MODE!=='local'||S.over||!isAI(S.cur)) return;
+  const gid=S.gid;
+  setTimeout(()=>{ if(S.gid===gid && !S.over && isAI(S.cur) && !S.lock) aiTurn(); },900);
+}
+function aiTurn(){
+  const p=S.players[S.cur], gid=S.gid;
+  const hidden=S.cards.map((c,i)=>i).filter(i=>!S.cards[i].matched&&!S.cards[i].flipped);
+  const mem=[...p.memory].filter(([i])=>hidden.includes(i));
+  const pick=a=>a[Math.random()*a.length|0];
+  // 1) une paire déjà connue ?
+  const byPair={}; let first=null, second=null;
+  for(const [i,pr] of mem){ if(byPair[pr]!==undefined){ first=byPair[pr]; second=i; break; } byPair[pr]=i; }
+  if(first===null){
+    const unknown=hidden.filter(i=>!p.memory.has(i));
+    first=pick(unknown.length?unknown:hidden);
+  }
+  applyFlip(first);
+  setTimeout(()=>{
+    if(S.gid!==gid||S.over) return;
+    if(second===null){
+      const pr=S.cards[first].pair;
+      const known=[...p.memory].find(([i,q])=>q===pr&&i!==first&&!S.cards[i].matched);
+      if(known) second=known[0];
+      else{
+        const rest=S.cards.map((c,i)=>i).filter(i=>i!==first&&!S.cards[i].matched&&!S.cards[i].flipped);
+        const unknown=rest.filter(i=>!p.memory.has(i));
+        second=pick(unknown.length?unknown:rest);
+      }
+    }
+    applyFlip(second);
+  },800);
+}
 
 function beginGame(cfg){
   ac();
-  S={players:cfg.names.map(n=>({name:n,score:0,tries:0,pairs:0,gone:false})),cur:0,W:cfg.W,H:cfg.H,
+  S={gid:Math.random(),players:cfg.names.map((n,i)=>{const k=(cfg.kinds||[])[i]||'human';return {name:n,score:0,tries:0,pairs:0,gone:false,ai:k!=='human',mem:AI_MEMORY[k]||0,memory:new Map()}}),cur:0,W:cfg.W,H:cfg.H,
      nPairs:cfg.deck.length/2,found:0,first:null,lock:false,over:false,cards:[]};
   const board=$('board'); board.innerHTML='';
   board.style.gridTemplateColumns=`repeat(${S.W},var(--cs))`;
@@ -442,13 +498,13 @@ function beginGame(cfg){
     el.setAttribute('aria-label','Carte cachée');
     el.innerHTML=`<div class="inner"><div class="face back">?</div><div class="face front">${cardSVG(d.a,d.c)}</div></div>`;
     el.addEventListener('click',()=>userClick(idx));
-    S.cards.push({pair:d.pair,el,flipped:false,matched:false});
+    S.cards.push({idx,pair:d.pair,el,flipped:false,matched:false});
     board.appendChild(el);
   });
   show('game');
   renderPlayers();
   setStatus(MODE!=='local'&&isMe(0) ? 'Tu commences !' : `À ${N(S.players[0].name)} de commencer !`);
-  fit(); updateWait();
+  fit(); updateWait(); scheduleAI();
 }
 
 function fit(){
@@ -468,12 +524,12 @@ function renderPlayers(){
   S.players.forEach((p,i)=>{
     const c=document.createElement('div'); c.className='chip'+(i===S.cur?' active':'')+(p.gone?' gone':'');
     if(i===S.cur) c.style.borderColor=PCOLORS[i];
-    c.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>${N(p.name)}${MODE!=='local'&&i===NET.seat?'<span class="me">(toi)</span>':''}<span class="sc">${p.score}</span>`;
+    c.innerHTML=`<span class="dot" style="background:${PCOLORS[i]}"></span>${p.ai?'🤖':''}${N(p.name)}${MODE!=='local'&&i===NET.seat?'<span class="me">(toi)</span>':''}<span class="sc">${p.score}</span>`;
     box.appendChild(c);
   });
 }
 function setStatus(t){ $('status').innerHTML=t; }
-function updateWait(){ $('board').classList.toggle('wait', MODE!=='local' && !isMe(S.cur)); }
+function updateWait(){ $('board').classList.toggle('wait', (MODE!=='local' && !isMe(S.cur)) || isAI(S.cur)); }
 function turnLine(){ return MODE!=='local'&&isMe(S.cur) ? "C'est ton tour !" : `Au tour de ${N(S.players[S.cur].name)}.`; }
 function nextPlayer(){
   const n=S.players.length;
@@ -486,7 +542,7 @@ function canFlip(i,seat){
 }
 // clic sur une carte par le joueur de cet écran
 function userClick(i){
-  if(MODE==='local'){ if(canFlip(i,S.cur)) applyFlip(i); }
+  if(MODE==='local'){ if(!isAI(S.cur) && canFlip(i,S.cur)) applyFlip(i); }
   else if(MODE==='host'){ if(canFlip(i,0)){ broadcast({t:'flip',i}); applyFlip(i); } }
   else if(MODE==='client'){ if(canFlip(i,NET.seat) && NET.conn) NET.conn.send({t:'click',i}); }
 }
@@ -496,6 +552,7 @@ function applyFlip(i){
   if(!card||card.flipped||card.matched||S.over) return;
   card.flipped=true; card.el.classList.add('flipped'); card.el.setAttribute('aria-label','Carte retournée');
   playFlip(card.pair);
+  if(MODE==='local') aiObserve(i,card.pair);
   if(!S.first){ S.first=card; return; }
   const a=S.first, b=card, p=S.players[S.cur];
   S.first=null; S.lock=true; p.tries++;
@@ -503,12 +560,13 @@ function applyFlip(i){
     S.found++; if(S.found===S.nPairs) S.over=true;
     setTimeout(()=>{
       [a,b].forEach(c=>{c.matched=true;c.el.classList.add('matched');c.el.style.setProperty('--mc',PCOLORS[S.cur])});
+      if(MODE==='local') aiForget([a.idx,b.idx]);
       p.score+=10; p.pairs++; playMatch();
       if(S.over){ renderPlayers(); setStatus('Toutes les paires sont trouvées !'); setTimeout(endGame,800); return; }
       if(p.gone){ nextPlayer(); setStatus(turnLine()); }
       else setStatus(`Bravo ${N(p.name)} ! +10 points et ${MODE!=='local'&&isMe(S.cur)?'tu rejoues':'nouveau tour'}.`);
       renderPlayers(); updateWait();
-      S.lock=false;
+      S.lock=false; scheduleAI();
     },420);
   } else {
     setTimeout(()=>[a,b].forEach(c=>c.el.classList.add('shake')),500);
@@ -517,7 +575,7 @@ function applyFlip(i){
       playMiss();
       nextPlayer(); renderPlayers(); updateWait();
       setStatus(S.players.length>1 ? 'Raté ! '+turnLine() : 'Raté ! Essaie encore.');
-      S.lock=false;
+      S.lock=false; scheduleAI();
     },1150);
   }
 }
