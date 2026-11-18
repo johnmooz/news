@@ -40,6 +40,11 @@ canvas{display:block;border-radius:4px;box-shadow:0 0 0 2px #222,0 10px 40px rgb
 .seg button small{font-size:11px;font-weight:normal;opacity:.8}
 .seg button.on{background:linear-gradient(#3a6aff,#1a3ab0);border-color:#9cf;color:#fff}
 .stepper{display:flex;align-items:center;gap:10px}
+.lvgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lvc{position:relative;padding:3px;border-radius:8px;border:2px solid #444a88;background:#0a1a70;cursor:pointer;line-height:0}
+.lvc canvas{width:100%;height:auto;border-radius:4px;box-shadow:none}
+.lvc span{position:absolute;left:4px;top:4px;font:bold 12px/1 "Courier New",monospace;color:#fff;background:rgba(0,0,0,.65);padding:2px 4px;border-radius:4px}
+.lvc.on{border-color:#ffd400;box-shadow:0 0 0 2px #ffd400,0 0 12px rgba(255,212,0,.6)}
 .stepper button{flex:0 0 48px;font-size:22px;padding:4px}
 .stepper span{flex:1;text-align:center;font:bold 26px "Courier New",monospace;color:#fff}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}
@@ -63,7 +68,7 @@ h2{text-align:center;font:900 30px "Courier New",monospace;color:#ffd400;text-sh
   <div class="bar" id="topBar"></div>
   <div id="stage">
     <canvas id="game"></canvas>
-    <div id="hudBtns"><button id="muteBtn" title="Son (M)">♪</button><button id="pauseBtn" title="Pause (P)">II</button></div>
+    <div id="hudBtns"><button id="musicBtn" title="Musique (N)">♫</button><button id="muteBtn" title="Bruitages (M)">♪</button><button id="pauseBtn" title="Pause (P)">II</button></div>
   </div>
   <div class="bar" id="bottomBar"></div>
 </div>
@@ -78,9 +83,9 @@ h2{text-align:center;font:900 30px "Courier New",monospace;color:#ffd400;text-sh
         <button data-v="vs">2 joueurs<br><small>contre</small></button>
       </div></div>
     <div class="sect"><div class="lbl">Niveau de départ</div>
-      <div class="stepper"><button id="lvMinus">−</button><span id="lvVal">1</span><button id="lvPlus">+</button></div></div>
+      <div class="lvgrid" id="lvGrid"></div></div>
     <div class="sect"><div class="lbl">Vitesse du jeu</div><div class="seg" id="spdSeg"></div></div>
-    <div class="sect"><div class="lbl">Écran tactile</div><label class="chk"><input type="checkbox" id="touchChk"> Afficher les boutons ◀ ▶ TIR</label><div style="font-size:12px;color:#aab;margin-top:4px">Sans boutons, tu peux aussi glisser le doigt sur le jeu pour déplacer ta raquette, et toucher brièvement l'écran pour lancer ou tirer.</div></div>
+    <div class="sect"><div class="lbl">Son et écran tactile</div><label class="chk" style="margin-bottom:6px"><input type="checkbox" id="musicChk"> Musique</label><label class="chk"><input type="checkbox" id="touchChk"> Afficher les boutons ◀ ▶ TIR</label><div style="font-size:12px;color:#aab;margin-top:4px">Sans boutons, tu peux aussi glisser le doigt sur le jeu pour déplacer ta raquette, et toucher brièvement l'écran pour lancer ou tirer.</div></div>
     <button class="big" id="startBtn">JOUER</button>
     <div class="help" id="help"></div>
     <div class="help">
@@ -239,6 +244,80 @@ function sfx(n,arg){
   }}catch(e){}
 }
 
+// ---------- musique (composition originale, style NES 8 bits) ----------
+// pas = croche ; -1 = note tenue ; 0 = silence
+const TRACKS={
+  menu:{bpm:112,
+    lead:[72,-1,76,79, 84,-1,79,76, 81,-1,79,76, 72,-1,-1,0, 77,-1,81,84, 81,79,77,76, 74,-1,79,-1, 83,-1,-1,0],
+    bass:[48,55,48,55, 48,55,48,55, 45,52,45,52, 45,52,45,52, 41,48,41,48, 41,48,41,48, 43,50,43,50, 43,50,43,50],
+    chords:[[60,64,67],[57,60,64],[57,60,65],[55,59,62]],drums:false},
+  game:{bpm:150,
+    lead:[69,72,76,72, 74,72,69,0, 65,69,72,69, 71,69,65,67, 67,72,76,79, 77,76,74,72, 71,-1,74,-1, 79,77,74,71,
+          81,-1,79,76, 77,76,72,69, 72,-1,69,72, 77,-1,76,74, 74,77,81,77, 76,74,72,71, 69,-1,-1,0, 68,71,74,76],
+    bass:[45,57,45,57, 45,57,45,57, 41,53,41,53, 41,53,41,53, 48,60,48,60, 48,60,48,60, 43,55,43,55, 43,55,43,55,
+          45,57,45,57, 45,57,45,57, 41,53,41,53, 41,53,41,53, 38,50,38,50, 38,50,38,50, 40,52,40,52, 40,52,40,52],
+    chords:[[57,60,64],[53,57,60],[55,60,64],[55,59,62],[57,60,64],[53,57,60],[57,62,65],[56,59,64]],drums:true},
+  fast:{bpm:172,
+    lead:[76,-1,79,81, 84,81,79,76, 74,-1,76,79, 81,79,76,74, 72,-1,74,76, 79,76,74,72, 71,74,79,83, 86,-1,83,-1],
+    bass:[45,57,45,57, 45,57,45,57, 43,55,43,55, 43,55,43,55, 41,53,41,53, 41,53,41,53, 40,52,40,52, 40,52,44,47],
+    chords:[[57,60,64],[55,59,62],[53,57,60],[56,59,64]],drums:true}
+};
+let musicOn=true;try{musicOn=localStorage.getItem('arkanoid_music')!=='0';}catch(e){}
+const mus={track:null,step:0,next:0,timer:null,gain:null,pulse:null};
+function musNodes(){
+  if(mus.gain)return;
+  mus.gain=AC.createGain();mus.gain.gain.value=0.16;mus.gain.connect(AC.destination);
+  const n=32,re=new Float32Array(n),im=new Float32Array(n);
+  for(let k=1;k<n;k++)re[k]=2/(k*Math.PI)*Math.sin(k*Math.PI*0.25);   // onde pulse 25 % (son NES)
+  mus.pulse=AC.createPeriodicWave(re,im);
+}
+function mNote(midi,t,dur,kind,vol){
+  const o=AC.createOscillator(),g=AC.createGain();
+  if(kind==='pulse')o.setPeriodicWave(mus.pulse);else o.type=kind;
+  o.frequency.setValueAtTime(NF(midi),t);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.008);
+  g.gain.setValueAtTime(vol*0.75,t+Math.max(0.01,dur*0.6));g.gain.linearRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(mus.gain);o.start(t);o.stop(t+dur+0.02);
+}
+function mDrum(kind,t){
+  if(kind==='kick'){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(40,t+0.12);
+    g.gain.setValueAtTime(0.9,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.14);o.connect(g);g.connect(mus.gain);o.start(t);o.stop(t+0.16);return;}
+  const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;
+  const snare=kind==='snare';f.type=snare?'bandpass':'highpass';f.frequency.value=snare?1800:7000;
+  const d=snare?0.13:0.03;g.gain.setValueAtTime(snare?0.6:0.25,t);g.gain.exponentialRampToValueAtTime(0.001,t+d);
+  s.connect(f);f.connect(g);g.connect(mus.gain);s.start(t);s.stop(t+d+0.02);
+}
+function musTick(){
+  const T=TRACKS[mus.track];if(!T)return;
+  const st=60/T.bpm/2;                       // durée d'une croche
+  while(mus.next<AC.currentTime+0.15){
+    const i=mus.step,L=T.lead.length,t=mus.next;
+    const n=T.lead[i%L];
+    if(n>0){let k=1;while(T.lead[(i+k)%L]===-1&&k<L)k++;mNote(n,t,st*k*0.95,'pulse',0.32);}
+    const b=T.bass[i%T.bass.length];if(b)mNote(b,t,st*0.9,'triangle',0.55);
+    const ch=T.chords[Math.floor(i/8)%T.chords.length];          // arpège rapide, 2e voix
+    mNote(ch[(i*2)%3]+12,t,st*0.45,'pulse',0.07);mNote(ch[(i*2+1)%3]+12,t+st/2,st*0.45,'pulse',0.07);
+    if(T.drums){const p=i%8;if(p===0||p===4)mDrum('kick',t);if(p===2||p===6)mDrum('snare',t);mDrum('hat',t+st/2);}
+    mus.step++;mus.next+=st;
+  }
+}
+function musicPlay(name){
+  if(mus.track===name&&mus.timer)return;
+  musicStop();mus.track=name;
+  if(!musicOn)return;
+  try{ac();musNodes();}catch(e){return;}
+  mus.step=0;mus.next=AC.currentTime+0.08;mus.gain.gain.cancelScheduledValues(AC.currentTime);mus.gain.gain.setValueAtTime(0.16,AC.currentTime);
+  musTick();mus.timer=setInterval(musTick,40);
+}
+function musicStop(){if(mus.timer){clearInterval(mus.timer);mus.timer=null;}
+  if(mus.gain&&AC){const t=AC.currentTime;mus.gain.gain.cancelScheduledValues(t);mus.gain.gain.setValueAtTime(mus.gain.gain.value,t);mus.gain.gain.linearRampToValueAtTime(0.0001,t+0.08);}}
+function musicResume(){const n=mus.track;mus.track=null;if(n)musicPlay(n);}
+function gameTrack(){return game&&(game.levelNum%3===0||game.loop>0)?'fast':'game';}   // tous les 3 niveaux : thème rapide
+function toggleMusic(){musicOn=!musicOn;try{localStorage.setItem('arkanoid_music',musicOn?'1':'0');}catch(e){}
+  if(musicOn)musicResume();else musicStop();refreshMusicUI();}
+function refreshMusicUI(){const b=document.getElementById('musicBtn');if(b){b.textContent=musicOn?'♫':'×';b.style.opacity=musicOn?1:.5;}
+  const c=document.getElementById('musicChk');if(c)c.checked=musicOn;}
+
 // ---------- entrées ----------
 const keys={},touch={},tap={};
 function mapKey(e){const k=(e.key||'').toLowerCase(),c=e.code;
@@ -252,6 +331,7 @@ window.addEventListener('keydown',e=>{
     if(k==='p'||k==='escape'){e.preventDefault();togglePause();return;}
   }
   if(k==='m'){toggleMute();return;}
+  if(k==='n'){toggleMusic();return;}
   const n=mapKey(e);if(n&&game&&!menuOpen()){e.preventDefault();keys[n]=true;if(!e.repeat)tap[n]=true;}
 });
 window.addEventListener('keyup',e=>{const n=mapKey(e);if(n)keys[n]=false;});
@@ -478,12 +558,12 @@ function warp(p){
 }
 function vsNextLevel(serveId){
   const g=game;let n=g.levelNum+1;if(n>NLEV){n=1;g.loop++;}
-  loadLevel(n);resetPaddles();serve(serveId);sfx('start');showBanner('NIVEAU '+n,'',110);
+  loadLevel(n);resetPaddles();serve(serveId);sfx('start');musicPlay(gameTrack());showBanner('NIVEAU '+n,'',110);
 }
 function nextLevel(){
   const g=game;let n=g.levelNum+1;
   if(n>NLEV){n=1;g.loop++;}
-  loadLevel(n);resetPaddles();serve(g.mode==='coop'?g.serveId:0);g.state='play';sfx('start');
+  loadLevel(n);resetPaddles();serve(g.mode==='coop'?g.serveId:0);g.state='play';sfx('start');musicPlay(gameTrack());
   showBanner('NIVEAU '+n,g.loop&&n===1?'Tour '+(g.loop+1)+' — encore plus vite !':'',150);
 }
 function loseLife(){
@@ -498,14 +578,14 @@ function afterDeath(){
   showBanner('PRÊT ?',g.lives+(g.lives>1?' vies restantes':' vie restante'),110);
 }
 function gameOver(){
-  const g=game;g.state='over';setTimeout(()=>sfx('gameover'),700);
+  const g=game;g.state='over';musicStop();setTimeout(()=>sfx('gameover'),700);
   if(g.score>best){best=g.score;try{localStorage.setItem('arkanoid_best',best);}catch(e){}}
   $('endTitle').textContent='GAME OVER';
   $('endMsg').innerHTML='Score : <b>'+g.score+'</b><br>Niveau atteint : '+g.levelNum+'<br>Record : '+best;
   setTimeout(()=>{if(game&&game.state==='over')show('endOv');},900);
 }
 function endVersus(w){
-  const g=game;g.state='over';sfx('victory');
+  const g=game;g.state='over';musicStop();sfx('victory');
   $('endTitle').textContent='JOUEUR '+(w+1)+' GAGNE !';
   $('endMsg').innerHTML=(w===0?'Le joueur du bas':'Le joueur du haut')+' remporte la partie<br>avec '+g.hearts[w]+' cœur'+(g.hearts[w]>1?'s':'')+' restant'+(g.hearts[w]>1?'s':'')+'.';
   setTimeout(()=>{if(game&&game.state==='over')show('endOv');},900);
@@ -712,7 +792,7 @@ function show(id){$(id).classList.add('show');}
 function hide(id){$(id).classList.remove('show');}
 function togglePause(){
   if(!game||game.state==='over')return;
-  paused=!paused;if(paused)show('pauseOv');else{hide('pauseOv');last=0;}
+  paused=!paused;if(paused){show('pauseOv');musicStop();}else{hide('pauseOv');last=0;musicResume();}
 }
 function toggleMute(){muted=!muted;if(!muted)sfx('click');$('muteBtn').textContent=muted?'×':'♪';$('muteBtn').style.opacity=muted?.5:1;}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&game&&!paused&&game.state!=='over'&&!menuOpen())togglePause();});
@@ -725,25 +805,39 @@ const HELP={
 function refreshMenu(){
   document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===cfg.mode));
   document.querySelectorAll('#spdSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.v===cfg.speed));
-  $('lvVal').textContent=cfg.level;$('touchChk').checked=cfg.touch;
-  $('help').innerHTML=HELP[cfg.mode]+'<br><b>Tactile :</b> boutons ◀ ▶ TIR, ou glisse le doigt sur le jeu (toucher = lancer / tirer'+(cfg.mode==='vs'?', chacun sa moitié d\'écran':cfg.mode==='coop'?', le doigt pilote la raquette la plus proche':'')+')<br><b>P / Échap :</b> pause · <b>M :</b> son';
+  document.querySelectorAll('.lvc').forEach(d=>d.classList.toggle('on',+d.dataset.v===cfg.level));$('touchChk').checked=cfg.touch;refreshMusicUI();
+  $('help').innerHTML=HELP[cfg.mode]+'<br><b>Tactile :</b> boutons ◀ ▶ TIR, ou glisse le doigt sur le jeu (toucher = lancer / tirer'+(cfg.mode==='vs'?', chacun sa moitié d\'écran':cfg.mode==='coop'?', le doigt pilote la raquette la plus proche':'')+')<br><b>P / Échap :</b> pause · <b>M :</b> bruitages · <b>N :</b> musique';
   $('touchToggle').textContent='Boutons tactiles : '+(cfg.touch?'OUI':'NON');
 }
 $('spdSeg').innerHTML=SPEEDS.map((s,i)=>`<button data-v="${i}">${s.n}</button>`).join('');
 $('capsLegend').innerHTML=Object.keys(CAPS).map(k=>`<div><span class="cap" style="background:${CAPS[k].col}">${k}</span>${CAPS[k].fr}</div>`).join('');
 document.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.v;refreshMenu();saveCfg();});
 document.querySelectorAll('#spdSeg button').forEach(b=>b.onclick=()=>{cfg.speed=+b.dataset.v;refreshMenu();saveCfg();});
-$('lvMinus').onclick=()=>{cfg.level=cfg.level<=1?NLEV:cfg.level-1;refreshMenu();saveCfg();};
-$('lvPlus').onclick=()=>{cfg.level=cfg.level>=NLEV?1:cfg.level+1;refreshMenu();saveCfg();};
+(function(){const grid=$('lvGrid');
+  for(let n=1;n<=NLEV;n++){const L=LEVELS[n-1],rows=(typeof L==='function'?L():L).map(r=>(r+'.............').slice(0,COLS));
+    const c=document.createElement('canvas');c.width=104;c.height=78;const x=c.getContext('2d');
+    x.drawImage(bg,0,0,bg.width,bg.width*78/104,0,0,104,78);
+    x.fillStyle='#bbb';x.fillRect(0,0,3,78);x.fillRect(101,0,3,78);x.fillRect(0,0,104,3);
+    rows.forEach((r,ri)=>{for(let ci=0;ci<COLS;ci++){const ch=r[ci];if(ch==='.')continue;
+      x.fillStyle=ch==='s'?'#c8c8d0':ch==='G'?'#e0a800':BCOL[ch];x.fillRect(4+ci*7.4,8+ri*4.2,6.6,3.4);}});
+    x.fillStyle='#ccc';x.fillRect(44,70,16,3);
+    const d=document.createElement('div');d.className='lvc';d.dataset.v=n;d.appendChild(c);
+    const sp=document.createElement('span');sp.textContent=n;d.appendChild(sp);
+    d.onclick=()=>{cfg.level=n;refreshMenu();saveCfg();sfx('click');};grid.appendChild(d);}
+})();
+$('musicChk').onchange=()=>{toggleMusic();};
+$('musicBtn').onclick=toggleMusic;
+// la musique du menu démarre au premier contact (les navigateurs l'exigent)
+['pointerdown','keydown'].forEach(ev=>window.addEventListener(ev,()=>{if(!game&&!mus.timer&&musicOn)musicPlay('menu');},{once:true}));
 $('touchChk').onchange=e=>{cfg.touch=e.target.checked;touchSet=true;try{localStorage.setItem('arkanoid_touchset','1');}catch(_){}saveCfg();refreshMenu();};
 $('touchToggle').onclick=()=>{cfg.touch=!cfg.touch;touchSet=true;try{localStorage.setItem('arkanoid_touchset','1');}catch(_){}saveCfg();refreshMenu();buildBars();resize();};
 function start(){
   hide('menu');hide('endOv');hide('pauseOv');paused=false;
   for(const k in keys)keys[k]=false;for(const k in touch)touch[k]=false;for(const k in drags)delete drags[k];dragDX[0]=dragDX[1]=dragHold[0]=dragHold[1]=0;
   buildBars();newGame();$('hudBtns').style.display='flex';last=0;acc=0;resize();
-  sfx('start');
+  sfx('start');musicPlay(gameTrack());
 }
-function toMenu(){game=null;paused=false;hide('pauseOv');hide('endOv');buildBarsOff();$('hudBtns').style.display='none';refreshMenu();show('menu');resize();}
+function toMenu(){game=null;musicPlay('menu');paused=false;hide('pauseOv');hide('endOv');buildBarsOff();$('hudBtns').style.display='none';refreshMenu();show('menu');resize();}
 function buildBarsOff(){topBar.classList.remove('show');bottomBar.classList.remove('show');topBar.innerHTML='';bottomBar.innerHTML='';}
 $('startBtn').onclick=start;$('againBtn').onclick=start;$('menuBtn').onclick=toMenu;$('quitBtn').onclick=toMenu;
 $('resumeBtn').onclick=togglePause;$('pauseBtn').onclick=togglePause;$('muteBtn').onclick=toggleMute;
