@@ -130,41 +130,59 @@
     /* ---------- Feuille ---------- */
     .sheet-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
     .sheet-title h3 { margin: 0; font-size: 16px; }
-    .sheet-wrap { overflow-x: auto; }
-    .grid { display: grid; grid-template-columns: repeat(12, var(--cell)); gap: 4px; justify-content: center; }
-    .slot { height: var(--cell); }
+    /* Feuille façon carte Qwinto : fond clair, bandes de couleur décalées */
+    .paper {
+        background: #e7e5e4; color: #1c1917; border-radius: 14px; padding: 16px 12px;
+        overflow-x: auto;
+    }
+    .grid { display: grid; grid-template-columns: repeat(12, var(--cell)); row-gap: 10px; justify-content: center; }
+    .band {
+        display: grid; grid-template-columns: repeat(10, 1fr); align-items: center;
+        padding: 4px 0; border-radius: 8px; border: 2px solid rgba(0,0,0,.3);
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.12);
+    }
+    .band.o { background: #ef6a2c; } .band.y { background: #f2cc2b; } .band.p { background: #6d3fa5; }
+    .gap { height: calc(var(--cell) * .82); }
     .cell {
-        height: var(--cell); border-radius: 8px; display: grid; place-items: center;
-        font-weight: 800; font-size: calc(var(--cell) * .42); font-variant-numeric: tabular-nums;
-        border: 2px solid; position: relative;
+        width: calc(var(--cell) * .82); height: calc(var(--cell) * .82); justify-self: center;
+        border-radius: 50%; display: grid; place-items: center;
+        background: #fbf3ef; border: 2px solid rgba(0,0,0,.35); color: #1c1917;
+        font-weight: 800; font-size: calc(var(--cell) * .4); font-variant-numeric: tabular-nums;
+        transition: opacity .2s;
     }
-    .cell.o { border-color: var(--o); background: color-mix(in srgb, var(--o) 14%, #0f172a); }
-    .cell.y { border-color: var(--y); background: color-mix(in srgb, var(--y) 14%, #0f172a); }
-    .cell.p { border-color: var(--p); background: color-mix(in srgb, var(--p) 14%, #0f172a); }
-    .cell.filled.o { background: color-mix(in srgb, var(--o) 60%, #0f172a); }
-    .cell.filled.y { background: color-mix(in srgb, var(--y) 60%, #0f172a); }
-    .cell.filled.p { background: color-mix(in srgb, var(--p) 60%, #0f172a); }
-    .cell.penta { border: 0; border-radius: 0; clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); }
-    .cell.penta.o { background: color-mix(in srgb, var(--o) 40%, #0f172a); }
-    .cell.penta.y { background: color-mix(in srgb, var(--y) 40%, #0f172a); }
-    .cell.penta.p { background: color-mix(in srgb, var(--p) 40%, #0f172a); }
-    .cell.penta.filled.o { background: var(--o); } .cell.penta.filled.y { background: var(--y); } .cell.penta.filled.p { background: var(--p); }
-    .cell.valid { cursor: pointer; animation: pulse .8s infinite alternate; }
-    .cell.valid .ghost { opacity: 0; color: #fff; transition: opacity .1s; }
-    .cell.valid:hover .ghost, .cell.valid:focus .ghost { opacity: .8; }
+    .cell.penta {
+        border: 0; border-radius: 0; background: #fbf3ef;
+        clip-path: polygon(50% 2%, 98% 38%, 80% 98%, 20% 98%, 2% 38%);
+        padding-top: 8%;
+    }
+    .cell.locked { opacity: .45; }
+    .cell.valid { cursor: pointer; animation: pulse .7s infinite alternate; }
+    .cell.valid .ghost { opacity: 0; transition: opacity .1s; color: #57534e; }
+    .cell.valid:hover .ghost, .cell.valid:focus .ghost { opacity: 1; }
     .cell.valid:focus { outline: none; }
-    @keyframes pulse { from { filter: brightness(1); } to { filter: brightness(1.9); } }
+    @keyframes pulse { from { transform: scale(1); background: #fbf3ef; } to { transform: scale(1.12); background: #fff; } }
     .cell.just { animation: pop .35s ease-out; }
-    @keyframes pop { 0% { transform: scale(1.35); } 100% { transform: scale(1); } }
+    @keyframes pop { 0% { transform: scale(1.4); } 100% { transform: scale(1); } }
 
-    .under { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-    .misses { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-    .misses span.box {
-        width: 26px; height: 26px; border-radius: 6px; border: 2px solid #475569; display: grid; place-items: center;
-        color: #f87171; font-weight: 800;
+    /* Bas de la feuille : croix et calcul du score */
+    .bottom { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 18px; }
+    .misses { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .xicon { color: #b91c1c; font-size: 20px; }
+    .sq {
+        min-width: 34px; height: 34px; padding: 0 6px; border-radius: 6px; display: grid; place-items: center;
+        background: #fff; border: 2px solid #a8a29e; font-weight: 800; font-variant-numeric: tabular-nums;
     }
-    .breakdown { font-size: 13px; color: var(--muted); }
-    .breakdown b { color: var(--text); }
+    .misses .sq { color: #b91c1c; font-size: 18px; }
+    .calc { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; font-weight: 800; font-size: 16px; }
+    .calc .sq.o { background: #f8b38e; border-color: #ef6a2c; }
+    .calc .sq.y { background: #f8e48f; border-color: #d4ad12; }
+    .calc .sq.p { background: #c4b0de; border-color: #6d3fa5; }
+    .calc .pent {
+        width: 34px; height: 34px; display: grid; place-items: center; padding-top: 4px;
+        background: #fff; clip-path: polygon(50% 2%, 98% 38%, 80% 98%, 20% 98%, 2% 38%);
+        font-weight: 800; font-size: 14px;
+    }
+    .calc .sq.total { min-width: 60px; background: #fff; border-color: #57534e; }
 
     /* ---------- Fin de partie ---------- */
     .overlay {
@@ -208,7 +226,7 @@ const ROWS = [
 ];
 const ROW_BY = Object.fromEntries(ROWS.map(r => [r.key, r]));
 // Colonnes bonus (pentagones) : colonne -> ligne dont la case donne la valeur du bonus
-const PENTA = { 2: 'o', 3: 'p', 7: 'y', 8: 'o', 9: 'p' };
+const PENTA = { 2: 'p', 3: 'o', 7: 'o', 8: 'y', 9: 'p' };
 const SUBSETS = [['o'], ['y'], ['p'], ['o', 'y'], ['o', 'p'], ['y', 'p'], ['o', 'y', 'p']];
 const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const MAX_MISSES = 4;
@@ -658,32 +676,48 @@ function renderGame() {
 function renderSheet(idx, humanDeciding) {
     const p = G.players[idx];
     const interactive = humanDeciding && idx === G.deciding && (G.phase === 'rolled' || G.phase === 'passive');
-    let cells = '';
-    for (const row of ROWS) {
-        for (let c = 0; c < 12; c++) {
+    // Chaque ligne est une bande de 10 colonnes décalée (orange à droite, violet à gauche),
+    // avec une case vide (sans rond) au milieu, comme sur la feuille officielle.
+    let bands = '';
+    ROWS.forEach((row, r) => {
+        const start = Math.min(...row.cols);
+        let cells = '';
+        for (let c = start; c < start + 10; c++) {
             const i = row.cols.indexOf(c);
-            if (i < 0) { cells += '<div class="slot"></div>'; continue; }
+            if (i < 0) { cells += '<div class="gap"></div>'; continue; }
             const v = p.sheet[row.key][i];
             const penta = PENTA[c] === row.key;
             const valid = interactive && G.rolled.includes(row.key) && isValid(p, row.key, i, G.sum);
+            const locked = interactive && !valid && v == null;
             const just = G.just && G.just.player === idx && G.just.rk === row.key && G.just.i === i;
             const attrs = valid
                 ? `data-action="place" data-rk="${row.key}" data-i="${i}" role="button" tabindex="0" aria-label="Inscrire ${G.sum} en ${COLORS[row.key].name}, case ${i + 1}"`
                 : '';
-            cells += `<div class="cell ${row.key} ${penta ? 'penta' : ''} ${v != null ? 'filled' : ''} ${valid ? 'valid' : ''} ${just ? 'just' : ''}" ${attrs}>${v ?? (valid ? `<span class="ghost">${G.sum}</span>` : '')}</div>`;
+            cells += `<div class="cell ${penta ? 'penta' : ''} ${valid ? 'valid' : ''} ${locked ? 'locked' : ''} ${just ? 'just' : ''}" ${attrs}>${v ?? (valid ? `<span class="ghost">${G.sum}</span>` : '')}</div>`;
         }
-    }
+        bands += `<div class="band ${row.key}" style="grid-column:${start + 1} / span 10;grid-row:${r + 1}">${cells}</div>`;
+    });
+
     const s = score(p);
-    const boxes = Array.from({ length: MAX_MISSES }, (_, k) => `<span class="box">${k < p.misses ? '✗' : ''}</span>`).join('');
+    const boxes = Array.from({ length: MAX_MISSES }, (_, k) => `<span class="sq">${k < p.misses ? '✗' : ''}</span>`).join('');
+    const pents = Object.keys(PENTA).map(c => {
+        const v = columnComplete(p, +c) ? colValue(p, PENTA[c], +c) : '';
+        return `<span class="pent" title="Bonus colonne">${v}</span>`;
+    }).join('');
     return `<section class="card">
         <div class="sheet-title">
             <h3>Feuille de ${esc(p.name)}${idx !== G.deciding && G.phase !== 'over' ? ' <span class="pmeta">(consultation)</span>' : ''}</h3>
             <span class="pscore">${s.total} pts</span>
         </div>
-        <div class="sheet-wrap"><div class="grid">${cells}</div></div>
-        <div class="under">
-            <div class="misses">Lancers ratés ${boxes}</div>
-            <div class="breakdown">Orange <b>${s.rows.o}</b> · Jaune <b>${s.rows.y}</b> · Violet <b>${s.rows.p}</b> · Bonus <b>${s.bonus}</b> · Croix <b>−${5 * p.misses}</b></div>
+        <div class="paper">
+            <div class="grid">${bands}</div>
+            <div class="bottom">
+                <div class="misses" aria-label="Lancers ratés : ${p.misses} sur ${MAX_MISSES}"><span class="xicon">✗</span> = −5 ${boxes}</div>
+                <div class="calc" aria-label="Score : ${s.total}">
+                    <span class="sq o">${s.rows.o}</span>+<span class="sq y">${s.rows.y}</span>+<span class="sq p">${s.rows.p}</span>
+                    + ${pents} − <span class="sq">${5 * p.misses}</span> = <span class="sq total">${s.total}</span>
+                </div>
+            </div>
         </div>
     </section>`;
 }
