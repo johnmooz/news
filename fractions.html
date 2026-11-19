@@ -59,13 +59,25 @@
   .feedback.ok{color:var(--ok)} .feedback.ko{color:var(--ko)}
   .count{color:var(--muted);font-weight:600;font-size:.95rem}
   .vs{font-family:Fredoka;font-size:1.5rem;color:var(--muted)}
+  .hd-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-weight:800;cursor:pointer;user-select:none;background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:6px 12px;box-shadow:3px 3px 0 var(--ink)}
+  .toggle input{position:absolute;opacity:0;width:0;height:0}
+  .toggle .sw{width:40px;height:22px;border-radius:999px;background:#d9d2c5;border:2px solid var(--ink);position:relative;transition:background .2s;flex:0 0 auto}
+  .toggle .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--ink);transition:left .2s}
+  .toggle input:checked + .sw{background:var(--fill)}
+  .toggle input:checked + .sw::after{left:20px}
+  .toggle input:focus-visible + .sw{outline:3px solid var(--accent);outline-offset:2px}
+  .story{font-weight:600}
   footer{text-align:center;color:var(--muted);font-size:.85rem;padding-bottom:24px}
 </style>
 </head>
 <body>
 <header>
   <h1>Les fractions 🍕<small>Exercices CM2 · représentation par disques</small></h1>
-  <div class="score">Score : <span id="good">0</span> / <span id="total">0</span></div>
+  <div class="hd-right">
+    <label class="toggle"><input type="checkbox" id="showDisc" checked><span class="sw"></span>Afficher les disques</label>
+    <div class="score">Score : <span id="good">0</span> / <span id="total">0</span></div>
+  </div>
 </header>
 <nav id="tabs"></nav>
 <main>
@@ -134,6 +146,14 @@ function discBox(svg, labelHTML=''){
 }
 const fracInput = (id1,id2,d2) => `<span class="fin"><input class="n" id="${id1}" inputmode="numeric"><hr>${d2!==undefined?`<b>${d2}</b>`:`<input class="n" id="${id2}" inputmode="numeric">`}</span>`;
 const val = id => { const v=$('#'+id).value.trim(); return v===''?NaN:parseInt(v,10); };
+let showDisc = true;
+try { if (localStorage.getItem('fractions-disques')==='0') showDisc=false; } catch(e){}
+// Affiche un disque avec sa légende, ou seulement la légende si les disques sont masqués
+function item(d,n,opts,label){
+  if (showDisc) return discBox(makeDisc(d,n,opts),label);
+  const b=document.createElement('div'); b.className='discbox'; b.innerHTML=label; return b;
+}
+const objets=['un gâteau','une pizza','une tarte','un camembert'];
 
 /* ---------- Les exercices ---------- */
 let Q = {};
@@ -143,8 +163,12 @@ const modes = {
     tip:'Le dénominateur (en bas) = nombre de parts égales du disque. Le numérateur (en haut) = nombre de parts coloriées.',
     gen(){
       const d=rand(2,12), n=rand(1,d-1); Q={n,d};
-      $('#prompt').innerHTML='Quelle fraction du disque est coloriée ?';
-      $('#stage').append(discBox(makeDisc(d,n)));
+      if (showDisc){
+        $('#prompt').innerHTML='Quelle fraction du disque est coloriée ?';
+        $('#stage').append(discBox(makeDisc(d,n)));
+      } else {
+        $('#prompt').innerHTML=`<span class="story">On partage ${pick(objets)} en ${d} parts égales. On en mange ${n}.</span><br>Quelle fraction a été mangée ?`;
+      }
       $('#answer').innerHTML=`<div class="answer">${fracInput('a1','a2')}</div>`;
     },
     check(){
@@ -153,7 +177,7 @@ const modes = {
       if (N===Q.n && D===Q.d) return {ok:true,msg:`Bravo ! ${plural(Q.n,'part')} coloriée${Q.n>1?'s':''} sur ${Q.d} : ${F(Q.n,Q.d)}`};
       if (D>0 && N*Q.d===Q.n*D) return {ok:true,msg:`Juste : ${F(N,D)} = ${F(Q.n,Q.d)}. En comptant les parts, on écrit ${F(Q.n,Q.d)}.`};
       if (N===Q.d && D===Q.n) return {ok:false,msg:'Attention, tu as inversé ! Le nombre total de parts va en bas.'};
-      return {ok:false,msg:`Pas tout à fait. Compte toutes les parts du disque, puis les parts coloriées.`};
+      return {ok:false,msg: showDisc ? `Pas tout à fait. Compte toutes les parts du disque, puis les parts coloriées.` : `Pas tout à fait. En bas : le nombre total de parts. En haut : les parts mangées.`};
     },
     solution(){ return `La réponse était ${F(Q.n,Q.d)}.`; }
   },
@@ -163,6 +187,11 @@ const modes = {
     tip:'Clique sur les parts pour les colorier. Le dénominateur te dit en combien de parts le disque est partagé.',
     gen(){
       const d=rand(2,12), n=rand(1,d-1); Q={n,d};
+      if (!showDisc){
+        $('#prompt').innerHTML=`<span class="story">On partage ${pick(objets)} en ${d} parts égales.</span><br>Combien de parts faut-il prendre pour avoir ${F(n,d,true)} ?`;
+        $('#answer').innerHTML=`<div class="answer"><input class="n" id="a1" inputmode="numeric"> <span>parts</span></div>`;
+        return;
+      }
       $('#prompt').innerHTML=`Colorie ${F(n,d,true)} du disque.`;
       const c=document.createElement('div'); c.className='count'; c.textContent='0 part coloriée';
       const disc=makeDisc(d,0,{clickable:true,onChange:k=>c.textContent=`${plural(k,'part')} coloriée${k>1?'s':''}`});
@@ -170,11 +199,13 @@ const modes = {
       const box=discBox(disc); box.appendChild(c); $('#stage').append(box);
     },
     check(){
-      const k=Q.disc.count();
+      const k = Q.disc ? Q.disc.count() : val('a1');
+      if (isNaN(k)) return {msg:'Écris un nombre de parts.'};
       if (k===Q.n) return {ok:true,msg:`Parfait ! ${F(Q.n,Q.d)} = ${Q.n} part${Q.n>1?'s':''} sur ${Q.d}.`};
+      if (!Q.disc) return {ok:false,msg:`Non : le numérateur de ${F(Q.n,Q.d)} indique le nombre de parts à prendre.`};
       return {ok:false,msg:`Tu as colorié ${plural(k,'part')}. Il en faut ${Q.n} sur ${Q.d}.`};
     },
-    solution(){ return `Il fallait colorier ${Q.n} parts sur ${Q.d}.`; }
+    solution(){ return Q.disc ? `Il fallait colorier ${Q.n} parts sur ${Q.d}.` : `Il fallait prendre ${Q.n} parts sur ${Q.d}.`; }
   },
 
   comparer: {
@@ -188,9 +219,9 @@ const modes = {
       if (Math.random()<.5) [n1,d1,n2,d2]=[n2,d2,n1,d1];
       Q={n1,d1,n2,d2,type,choice:null};
       $('#prompt').innerHTML=`Compare ces deux fractions : choisis &lt;, = ou &gt;.`;
-      $('#stage').append(discBox(makeDisc(d1,n1),F(n1,d1,true)));
+      $('#stage').append(item(d1,n1,{},F(n1,d1,true)));
       const vs=document.createElement('div'); vs.className='vs'; vs.textContent='?'; Q.vs=vs; $('#stage').append(vs);
-      $('#stage').append(discBox(makeDisc(d2,n2,{alt:true}),F(n2,d2,true)));
+      $('#stage').append(item(d2,n2,{alt:true},F(n2,d2,true)));
       $('#answer').innerHTML=`<div class="cmp">${['<','=','>'].map(s=>`<button data-s="${s}">${s}</button>`).join('')}</div>`;
       document.querySelectorAll('.cmp button').forEach(b=>b.onclick=()=>{
         document.querySelectorAll('.cmp button').forEach(x=>x.classList.remove('sel'));
@@ -209,7 +240,7 @@ const modes = {
       if (!Q.choice) return {msg:'Choisis un signe : <, = ou >.'};
       const t=this.truth();
       if (Q.choice===t) return {ok:true,msg:`Oui ! ${F(Q.n1,Q.d1)} ${t} ${F(Q.n2,Q.d2)}. ${this.why()}`};
-      return {ok:false,msg:`Non, regarde bien les disques. Astuce : ${Q.type==='mult'?'transforme une fraction pour avoir le même dénominateur.':Q.type==='num'?'compare la taille des parts.':'compare le nombre de parts coloriées.'}`};
+      return {ok:false,msg:`Non${showDisc?', regarde bien les disques':''}. Astuce :${Q.type==='mult'?'transforme une fraction pour avoir le même dénominateur.':Q.type==='num'?'compare la taille des parts.':'compare le nombre de parts coloriées.'}`};
     },
     solution(){ return `${F(Q.n1,Q.d1)} ${this.truth()} ${F(Q.n2,Q.d2)}. ${this.why()}`; }
   },
@@ -218,7 +249,12 @@ const modes = {
     label:'Plus grand que 1',
     tip:'Un disque entier = 1 unité. Quand le numérateur est plus grand que le dénominateur, la fraction dépasse 1.',
     gen(){
-      const d=pick([2,3,4,5,6,8,10]), n=rand(d+1,3*d-1); Q={n,d};
+      const d=pick([2,3,4,5,6,8,10]), n=rand(d+1,3*d-1); Q={n,d,given:!showDisc};
+      if (!showDisc){
+        $('#prompt').innerHTML=`Décompose ${F(n,d,true)} en un nombre entier + une fraction plus petite que 1.`;
+        $('#answer').innerHTML=`<div class="answer">${F(n,d,true)} <span>=</span> <input class="n" id="e" inputmode="numeric"> <span>+</span> ${fracInput('r',null,d)}</div>`;
+        return;
+      }
       $('#prompt').innerHTML='Chaque disque représente une unité. Quelle fraction est coloriée ? Décompose-la ensuite.';
       let rest=n; const nb=Math.ceil(n/d);
       for (let i=0;i<nb;i++){ $('#stage').append(discBox(makeDisc(d,Math.min(d,rest),{small:true}))); rest-=d; }
@@ -227,9 +263,10 @@ const modes = {
       $('#a2').addEventListener('input',()=>{ $('#answer').querySelector('b').textContent=$('#a2').value||'…'; });
     },
     check(){
-      const N=val('a1'), D=val('a2'), E=val('e'), R=val('r');
+      const N=Q.given?Q.n:val('a1'), D=Q.given?Q.d:val('a2'), E=val('e'), R=val('r');
       if ([N,D,E,R].some(isNaN)) return {msg:'Complète toutes les cases (mets 0 s\'il ne reste rien).'};
       const E0=Math.floor(Q.n/Q.d), R0=Q.n%Q.d;
+      if (Q.given && !(E===E0 && R===R0)) return {ok:false,msg:`Pas encore. Combien de fois ${Q.d} ${Q.d}ᵉˢ (= 1 unité) peut-on faire avec ${Q.n} ${Q.d}ᵉˢ ? Ce qui reste va dans la fraction.`};
       if (!(N===Q.n && D===Q.d)) return {ok:false,msg:`La fraction n'est pas juste. Compte les parts coloriées dans tous les disques (chaque disque a ${Q.d} parts).`};
       if (E===E0 && R===R0) return {ok:true,msg:`Excellent ! ${F(Q.n,Q.d)} = ${E0} + ${F(R0,Q.d)}`};
       return {ok:false,msg:`La fraction est juste ! Mais la décomposition non : combien de disques entiers sont coloriés ?`};
@@ -243,6 +280,11 @@ const modes = {
     gen(){
       const d1=pick([2,3,4,5,6]), k=pick([2,3,4].filter(k=>d1*k<=12)), d2=d1*k, n=rand(1,d1-1);
       Q={n,d1,d2,k};
+      if (!showDisc){
+        $('#prompt').innerHTML='Complète l\'égalité.';
+        $('#answer').innerHTML=`<div class="answer">${F(n,d1,true)} <span>=</span> ${fracInput('a1',null,d2)}</div>`;
+        return;
+      }
       $('#prompt').innerHTML=`Colorie le 2ᵉ disque pour représenter la même quantité que ${F(n,d1,true)}, puis complète l'égalité.`;
       $('#stage').append(discBox(makeDisc(d1,n),F(n,d1,true)));
       const vs=document.createElement('div'); vs.className='vs'; vs.textContent='='; $('#stage').append(vs);
@@ -251,7 +293,13 @@ const modes = {
       $('#answer').innerHTML=`<div class="answer">${F(n,d1,true)} <span>=</span> ${fracInput('a1',null,d2)}</div>`;
     },
     check(){
-      const c=Q.disc.count(), N=val('a1'), want=Q.n*Q.k;
+      const N=val('a1'), want=Q.n*Q.k;
+      if (!Q.disc){
+        if (isNaN(N)) return {msg:'Complète le numérateur.'};
+        if (N===want) return {ok:true,msg:`Super ! ${F(Q.n,Q.d1)} = ${F(want,Q.d2)} (×${Q.k} en haut et en bas).`};
+        return {ok:false,msg:`Non. Par combien faut-il multiplier ${Q.d1} pour obtenir ${Q.d2} ? Fais pareil avec le numérateur.`};
+      }
+      const c=Q.disc.count();
       if (c!==want) return {ok:false,msg:`Le 2ᵉ disque n'a pas la même quantité coloriée (${plural(c,'part')}). Compare les deux disques !`};
       if (isNaN(N)) return {msg:'Bon coloriage ! Complète maintenant le numérateur.'};
       if (N===want) return {ok:true,msg:`Super ! ${F(Q.n,Q.d1)} = ${F(want,Q.d2)} (on a multiplié par ${Q.k} en haut et en bas).`};
@@ -288,6 +336,12 @@ function check(){
   else { fb.className='feedback ko'; fb.innerHTML='❌ '+r.msg + (tries>=2?`<br><span style="color:var(--ink)">Solution : ${m.solution()}</span>`:'<br><span class="count">Essaie encore !</span>'); if(tries>=2) solved=true; }
   $('#good').textContent=good; $('#total').textContent=total;
 }
+$('#showDisc').checked=showDisc;
+$('#showDisc').addEventListener('change',e=>{
+  showDisc=e.target.checked;
+  try { localStorage.setItem('fractions-disques', showDisc?'1':'0'); } catch(err){}
+  newQ();
+});
 $('#check').onclick=check;
 $('#next').onclick=newQ;
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'){ solved?newQ():check(); } });
