@@ -36,6 +36,7 @@ h1{font-size:44px;line-height:1;text-align:center;letter-spacing:.5px}
 .prow input{flex:1;min-width:0;height:42px;border-radius:10px;border:1.5px solid var(--line);background:#24090f;color:var(--txt);padding:0 10px;font-size:16px}
 .prow input:focus{outline:none;border-color:var(--gold)}
 .tog{flex:none;height:42px;border-radius:10px;border:1.5px solid var(--line);background:rgba(0,0,0,.2);color:var(--txt);padding:0 10px;font-size:14px;font-weight:600;width:118px}
+.tog.dice{width:42px;padding:0;font-size:18px}
 .tog.h{border-color:#8fd19e;color:#bff0c9}
 .hint{color:var(--mute);font-size:13px;margin-top:10px;line-height:1.4}
 .btn{border:none;border-radius:12px;padding:12px 18px;font-weight:700;font-size:16px;background:rgba(255,255,255,.08);color:var(--txt);border:1px solid var(--line)}
@@ -55,6 +56,11 @@ details summary{cursor:pointer;font-family:var(--serif);font-size:20px;color:var
 .card .cv{position:absolute;top:6px;left:6px;width:32px;height:32px;border-radius:50%;background:hsl(var(--h) 50% 34%);color:#fff3da;font-family:var(--serif);font-weight:700;font-size:22px;display:grid;place-items:center;border:2px solid #d9b064}
 .card .cn{font-family:var(--serif);font-weight:700;font-size:19px;margin:6px 0 0 30px;line-height:1.05;text-align:center;min-height:22px}
 .card .ci{font-size:46px;margin:8px 0 4px;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,hsl(var(--h) 70% 85%) 0%,hsl(var(--h) 45% 72%) 100%);border:2px solid #d9b064;flex:none}
+.card .ci.img{width:100%;height:auto;flex:1 1 0;min-height:0;border-radius:8px;background-size:cover;background-position:center 25%;font-size:0;margin:6px 0 5px;border:2px solid #d9b064}
+.card.sm .ci.img{width:100%;height:auto;margin:5px 0 4px}
+.artcell{display:flex;flex-direction:column;align-items:center;gap:5px}
+.artcell .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.artcell a{font-size:11px;color:var(--gold2)}
 .card .ct{font-size:10.5px;line-height:1.28;text-align:center;margin-top:auto;background:rgba(255,255,255,.55);border:1px solid rgba(160,120,60,.35);border-radius:8px;padding:5px 6px;width:100%}
 .card .ext{position:absolute;top:8px;right:8px;font-size:9px;font-weight:700;color:hsl(var(--h) 45% 35%);letter-spacing:.5px}
 .card.sel{transform:translateY(-10px);box-shadow:0 0 0 2px #c9a04f inset,0 0 0 4px var(--gold2),0 14px 26px rgba(0,0,0,.55)}
@@ -129,6 +135,7 @@ details summary{cursor:pointer;font-family:var(--serif);font-size:20px;color:var
 .gains li{color:var(--good);padding:2px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;justify-items:center;margin-top:10px}
 .cnt{font-size:12px;color:var(--mute);text-align:center;margin-top:3px}
+@media (max-width:420px){ .top h2{font-size:21px} }
 @media (max-width:380px){ .card.sm{width:100px} .opt b{font-size:17px} h1{font-size:38px} }
 </style>
 </head>
@@ -151,6 +158,7 @@ details summary{cursor:pointer;font-family:var(--serif);font-size:20px;color:var
       <h3>Joueurs</h3>
       <div class="seg" id="nbSeg"></div>
       <div id="pRows"></div>
+      <button class="btn sm" id="rerollBtn" style="margin-top:10px">🎲 Nouveaux prénoms pour tous</button>
       <div class="hint" id="setupHint"></div>
     </div>
 
@@ -164,6 +172,8 @@ details summary{cursor:pointer;font-family:var(--serif);font-size:20px;color:var
     </div>
 
     <div class="sec"><h3>Sons</h3><div class="seg" id="sndSeg"><button data-snd="1" style="padding:0 14px">🔊 Activés</button><button data-snd="0" style="padding:0 14px">🔇 Coupés</button></div></div>
+
+    <div class="sec"><h3>Illustrations</h3><p class="hint" style="margin-top:0">Remplacez les icônes par vos propres images (photos ou tableaux trouvés sur le web et enregistrés sur votre appareil). Elles restent dans votre navigateur.</p><button class="btn wide" id="artBtn">🖼️ Personnaliser les illustrations</button></div>
 
     <button class="btn main wide" id="startBtn" style="font-size:18px;padding:15px">Commencer la partie</button>
 
@@ -636,8 +646,9 @@ document.addEventListener('click',e=>{if(e.target.closest('button,.card.click'))
 /* ================= UI ================= */
 const $=s=>document.querySelector(s);
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function cardHTML(c,o={}){const k=c.t||c,T=TYPES[k];
-  return `<div class="card ${o.sm?'sm':''} ${o.cls||''}" style="--h:${HUE[T.v]}" ${o.attr||''}><div class="cv">${T.v}</div>${T.x?'<div class="ext">EXT</div>':''}<div class="cn">${T.n}</div><div class="ci">${T.i}</div><div class="ct">${T.t}</div></div>`}
+let ART={};try{ART=JSON.parse(localStorage.getItem('lettreAmourArt')||'{}')||{};}catch(e){}
+function cardHTML(c,o={}){const k=c.t||c,T=TYPES[k],art=ART[k];
+  return `<div class="card ${o.sm?'sm':''} ${o.cls||''}" style="--h:${HUE[T.v]}" ${o.attr||''}><div class="cv">${T.v}</div>${T.x?'<div class="ext">EXT</div>':''}<div class="cn">${T.n}</div>${art?`<div class="ci img" style="background-image:url('${art}')"></div>`:`<div class="ci">${T.i}</div>`}<div class="ct">${T.t}</div></div>`}
 function chip(c){const T=TYPES[c.t||c];return `<span class="chip" data-type="${c.t||c}" style="--h:${HUE[T.v]}"><i>${T.v}</i>${T.n}</span>`}
 
 /* ---- modal ---- */
@@ -776,17 +787,23 @@ function renderHand(){
 const S={ed:'base',n:3,players:[],speed:850,sound:true};
 let lastCfg=null;
 try{const sv=JSON.parse(localStorage.getItem('lettreAmourSetup')||'null');if(sv)Object.assign(S,sv);}catch(e){}
-function defaults(){while(S.players.length<8){const i=S.players.length;S.players.push({name:i===0?'Joueur 1':`Ordi ${i+1}`,human:i===0});}}
+const NAMES=['Aliénor','Gauthier','Isaure','Tristan','Blanche','Perceval','Mahaut','Enguerrand','Yseult','Bertrand','Clotilde','Arnaud','Héloïse','Godefroy','Mélisande','Ysabeau','Thibault','Adélaïde','Raoul','Amaury','Béatrix','Florent','Ombeline','Hugues','Sibylle','Baudouin','Margaux','Aymeric','Bérengère','Geoffroy','Alix','Roland','Églantine','Anselme','Constance','Évrard','Philippa','Léandre','Oriane','Gaspard','Hermine','Valentin','Iseult','Bastien','Guillemette','Foulques','Aude','Lothaire'];
+function freshName(except){const used=new Set(S.players.slice(0,S.n).map(p=>p.name));if(except)used.add(except);const free=NAMES.filter(n=>!used.has(n));return rnd(free.length?free:NAMES);}
+function defaults(){
+  S.players.forEach(p=>{if(/^(Joueur|Ordi) \d+$/.test(p.name)||!p.name)p.name='';});
+  while(S.players.length<8)S.players.push({name:'',human:S.players.length===0});
+  S.players.forEach(p=>{if(!p.name)p.name=freshName();});
+}
 function maxN(){return S.ed==='ext'?8:6}
 function renderSetup(){
   defaults();if(S.n>maxN())S.n=maxN();
   document.querySelectorAll('#edOpts .opt').forEach(b=>b.classList.toggle('on',b.dataset.ed===S.ed));
   $('#nbSeg').innerHTML=Array.from({length:maxN()-1},(_,i)=>i+2).map(n=>`<button data-n="${n}" class="${S.n===n?'on':''}">${n}</button>`).join('');
   $('#nbSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.n=+b.dataset.n;renderSetup();});
-  $('#pRows').innerHTML=S.players.slice(0,S.n).map((p,i)=>`<div class="prow"><span class="num">${i+1}</span><input data-pi="${i}" value="${esc(p.name)}" maxlength="16" placeholder="Nom"><button class="tog ${p.human?'h':''}" data-ti="${i}">${p.human?'🙂 Humain':'🤖 Ordinateur'}</button></div>`).join('');
+  $('#pRows').innerHTML=S.players.slice(0,S.n).map((p,i)=>`<div class="prow"><span class="num">${i+1}</span><input data-pi="${i}" value="${esc(p.name)}" maxlength="16" placeholder="Prénom"><button class="tog dice" data-di="${i}" aria-label="Autre prénom">🎲</button><button class="tog ${p.human?'h':''}" data-ti="${i}">${p.human?'🙂 Humain':'🤖 Ordinateur'}</button></div>`).join('');
   $('#pRows').querySelectorAll('input').forEach(el=>el.oninput=()=>{S.players[+el.dataset.pi].name=el.value;save();});
-  $('#pRows').querySelectorAll('.tog').forEach(el=>el.onclick=()=>{const p=S.players[+el.dataset.ti];p.human=!p.human;
-    if(p.human&&/^Ordi \d+$/.test(p.name))p.name=`Joueur ${+el.dataset.ti+1}`;else if(!p.human&&/^Joueur \d+$/.test(p.name))p.name=`Ordi ${+el.dataset.ti+1}`;renderSetup();});
+  $('#pRows').querySelectorAll('[data-ti]').forEach(el=>el.onclick=()=>{const p=S.players[+el.dataset.ti];p.human=!p.human;renderSetup();});
+  $('#pRows').querySelectorAll('[data-di]').forEach(el=>el.onclick=()=>{const p=S.players[+el.dataset.di];p.name=freshName(p.name);renderSetup();});
   const nh=S.players.slice(0,S.n).filter(p=>p.human).length;
   $('#setupHint').innerHTML=`Objectif : <b>${goalFor(S.n)} pions Faveur ♥</b>. `+(nh>1?`${nh} humains : l'appareil passe de main en main, et chacun valide qu'il est prêt avant de voir sa carte.`:nh===1?'Seul contre les ordinateurs : votre carte reste toujours visible.':'Aucun humain : vous regardez les ordinateurs jouer, mains visibles.');
   document.querySelectorAll('#spdSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.s===S.speed));
@@ -800,8 +817,9 @@ document.querySelectorAll('#edOpts .opt').forEach(b=>b.onclick=()=>{S.ed=b.datas
 document.querySelectorAll('#spdSeg button').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.s;renderSetup();});
 document.querySelectorAll('#sndSeg button').forEach(b=>b.onclick=()=>{S.sound=b.dataset.snd==='1';renderSetup();if(S.sound)SFX.play('token');});
 $('#sndBtn').onclick=()=>{S.sound=!S.sound;SFX.on=S.sound;$('#sndBtn').textContent=S.sound?'🔊':'🔇';save();};
+$('#rerollBtn').onclick=()=>{S.players.slice(0,S.n).forEach(p=>p.name='');S.players.slice(0,S.n).forEach(p=>p.name=freshName());renderSetup();};
 $('#startBtn').onclick=()=>{
-  const ps=S.players.slice(0,S.n).map((p,i)=>({name:(p.name||'').trim()||`Joueur ${i+1}`,human:p.human}));
+  const ps=S.players.slice(0,S.n).map((p,i)=>({name:(p.name||'').trim()||NAMES[i],human:p.human}));
   startGame({players:ps,ext:S.ed==='ext'});
 };
 function startGame(cfg){
@@ -817,10 +835,30 @@ $('#quitBtn').onclick=async()=>{
   const v=await modal('<h3>Quitter la partie ?</h3><p>La partie en cours sera perdue.</p>',[{label:'Oui, quitter',value:true,cls:'main'},{label:'Continuer à jouer',value:false}]);
   if(v)showSetup();
 };
+const ARTQ={espionne:'medieval hooded woman painting',garde:'medieval soldier halberd painting',pretre:'medieval priest portrait painting',baron:'Renaissance nobleman portrait',servante:'maidservant painting 17th century',prince:'Renaissance prince portrait',chancelier:'chancellor portrait Holbein',roi:'king portrait Holbein',comtesse:'countess portrait painting Renaissance',princesse:'princess portrait Renaissance painting',bouffon:'court jester painting',assassin:'hooded man dagger painting',cardinal:'cardinal portrait painting',baronne:'baroness portrait painting',sycophante:'courtier portrait painting',comte:'count portrait Renaissance painting',connetable:'knight armour portrait painting',reine:'queen dowager portrait painting',eveque:'bishop portrait painting'};
+function saveArt(){try{localStorage.setItem('lettreAmourArt',JSON.stringify(ART));return true;}catch(e){return false;}}
+function shrink(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+  const W=320,H=400,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  const sc=Math.max(W/im.width,H/im.height),w=im.width*sc,h=im.height*sc;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);
+  res(cv.toDataURL('image/jpeg',.82));};im.src=r.result;};r.readAsDataURL(file);});}
+function refreshAll(){if(G&&!$('#game').hidden)renderGame();else renderSetup();}
+function openArt(msg){
+  const keys=Object.keys(TYPES).sort((a,b)=>TYPES[a].v-TYPES[b].v);
+  const p=modal(`<h3>Illustrations</h3><p style="font-size:13px">Touchez « Photo » pour choisir une image pour chaque personnage. Elle est recadrée au centre, en portrait. « Chercher » ouvre Wikimedia Commons (tableaux anciens, souvent libres de droits) : enregistrez l'image sur votre appareil puis choisissez-la ici.</p>${msg?`<p class="warn">${msg}</p>`:''}
+    <div class="grid">${keys.map(k=>`<div class="artcell">${cardHTML(k,{sm:true})}<div class="acts"><label class="btn sm">📷 Photo<input type="file" accept="image/*" hidden data-up="${k}"></label>${ART[k]?`<button class="btn sm" data-rm="${k}">✕</button>`:''}</div><a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(ARTQ[k])}&title=Special:MediaSearch&type=image" target="_blank" rel="noopener">Chercher</a></div>`).join('')}</div>`,
+    [{label:'Terminé',value:1,cls:'main'},...(Object.keys(ART).length?[{label:'Tout retirer',value:'clear'}]:[])]);
+  const box=$('#modal .box');
+  box.querySelectorAll('[data-up]').forEach(inp=>inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+    try{ART[inp.dataset.up]=await shrink(f);const ok=saveArt();refreshAll();openArt(ok?'':"Image chargée, mais elle n'a pas pu être enregistrée : elle disparaîtra à la fermeture de la page.");}
+    catch(e){openArt("Cette image n'a pas pu être lue.");}});
+  box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{delete ART[b.dataset.rm];saveArt();refreshAll();openArt();});
+  p.then(v=>{if(v==='clear'){ART={};saveArt();}refreshAll();});
+}
+$('#artBtn').onclick=()=>openArt();
 $('#helpBtn').onclick=()=>{
   if(modalOpen||!G)return;
   const c=comp();
-  modal(`<h3>Les cartes</h3><p style="font-size:13px">Nombre d'exemplaires dans la pioche de cette partie.</p><div class="grid">${Object.entries(c).sort((a,b)=>TYPES[a[0]].v-TYPES[b[0]].v).map(([k,n])=>`<div>${cardHTML(k,{sm:true})}<div class="cnt">× ${n}</div></div>`).join('')}</div>`,[{label:'Fermer',value:1,cls:'main'}]);
+  modal(`<h3>Les cartes</h3><p style="font-size:13px">Nombre d'exemplaires dans la pioche de cette partie.</p><div class="grid">${Object.entries(c).sort((a,b)=>TYPES[a[0]].v-TYPES[b[0]].v).map(([k,n])=>`<div>${cardHTML(k,{sm:true})}<div class="cnt">× ${n}</div></div>`).join('')}</div>`,[{label:'Fermer',value:1,cls:'main'},{label:'🖼️ Personnaliser les illustrations',value:'art'}]).then(v=>{if(v==='art')openArt();});
 };
 document.addEventListener('click',e=>{
   const ch=e.target.closest('.chip');if(!ch||modalOpen)return;
