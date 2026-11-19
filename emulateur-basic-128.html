@@ -24,7 +24,8 @@ main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;
 .frame{padding:3.2%;border-radius:8px;background:#00ffff;box-shadow:inset 0 0 0 3px #0003, inset 0 0 22px #0006;transition:background .1s}
 .glass{position:relative;line-height:0;cursor:text}
 #scr{width:100%;aspect-ratio:8/5;display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000}
-#cur{position:absolute;width:2.5%;height:4%;background:#fff;mix-blend-mode:difference;display:none;pointer-events:none;animation:blink 1s steps(1) infinite}
+#cur{position:absolute;width:2.5%;height:0.9%;transform:translateY(345%);background:#fff;mix-blend-mode:difference;display:none;pointer-events:none;animation:blink 1s steps(1) infinite}
+#cur.ovr{height:4%;transform:none}
 @keyframes blink{50%{opacity:0}}
 #kb{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;font-size:16px;pointer-events:none}
 .plate{display:flex;justify-content:space-between;align-items:center;padding:8px 4px 0;color:#5b5548;font-size:12px}
@@ -41,7 +42,8 @@ main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;
 .spd{margin-left:auto;display:flex;gap:6px;align-items:center;color:var(--mut);font-size:13px}
 select,input[type=text]{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
 .mob{display:none}
-@media (pointer:coarse){.mob{display:inline-block}}
+.keys{gap:4px}.keys .btn{padding:7px 11px}
+@media (pointer:coarse){.mob{display:inline-block}.mob.keys{display:inline-flex}}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .tabs{display:flex;border-bottom:1px solid var(--line)}
 .tabs button{flex:1;background:none;border:0;padding:11px 8px;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent}
@@ -113,7 +115,7 @@ td.a button{margin-left:3px}
           <input id="kb" value="_" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Clavier">
         </div>
       </div>
-      <div class="plate"><b>TO8</b><span>Cliquez sur l'écran pour taper · Tab complète · Échap = BREAK</span><span class="led" id="led"></span></div>
+      <div class="plate"><b>TO8</b><span>↑ recopie une ligne · ← → pour corriger · Tab complète · Échap = BREAK</span><span class="led" id="led"></span></div>
     </div>
     <div class="sugg" id="sugg"><span class="lbl">Tab = compléter</span></div>
     <div class="toolbar">
@@ -123,6 +125,8 @@ td.a button{margin-left:3px}
       <button class="btn" id="bDir">DIR</button>
       <button class="btn" id="bCls">CLS</button>
       <button class="btn mob" id="bKb">⌨ Clavier</button>
+      <span class="mob keys"><button class="btn" data-key="ArrowUp" title="Recopier la ligne au-dessus">▲</button><button class="btn" data-key="ArrowDown">▼</button><button class="btn" data-key="ArrowLeft">◀</button><button class="btn" data-key="ArrowRight">▶</button></span>
+      <button class="btn" id="bIns" title="Touche Inser : insertion ou refrappe">INS : insertion</button>
       <label class="spd">Vitesse
         <select id="speed">
           <option value="40">TO8 (lent)</option>
@@ -180,7 +184,8 @@ td.a button{margin-left:3px}
 
     <div class="pane help" id="p-hp" hidden>
       <h3>Mode direct</h3>
-      <p>Tapez une ligne précédée d'un numéro pour l'ajouter au programme (un numéro seul l'efface). Sans numéro, la commande s'exécute immédiatement. ↑/↓ rappellent les commandes précédentes, Échap ou Ctrl+C interrompt.</p>
+      <p>Tapez une ligne précédée d'un numéro pour l'ajouter au programme (un numéro seul l'efface). Sans numéro, la commande s'exécute immédiatement. Échap ou Ctrl+C interrompt.</p>
+      <p><b>Édition de ligne :</b> ↑ recopie dans la saisie la ligne affichée juste au-dessus (appuyez plusieurs fois pour remonter, ↓ pour redescendre) : faites <code>LIST</code>, remontez sur la ligne voulue, corrigez-la puis Entrée. ← → déplacent le curseur dans la ligne, Début/Fin vont aux extrémités, Suppr efface sous le curseur, Inser bascule insertion / refrappe. Ctrl+↑/↓ (ou PgPréc/PgSuiv) parcourt l'historique des commandes.</p>
       <dl>
         <dt><code>RUN [n | "F"]</code></dt><dd>exécute (depuis la ligne n ou le fichier F)</dd>
         <dt><code>LIST [a-b]</code></dt><dd>affiche le programme</dd>
@@ -251,6 +256,7 @@ const cv=$('scr'),ctx=cv.getContext('2d',{alpha:false});
 ctx.imageSmoothingEnabled=false;
 const pix=new Uint8Array(W*H);
 let fg=0,bg=6,brd=6,cx=0,cy=0,lastX=0,lastY=0,scrollCount=0;
+const tch=new Array(COLS*ROWS).fill(' '),tcont=new Uint8Array(ROWS); // texte affiché + lignes « suite »
 
 function setFont(ok){ctx.font=ok?'16px "Press Start 2P"':'bold 15px ui-monospace,Menlo,Consolas,monospace';ctx.textBaseline='top';}
 function fillPix(x,y,w,h,c){
@@ -259,18 +265,20 @@ function fillPix(x,y,w,h,c){
   for(let r=y0;r<y1;r++)pix.fill(c,r*W+x0,r*W+x1);
   ctx.fillStyle=PAL[c];ctx.fillRect(x0*2,y0*2,(x1-x0)*2,(y1-y0)*2);
 }
-function cls(){fillPix(0,0,W,H,bg);cx=0;cy=0;placeCursor();}
+function cls(){fillPix(0,0,W,H,bg);tch.fill(' ');tcont.fill(0);cx=0;cy=0;placeCursor();}
 function setBorder(){ $('frame').style.background=PAL[brd]; }
 function scrollUp(){
   ctx.drawImage(cv,0,16,640,384,0,0,640,384);
   pix.copyWithin(0,W*8);fillPix(0,192,W,8,bg);scrollCount++;
+  tch.copyWithin(0,COLS);tch.fill(' ',COLS*(ROWS-1));tcont.copyWithin(0,1);tcont[ROWS-1]=0;
 }
-function newline(){cx=0;cy++;if(cy>=ROWS){cy=ROWS-1;scrollUp();}}
+function newline(){cx=0;cy++;if(cy>=ROWS){cy=ROWS-1;scrollUp();}tcont[cy]=0;}
 function putc(ch){
   const x=cx*8,y=cy*8;
   fillPix(x,y,8,8,bg);
   if(ch!==' '){ctx.fillStyle=PAL[fg];ctx.fillText(ch,x*2,y*2+1);}
-  cx++;if(cx>=COLS)newline();
+  tch[cy*COLS+cx]=ch;
+  cx++;if(cx>=COLS){newline();tcont[cy]=1;}
 }
 function out(s){
   s=String(s);
@@ -386,41 +394,80 @@ function play(str){
 /* ======================= CLAVIER / SAISIE ======================= */
 const kb=$('kb');const keyQ=[];const hist=[];
 let LW=null;
+let insMode=true;
 function readLine(prompt,init,direct){
   out(prompt||'');
   return new Promise((res,rej)=>{
-    LW={buf:'',sx:cx,sy:cy,prev:0,res,rej,direct:!!direct,hi:hist.length};
+    LW={buf:'',pos:0,sx:cx,sy:cy,prev:0,res,rej,direct:!!direct,hi:hist.length,pick:null};
     lwSet(init||'');showCursor(true);setStatus();
   });
 }
-function lwSet(s){
+function lwSet(s,p){
   const w=LW;if(!w)return;
+  if(p==null)p=s.length;p=Math.max(0,Math.min(s.length,p));
   const s0=scrollCount;cx=w.sx;cy=Math.max(0,w.sy);out(s);
   w.sy-=scrollCount-s0;
-  let ex=cx,ey=cy;const s1=scrollCount;
+  const s1=scrollCount;
   const pad=Math.max(0,w.prev-s.length);if(pad)out(' '.repeat(pad));
-  const d=scrollCount-s1;ey-=d;w.sy-=d;
-  cx=ex;cy=Math.max(0,ey);w.buf=s;w.prev=s.length;placeCursor();
-  consoleSugg();
+  w.sy-=scrollCount-s1;
+  w.buf=s;w.prev=s.length;w.pos=p;
+  const idx=w.sx+p;cx=idx%COLS;cy=Math.max(0,Math.min(ROWS-1,w.sy+Math.floor(idx/COLS)));
+  placeCursor();consoleSugg();
 }
 function lwSubmit(){
-  const w=LW;if(!w)return;LW=null;showCursor(false);consoleSugg();out('\n');
+  const w=LW;if(!w)return;lwSet(w.buf,w.buf.length);LW=null;showCursor(false);consoleSugg();out('\n');
   if(w.direct&&w.buf.trim()&&hist[hist.length-1]!==w.buf)hist.push(w.buf);
   setStatus();w.res(w.buf);
+}
+// Lecture d'une ligne logique affichée à l'écran (lignes coupées à 40 colonnes recollées)
+function rowStart(r){while(r>0&&tcont[r])r--;return r;}
+function lineText(r){let t='';do{t+=tch.slice(r*COLS,(r+1)*COLS).join('');r++;}while(r<ROWS&&tcont[r]);return[t.replace(/\s+$/,''),r];}
+// Flèche ↑/↓ : recopie dans la ligne de saisie une ligne déjà affichée (LIST, commande précédente…)
+function pickLine(dir){
+  const w=LW,top=w.sy;
+  const r=w.pick!=null?w.pick-scrollCount:top;
+  if(dir<0){
+    for(let row=Math.min(r,top)-1;row>=0;){
+      const st=rowStart(row);const[t]=lineText(st);
+      if(t&&t!=='OK'){w.pick=st+scrollCount;lwSet(t);return;}
+      row=st-1;
+    }
+    beep();
+  }else{
+    if(w.pick==null)return;
+    let row=r>=0?lineText(r)[1]:0;
+    while(row<top){const[t,e]=lineText(row);if(t&&t!=='OK'){w.pick=row+scrollCount;lwSet(t);return;}row=e;}
+    w.pick=null;lwSet('');
+  }
+}
+function histNav(d){
+  const w=LW;
+  if(d<0){if(w.hi>0){w.hi--;lwSet(hist[w.hi]);}else beep();}
+  else{if(w.hi<hist.length-1){w.hi++;lwSet(hist[w.hi]);}else{w.hi=hist.length;lwSet('');}}
+}
+function setIns(v){insMode=v;curEl.classList.toggle('ovr',!v);const b=$('bIns');if(b)b.textContent=v?'INS : insertion':'INS : refrappe';}
+function lineKey(k,mod){
+  const w=LW;if(!w)return false;
+  switch(k){
+    case 'ArrowLeft':lwSet(w.buf,w.pos-1);return true;
+    case 'ArrowRight':lwSet(w.buf,w.pos+1);return true;
+    case 'Home':lwSet(w.buf,0);return true;
+    case 'End':lwSet(w.buf,w.buf.length);return true;
+    case 'Delete':if(w.pos<w.buf.length)lwSet(w.buf.slice(0,w.pos)+w.buf.slice(w.pos+1),w.pos);return true;
+    case 'Insert':setIns(!insMode);return true;
+    case 'ArrowUp':case 'ArrowDown':case 'PageUp':case 'PageDown':
+      if(w.direct){const d=(k==='ArrowUp'||k==='PageUp')?-1:1;if(mod||k.startsWith('Page'))histNav(d);else pickLine(d);}
+      return true;
+  }
+  return false;
 }
 kb.addEventListener('keydown',e=>{
   audioInit();
   if(e.key==='Escape'||(e.ctrlKey&&(e.key==='c'||e.key==='C'))){e.preventDefault();doBreak();return;}
   if(e.key==='Enter'){e.preventDefault();if(LW)lwSubmit();else if(running)keyQ.push('\r');return;}
   if(LW){
-    if(LW.direct&&(e.key==='ArrowUp'||e.key==='ArrowDown')){
-      e.preventDefault();
-      if(e.key==='ArrowUp'){if(LW.hi>0){LW.hi--;lwSet(hist[LW.hi]);}}
-      else{if(LW.hi<hist.length-1){LW.hi++;lwSet(hist[LW.hi]);}else{LW.hi=hist.length;lwSet('');}}
-      return;
-    }
     if(e.key==='Tab'){e.preventDefault();if(LW.direct&&cSugg.length)consoleAccept(cSugg[0]);return;}
-    if(e.key.startsWith('Arrow')){e.preventDefault();}
+    if(lineKey(e.key,e.ctrlKey||e.altKey||e.metaKey)){e.preventDefault();return;}
     return;
   }
   if(running){
@@ -433,8 +480,12 @@ kb.addEventListener('input',()=>{
   if(v.length===0)bs=true;else add=v.startsWith('_')?v.slice(1):v;
   kb.value='_';try{kb.setSelectionRange(1,1);}catch(e){}
   if(LW){
-    if(bs)lwSet(LW.buf.slice(0,-1));
-    else if(add){let b=LW.buf+add;if(b.length>255)b=b.slice(0,255);lwSet(b);}
+    const w=LW,p=w.pos;
+    if(bs){if(p>0)lwSet(w.buf.slice(0,p-1)+w.buf.slice(p),p-1);}
+    else if(add){
+      const b=insMode?w.buf.slice(0,p)+add+w.buf.slice(p):w.buf.slice(0,p)+add+w.buf.slice(p+add.length);
+      if(b.length<=255)lwSet(b,p+add.length);else beep();
+    }
   }else if(running){
     if(bs)keyQ.push('\x08');
     for(const ch of add)keyQ.push(ch);
@@ -1431,8 +1482,9 @@ const suggEl=$('sugg');let cSugg=[];
 function consoleSugg(){
   cSugg=[];
   if(LW&&LW.direct){
-    const buf=LW.buf;const body=buf.replace(/^\s*\d+\s?/,'');
-    const w=wordContext(buf);
+    const buf=LW.buf.slice(0,LW.pos);const body=buf.replace(/^\s*\d+\s?/,'');
+    const nxt=LW.buf[LW.pos]||' ';
+    const w=/[A-Za-z0-9$]/.test(nxt)?null:wordContext(buf);
     if(w&&body.length)cSugg=matches(w,collectVars([...prog.values()].join('\n'))).slice(0,8);
     LW.word=w||'';
   }
@@ -1440,13 +1492,14 @@ function consoleSugg(){
 }
 function consoleAccept(x){
   if(!LW)return;
-  const base=LW.buf.slice(0,LW.buf.length-LW.word.length);
+  const before=LW.buf.slice(0,LW.pos),after=LW.buf.slice(LW.pos);
+  const base=before.slice(0,before.length-LW.word.length);
   let t;
   if(x.v)t=x.s;
   else if(/^[A-Z$]+\(/.test(x.s))t=x.k+'(';
   else if(plain(x.s)===x.k||/\$$/.test(x.k))t=plain(x.s);
   else t=plain(x.s).startsWith(x.k+' "')?x.k+' "':x.k+' ';
-  lwSet(base+t);
+  lwSet(base+t+after,(base+t).length);
 }
 suggEl.addEventListener('pointerdown',e=>{const b=e.target.closest('.chip');if(!b)return;e.preventDefault();consoleAccept(cSugg[+b.dataset.k]);focusKb();});
 
@@ -1461,6 +1514,11 @@ $('bDir').addEventListener('click',()=>inject('DIR'));
 $('bCls').addEventListener('click',()=>inject('CLS'));
 $('bBrk').addEventListener('click',()=>{doBreak();refocus();});
 $('bKb').addEventListener('click',()=>focusKb());
+$('bIns').addEventListener('click',()=>{setIns(!insMode);refocus();});
+document.querySelectorAll('[data-key]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();audioInit();
+  if(LW)lineKey(b.dataset.key,false);
+  else if(running){const m={ArrowLeft:'\x08',ArrowRight:'\x09',ArrowDown:'\x0a',ArrowUp:'\x0b'};keyQ.push(m[b.dataset.key]);}
+}));
 $('speed').addEventListener('change',e=>{speed=+e.target.value;refocus();});
 document.addEventListener('pointerdown',audioInit,{passive:true});
 let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);}
