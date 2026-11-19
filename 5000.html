@@ -20,16 +20,14 @@
     border: 2px solid rgba(245,215,110,.6); background: rgba(0,0,0,.3); color: #f5d76e;
   }
   .sound-btn:hover { background: rgba(245,215,110,.15); }
-  .net-status { font-size: .85rem; color: #ffcf8a; min-height: 1.2em; }
 
-  /* ---------- Panneaux ---------- */
+  /* ---------- Configuration ---------- */
   .panel {
     margin-top: 20px; width: 100%; max-width: 520px; padding: 24px 26px; border-radius: 20px;
     background: rgba(0,0,0,.25); box-shadow: 0 4px 14px rgba(0,0,0,.25);
   }
   .panel h2 { margin: 0 0 12px; font-size: 1.15rem; text-align: center; letter-spacing: .05em; }
   .mode-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
-  .mode-picker.three { grid-template-columns: repeat(3, 1fr); }
   .mode-picker button {
     font-family: inherit; text-align: center; padding: 12px 8px; border-radius: 14px; cursor: pointer;
     border: 2px solid rgba(245,215,110,.5); background: transparent; color: #f5efe0;
@@ -45,23 +43,24 @@
   }
   .count-picker button.on { background: #f5d76e; color: #2a1d05; }
   .names { display: flex; flex-direction: column; gap: 10px; }
-  .names label { display: flex; align-items: center; gap: 10px; font-size: .95rem; }
-  .names label span { min-width: 22px; text-align: right; opacity: .75; }
+  .names .row { display: flex; align-items: center; gap: 8px; font-size: .95rem; }
+  .names .row > span { min-width: 18px; text-align: right; opacity: .75; }
   .names input {
     flex: 1; min-width: 0; font-family: inherit; font-size: 1rem; padding: 9px 12px; border-radius: 10px;
     border: 1px solid rgba(245,215,110,.5); background: rgba(255,255,255,.08); color: #f5efe0;
   }
   .names input:focus { outline: 2px solid #f5d76e; border-color: transparent; }
-  #joinCode { text-transform: uppercase; letter-spacing: .3em; font-weight: bold; }
-  .err { color: #ff9b8a; text-align: center; min-height: 1.2em; margin: 12px 0 0; font-size: .9rem; }
-
-  .code-box { text-align: center; margin: 4px 0 14px; }
-  .code-box .code { font-size: 2.6rem; font-weight: bold; letter-spacing: .3em; color: #f5d76e; padding-left: .3em; }
-  .code-box small { opacity: .75; }
-  .lobby-list { list-style: none; padding: 0; margin: 0; }
-  .lobby-list li { display: flex; justify-content: space-between; padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.1); }
-  .lobby-list li em { opacity: .65; font-size: .85rem; }
-  .lobby-info { text-align: center; opacity: .85; font-style: italic; margin: 14px 0 0; }
+  .reroll {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; font-size: 1.1rem;
+    border: 1px solid rgba(245,215,110,.5); background: rgba(255,255,255,.06);
+  }
+  .reroll:hover { background: rgba(245,215,110,.18); }
+  .kind-toggle { display: flex; border: 2px solid rgba(245,215,110,.5); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+  .kind-toggle button {
+    font-family: inherit; font-size: .82rem; padding: 7px 9px; border: none; cursor: pointer;
+    background: transparent; color: #f5efe0;
+  }
+  .kind-toggle button.on { background: #f5d76e; color: #2a1d05; font-weight: bold; }
 
   /* ---------- Tableau des joueurs ---------- */
   .players { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 14px 0 6px; max-width: 760px; }
@@ -69,12 +68,10 @@
     min-width: 110px; padding: 8px 14px; border-radius: 14px; text-align: center;
     background: rgba(0,0,0,.2); border: 2px solid transparent; transition: all .2s;
   }
-  .player .pname { font-size: .95rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player .pname { font-size: .95rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .player .ptotal { font-size: 1.5rem; font-weight: bold; color: #f5d76e; }
   .player .pnote { font-size: .7rem; opacity: .65; }
   .player.current { border-color: #f5d76e; background: rgba(245,215,110,.15); transform: scale(1.06); }
-  .player.away { opacity: .5; }
-  .you-tag { font-size: .65rem; background: #f5d76e; color: #2a1d05; border-radius: 999px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
 
   .turn-banner { font-weight: bold; color: #a8f0b8; min-height: 1.3em; margin-top: 6px; font-size: 1.1rem; }
   p.sub { margin: 8px 0 20px; opacity: .9; font-style: italic; text-align: center; min-height: 1.4em; max-width: 520px; }
@@ -155,62 +152,27 @@
     .table { gap: 18px; padding: 20px; }
     .die { width: 84px; height: 84px; }
     h1 { font-size: 2rem; }
-    .mode-picker.three { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
   <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">🔊 Son</button>
   <h1>Jeu du 5000</h1>
-  <div class="net-status" id="netStatus"></div>
 
   <!-- ================= Configuration ================= -->
   <section id="setup" class="panel">
-    <h2>Type de partie</h2>
-    <div class="mode-picker three" id="typePicker">
-      <button type="button" data-type="local"><b>Solo</b><small>Sur cet appareil, de 1 à 6 joueurs</small></button>
-      <button type="button" data-type="host"><b>Réseau – héberger</b><small>Créez une partie et donnez le code</small></button>
-      <button type="button" data-type="join"><b>Réseau – rejoindre</b><small>Entrez le code de l'hôte</small></button>
+    <h2>Dés</h2>
+    <div class="mode-picker" id="modePicker">
+      <button type="button" data-mode="virtual"><b>Dés à l'écran</b><small>La page lance les dés</small></button>
+      <button type="button" data-mode="manual"><b>Vrais dés</b><small>On lance ses dés et on saisit les valeurs</small></button>
     </div>
 
-    <div id="diceBlock">
-      <h2>Dés</h2>
-      <div class="mode-picker" id="modePicker">
-        <button type="button" data-mode="virtual"><b>Dés à l'écran</b><small>La page lance les dés</small></button>
-        <button type="button" data-mode="manual"><b>Vrais dés</b><small>On lance ses dés et on saisit les valeurs</small></button>
-      </div>
-    </div>
+    <h2>Nombre de joueurs</h2>
+    <div class="count-picker" id="countPicker"></div>
+    <div class="names" id="names"></div>
 
-    <div id="localBlock">
-      <h2>Nombre de joueurs</h2>
-      <div class="count-picker" id="countPicker"></div>
-      <div class="names" id="names"></div>
-    </div>
-
-    <div id="netBlock" class="names">
-      <label><span>Nom</span><input type="text" id="myName" maxlength="20" placeholder="Votre nom"></label>
-      <label id="codeLabel"><span>Code</span><input type="text" id="joinCode" maxlength="4" placeholder="ABCD" autocomplete="off"></label>
-    </div>
-
-    <p class="err" id="setupErr"></p>
     <div class="controls">
       <button class="action" id="startBtn">Commencer la partie</button>
-    </div>
-  </section>
-
-  <!-- ================= Salle d'attente ================= -->
-  <section id="lobby" class="panel hidden">
-    <h2 id="lobbyTitle">Partie en réseau</h2>
-    <div class="code-box">
-      <small>Code de la partie</small>
-      <div class="code" id="lobbyCode"></div>
-      <small id="lobbyCodeHint"></small>
-    </div>
-    <ul class="lobby-list" id="lobbyList"></ul>
-    <p class="lobby-info" id="lobbyInfo"></p>
-    <div class="controls">
-      <button class="action" id="lobbyStart">Lancer la partie</button>
-      <button class="action secondary" id="lobbyLeave">Quitter</button>
     </div>
   </section>
 
@@ -240,15 +202,14 @@
       </div>
     </div>
 
-    <div class="controls" id="playControls">
+    <div class="controls">
       <button class="action" id="rollBtn">Lancer les dés</button>
       <button class="action stop hidden" id="stopBtn">S'arrêter</button>
-      <button class="action secondary hidden" id="skipBtn">Passer son tour</button>
     </div>
     <div class="stop-hint" id="stopHint"></div>
 
     <div class="controls">
-      <button class="action secondary small" id="quitBtn">Quitter la partie</button>
+      <button class="action secondary small" id="quitBtn">Nouvelle partie</button>
     </div>
   </section>
 
@@ -257,10 +218,9 @@
     <div>Victoire !</div>
     <div class="big" id="winnerName"></div>
     <ol class="ranking" id="ranking"></ol>
-    <p class="lobby-info" id="victoryInfo"></p>
     <div class="controls">
       <button class="action" id="replayBtn">Rejouer avec les mêmes joueurs</button>
-      <button class="action secondary" id="backBtn">Retour au menu</button>
+      <button class="action secondary" id="backBtn">Changer les joueurs</button>
     </div>
   </section>
 
@@ -314,7 +274,6 @@
   }
   const rand = () => Math.floor(Math.random() * 6) + 1;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const cleanName = s => (typeof s === 'string' ? s : '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯﻿]/g, '').trim().slice(0, 20);
   const $ = id => document.getElementById(id);
 
   // =====================================================================
@@ -347,13 +306,13 @@
   }
 
   // =====================================================================
-  // Moteur du jeu (l'état G est un objet JSON, partageable en réseau)
+  // Moteur du jeu
   // phase : 'start' | 'enter' (saisie vrais dés) | 'choose' | 'lost' | 'over'
   // =====================================================================
   function newGame(players, diceMode) {
     const G = {
       phase: 'start', diceMode,
-      players: players.map(p => ({ name: p.name, peer: p.peer || null, total: 0 })),
+      players: players.map(p => ({ name: p.name, cpu: !!p.cpu, total: 0 })),
       current: 0,
       dice: Array.from({ length: 6 }, () => ({ value: rand(), kept: false, selected: false })),
       pending: [], turnScore: 0, turnParts: [],
@@ -401,7 +360,9 @@
       G.turnScore = 0; G.turnParts = [];
     } else {
       G.phase = 'choose';
-      setMsg(G, `${curP(G).name} : sélectionnez vos dés gagnants (jusqu'à ${r.score} points sur ce lancer)`);
+      setMsg(G, curP(G).cpu
+        ? `${curP(G).name} réfléchit…`
+        : `${curP(G).name} : sélectionnez vos dés gagnants (jusqu'à ${r.score} points sur ce lancer)`);
     }
   }
   const selValues = G => G.dice.filter(d => d.selected).map(d => d.value);
@@ -424,7 +385,6 @@
     G.dice.forEach(d => { if (d.selected) { d.selected = false; d.kept = true; } });
     return true;
   }
-  // Applique une action ; renvoie true si l'état a changé. Valide tout (actions réseau non fiables).
   function act(G, a) {
     if (!a || G.phase === 'over') return false;
     switch (a.type) {
@@ -473,45 +433,85 @@
           (G.phase === 'enter' ? G.msg.text : `À ${curP(G).name} de jouer !`), 'good');
         return true;
       }
-      case 'skip':
-        setMsg(G, `${curP(G).name} passe son tour.`);
-        nextPlayer(G);
-        return true;
     }
     return false;
   }
 
   // =====================================================================
-  // Application : modes local / hôte / invité
+  // Ordinateur
   // =====================================================================
-  let appMode = 'local';      // 'local' | 'host' | 'guest'
-  let G = null;               // état de la partie
-  let room = null;            // salle réseau (named room)
-  let myPeer = null;
-  let peersNow = [];
-  let roomCode = '';
-  let hostName = '';
-  let guestSeq = 0, guestActs = [];
-  const lastSeq = {};
-  let lastHostGame = null;
-  let hostSeen = false, hostMissingTimer = null;
+  // Choisit les dés à garder et s'il faut s'arrêter. Renvoie { idx: [...], stop: bool }.
+  function cpuPlan(G) {
+    const free = G.dice.map((d, i) => d.kept ? -1 : i).filter(i => i >= 0);
+    const options = [];
+    for (let m = 1; m < (1 << free.length); m++) {
+      const idx = free.filter((_, k) => (m >> k) & 1);
+      const r = computeScore(idx.map(i => G.dice[i].value));
+      if (r.valid) options.push({ idx, score: r.score, left: free.length - idx.length });
+    }
+    if (!options.length) return null;
+    const p = curP(G);
+    const leftAfter = o => o.left === 0 ? 6 : o.left;        // main pleine : on relance les 6
+    // Seuil pour s'arrêter selon le nombre de dés qu'il resterait à lancer
+    const THRESHOLD = { 1: 200, 2: 300, 3: 400, 4: 650, 5: 1200, 6: Infinity };
+    const wantsStop = o => {
+      if (o.left === 0) return false;                         // 6 dés gardés : relance obligatoire
+      const pot = G.turnScore + o.score;
+      if (p.total === 0 && pot < OPENING) return false;       // pas encore ouvert
+      if (p.total + pot >= TARGET) return true;               // victoire assurée
+      const behind = Math.max(0, ...G.players.filter(q => q !== p).map(q => q.total)) - p.total;
+      const bonus = behind > 1500 ? 150 : 0;                  // plus audacieux s'il est loin derrière
+      return pot >= THRESHOLD[o.left] + bonus;
+    };
+    // 1) Meilleur score immédiat
+    const best = options.reduce((a, b) => b.score > a.score || (b.score === a.score && b.left > a.left) ? b : a);
+    if (wantsStop(best)) return { idx: best.idx, stop: true };
+    // 2) S'il continue : garder peu de dés pour en relancer plus, si la perte est faible
+    let pick = best;
+    for (const o of options) {
+      const gainDice = leftAfter(o) - leftAfter(pick);
+      const loss = pick.score - o.score;
+      if (gainDice > 0 && loss <= 100 * gainDice && o.score >= 100) pick = o;
+    }
+    return { idx: pick.idx, stop: false };
+  }
 
-  // La salle réseau n'existe que sur la page publiée sur claude.ai
-  const lobbyRoomPromise = (async () => {
-    try {
-      if (!window.claude || typeof window.claude.use !== 'function') return null;
-      return await window.claude.use('room');
-    } catch (e) { return null; }
-  })();
-
-  // ---------- Préférences mémorisées ----------
-  const prefs = { type: 'local', mode: 'virtual', count: 2, names: [], myName: '' };
-  try { Object.assign(prefs, JSON.parse(localStorage.getItem('5000-prefs') || '{}')); } catch (e) {}
-  const savePrefs = () => { try { localStorage.setItem('5000-prefs', JSON.stringify(prefs)); } catch (e) {} };
+  let cpuTimer = null, cpuQueue = [];
+  function scheduleCpu() {
+    clearTimeout(cpuTimer);
+    if (!G || G.phase === 'over' || animating || !curP(G).cpu) return;
+    cpuTimer = setTimeout(cpuStep, cpuQueue.length ? 450 : 900);
+  }
+  function cpuStep() {
+    if (!G || G.phase === 'over' || animating || !curP(G).cpu) return;
+    if (cpuQueue.length) {
+      if (!applyAction(cpuQueue.shift())) {          // sécurité : si l'action échoue, on relance
+        cpuQueue = [];
+        if (!applyAction({ type: 'roll' })) applyAction({ type: 'stop' });
+      }
+      return;
+    }
+    if (G.phase === 'start' || G.phase === 'lost') { applyAction({ type: 'roll' }); return; }
+    if (G.phase === 'choose') {
+      const plan = cpuPlan(G);
+      if (!plan) return;
+      cpuQueue = plan.idx.map(i => ({ type: 'toggle', i }));
+      cpuQueue.push({ type: plan.stop ? 'stop' : 'roll' });
+      applyAction(cpuQueue.shift());
+    }
+  }
 
   // =====================================================================
   // Sons (synthétisés avec Web Audio, aucun fichier)
   // =====================================================================
+  const prefs = { mode: 'virtual', count: 2, names: [], cpu: [], muted: false };
+  try { Object.assign(prefs, JSON.parse(localStorage.getItem('5000-prefs') || '{}')); } catch (e) {}
+  if (!Array.isArray(prefs.names)) prefs.names = [];
+  if (!Array.isArray(prefs.cpu)) prefs.cpu = [];
+  prefs.count = Math.min(6, Math.max(1, Number(prefs.count) || 2));
+  if (prefs.mode !== 'manual') prefs.mode = 'virtual';
+  const savePrefs = () => { try { localStorage.setItem('5000-prefs', JSON.stringify(prefs)); } catch (e) {} };
+
   let actx = null, master = null, noiseBuf = null;
   function audio() {
     try {
@@ -530,7 +530,6 @@
       return actx;
     } catch (e) { return null; }
   }
-  // Le navigateur n'autorise le son qu'après un clic : on active l'audio au premier geste
   document.addEventListener('pointerdown', () => { if (!prefs.muted) audio(); }, true);
   document.addEventListener('keydown', () => { if (!prefs.muted) audio(); }, true);
 
@@ -557,7 +556,7 @@
     s.start(t, Math.random() * 0.4, dur + 0.02);
   }
   const SOUNDS = {
-    roll() { // dés qui roulent sur la table
+    roll() {
       for (let i = 0; i < 14; i++) click(i * 0.032 + Math.random() * 0.02, { freq: 1800 + Math.random() * 2500, vol: 0.25 + Math.random() * 0.2 });
       click(0.47, { freq: 600, dur: 0.08, vol: 0.5, q: 1.5 });
       click(0.5, { freq: 900, dur: 0.05, vol: 0.3, q: 2 });
@@ -596,7 +595,7 @@
   });
   renderSoundBtn();
 
-  // Sons déduits des changements d'état (fonctionne aussi pour les actions des autres joueurs en réseau)
+  // Sons déduits des changements d'état
   function diffSounds(a, b) {
     if (!a || !b || a.players.length !== b.players.length) return [];
     if (b.phase === 'over' && a.phase !== 'over') return ['win'];
@@ -606,7 +605,7 @@
     const cnt = (g, f) => g.dice.filter(f).length;
     const filled = g => g.phase === 'enter' ? g.pending.filter(i => g.dice[i].value !== null).length : 0;
     if (a.current === b.current && !banked) {
-      if (b.turnScore > a.turnScore) out.push('validate');          // dés gardés puis relance
+      if (b.turnScore > a.turnScore) out.push('validate');
       else {
         const sa = cnt(a, d => d.selected), sb = cnt(b, d => d.selected);
         if (sb > sa) out.push('select');
@@ -616,23 +615,23 @@
         if (filled(b) > filled(a)) out.push('tick');
         else if (filled(b) < filled(a)) out.push('clear');
       }
-      if (a.phase === 'enter' && b.phase === 'choose') out.push('validate'); // lancer saisi validé
+      if (a.phase === 'enter' && b.phase === 'choose') out.push('validate');
     }
     if (b.phase === 'lost' && a.phase !== 'lost') out.push('lost');
-    if (a.current !== b.current) out.push(appMode !== 'local' && myIndex() === b.current ? 'yourturn' : 'turn');
+    if (a.current !== b.current) {
+      const hasCpu = b.players.some(p => p.cpu);
+      out.push(hasCpu && !b.players[b.current].cpu ? 'yourturn' : 'turn');
+    }
     return out;
   }
-  let prevSnap = null;
-
-  const SECTIONS = ['setup', 'lobby', 'game', 'victory'];
-  const show = id => SECTIONS.forEach(s => $(s).classList.toggle('hidden', s !== id));
 
   // =====================================================================
   // Écran de configuration
   // =====================================================================
-  const typePicker = $('typePicker'), modePicker = $('modePicker');
-  const countPicker = $('countPicker'), namesBox = $('names');
-  typePicker.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { saveSetupInputs(); prefs.type = b.dataset.type; renderSetup(); }));
+  const SECTIONS = ['setup', 'game', 'victory'];
+  const show = id => SECTIONS.forEach(s => $(s).classList.toggle('hidden', s !== id));
+
+  const modePicker = $('modePicker'), countPicker = $('countPicker'), namesBox = $('names');
   modePicker.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { saveSetupInputs(); prefs.mode = b.dataset.mode; renderSetup(); }));
   for (let n = 1; n <= 6; n++) {
     const b = document.createElement('button');
@@ -642,281 +641,100 @@
   }
   function saveSetupInputs() {
     namesBox.querySelectorAll('input').forEach((inp, i) => { prefs.names[i] = inp.value; });
-    prefs.myName = $('myName').value;
   }
+  const defaultName = i => prefs.mode === 'virtual' && prefs.cpu[i] ? `Ordinateur ${i + 1}` : `Joueur ${i + 1}`;
+
+  // Prénoms proposés (modifiables)
+  const FIRST_NAMES = [
+    'Léon', 'Margaux', 'Gaspard', 'Inès', 'Basile', 'Capucine', 'Achille', 'Romane', 'Félix', 'Louise',
+    'Anatole', 'Jeanne', 'Octave', 'Clémence', 'Marius', 'Albane', 'Victor', 'Suzanne', 'Jules', 'Héloïse',
+    'Augustin', 'Mathilde', 'Lucien', 'Joséphine', 'Firmin', 'Rose', 'Hector', 'Colette', 'Edmond', 'Lison',
+    'Gustave', 'Apolline', 'Ernest', 'Blanche', 'Côme', 'Adèle', 'Maxence', 'Lucie', 'Timothée', 'Elsa'
+  ];
+  function inventName(i) {
+    const taken = new Set(prefs.names.filter((n, k) => k !== i && k < prefs.count).map(n => (n || '').trim()));
+    const free = FIRST_NAMES.filter(n => !taken.has(n) && n !== prefs.names[i]);
+    return free[Math.floor(Math.random() * free.length)] || defaultName(i);
+  }
+
   function renderSetup() {
-    typePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.type === prefs.type));
+    for (let i = 0; i < prefs.count; i++) if (!(prefs.names[i] || '').trim()) prefs.names[i] = inventName(i);
     modePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === prefs.mode));
-    $('diceBlock').classList.toggle('hidden', prefs.type === 'join');
-    $('localBlock').classList.toggle('hidden', prefs.type !== 'local');
-    $('netBlock').classList.toggle('hidden', prefs.type === 'local');
-    $('codeLabel').classList.toggle('hidden', prefs.type !== 'join');
-    $('myName').value = prefs.myName || '';
-    $('startBtn').textContent = { local: 'Commencer la partie', host: 'Créer la partie', join: 'Rejoindre la partie' }[prefs.type];
-    $('setupErr').textContent = '';
     [...countPicker.children].forEach((b, i) => b.classList.toggle('on', i + 1 === prefs.count));
     namesBox.innerHTML = '';
     for (let i = 0; i < prefs.count; i++) {
-      const label = document.createElement('label');
-      label.innerHTML = `<span>${i + 1}</span>`;
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `<span>${i + 1}</span>`;
       const inp = document.createElement('input');
-      inp.type = 'text'; inp.maxLength = 20; inp.placeholder = `Joueur ${i + 1}`;
+      inp.type = 'text'; inp.maxLength = 20; inp.placeholder = defaultName(i);
       inp.value = prefs.names[i] || '';
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
-      label.appendChild(inp);
-      namesBox.appendChild(label);
+      inp.setAttribute('aria-label', `Nom du joueur ${i + 1}`);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+      row.appendChild(inp);
+      const reroll = document.createElement('button');
+      reroll.type = 'button';
+      reroll.className = 'reroll';
+      reroll.textContent = '🎲';
+      reroll.title = 'Proposer un autre prénom';
+      reroll.setAttribute('aria-label', `Proposer un autre prénom pour le joueur ${i + 1}`);
+      reroll.addEventListener('click', () => { saveSetupInputs(); prefs.names[i] = inventName(i); renderSetup(); play('tick'); });
+      row.appendChild(reroll);
+      // Joueur / Ordinateur : seulement avec les dés à l'écran
+      if (prefs.mode === 'virtual') {
+        const tg = document.createElement('div');
+        tg.className = 'kind-toggle';
+        [['Joueur', false], ['Ordinateur', true]].forEach(([label, isCpu]) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = label;
+          b.classList.toggle('on', !!prefs.cpu[i] === isCpu);
+          b.setAttribute('aria-pressed', !!prefs.cpu[i] === isCpu ? 'true' : 'false');
+          b.addEventListener('click', () => { saveSetupInputs(); prefs.cpu[i] = isCpu; renderSetup(); });
+          tg.appendChild(b);
+        });
+        row.appendChild(tg);
+      }
+      namesBox.appendChild(row);
     }
   }
-  $('myName').addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
-  $('joinCode').addEventListener('keydown', e => { if (e.key === 'Enter') onStart(); });
-  $('startBtn').addEventListener('click', onStart);
+  $('startBtn').addEventListener('click', startGame);
 
-  async function onStart() {
+  function startGame() {
     saveSetupInputs();
     savePrefs();
-    const err = $('setupErr');
-    err.textContent = '';
-    if (prefs.type === 'local') {
-      const players = [];
-      for (let i = 0; i < prefs.count; i++) players.push({ name: cleanName(prefs.names[i] || '') || `Joueur ${i + 1}` });
-      appMode = 'local';
-      G = newGame(players, prefs.mode);
-      lastAnim = null;
-      show('game');
-      renderGame();
-      return;
+    const players = [];
+    for (let i = 0; i < prefs.count; i++) {
+      const cpu = prefs.mode === 'virtual' && !!prefs.cpu[i];
+      players.push({ name: (prefs.names[i] || '').trim().slice(0, 20) || defaultName(i), cpu });
     }
-    const name = cleanName(prefs.myName);
-    if (!name) { err.textContent = 'Entrez votre nom.'; return; }
-    let code = '';
-    if (prefs.type === 'join') {
-      code = $('joinCode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      if (code.length !== 4) { err.textContent = 'Le code de la partie fait 4 caractères.'; return; }
-    }
-    $('startBtn').disabled = true;
-    err.textContent = 'Connexion…';
-    const lobby = await lobbyRoomPromise;
-    if (!lobby) {
-      $('startBtn').disabled = false;
-      err.textContent = "Le mode réseau n'est disponible que sur la page publiée sur claude.ai.";
-      return;
-    }
-    if (prefs.type === 'host') code = makeCode();
-    try {
-      room = await lobby.join('g5000-' + code.toLowerCase());
-    } catch (e) {
-      $('startBtn').disabled = false;
-      err.textContent = "Impossible de se connecter à la partie. Réessayez dans un instant.";
-      return;
-    }
-    $('startBtn').disabled = false;
-    err.textContent = '';
-    roomCode = code;
-    peersNow = [];
-    G = null; lastAnim = null; lastHostGame = null;
-    room.onConnection(ok => { $('netStatus').textContent = ok ? '' : 'Connexion perdue… reconnexion en cours'; });
-    room.onPeers(onPeersChange);
-    if (prefs.type === 'host') {
-      appMode = 'host';
-      hostName = name;
-      Object.keys(lastSeq).forEach(k => delete lastSeq[k]);
-      room.presence({ role: 'host', name, game: null }).catch(() => {});
-    } else {
-      appMode = 'guest';
-      guestSeq = 0; guestActs = [];
-      hostSeen = false;
-      room.presence({ role: 'guest', name, joinedAt: Date.now(), acts: [] }).catch(() => {});
-      clearTimeout(hostMissingTimer);
-      hostMissingTimer = setTimeout(() => { if (!hostSeen && appMode === 'guest') renderLobby(); }, 5000);
-    }
-    show('lobby');
-    renderLobby();
+    beginGame(newGame(players, prefs.mode));
   }
-
-  function makeCode() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let s = '';
-    for (let i = 0; i < 4; i++) s += chars[Math.floor(Math.random() * chars.length)];
-    return s;
-  }
-
-  // =====================================================================
-  // Réseau
-  // =====================================================================
-  const presenceOf = p => (p && p.presence) || {};
-  function guestsInRoom() {
-    return peersNow
-      .filter(p => !p.sameTab && p.kind === 'viewer' && presenceOf(p).role === 'guest' && cleanName(presenceOf(p).name))
-      .sort((a, b) => (Number(presenceOf(a).joinedAt) || 0) - (Number(presenceOf(b).joinedAt) || 0));
-  }
-  const findHost = () => peersNow.find(p => !p.sameTab && presenceOf(p).role === 'host');
-  const isPresent = peer => peersNow.some(p => p.peer === peer);
-
-  function onPeersChange(change) {
-    peersNow = change.peers;
-    const me = peersNow.find(p => p.sameTab);
-    if (me) myPeer = me.peer;
-    if (appMode === 'host') {
-      if (!G) { renderLobby(); return; }
-      processGuestActs();
-      if (!$('game').classList.contains('hidden')) renderGame();
-    } else if (appMode === 'guest') {
-      onHostState();
-    }
-  }
-
-  // --- Hôte : applique les actions des invités ---
-  function processGuestActs() {
-    let changed = false;
-    for (const p of peersNow) {
-      if (p.sameTab) continue;
-      const acts = presenceOf(p).acts;
-      if (!Array.isArray(acts)) continue;
-      for (const a of acts) {
-        if (!a || typeof a.n !== 'number') continue;
-        if (a.n <= (lastSeq[p.peer] || 0)) continue;
-        lastSeq[p.peer] = a.n;
-        if (!G || G.phase === 'over' || a.type === 'skip') continue;
-        const idx = G.players.findIndex(pl => pl.peer === p.peer);
-        if (idx !== G.current) continue;
-        if (act(G, a)) changed = true;
-      }
-    }
-    if (changed) publish();
-  }
-  function publish() {
-    if (appMode === 'host' && room) room.presence({ game: G }).catch(() => {});
-  }
-
-  // --- Invité : reçoit l'état de l'hôte ---
-  function onHostState() {
-    const h = findHost();
-    if (!h) {
-      if (hostSeen) {
-        $('netStatus').textContent = "L'hôte s'est déconnecté. La partie reprendra s'il revient.";
-      }
-      if (!G) renderLobby();
-      return;
-    }
-    hostSeen = true;
-    $('netStatus').textContent = '';
-    const g = presenceOf(h).game;
-    if (!g || typeof g !== 'object') {
-      G = null; lastHostGame = null;
-      show('lobby'); renderLobby();
-      return;
-    }
-    if (g === lastHostGame) return;
-    lastHostGame = g;
-    try {
-      const copy = JSON.parse(JSON.stringify(g));
-      if (!Array.isArray(copy.players) || !Array.isArray(copy.dice) || copy.dice.length !== 6) return;
-      copy.players.forEach(p => { p.name = cleanName(p.name) || 'Joueur'; });
-      G = copy;
-    } catch (e) { return; }
-    if (G.phase !== 'over' && $('game').classList.contains('hidden')) {
-      if (!$('victory').classList.contains('hidden')) prevSnap = null; // nouvelle partie après une victoire
-      lastAnim = null;
-      show('game');
-    }
-    renderGame();
-  }
-
-  // --- Salle d'attente ---
-  function renderLobby() {
-    $('lobbyCode').textContent = roomCode;
-    const list = $('lobbyList');
-    const info = $('lobbyInfo');
-    const startBtn = $('lobbyStart');
-    if (appMode === 'host') {
-      $('lobbyTitle').textContent = 'Votre partie en réseau';
-      $('lobbyCodeHint').textContent = 'Donnez ce code aux autres joueurs';
-      const guests = guestsInRoom();
-      const rows = [`<li><span>${esc(hostName)} <span class="you-tag">vous</span></span><em>hôte</em></li>`];
-      guests.forEach((p, i) => {
-        rows.push(`<li><span>${esc(cleanName(presenceOf(p).name))}</span><em>${i < 5 ? 'prêt' : 'partie complète'}</em></li>`);
-      });
-      list.innerHTML = rows.join('');
-      info.textContent = guests.length ? `${Math.min(guests.length, 5) + 1} joueur(s) — lancez la partie quand tout le monde est là.` : 'En attente des autres joueurs…';
-      startBtn.classList.remove('hidden');
-      startBtn.disabled = guests.length === 0;
-    } else {
-      $('lobbyTitle').textContent = 'Partie en réseau';
-      $('lobbyCodeHint').textContent = '';
-      const h = findHost();
-      const rows = [];
-      if (h) rows.push(`<li><span>${esc(cleanName(presenceOf(h).name) || 'Hôte')}</span><em>hôte</em></li>`);
-      guestsInRoom().forEach(p => rows.push(`<li><span>${esc(cleanName(presenceOf(p).name))}</span><em>prêt</em></li>`));
-      rows.push(`<li><span>${esc(cleanName(prefs.myName))} <span class="you-tag">vous</span></span><em>prêt</em></li>`);
-      list.innerHTML = rows.join('');
-      info.textContent = h ? "En attente que l'hôte lance la partie…"
-        : (hostSeen ? "L'hôte s'est déconnecté." : 'Recherche de la partie… Vérifiez le code si rien ne se passe.');
-      startBtn.classList.add('hidden');
-    }
-  }
-
-  $('lobbyStart').addEventListener('click', () => {
-    if (appMode !== 'host') return;
-    const me = peersNow.find(p => p.sameTab);
-    if (me) myPeer = me.peer;
-    const guests = guestsInRoom().slice(0, 5);
-    if (!guests.length) return;
-    // ignore les anciennes actions des invités
-    guests.forEach(p => {
-      const acts = presenceOf(p).acts;
-      lastSeq[p.peer] = Array.isArray(acts) ? acts.reduce((m, a) => Math.max(m, Number(a && a.n) || 0), 0) : 0;
-    });
-    const players = [{ name: hostName, peer: myPeer }]
-      .concat(guests.map(p => ({ name: cleanName(presenceOf(p).name), peer: p.peer })));
-    G = newGame(players, prefs.mode);
-    lastAnim = null;
-    publish();
+  function beginGame(g) {
+    clearTimeout(cpuTimer); cpuQueue = [];
+    G = g;
+    lastAnim = null; prevSnap = null;
     show('game');
     renderGame();
-  });
-
-  $('lobbyLeave').addEventListener('click', leaveToMenu);
-
-  function leaveToMenu() {
-    clearTimeout(hostMissingTimer);
-    if (room) { room.leave().catch(() => {}); room = null; }
-    appMode = 'local';
-    G = null; peersNow = [];
-    $('netStatus').textContent = '';
-    renderSetup();
-    show('setup');
   }
 
   // =====================================================================
-  // Actions du joueur
+  // Partie
   // =====================================================================
-  const myIndex = () => {
-    if (!G) return -1;
-    if (appMode === 'local') return G.current;
-    return G.players.findIndex(p => p.peer && p.peer === myPeer);
-  };
-  const canControl = () => !!G && (appMode === 'local' || myIndex() === G.current);
+  let G = null;
+  const canControl = () => !!G && !curP(G).cpu;
 
-  function dispatch(a) {
-    if (!G || animating) return;
-    if (appMode === 'guest') {
-      if (!canControl()) return;
-      guestActs.push(Object.assign({}, a, { n: ++guestSeq }));
-      guestActs = guestActs.slice(-12);
-      room.presence({ acts: guestActs }).catch(() => {});
-      return;
-    }
-    if (appMode === 'host' && a.type !== 'skip' && !canControl()) return;
-    if (act(G, a)) {
-      publish();
-      renderGame();
-    }
+  function applyAction(a) {
+    if (!G || animating) return false;
+    if (!act(G, a)) return false;
+    renderGame();
+    return true;
+  }
+  function dispatch(a) {           // actions du joueur humain
+    if (!canControl()) return;
+    applyAction(a);
   }
 
-  // =====================================================================
-  // Affichage de la partie
-  // =====================================================================
-  const table = $('table'), rollBtn = $('rollBtn'), stopBtn = $('stopBtn'), skipBtn = $('skipBtn'), stopHint = $('stopHint');
+  const table = $('table'), rollBtn = $('rollBtn'), stopBtn = $('stopBtn'), stopHint = $('stopHint');
   const buttons = Array.from({ length: 6 }, (_, i) => {
     const b = document.createElement('button');
     b.className = 'die'; b.type = 'button';
@@ -934,32 +752,31 @@
   }
   rollBtn.addEventListener('click', () => dispatch({ type: 'roll' }));
   stopBtn.addEventListener('click', () => dispatch({ type: 'stop' }));
-  skipBtn.addEventListener('click', () => dispatch({ type: 'skip' }));
 
   let lastAnim = null, animating = false, animIdx = [];
+  let prevSnap = null, deferredSounds = [];
 
-  let deferredSounds = [];
   function renderGame() {
     if (!G) return;
-    if (animating) return; // l'animation en cours affichera le dernier état
+    if (animating) return;
     const snap = JSON.parse(JSON.stringify(G));
     const sounds = diffSounds(prevSnap, snap);
     prevSnap = snap;
-    if (G.phase === 'over') { sounds.forEach(play); showVictory(); return; }
-    const a = G.anim || { id: 0, idx: [] };
-    if (lastAnim !== null && a.id !== lastAnim && Array.isArray(a.idx) && a.idx.length) {
+    if (G.phase === 'over') { sounds.forEach(play); setTimeout(showVictory, curP(G).cpu ? 900 : 0); draw(); return; }
+    const a = G.anim;
+    if (lastAnim !== null && a.id !== lastAnim && a.idx.length) {
       lastAnim = a.id;
-      // sons immédiats, puis le résultat du lancer après l'animation
       const now = ['validate', 'bank', 'select', 'deselect', 'tick', 'clear'];
       sounds.filter(s => now.includes(s)).forEach(play);
       deferredSounds = sounds.filter(s => !now.includes(s));
       play('roll');
-      animate(a.idx.filter(i => i >= 0 && i < 6));
+      animate(a.idx);
       return;
     }
     lastAnim = a.id;
     sounds.forEach(play);
     draw();
+    scheduleCpu();
   }
 
   function animate(idx) {
@@ -981,37 +798,28 @@
   }
 
   function draw() {
-    const control = canControl();
-    const mine = myIndex();
+    const control = canControl() && G.phase !== 'over';
+    const hasCpu = G.players.some(p => p.cpu);
 
-    // Joueurs
-    $('players').innerHTML = G.players.map((p, i) => {
-      const away = appMode !== 'local' && p.peer && p.peer !== myPeer && !isPresent(p.peer);
-      const you = appMode !== 'local' && i === mine;
-      return `<div class="player${i === G.current ? ' current' : ''}${away ? ' away' : ''}">
-        <div class="pname">${esc(p.name)}${you ? '<span class="you-tag">vous</span>' : ''}</div>
-        <div class="ptotal">${Number(p.total) || 0}</div>
-        <div class="pnote">${away ? 'déconnecté' : (!p.total ? `ouvre à ${OPENING}` : '&nbsp;')}</div>
-      </div>`;
-    }).join('');
+    $('players').innerHTML = G.players.map((p, i) => `
+      <div class="player${i === G.current ? ' current' : ''}">
+        <div class="pname">${p.cpu ? '🤖 ' : ''}${esc(p.name)}</div>
+        <div class="ptotal">${p.total}</div>
+        <div class="pnote">${!p.total ? `ouvre à ${OPENING}` : '&nbsp;'}</div>
+      </div>`).join('');
 
-    // Bandeau de tour
-    const banner = $('turnBanner');
-    if (appMode === 'local') banner.textContent = '';
-    else if (control) banner.textContent = 'À vous de jouer !';
-    else if (mine === -1) banner.textContent = 'Vous regardez la partie';
-    else banner.textContent = `Tour de ${curP(G).name}…`;
+    $('turnBanner').textContent = !hasCpu || G.phase === 'over' ? ''
+      : (curP(G).cpu ? `${curP(G).name} joue…` : `À vous de jouer, ${curP(G).name} !`);
 
     const m = $('message');
-    m.textContent = (G.msg && G.msg.text) || '';
-    m.className = 'sub' + (G.msg && G.msg.kind ? ' ' + G.msg.kind : '');
+    m.textContent = G.msg.text;
+    m.className = 'sub' + (G.msg.kind ? ' ' + G.msg.kind : '');
 
-    // Dés
     G.dice.forEach((d, i) => {
       const b = buttons[i];
       b.innerHTML = animIdx.includes(i) ? dieSVG(rand()) : dieSVG(d.value);
-      b.classList.toggle('selected', !!d.selected);
-      b.classList.toggle('kept', !!d.kept);
+      b.classList.toggle('selected', d.selected);
+      b.classList.toggle('kept', d.kept);
       b.classList.toggle('pending-empty', !FACES[d.value]);
       const enterable = G.phase === 'enter' && G.pending.includes(i) && d.value !== null;
       b.disabled = animating || !control || !(enterable || (G.phase === 'choose' && !d.kept));
@@ -1022,7 +830,6 @@
 
     $('palette').classList.toggle('hidden', !(G.phase === 'enter' && control));
 
-    // Scores
     const I = info(G);
     const selValue = $('selValue'), selDetail = $('selDetail');
     if (!I.r) {
@@ -1037,7 +844,6 @@
     $('turnValue').textContent = I.potential;
     $('turnDetail').textContent = G.turnParts.concat(I.selOk ? [String(I.r.score)] : []).join(' + ');
 
-    // Boutons
     rollBtn.classList.toggle('hidden', !control);
     stopBtn.classList.toggle('hidden', !control || G.phase !== 'choose');
     stopHint.textContent = '';
@@ -1062,58 +868,43 @@
       rollBtn.textContent = `Au tour de ${G.players[(G.current + 1) % G.players.length].name}`;
       rollBtn.disabled = false;
     }
-
-    // L'hôte peut passer le tour d'un joueur déconnecté
-    const cp = curP(G);
-    const showSkip = appMode === 'host' && cp.peer && cp.peer !== myPeer && !isPresent(cp.peer);
-    skipBtn.classList.toggle('hidden', !showSkip);
-    if (showSkip) skipBtn.textContent = `Passer le tour de ${cp.name}`;
-
-    $('quitBtn').textContent = appMode === 'local' ? 'Nouvelle partie' : 'Quitter la partie';
   }
 
   // =====================================================================
   // Victoire
   // =====================================================================
   function showVictory() {
-    const w = G.players[G.winner] || curP(G);
-    $('winnerName').textContent = `${w.name} — ${w.total} points`;
+    if (!G || G.phase !== 'over') return;
+    const w = G.players[G.winner];
+    $('winnerName').textContent = `${w.cpu ? '🤖 ' : ''}${w.name} — ${w.total} points`;
     const sorted = [...G.players].sort((a, b) => b.total - a.total);
-    $('ranking').innerHTML = sorted.map(p => `<li><span>${esc(p.name)}</span><b>${Number(p.total) || 0}</b></li>`).join('');
-    const canReplay = appMode !== 'guest';
-    $('replayBtn').classList.toggle('hidden', !canReplay);
-    $('victoryInfo').textContent = appMode === 'guest' ? "L'hôte peut relancer une nouvelle partie." : '';
-    $('backBtn').textContent = appMode === 'local' ? 'Retour au menu' : 'Quitter';
+    $('ranking').innerHTML = sorted.map(p => `<li><span>${p.cpu ? '🤖 ' : ''}${esc(p.name)}</span><b>${p.total}</b></li>`).join('');
     show('victory');
   }
   $('replayBtn').addEventListener('click', () => {
-    if (!G || appMode === 'guest') return;
-    let players = G.players;
-    if (appMode === 'host') players = players.filter(p => p.peer === myPeer || isPresent(p.peer));
-    G = newGame(players, G.diceMode);
-    lastAnim = null;
-    publish();
-    show('game');
-    renderGame();
+    if (!G) return;
+    beginGame(newGame(G.players, G.diceMode));
   });
-  $('backBtn').addEventListener('click', leaveToMenu);
+  function toMenu() {
+    clearTimeout(cpuTimer); cpuQueue = [];
+    G = null;
+    renderSetup();
+    show('setup');
+  }
+  $('backBtn').addEventListener('click', toMenu);
 
-  // Quitter (confirmation en deux clics)
   const quitBtn = $('quitBtn');
   let quitTimer = null;
   quitBtn.addEventListener('click', () => {
     if (quitBtn.dataset.confirm === '1') {
       clearTimeout(quitTimer);
-      quitBtn.dataset.confirm = '';
-      leaveToMenu();
+      quitBtn.dataset.confirm = ''; quitBtn.textContent = 'Nouvelle partie';
+      toMenu();
       return;
     }
     quitBtn.dataset.confirm = '1';
     quitBtn.textContent = 'Cliquez encore pour confirmer';
-    quitTimer = setTimeout(() => {
-      quitBtn.dataset.confirm = '';
-      quitBtn.textContent = appMode === 'local' ? 'Nouvelle partie' : 'Quitter la partie';
-    }, 3000);
+    quitTimer = setTimeout(() => { quitBtn.dataset.confirm = ''; quitBtn.textContent = 'Nouvelle partie'; }, 3000);
   });
 
   renderSetup();
