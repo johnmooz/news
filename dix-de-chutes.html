@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dix de chute</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5efe3; --ink:#1b2a3c; --muted:#5f6b7a;
+  --blue:#3d97dd; --blue-d:#2a78b8; --blue-dd:#1c5d93;
+  --card:#fffdf8; --line:#e4dccb; --accent:#ffcf1f; --danger:#d63a2f; --ok:#2e9d48;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:"Fredoka",ui-rounded,"Nunito","Segoe UI",system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(27,42,60,.07) 1px, transparent 0) 0 0/18px 18px,
+    var(--bg);
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- Écran de configuration ---------- */
+.setup{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px}
+.hero{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.hero h1{font-size:clamp(2.2rem,6vw,3.4rem);margin:0;line-height:1;letter-spacing:-.5px;color:var(--blue-dd)}
+.hero p{margin:6px 0 0;color:var(--muted);max-width:34ch}
+.hero svg{flex:none}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:22px;width:min(640px,100%);box-shadow:0 10px 0 -4px rgba(27,42,60,.08)}
+.field{margin-bottom:16px}
+.field>label,.lbl{display:block;font-weight:600;font-size:.9rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.seg{display:inline-flex;background:#efe8d9;border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;padding:8px 16px;border-radius:10px;font-weight:600}
+.seg button[aria-pressed="true"]{background:#fff;box-shadow:0 2px 0 rgba(27,42,60,.12);color:var(--blue-dd)}
+.seg.small button{padding:6px 12px;font-size:.92rem}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.pset{border:2px solid var(--line);border-radius:16px;padding:12px 14px 14px;margin:0;display:flex;flex-direction:column;gap:10px}
+.pset legend{font-weight:700;padding:0 6px;display:flex;align-items:center;gap:6px}
+.pset input,.pset select,.row select{width:100%;padding:9px 12px;border:2px solid var(--line);border-radius:12px;background:#fff}
+.pset input:focus,.pset select:focus,.row select:focus{outline:none;border-color:var(--blue)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(0,0,0,.25);vertical-align:-2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.primary{border:0;background:var(--blue);color:#fff;font-weight:700;padding:11px 20px;border-radius:14px;box-shadow:0 4px 0 var(--blue-dd);transition:transform .08s}
+.primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--blue-dd)}
+.primary:disabled{background:#b7c3cf;box-shadow:0 4px 0 #9aa6b2;cursor:not-allowed}
+.primary.big{width:100%;font-size:1.25rem;padding:14px}
+.ghost{border:2px solid var(--line);background:#fff;border-radius:12px;padding:7px 14px;font-weight:600}
+.ghost:hover{border-color:var(--blue)}
+.linkbtn{border:0;background:none;color:var(--blue-d);font-weight:600;text-decoration:underline;margin-top:12px;display:block;margin-inline:auto}
+
+/* ---------- Jeu ---------- */
+.game{max-width:1320px;margin:0 auto;padding:12px 14px 20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.topbar h1{margin:0;font-size:1.6rem;color:var(--blue-dd)}
+.topbar .actions{display:flex;gap:8px}
+.arena{display:grid;grid-template-columns:minmax(0,1fr) 280px minmax(0,1fr);grid-template-areas:"b0 panel b1";gap:14px;align-items:start}
+#side0{grid-area:b0}#side1{grid-area:b1}.panel{grid-area:panel}
+.side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.board svg{width:100%;height:auto;max-height:calc(100vh - 190px);display:block;margin:0 auto;user-select:none;-webkit-user-select:none}
+.pcard{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:8px 12px;display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0;transition:border-color .2s, box-shadow .2s}
+.pcard.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,207,31,.35)}
+.pname{font-weight:700;font-size:1.1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tag{font-size:.75rem;font-weight:600;background:#efe8d9;border-radius:8px;padding:2px 7px;margin-left:6px;color:var(--muted);vertical-align:2px}
+.pinfo{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pinfo .count{margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.85rem;font-weight:600;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:2px 9px 2px 4px}
+.chip i{width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-style:normal;font-size:.72rem;font-weight:700;border:1.5px solid rgba(0,0,0,.25)}
+.count{font-weight:700;color:var(--blue-dd)}
+
+.panel{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
+.turn{font-size:1.15rem;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.turn b{color:var(--blue-dd)}
+.hint{margin:0;color:var(--muted);font-size:.95rem;min-height:2.6em}
+.wheelpick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.wheelpick button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:7px 0;font-weight:700;font-size:1.05rem}
+.wheelpick button[aria-pressed="true"]{border-color:var(--accent);background:#fff6cf}
+.wheelpick button.forbid{color:#b9b2a3;text-decoration:line-through;border-style:dashed}
+.wheelpick button:disabled{opacity:.5;cursor:not-allowed}
+.rot{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.rotbtn{border:0;background:var(--blue);color:#fff;font-size:2rem;line-height:1;padding:10px 0;border-radius:16px;box-shadow:0 4px 0 var(--blue-dd);font-weight:700}
+.rotbtn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--blue-dd)}
+.rotbtn:disabled{background:#b7c3cf;box-shadow:0 4px 0 #9aa6b2;cursor:not-allowed}
+.rotbtn small{display:block;font-size:.7rem;font-weight:600;margin-top:2px;opacity:.9}
+.crans{text-align:center;min-width:64px}
+.crans span{display:block;font-size:1.8rem;font-weight:700;color:var(--blue-dd);line-height:1}
+.crans small{color:var(--muted);font-size:.8rem}
+.flash{min-height:1.3em;font-size:.9rem;font-weight:600;color:var(--danger)}
+.panel h3{margin:4px 0 0;font-size:.85rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.log{list-style:none;margin:0;padding:0;max-height:230px;overflow:auto;font-size:.88rem;display:flex;flex-direction:column;gap:5px}
+.log li{background:#f6f1e6;border-radius:10px;padding:6px 9px;line-height:1.3}
+.log li .ok{color:var(--ok);font-weight:700}.log li .ko{color:var(--danger);font-weight:700}
+.keys{font-size:.78rem;color:var(--muted);margin:0}
+
+/* Plateau SVG */
+.wheel.clickable{cursor:pointer}
+.wheel.clickable:hover .disc{stroke:#ffd400;stroke-width:4}
+
+/* Fenêtres */
+.overlay{position:fixed;inset:0;background:rgba(20,30,45,.55);display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--card);border-radius:22px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:22px 24px;border:2px solid var(--line)}
+.modal h2{margin:0 0 8px;color:var(--blue-dd)}
+.modal h3{margin:16px 0 4px}
+.modal ul{padding-left:20px;margin:6px 0}
+.modal li{margin:4px 0;line-height:1.4}
+.modal .close{float:right}
+.endcard{text-align:center}
+.endcard .big{font-size:3rem;line-height:1}
+.endcard h2{font-size:1.9rem;margin:8px 0}
+.endcard p{color:var(--muted);margin:0 0 18px}
+.endcard .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+@media (max-width:980px){
+  .arena{grid-template-columns:1fr 1fr;grid-template-areas:"b0 b1" "panel panel"}
+  .panel{position:static}
+  .board svg{max-height:none}
+  .pname{font-size:.95rem}
+}
+@media (max-width:560px){
+  .players,.row{grid-template-columns:1fr}
+  .arena{gap:8px}
+  .pcard{padding:6px 8px}
+  .chip{font-size:.75rem}
+  .topbar h1{font-size:1.2rem;white-space:nowrap}
+  .topbar .actions{gap:5px}
+  .topbar .ghost{padding:5px 9px;font-size:.85rem}
+  .chip .lbl-t{display:none}
+  .chip{padding:2px 4px}
+  .tag{display:none}
+  .hero{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ CONFIGURATION ============ -->
+<section id="setup" class="setup">
+  <div class="hero">
+    <svg width="96" height="96" viewBox="-60 -60 120 120" aria-hidden="true">
+      <circle r="56" fill="#3d97dd"/>
+      <circle r="44" fill="#fbfbf8"/>
+      <g fill="#3d97dd"><circle cx="0" cy="-38" r="10"/><circle cx="33" cy="19" r="10"/><circle cx="-33" cy="19" r="10"/></g>
+      <circle cx="0" cy="-38" r="8" fill="#e53935"/><text x="0" y="-34.5" font-size="10" font-weight="700" fill="#fff" text-anchor="middle" font-family="Fredoka,sans-serif">1</text>
+      <circle cx="33" cy="19" r="8" fill="#fdd835"/><text x="33" y="22.5" font-size="10" font-weight="700" fill="#333" text-anchor="middle" font-family="Fredoka,sans-serif">2</text>
+      <circle r="11" fill="#fff" stroke="#c4c9cf" stroke-width="3"/>
+    </svg>
+    <div>
+      <h1>Dix de chute</h1>
+      <p>Faites tomber vos 10 jetons dans l'ordre… sans vous faire piéger par la roue d'en face.</p>
+    </div>
+  </div>
+
+  <form class="card" id="setupForm">
+    <div class="field">
+      <span class="lbl">Nombre de joueurs</span>
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="1">1 joueur</button>
+        <button type="button" data-mode="2">2 joueurs</button>
+      </div>
+    </div>
+
+    <div class="players" id="playersCfg"></div>
+
+    <div class="row">
+      <div>
+        <label class="lbl" for="firstSel">Qui commence</label>
+        <select id="firstSel">
+          <option value="0">Joueur 1</option>
+          <option value="1">Joueur 2</option>
+          <option value="r">Au hasard</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl" for="wheelSel">Roues</label>
+        <select id="wheelSel">
+          <option value="classic">Classiques</option>
+          <option value="random">Encoches aléatoires</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="primary big">Jouer</button>
+    <button type="button" class="linkbtn" data-open-rules>Lire les règles</button>
+  </form>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="game" class="game hidden">
+  <div class="topbar">
+    <h1>Dix de chute</h1>
+    <div class="actions">
+      <button class="ghost" data-open-rules>Règles</button>
+      <button class="ghost" id="btnRestart">Rejouer</button>
+      <button class="ghost" id="btnSetup">Nouvelle partie</button>
+    </div>
+  </div>
+
+  <div class="arena">
+    <section class="side" id="side0">
+      <div class="pcard" id="pcard0"></div>
+      <div class="board" id="board0"></div>
+    </section>
+
+    <aside class="panel" aria-live="polite">
+      <div class="turn" id="turnBanner"></div>
+      <p class="hint" id="hint"></p>
+      <div>
+        <span class="lbl">Roue</span>
+        <div class="wheelpick" id="wheelPick"></div>
+      </div>
+      <div class="rot">
+        <button class="rotbtn" id="btnCCW" title="Sens antihoraire (flèche ←)">↺<small>antihoraire</small></button>
+        <div class="crans"><span id="cranCount">0</span><small>cran(s)</small></div>
+        <button class="rotbtn" id="btnCW" title="Sens horaire (flèche →)">↻<small>horaire</small></button>
+      </div>
+      <button class="primary" id="btnEnd">Terminer mon tour</button>
+      <div class="flash" id="flash"></div>
+      <p class="keys">Clavier : 1–5 roue · ← → tourner · Entrée terminer</p>
+      <h3>Journal <span id="turnNo" style="float:right;text-transform:none;letter-spacing:0"></span></h3>
+      <ol class="log" id="log"></ol>
+    </aside>
+
+    <section class="side" id="side1">
+      <div class="pcard" id="pcard1"></div>
+      <div class="board" id="board1"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ RÈGLES ============ -->
+<div class="overlay hidden" id="rulesBox" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+  <div class="modal">
+    <button class="ghost close" data-close-rules>Fermer</button>
+    <h2 id="rulesTitle">Règles du jeu</h2>
+    <h3>Mise en place</h3>
+    <ul>
+      <li>Le plateau est vertical entre les deux joueurs : chacun a 5 roues dentées de son côté (à gauche le joueur 1, à droite le joueur 2, vu depuis l'autre face).</li>
+      <li>Chaque joueur a 10 jetons : deux séries de 1 à 5 de deux couleurs, rangées dans deux rampes de lancement, le 1 en bas pour tomber en premier.</li>
+      <li>Les roues sont alignées au départ pour qu'aucun jeton ne tombe avant le début de la partie.</li>
+    </ul>
+    <h3>Déroulement d'un tour</h3>
+    <ul>
+      <li><b>Une seule roue :</b> choisissez une de vos 5 roues et tournez-la d'autant de crans que vous voulez, dans un seul sens (horaire ou antihoraire).</li>
+      <li><b>Roue interdite :</b> vous ne pouvez pas tourner la roue que votre adversaire vient de manipuler. Exception : s'il ne vous reste qu'un seul jeton en jeu et qu'il est dans la roue 5.</li>
+      <li><b>Effet miroir :</b> chaque roue partage son axe avec la roue d'en face. Tourner votre roue fait aussi tourner celle de l'adversaire (en sens inverse de son point de vue), ce qui peut l'aider… ou piéger ses jetons.</li>
+    </ul>
+    <h3>Fin de partie</h3>
+    <ul>
+      <li><b>Victoire :</b> faire tomber vos 10 jetons dans la glissière en respectant l'ordre 1-2-3-4-5 de chaque couleur (vous pouvez alterner les couleurs).</li>
+      <li><b>Match nul :</b> si personne n'a gagné après 200 tours (100 chacun).</li>
+      <li><b>Défaite immédiate :</b> si l'un de vos jetons tombe dans le mauvais ordre (un 3 avant le 2 de la même couleur), vous perdez sur-le-champ, même si c'est votre adversaire qui l'a fait tomber.</li>
+    </ul>
+    <h3>Comment les jetons circulent</h3>
+    <ul>
+      <li>Chaque roue a 12 crans et quelques encoches. Un jeton tombe d'une rampe quand une encoche vide de la roue 1 passe devant elle.</li>
+      <li>Quand une encoche pleine arrive devant un passage (bande bleu foncé), le jeton glisse dans le passage et attend qu'une encoche vide de la roue suivante se présente. Un passage ne contient qu'un jeton : tant qu'il est occupé, les autres jetons restent dans leurs encoches.</li>
+      <li>Attention : en changeant de sens, un jeton plus récent peut atteindre le passage avant un plus ancien… c'est là que l'ordre se mélange.</li>
+      <li>Depuis la roue 5, un jeton qui arrive au passage tombe toujours dans la glissière.</li>
+      <li>La roue que vous sélectionnez est entourée de jaune ; la roue liée chez l'adversaire est entourée en pointillés.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ FIN DE PARTIE ============ -->
+<div class="overlay hidden" id="endBox" role="dialog" aria-modal="true">
+  <div class="modal endcard">
+    <div class="big" id="endIcon">🏆</div>
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <div class="btns">
+      <button class="primary" id="endReplay">Rejouer</button>
+      <button class="ghost" id="endSetup">Changer les réglages</button>
+      <button class="ghost" id="endView">Voir le plateau</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*LOGIC-START*/
+// ===================== Constantes et géométrie =====================
+const N = 12, R = 58, CUP_OFF = R - 10, CUP_RAD = 12, TOK = 10;
+const BASE = {
+  wheels: [[200,150],[275,255],[150,320],[265,410],[150,495]],
+  rampEnds: [[40,25],[360,25]],
+  rampEntryPos: [11,1],
+  chuteExit: 5,
+  tray: {x:232, y:526, w:156, h:80},
+  labelAng: [0,45,315,45,315]
+};
+const COLORS = [
+  [{n:'rouge', f:'#e53935', t:'#fff'}, {n:'jaune', f:'#fdd835', t:'#3a3000'}],
+  [{n:'vert',  f:'#2e9d48', t:'#fff'}, {n:'violet',f:'#8e44ad', t:'#fff'}]
+];
+const DEFAULT_PATS = [
+  [[0,6],[0,3,7,9],[0,2,6,9],[1,4,7,10],[0,3,6,9]],
+  [[3,9],[1,5,8,10],[0,3,7,9],[2,5,8,11],[1,4,8,11]]
+];
+const MAX_TURNS = 200;
+
+const rad = d => d*Math.PI/180;
+const polar = (cx,cy,r,deg) => [cx + r*Math.sin(rad(deg)), cy - r*Math.cos(rad(deg))];
+const mod = (a,n=N) => ((a%n)+n)%n;
+const dirIdx = (dx,dy) => mod(Math.round(mod(Math.atan2(dx,-dy)*180/Math.PI,360)/30));
+
+function buildGeom(s){
+  const mx = x => s ? 400-x : x, mp = p => s ? mod(-p) : p;
+  const C = BASE.wheels.map(([x,y]) => [mx(x),y]);
+  const exit = [], entry = [null];
+  for (let k=0;k<4;k++){
+    const [x1,y1]=C[k],[x2,y2]=C[k+1];
+    exit[k] = dirIdx(x2-x1,y2-y1);
+    entry[k+1] = dirIdx(x1-x2,y1-y2);
+  }
+  exit[4] = mp(BASE.chuteExit);
+  const rampEntry = BASE.rampEntryPos.map(mp);
+  const ramps = [0,1].map(r => {
+    const E = polar(C[0][0],C[0][1],R+12,rampEntry[r]*30);
+    const end = [mx(BASE.rampEnds[r][0]), BASE.rampEnds[r][1]];
+    const dx=end[0]-E[0], dy=end[1]-E[1], L=Math.hypot(dx,dy), u=[dx/L,dy/L];
+    return {E,u,end,slots:[0,1,2,3,4].map(i=>[E[0]+u[0]*i*24, E[1]+u[1]*i*24])};
+  });
+  const t = BASE.tray;
+  const tray = {x: s ? 400-t.x-t.w : t.x, y:t.y, w:t.w, h:t.h};
+  const traySlot = (c,n) => [tray.x+18+(n-1)*30, tray.y+28+c*32];
+  const trayIn = s ? [tray.x+tray.w-12, tray.y+14] : [tray.x+12, tray.y+14];
+  const labels = BASE.labelAng.map((a,k)=>polar(C[k][0],C[k][1],R+19,s?360-a:a));
+  const gatePt = [0,1,2,3].map(k=>{
+    const a = polar(C[k][0],C[k][1],CUP_OFF,exit[k]*30), b = polar(C[k+1][0],C[k+1][1],CUP_OFF,entry[k+1]*30);
+    return [(a[0]+b[0])/2,(a[1]+b[1])/2];
+  });
+  return {C,exit,entry,rampEntry,ramps,tray,traySlot,trayIn,labels,gatePt};
+}
+const GEO = [buildGeom(0), buildGeom(1)];
+
+// ===================== État et règles =====================
+let HAS = null; // HAS[s][k][c] : encoche présente ?
+
+function patsToHas(pats){
+  return pats.map(side => side.map(list => { const a=Array(N).fill(false); list.forEach(i=>a[i]=true); return a; }));
+}
+function randCups(count){
+  for(;;){
+    const idx=[...Array(N).keys()].sort(()=>Math.random()-.5), out=[];
+    for (const i of idx){ if (out.every(j=>{const d=mod(i-j);return d>1&&d<N-1;})) out.push(i); if(out.length===count)break; }
+    if (out.length===count) return out.sort((a,b)=>a-b);
+  }
+}
+function randomPatterns(){
+  return [0,1].map(()=>[randCups(2), ...[1,2,3,4].map(()=>randCups(Math.random()<.5?4:5))]);
+}
+function cupAt(st,s,k,p){
+  const c = s===0 ? mod(p - st.axles[k]) : mod(p + st.axles[k]);
+  return HAS[s][k][c] ? c : -1;
+}
+function newState(randomWheels){
+  let pats, valid;
+  for(;;){
+    pats = randomWheels ? randomPatterns() : DEFAULT_PATS;
+    HAS = patsToHas(pats);
+    const probe = {axles:[0,0,0,0,0]};
+    valid = [];
+    for (let a=0;a<N;a++){
+      probe.axles[0]=a;
+      let ok=true;
+      for (const s of [0,1]) for (const p of GEO[s].rampEntry) if (cupAt(probe,s,0,p)>=0) ok=false;
+      if (ok) valid.push(a);
+    }
+    if (valid.length) break;
+  }
+  const axles = [valid[Math.floor(Math.random()*valid.length)], ...[1,2,3,4].map(()=>Math.floor(Math.random()*N))];
+  const mkRamp = (o,c) => [1,2,3,4,5].map(n=>({o,c,n}));
+  return {
+    axles,
+    occ: [0,1].map(()=>[0,1,2,3,4].map(()=>Array(N).fill(null))),
+    ramps: [0,1].map(o=>[mkRamp(o,0), mkRamp(o,1)]),
+    gates: [[null,null,null,null],[null,null,null,null]],
+    fallen: [[],[]],
+    next: [[1,1],[1,1]],
+    winner:-1, loser:-1, last:-1, turns:0, draw:false
+  };
+}
+function clone(st){
+  return {
+    axles: st.axles.slice(),
+    occ: st.occ.map(s=>s.map(w=>w.slice())),
+    ramps: st.ramps.map(s=>s.map(r=>r.slice())),
+    gates: st.gates.map(g=>g.slice()),
+    fallen: st.fallen.map(f=>f.slice()),
+    next: st.next.map(x=>x.slice()),
+    winner:st.winner, loser:st.loser, last:st.last, turns:st.turns, draw:st.draw
+  };
+}
+const over = st => st.winner>=0 || st.loser>=0 || st.draw;
+
+function findDrop(st, order){
+  for (const s of order){
+    const g = GEO[s];
+    let c = cupAt(st,s,4,g.exit[4]);
+    if (c>=0 && st.occ[s][4][c]) return {s, from:{w:4,c}, to:{chute:true}};
+    for (let k=3;k>=0;k--){
+      if (st.gates[s][k]){
+        const d = cupAt(st,s,k+1,g.entry[k+1]);
+        if (d>=0 && !st.occ[s][k+1][d]) return {s, from:{gate:k}, to:{w:k+1,c:d}};
+      } else {
+        c = cupAt(st,s,k,g.exit[k]);
+        if (c>=0 && st.occ[s][k][c]) return {s, from:{w:k,c}, to:{gate:k}};
+      }
+    }
+    for (let r=0;r<2;r++){
+      if (st.ramps[s][r].length){
+        const d = cupAt(st,s,0,g.rampEntry[r]);
+        if (d>=0 && !st.occ[s][0][d]) return {s, from:{ramp:r}, to:{w:0,c:d}};
+      }
+    }
+  }
+  return null;
+}
+function take(st,ev){
+  if ('ramp' in ev.from) ev.tok = st.ramps[ev.s][ev.from.ramp].shift();
+  else if ('gate' in ev.from){ ev.tok = st.gates[ev.s][ev.from.gate]; st.gates[ev.s][ev.from.gate] = null; }
+  else { ev.tok = st.occ[ev.s][ev.from.w][ev.from.c]; st.occ[ev.s][ev.from.w][ev.from.c] = null; }
+}
+function put(st,ev){
+  const t = ev.tok;
+  if (ev.to.chute){
+    st.fallen[ev.s].push(t);
+    if (t.n !== st.next[ev.s][t.c]){ ev.wrong = true; ev.expected = st.next[ev.s][t.c]; st.loser = ev.s; }
+    else { st.next[ev.s][t.c]++; if (st.fallen[ev.s].length===10) st.winner = ev.s; }
+  } else if ('gate' in ev.to) st.gates[ev.s][ev.to.gate] = t;
+  else st.occ[ev.s][ev.to.w][ev.to.c] = t;
+}
+function settle(st, order){
+  while(!over(st)){ const ev=findDrop(st,order); if(!ev)break; take(st,ev); put(st,ev); }
+}
+function rotateAxle(st,k,delta){ st.axles[k] = mod(st.axles[k]+delta); }
+const deltaFor = (s,dir) => s===0 ? dir : -dir; // dir : +1 horaire (vu par le joueur s)
+
+function tokensInPlay(st,s){
+  let n = st.ramps[s][0].length + st.ramps[s][1].length, inW5 = 0;
+  for (let k=0;k<5;k++) for (const t of st.occ[s][k]) if (t){ n++; if(k===4) inW5++; }
+  for (const t of st.gates[s]) if (t) n++;
+  return {n, inW5};
+}
+function exceptionFor(st,s){ const t=tokensInPlay(st,s); return t.n===1 && t.inW5===1; }
+function legalWheels(st,s){
+  const ex = exceptionFor(st,s);
+  return [0,1,2,3,4].filter(k => k!==st.last || ex);
+}
+
+// ===================== Ordinateur =====================
+function h(st,s){
+  const nx = st.next[s]; let v = st.fallen[s].length*15;
+  for (let k=0;k<5;k++){
+    const row = st.occ[s][k];
+    for (let c=0;c<N;c++){
+      const t=row[c]; if(!t) continue;
+      if (t.n===nx[t.c]) v += (k+1)*2.5;
+      else { v += (k+1)*0.7; if (k===4) v -= 14; else if (k===3) v -= 2; }
+    }
+  }
+  for (let k=0;k<4;k++){
+    const t = st.gates[s][k]; if(!t) continue;
+    if (t.n===nx[t.c]) v += (k+1.5)*2.5; else { v += (k+1.5)*0.7; if (k===3) v -= 4; }
+  }
+  return v;
+}
+const evalS = (st,s) => h(st,s) - h(st,1-s);
+function term(st,s){
+  if (st.draw) return 0;
+  return (st.winner===s || st.loser===1-s) ? 1e6 : -1e6;
+}
+function reply(t,opp,s){
+  // l'adversaire n'est pas parfait : mélange du pire cas et de la moyenne
+  let worst = Infinity, sum = 0, cnt = 0;
+  for (const k of legalWheels(t,opp)) for (const dir of [1,-1]){
+    const u = clone(t); u.last = k;
+    for (let n=1;n<=11;n++){
+      rotateAxle(u,k,deltaFor(opp,dir)); settle(u,[opp,s]);
+      const v = over(u) ? term(u,s) : evalS(u,s);
+      if (v<worst) worst=v;
+      sum += Math.max(v,-60); cnt++;
+      if (over(u)) break;
+    }
+  }
+  if (worst < -5e5) return worst;
+  return 0.65*worst + 0.35*(cnt ? sum/cnt : worst);
+}
+function aiChoose(st,s,level){
+  const opp = 1-s, cand = [];
+  for (const k of legalWheels(st,s)) for (const dir of [1,-1]){
+    const t = clone(st); t.last = k;
+    for (let n=1;n<=11;n++){
+      rotateAxle(t,k,deltaFor(s,dir)); settle(t,[s,opp]);
+      let v;
+      if (over(t)) v = term(t,s) - n;
+      else v = level===2 ? reply(t,opp,s) : evalS(t,s);
+      cand.push({k,dir,n,v});
+      if (over(t)) break;
+    }
+  }
+  const noise = [22,3,0.4][level];
+  cand.forEach(c => c.v += Math.random()*noise);
+  if (level===0 && Math.random()<0.25){
+    const safe = cand.filter(c=>c.v>-5e5);
+    if (safe.length) return safe[Math.floor(Math.random()*safe.length)];
+  }
+  cand.sort((a,b)=>b.v-a.v);
+  return cand[0];
+}
+/*LOGIC-END*/
+
+// ===================== Interface =====================
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const LEVELS = ['Facile','Moyen','Difficile'];
+
+let CFG = {
+  names:['Joueur 1','Ordinateur'], types:['h','c'], levels:[1,1], first:'0', wheels:'classic'
+};
+try { const saved = JSON.parse(localStorage.getItem('dixdechute-cfg')||'null'); if (saved && saved.names) CFG = Object.assign(CFG, saved); } catch(e){}
+
+let ST = null, VIS = [0,0,0,0,0], FLY = null, BUSY = false, GAME_ID = 0, LAST_FIRST = 0;
+let TURN = {p:0,k:null,dir:0,steps:0,drops:[]};
+let LOG = [];
+
+const name = s => CFG.names[s] || ('Joueur '+(s+1));
+const isAI = s => CFG.types[s]==='c';
+const tokName = t => `${t.n} ${COLORS[t.o][t.c].n}`;
+
+// ---------- Configuration ----------
+function renderSetup(){
+  $('playersCfg').innerHTML = [0,1].map(i => `
+    <fieldset class="pset">
+      <legend><span class="dot" style="background:${COLORS[i][0].f}"></span><span class="dot" style="background:${COLORS[i][1].f}"></span> Joueur ${i+1}</legend>
+      <input id="name${i}" maxlength="16" value="${esc(CFG.names[i])}" aria-label="Nom du joueur ${i+1}" placeholder="Nom">
+      <div class="seg small" role="group" aria-label="Type du joueur ${i+1}">
+        <button type="button" data-p="${i}" data-t="h" aria-pressed="${CFG.types[i]==='h'}">Humain</button>
+        <button type="button" data-p="${i}" data-t="c" aria-pressed="${CFG.types[i]==='c'}">Ordinateur</button>
+      </div>
+      <select id="lvl${i}" aria-label="Niveau de l'ordinateur ${i+1}" ${CFG.types[i]==='c'?'':'class="hidden"'}>
+        ${LEVELS.map((l,j)=>`<option value="${j}" ${CFG.levels[i]==j?'selected':''}>Ordinateur : ${l}</option>`).join('')}
+      </select>
+    </fieldset>`).join('');
+  const humans = CFG.types.filter(t=>t==='h').length;
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed', String(+b.dataset.mode===humans)));
+  $('firstSel').value = CFG.first; $('wheelSel').value = CFG.wheels;
+}
+function readSetup(){
+  for (const i of [0,1]){
+    const v = $('name'+i).value.trim();
+    CFG.names[i] = v || (CFG.types[i]==='c' ? 'Ordinateur' : 'Joueur '+(i+1));
+    CFG.levels[i] = +$('lvl'+i).value;
+  }
+  CFG.first = $('firstSel').value; CFG.wheels = $('wheelSel').value;
+}
+$('playersCfg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-t]'); if(!b) return;
+  readSetup();
+  const i = +b.dataset.p, t = b.dataset.t;
+  if (CFG.types[i]!==t){
+    if (t==='c' && /^Joueur \d$/.test(CFG.names[i])) CFG.names[i] = 'Ordinateur';
+    if (t==='h' && /^Ordinateur/.test(CFG.names[i])) CFG.names[i] = 'Joueur '+(i+1);
+    CFG.types[i] = t;
+  }
+  renderSetup();
+});
+$('modeSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  readSetup();
+  if (b.dataset.mode==='1'){
+    CFG.types = ['h','c'];
+    if (/^Joueur \d$/.test(CFG.names[1])) CFG.names[1]='Ordinateur';
+    if (/^Ordinateur/.test(CFG.names[0])) CFG.names[0]='Joueur 1';
+  } else {
+    CFG.types = ['h','h'];
+    for (const i of [0,1]) if (/^Ordinateur/.test(CFG.names[i])) CFG.names[i]='Joueur '+(i+1);
+  }
+  renderSetup();
+});
+$('setupForm').addEventListener('submit', e=>{
+  e.preventDefault(); readSetup();
+  try { localStorage.setItem('dixdechute-cfg', JSON.stringify(CFG)); } catch(err){}
+  startGame();
+});
+
+// ---------- Partie ----------
+function startGame(){
+  GAME_ID++;
+  ST = newState(CFG.wheels==='random');
+  VIS = ST.axles.slice();
+  FLY = null; BUSY = false; LOG = [];
+  const first = CFG.first==='r' ? (Math.random()<.5?0:1) : +CFG.first;
+  LAST_FIRST = first;
+  TURN = {p:first,k:null,dir:0,steps:0,drops:[]};
+  $('setup').classList.add('hidden'); $('game').classList.remove('hidden'); $('endBox').classList.add('hidden');
+  addLog(`Nouvelle partie. ${esc(name(first))} commence.`);
+  renderAll(); flash('');
+  maybeAI();
+}
+function restart(){
+  if (CFG.first!=='r') CFG.first = String(1-LAST_FIRST); // alterner qui commence
+  startGame();
+}
+
+function addLog(html){ LOG.unshift(html); if (LOG.length>40) LOG.pop(); $('log').innerHTML = LOG.map(l=>`<li>${l}</li>`).join(''); }
+function flash(msg){ $('flash').textContent = msg; }
+
+function flushTurnLog(){
+  if (!TURN.steps || TURN.k==null) return;
+  const s = TURN.p;
+  let html = `<b>${esc(name(s))}</b> : roue ${TURN.k+1}, ${TURN.steps} cran${TURN.steps>1?'s':''} ${TURN.dir>0?'↻':'↺'}`;
+  for (const ev of TURN.drops){
+    const who = ev.s===s ? '' : ` (chez ${esc(name(ev.s))})`;
+    html += ev.wrong
+      ? `<br><span class="ko">✘ le ${tokName(ev.tok)} tombe avant le ${ev.expected}${who}</span>`
+      : `<br><span class="ok">✔ le ${tokName(ev.tok)} tombe${who}</span>`;
+  }
+  addLog(html);
+}
+
+// ---------- Animation ----------
+function tween(dur, fn){
+  return new Promise(res=>{
+    const t0 = performance.now();
+    function f(now){ const p=Math.min(1,(now-t0)/dur); fn(p); if(p<1) requestAnimationFrame(f); else res(); }
+    requestAnimationFrame(f);
+  });
+}
+const ease = p => p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+function cupXY(s,w,c){
+  const g=GEO[s], sign = s?-1:1;
+  return polar(g.C[w][0], g.C[w][1], CUP_OFF, (c + sign*VIS[w])*30);
+}
+function srcXY(ev){
+  if ('ramp' in ev.from) return GEO[ev.s].ramps[ev.from.ramp].slots[0];
+  if ('gate' in ev.from) return GEO[ev.s].gatePt[ev.from.gate];
+  return cupXY(ev.s, ev.from.w, ev.from.c);
+}
+function dstXY(ev){
+  if (ev.to.chute) return GEO[ev.s].traySlot(ev.tok.c, ev.tok.n);
+  if ('gate' in ev.to) return GEO[ev.s].gatePt[ev.to.gate];
+  return cupXY(ev.s, ev.to.w, ev.to.c);
+}
+
+async function animatedStep(s,k,dir){
+  const id = GAME_ID, delta = deltaFor(s,dir), from = VIS[k];
+  await tween(200, p=>{ VIS[k] = from + delta*ease(p); renderBoards(); });
+  if (id!==GAME_ID) return;
+  VIS[k] = from + delta;
+  rotateAxle(ST,k,delta);
+  renderBoards();
+  while(!over(ST)){
+    const ev = findDrop(ST,[s,1-s]); if(!ev) break;
+    const a = srcXY(ev); take(ST,ev); const b = dstXY(ev);
+    let mid = null;
+    if (ev.to.chute){ const ti = GEO[ev.s].trayIn; mid = ti; }
+    const dur = ev.to.chute ? 420 : 200;
+    await tween(dur, p=>{
+      let x,y;
+      if (mid){
+        if (p<.45){ const q=p/.45; x=a[0]+(mid[0]-a[0])*q; y=a[1]+(mid[1]-a[1])*q*q; }
+        else { const q=(p-.45)/.55; x=mid[0]+(b[0]-mid[0])*ease(q); y=mid[1]+(b[1]-mid[1])*ease(q); }
+      } else { x=a[0]+(b[0]-a[0])*p; y=a[1]+(b[1]-a[1])*p*p; }
+      FLY = {s:ev.s, tok:ev.tok, x, y}; renderBoards();
+    });
+    if (id!==GAME_ID) return;
+    FLY = null; put(ST,ev);
+    if (ev.to.chute) TURN.drops.push(ev);
+    renderAll();
+  }
+}
+
+// ---------- Rendu des plateaux ----------
+function tokSVG(t,x,y,extra=''){
+  const col = COLORS[t.o][t.c];
+  return `<g ${extra}><circle cx="${x.toFixed(1)}" cy="${(y+1.5).toFixed(1)}" r="${TOK}" fill="rgba(0,0,0,.22)"/>
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${TOK}" fill="${col.f}" stroke="rgba(0,0,0,.35)" stroke-width="1.4"/>
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6.8" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1"/>
+    <text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${col.t}">${t.n}</text></g>`;
+}
+function renderBoard(s){
+  const g = GEO[s], st = ST, sign = s?-1:1;
+  const humanTurn = !over(st) && !isAI(TURN.p) && !BUSY;
+  const legal = legalWheels(st, TURN.p);
+  let o = `<svg viewBox="0 0 400 620" role="img" aria-label="Plateau de ${esc(name(s))}" font-family="Fredoka,ui-rounded,system-ui,sans-serif">`;
+  // plaque
+  o += `<rect x="8" y="10" width="384" height="604" rx="24" fill="#2a78b8"/>`;
+  o += `<rect x="8" y="6" width="384" height="602" rx="24" fill="#3d97dd"/>`;
+  for (const y of [118,228,338,448]) o += `<line x1="20" y1="${y}" x2="380" y2="${y}" stroke="#3086cb" stroke-width="3"/>`;
+  for (const [x,y1,y2] of [[96,118,228],[330,228,338],[70,338,448],[340,448,520]]) { const xx = s?400-x:x; o += `<line x1="${xx}" y1="${y1}" x2="${xx}" y2="${y2}" stroke="#3086cb" stroke-width="3"/>`; }
+  // rampes
+  for (let r=0;r<2;r++){
+    const rp = g.ramps[r], e = [rp.E[0]+rp.u[0]*112, rp.E[1]+rp.u[1]*112];
+    const w0 = polar(g.C[0][0],g.C[0][1],CUP_OFF,g.rampEntry[r]*30);
+    o += `<line x1="${w0[0]}" y1="${w0[1]}" x2="${rp.E[0]}" y2="${rp.E[1]}" stroke="#1f69a8" stroke-width="26" stroke-linecap="round"/>`;
+    o += `<line x1="${rp.E[0]}" y1="${rp.E[1]}" x2="${e[0]}" y2="${e[1]}" stroke="#eef5fb" stroke-width="28" stroke-linecap="round"/>`;
+    o += `<line x1="${rp.E[0]}" y1="${rp.E[1]}" x2="${e[0]}" y2="${e[1]}" stroke="#cfe0ee" stroke-width="18" stroke-linecap="round"/>`;
+    o += `<circle cx="${e[0]+rp.u[0]*6}" cy="${e[1]+rp.u[1]*6}" r="5" fill="${COLORS[s][r].f}" stroke="rgba(0,0,0,.3)"/>`;
+  }
+  // passages entre roues
+  for (let k=0;k<4;k++){
+    const a = polar(g.C[k][0],g.C[k][1],CUP_OFF,g.exit[k]*30), b = polar(g.C[k+1][0],g.C[k+1][1],CUP_OFF,g.entry[k+1]*30);
+    o += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#1f69a8" stroke-width="26" stroke-linecap="round"/>`;
+  }
+  { const a = polar(g.C[4][0],g.C[4][1],CUP_OFF,g.exit[4]*30), b = g.trayIn;
+    o += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#1f69a8" stroke-width="26" stroke-linecap="round"/>`; }
+  // glissière
+  const T = g.tray;
+  o += `<rect x="${T.x}" y="${T.y}" width="${T.w}" height="${T.h}" rx="12" fill="#cfd3d8" stroke="#a6adb5" stroke-width="2"/>`;
+  o += `<text x="${T.x+T.w/2}" y="${T.y+13}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#7d858e" letter-spacing="1.5">GLISSIÈRE</text>`;
+  for (let c=0;c<2;c++) for (let n=1;n<=5;n++){
+    const [x,y] = g.traySlot(c,n);
+    o += `<circle cx="${x}" cy="${y}" r="${TOK}" fill="#bcc2c9"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="600" fill="#99a1aa">${n}</text>`;
+  }
+  for (const t of st.fallen[s]){
+    const [x,y] = g.traySlot(t.c,t.n);
+    const wrong = st.next[s][t.c] <= t.n && st.loser===s && t===st.fallen[s][st.fallen[s].length-1];
+    o += tokSVG(t,x,y);
+    if (wrong) o += `<circle cx="${x}" cy="${y}" r="14" fill="none" stroke="#d63a2f" stroke-width="3"/>`;
+  }
+  // roues
+  for (let k=0;k<5;k++){
+    const [cx,cy] = g.C[k], av = VIS[k];
+    const mine = s===TURN.p, selected = TURN.k===k;
+    const forbidden = mine && !over(st) && !legal.includes(k);
+    const clickable = humanTurn && mine && !forbidden && (TURN.steps===0 || TURN.k===k);
+    o += `<g class="wheel${clickable?' clickable':''}" data-s="${s}" data-k="${k}" ${forbidden?'opacity=".6"':''}>`;
+    o += `<circle cx="${cx+2}" cy="${cy+4}" r="${R+1}" fill="rgba(0,0,0,.2)"/>`;
+    o += `<circle class="disc" cx="${cx}" cy="${cy}" r="${R}" fill="#fbfbf8" stroke="#d6dbe0" stroke-width="1.5"/>`;
+    for (let i=0;i<N;i++){
+      const ang = (i + sign*av)*30;
+      const p1 = polar(cx,cy,23,ang), p2 = polar(cx,cy, HAS[s][k][i]?30:36, ang);
+      o += `<line x1="${p1[0].toFixed(1)}" y1="${p1[1].toFixed(1)}" x2="${p2[0].toFixed(1)}" y2="${p2[1].toFixed(1)}" stroke="#2a5d8a" stroke-width="1.8" stroke-linecap="round"/>`;
+    }
+    for (let c=0;c<N;c++){
+      if (!HAS[s][k][c]) continue;
+      const [x,y] = polar(cx,cy,CUP_OFF,(c + sign*av)*30);
+      o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${CUP_RAD}" fill="#3d97dd"/>`;
+      const t = st.occ[s][k][c];
+      if (t) o += tokSVG(t,x,y);
+    }
+    const pm = polar(cx,cy,11,sign*av*30);
+    o += `<circle cx="${cx}" cy="${cy}" r="14" fill="#fff" stroke="#c4c9cf" stroke-width="3"/>`;
+    o += `<line x1="${cx}" y1="${cy}" x2="${pm[0].toFixed(1)}" y2="${pm[1].toFixed(1)}" stroke="#8a939c" stroke-width="3" stroke-linecap="round"/>`;
+    o += `<circle cx="${cx}" cy="${cy}" r="3.5" fill="#8a939c"/>`;
+    if (selected && !over(st)){
+      if (mine) o += `<circle cx="${cx}" cy="${cy}" r="${R+5}" fill="none" stroke="#ffd400" stroke-width="5"/>`;
+      else o += `<circle cx="${cx}" cy="${cy}" r="${R+5}" fill="none" stroke="#ffd400" stroke-width="3.5" stroke-dasharray="7 6"/>`;
+    }
+    if (forbidden) o += `<circle cx="${cx}" cy="${cy}" r="${R+4}" fill="none" stroke="#d63a2f" stroke-width="3" stroke-dasharray="4 5"/>`;
+    o += `</g>`;
+    const [lx,ly] = g.labels[k];
+    o += `<text x="${lx}" y="${ly+8}" text-anchor="middle" font-size="24" font-weight="700" fill="#1c5d93">${k+1}</text>`;
+  }
+  // jetons dans les rampes
+  for (let r=0;r<2;r++){
+    const ramp = st.ramps[s][r], slots = g.ramps[r].slots;
+    for (let i=ramp.length-1;i>=0;i--) o += tokSVG(ramp[i], slots[i][0], slots[i][1]);
+  }
+  for (let k=0;k<4;k++){ const t = st.gates[s][k]; if (t) o += tokSVG(t, g.gatePt[k][0], g.gatePt[k][1]); }
+  if (FLY && FLY.s===s) o += tokSVG(FLY.tok, FLY.x, FLY.y);
+  o += `</svg>`;
+  return o;
+}
+function renderBoards(){ $('board0').innerHTML = renderBoard(0); $('board1').innerHTML = renderBoard(1); }
+
+function renderCards(){
+  for (const s of [0,1]){
+    const nx = ST.next[s];
+    const chips = [0,1].map(c=>{
+      const col = COLORS[s][c], done = nx[c]>5;
+      return `<span class="chip" title="Prochain ${col.n} attendu"><i style="background:${col.f};color:${col.t}">${done?'✓':nx[c]}</i><span class="lbl-t">${done?'fini':'prochain'}</span></span>`;
+    }).join('');
+    $('pcard'+s).className = 'pcard' + (TURN.p===s && !over(ST) ? ' active' : '');
+    $('pcard'+s).innerHTML = `<div class="pname">${esc(name(s))}<span class="tag">${isAI(s)?'Ordinateur · '+LEVELS[CFG.levels[s]]:'Humain'}</span></div>
+      <div class="pinfo">${chips}<span class="count">${ST.fallen[s].length}/10</span></div>`;
+  }
+}
+function renderPanel(){
+  const p = TURN.p, col = COLORS[p];
+  const ai = isAI(p), done = over(ST);
+  $('turnBanner').innerHTML = done ? 'Partie terminée'
+    : `<span class="dot" style="background:${col[0].f}"></span><span class="dot" style="background:${col[1].f}"></span> Au tour de <b>${esc(name(p))}</b>`;
+  const legal = legalWheels(ST,p);
+  let hint = '';
+  if (done) hint = 'Cliquez sur « Rejouer » pour une nouvelle manche.';
+  else if (ai) hint = BUSY ? "L'ordinateur joue…" : "L'ordinateur réfléchit…";
+  else if (TURN.k==null) hint = 'Choisissez une de vos roues (clic sur le plateau ou boutons ci-dessous).';
+  else if (TURN.steps===0) hint = `Roue ${TURN.k+1} choisie. Tournez-la d'un cran à la fois avec ↺ ou ↻.`;
+  else hint = `Continuez dans le même sens (${TURN.dir>0?'↻':'↺'}) ou terminez votre tour.`;
+  if (!done && !ai && ST.last>=0 && !legal.includes(ST.last)) hint += ` Roue ${ST.last+1} interdite ce tour-ci.`;
+  if (!done && !ai && ST.last>=0 && legal.includes(ST.last) && ST.turns>0) hint += ` Exception : la roue ${ST.last+1} est autorisée (dernier jeton en roue 5).`;
+  $('hint').textContent = hint;
+  const canAct = !done && !ai && !BUSY;
+  $('wheelPick').innerHTML = [0,1,2,3,4].map(k=>{
+    const forb = !legal.includes(k);
+    const dis = !canAct || forb || (TURN.steps>0 && TURN.k!==k);
+    return `<button data-k="${k}" class="${forb&&!done?'forbid':''}" aria-pressed="${TURN.k===k}" ${dis?'disabled':''} title="${forb?'Interdite ce tour':'Roue '+(k+1)}">${k+1}</button>`;
+  }).join('');
+  const rotOK = canAct && TURN.k!=null;
+  $('btnCCW').disabled = !rotOK || (TURN.steps>0 && TURN.dir!==-1);
+  $('btnCW').disabled  = !rotOK || (TURN.steps>0 && TURN.dir!==1);
+  $('cranCount').textContent = TURN.steps;
+  $('turnNo').textContent = `Tour ${Math.min(ST.turns+1, MAX_TURNS)} / ${MAX_TURNS}`;
+  $('btnEnd').disabled = !(canAct && TURN.steps>0);
+}
+function renderAll(){ renderBoards(); renderCards(); renderPanel(); }
+
+// ---------- Actions humaines ----------
+function selectWheel(k){
+  if (BUSY || over(ST) || isAI(TURN.p)) return;
+  if (TURN.steps>0 && k!==TURN.k){ flash(`Vous avez déjà commencé à tourner la roue ${TURN.k+1}.`); return; }
+  if (!legalWheels(ST,TURN.p).includes(k)){ flash(`Roue ${k+1} interdite : ${name(1-TURN.p)} vient de la tourner.`); return; }
+  flash(''); TURN.k = k; renderAll();
+}
+async function rotate(dir){
+  if (BUSY || over(ST) || isAI(TURN.p)) return;
+  if (TURN.k==null){ flash("Choisissez d'abord une roue."); return; }
+  if (TURN.steps>0 && dir!==TURN.dir){ flash('Un seul sens de rotation par tour.'); return; }
+  flash('');
+  BUSY = true; TURN.dir = dir; TURN.steps++; renderPanel();
+  const id = GAME_ID;
+  await animatedStep(TURN.p, TURN.k, dir);
+  if (id!==GAME_ID) return;
+  BUSY = false;
+  if (over(ST)) finish(); else renderAll();
+}
+function endTurn(){
+  if (BUSY || over(ST) || isAI(TURN.p) || TURN.steps<1) return;
+  closeTurn();
+}
+function closeTurn(){
+  flushTurnLog();
+  ST.last = TURN.k; ST.turns++;
+  if (ST.turns >= MAX_TURNS){ ST.draw = true; finish(); return; }
+  TURN = {p:1-TURN.p,k:null,dir:0,steps:0,drops:[]};
+  flash(''); renderAll();
+  maybeAI();
+}
+async function maybeAI(){
+  if (over(ST) || !isAI(TURN.p)) return;
+  const id = GAME_ID, s = TURN.p;
+  renderAll();
+  await sleep(450);
+  if (id!==GAME_ID) return;
+  const mv = aiChoose(ST, s, CFG.levels[s]);
+  BUSY = true; TURN.k = mv.k; renderAll();
+  await sleep(420);
+  for (let i=0;i<mv.n;i++){
+    if (id!==GAME_ID) return;
+    TURN.dir = mv.dir; TURN.steps++; renderPanel();
+    await animatedStep(s, mv.k, mv.dir);
+    if (id!==GAME_ID) return;
+    if (over(ST)) break;
+    await sleep(70);
+  }
+  BUSY = false;
+  if (over(ST)) finish(); else closeTurn();
+}
+function finish(){
+  if (!ST.draw) flushTurnLog();
+  BUSY = false; renderAll();
+  let icon='🏆', title='', text='';
+  if (ST.draw){ icon='🤝'; title='Match nul'; text=`Aucun joueur n'a réussi après ${MAX_TURNS} tours.`; }
+  else if (ST.winner>=0){ title=`${name(ST.winner)} gagne !`; text='Ses 10 jetons sont tombés dans le bon ordre.'; }
+  else {
+    const loser = ST.loser, w = 1-loser, t = ST.fallen[loser][ST.fallen[loser].length-1];
+    const exp = ST.next[loser][t.c];
+    title = `${name(w)} gagne !`;
+    text = `Le ${tokName(t)} de ${name(loser)} est tombé avant le ${exp} ${COLORS[loser][t.c].n} : défaite immédiate.`;
+  }
+  addLog(`<b>${esc(title)}</b>`);
+  $('endIcon').textContent = icon; $('endTitle').textContent = title; $('endText').textContent = text;
+  setTimeout(()=>$('endBox').classList.remove('hidden'), 500);
+}
+
+// ---------- Événements ----------
+for (const s of [0,1]) $('board'+s).addEventListener('click', e=>{
+  const w = e.target.closest('[data-k]'); if(!w) return;
+  if (+w.dataset.s !== TURN.p) { if(!isAI(TURN.p) && !over(ST)) flash(`C'est au tour de ${name(TURN.p)} : utilisez votre propre plateau.`); return; }
+  selectWheel(+w.dataset.k);
+});
+$('wheelPick').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) selectWheel(+b.dataset.k); });
+$('btnCW').addEventListener('click', ()=>rotate(1));
+$('btnCCW').addEventListener('click', ()=>rotate(-1));
+$('btnEnd').addEventListener('click', endTurn);
+$('btnRestart').addEventListener('click', restart);
+$('endReplay').addEventListener('click', restart);
+$('btnSetup').addEventListener('click', ()=>{ GAME_ID++; $('game').classList.add('hidden'); $('endBox').classList.add('hidden'); renderSetup(); $('setup').classList.remove('hidden'); });
+$('endSetup').addEventListener('click', ()=>$('btnSetup').click());
+$('endView').addEventListener('click', ()=>$('endBox').classList.add('hidden'));
+document.querySelectorAll('[data-open-rules]').forEach(b=>b.addEventListener('click', ()=>$('rulesBox').classList.remove('hidden')));
+document.querySelector('[data-close-rules]').addEventListener('click', ()=>$('rulesBox').classList.add('hidden'));
+$('rulesBox').addEventListener('click', e=>{ if(e.target.id==='rulesBox') $('rulesBox').classList.add('hidden'); });
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape'){ $('rulesBox').classList.add('hidden'); return; }
+  if ($('game').classList.contains('hidden') || !$('rulesBox').classList.contains('hidden')) return;
+  if (e.target.matches('input,select')) return;
+  if (/^[1-5]$/.test(e.key)) selectWheel(+e.key-1);
+  else if (e.key==='ArrowRight'){ e.preventDefault(); rotate(1); }
+  else if (e.key==='ArrowLeft'){ e.preventDefault(); rotate(-1); }
+  else if (e.key==='Enter'){ e.preventDefault(); endTurn(); }
+});
+
+renderSetup();
+</script>
+</body>
+</html>
