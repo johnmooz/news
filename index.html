@@ -59,7 +59,7 @@
                     <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                         Portail d'Applications
                     </h1>
-                    <p class="text-xs text-slate-400 mt-1" id="count-label">75 modules disponibles</p>
+                    <p class="text-xs text-slate-400 mt-1" id="count-label">81 modules disponibles</p>
                 </div>
 
                 <!-- Search Bar -->
@@ -86,6 +86,7 @@
                 <button data-filter="reflexion" class="filter-btn"><i class="fa-solid fa-brain"></i> Réflexion</button>
                 <button data-filter="aventure" class="filter-btn"><i class="fa-solid fa-chess-rook"></i> Aventure &amp; stratégie</button>
                 <button data-filter="educatif" class="filter-btn"><i class="fa-solid fa-graduation-cap"></i> Éducatif</button>
+                <button data-filter="retro" class="filter-btn"><i class="fa-solid fa-floppy-disk"></i> Rétro TO9</button>
                 <button data-filter="outils" class="filter-btn"><i class="fa-solid fa-toolbox"></i> Applications</button>
             </div>
         </div>
@@ -109,13 +110,27 @@
                 </div>
             </a>
 
-            <!-- 2. Actualité -->
+            <!-- 2. 5e Axe -->
+            <a data-cat="retro" href="5e-axe.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#02</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">5e Axe</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
+                </div>
+            </a>
+
+            <!-- 3. Actualité -->
             <a data-cat="outils" href="actualite.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-newspaper text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#02</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#03</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">Actualité</h2>
@@ -123,13 +138,13 @@
                 </div>
             </a>
 
-            <!-- 3. Alerte rouge -->
+            <!-- 4. Alerte rouge -->
             <a data-cat="aventure" href="alerte-rouge.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-chess-rook text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#03</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#04</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Alerte rouge</h2>
@@ -137,13 +152,13 @@
                 </div>
             </a>
 
-            <!-- 4. Alerte Rouge (Mode Graphique) -->
+            <!-- 5. Alerte Rouge (Mode Graphique) -->
             <a data-cat="aventure" href="alerte-rouge-graphique.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-600/10 border border-red-600/20 flex items-center justify-center text-red-500 group-hover:bg-red-600 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-gamepad text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-500 transition">#04</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-500 transition">#05</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-400 transition">Alerte Rouge (Mode Graphique)</h2>
@@ -151,13 +166,13 @@
                 </div>
             </a>
 
-            <!-- 5. Arkanoid -->
+            <!-- 6. Arkanoid -->
             <a data-cat="adresse" href="arkanoid.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-border-all text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#05</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#06</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Arkanoid</h2>
@@ -165,13 +180,13 @@
                 </div>
             </a>
 
-            <!-- 6. Athlète de Compète -->
+            <!-- 7. Athlète de Compète -->
             <a data-cat="societe" href="athlete-de-compete.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-trophy text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#06</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#07</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Athlète de Compète</h2>
@@ -179,13 +194,13 @@
                 </div>
             </a>
 
-            <!-- 7. Attaque des concombres -->
+            <!-- 8. Attaque des concombres -->
             <a data-cat="cartes" href="attaque-des-concombres.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-lime-500/10 border border-lime-500/20 flex items-center justify-center text-lime-400 group-hover:bg-lime-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-seedling text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-lime-400 transition">#07</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-lime-400 transition">#08</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-lime-300 transition">Attaque des concombres</h2>
@@ -193,13 +208,13 @@
                 </div>
             </a>
 
-            <!-- 8. Bataille navale -->
+            <!-- 9. Bataille navale -->
             <a data-cat="societe tir" href="bataille-navale.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-anchor text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#08</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#09</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Bataille navale</h2>
@@ -207,13 +222,13 @@
                 </div>
             </a>
 
-            <!-- 9. Belote coinchée -->
+            <!-- 10. Belote coinchée -->
             <a data-cat="cartes" href="belotte-coinchee.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-spade text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#09</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#10</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Belote coinchée</h2>
@@ -221,13 +236,13 @@
                 </div>
             </a>
 
-            <!-- 10. Belotte Coinchée -->
+            <!-- 11. Belotte Coinchée -->
             <a data-cat="cartes" href="belotte-coinchee-2.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-500 group-hover:bg-amber-600 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-club text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-500 transition">#10</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-500 transition">#11</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-400 transition">Belotte Coinchée</h2>
@@ -235,13 +250,13 @@
                 </div>
             </a>
 
-            <!-- 11. Binero -->
+            <!-- 12. Binero -->
             <a data-cat="reflexion" href="binero.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-binary text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#11</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#12</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-teal-300 transition">Binero</h2>
@@ -249,13 +264,13 @@
                 </div>
             </a>
 
-            <!-- 12. Calculatrice -->
+            <!-- 13. Calculatrice -->
             <a data-cat="outils" href="calculatrice.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-calculator text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#12</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#13</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Calculatrice</h2>
@@ -263,13 +278,13 @@
                 </div>
             </a>
 
-            <!-- 13. Carnimal -->
+            <!-- 14. Carnimal -->
             <a data-cat="societe" href="carnimal.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-paw text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#13</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#14</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Carnimal</h2>
@@ -277,13 +292,13 @@
                 </div>
             </a>
 
-            <!-- 14. Chat -->
+            <!-- 15. Chat -->
             <a data-cat="outils" href="chat.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-comments text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#14</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#15</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">Chat</h2>
@@ -291,13 +306,13 @@
                 </div>
             </a>
 
-            <!-- 15. Chronomètre -->
+            <!-- 16. Chronomètre -->
             <a data-cat="outils" href="chronometre.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-stopwatch text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#15</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#16</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Chronomètre</h2>
@@ -305,13 +320,13 @@
                 </div>
             </a>
 
-            <!-- 16. Cinéma -->
+            <!-- 17. Cinéma -->
             <a data-cat="outils" href="cinéma.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-film text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#16</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#17</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-rose-300 transition">Cinéma</h2>
@@ -319,13 +334,13 @@
                 </div>
             </a>
 
-            <!-- 17. Code (jeu) -->
+            <!-- 18. Code (jeu) -->
             <a data-cat="societe reflexion" href="code.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-code text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#17</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#18</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">Code (jeu)</h2>
@@ -333,13 +348,13 @@
                 </div>
             </a>
 
-            <!-- 18. Date -->
+            <!-- 19. Date -->
             <a data-cat="outils" href="date.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-calendar-days text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#18</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#19</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">Date</h2>
@@ -347,13 +362,13 @@
                 </div>
             </a>
 
-            <!-- 19. Diagnostique -->
+            <!-- 20. Diagnostique -->
             <a data-cat="outils" href="diagnostique.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-stethoscope text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#19</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#20</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-teal-300 transition">Diagnostique</h2>
@@ -361,13 +376,13 @@
                 </div>
             </a>
 
-            <!-- 20. Dictée -->
+            <!-- 21. Dictée -->
             <a data-cat="educatif" href="dictee.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-pen-nib text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#20</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#21</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Dictée</h2>
@@ -375,13 +390,13 @@
                 </div>
             </a>
 
-            <!-- 21. Dix de chutes -->
+            <!-- 22. Dix de chutes -->
             <a data-cat="societe" href="dix-de-chutes.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-six text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#21</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#22</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Dix de chutes</h2>
@@ -389,13 +404,13 @@
                 </div>
             </a>
 
-            <!-- 22. Emulateur - Basic 128 -->
-            <a data-cat="outils" href="emulateur-basic-128.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+            <!-- 23. Emulateur - Basic 128 -->
+            <a data-cat="outils retro" href="emulateur-basic-128.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-computer text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#22</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#23</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Emulateur - Basic 128</h2>
@@ -403,13 +418,13 @@
                 </div>
             </a>
 
-            <!-- 23. Fractions -->
+            <!-- 24. Fractions -->
             <a data-cat="educatif" href="fractions.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-divide text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#23</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#24</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Fractions</h2>
@@ -417,13 +432,27 @@
                 </div>
             </a>
 
-            <!-- 24. Happy Double -->
+            <!-- 25. Game Over -->
+            <a data-cat="retro" href="game-over.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#25</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Game Over</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
+                </div>
+            </a>
+
+            <!-- 26. Happy Double -->
             <a data-cat="des" href="happy-double.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-two text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#24</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#26</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Happy Double</h2>
@@ -431,13 +460,13 @@
                 </div>
             </a>
 
-            <!-- 25. Invasion de l'Espace -->
+            <!-- 27. Invasion de l'Espace -->
             <a data-cat="tir" href="invasion-de-l-espace.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-rocket text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#25</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#27</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Invasion de l'Espace</h2>
@@ -445,13 +474,13 @@
                 </div>
             </a>
 
-            <!-- 26. Jeu de balle -->
+            <!-- 28. Jeu de balle -->
             <a data-cat="adresse" href="balle.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-baseball text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#26</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#28</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Jeu de balle</h2>
@@ -459,13 +488,13 @@
                 </div>
             </a>
 
-            <!-- 27. Jeu de bille -->
+            <!-- 29. Jeu de bille -->
             <a data-cat="adresse" href="bille.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-circle text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#27</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#29</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-violet-300 transition">Jeu de bille</h2>
@@ -473,13 +502,13 @@
                 </div>
             </a>
 
-            <!-- 28. Jeu de fléchettes -->
+            <!-- 30. Jeu de fléchettes -->
             <a data-cat="adresse tir" href="flechettes.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-bullseye text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#28</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#30</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Jeu de fléchettes</h2>
@@ -487,13 +516,13 @@
                 </div>
             </a>
 
-            <!-- 29. Jeu de lapin -->
+            <!-- 31. Jeu de lapin -->
             <a data-cat="adresse aventure" href="lapin.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-carrot text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#29</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#31</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Jeu de lapin</h2>
@@ -501,13 +530,13 @@
                 </div>
             </a>
 
-            <!-- 30. Jeu de mémoire -->
+            <!-- 32. Jeu de mémoire -->
             <a data-cat="reflexion" href="memory.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-brain text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#30</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#32</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-violet-300 transition">Jeu de mémoire</h2>
@@ -515,13 +544,13 @@
                 </div>
             </a>
 
-            <!-- 31. Jeu de plateforme -->
+            <!-- 33. Jeu de plateforme -->
             <a data-cat="adresse aventure" href="plateforme.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-gamepad text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#31</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#33</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Jeu de plateforme</h2>
@@ -529,13 +558,13 @@
                 </div>
             </a>
 
-            <!-- 32. Jeu Zelba -->
+            <!-- 34. Jeu Zelba -->
             <a data-cat="aventure" href="zelba.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 group-hover:bg-green-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-shield-halved text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-green-400 transition">#32</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-green-400 transition">#34</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-green-300 transition">Jeu Zelba</h2>
@@ -543,13 +572,13 @@
                 </div>
             </a>
 
-            <!-- 33. Jeux de noix -->
+            <!-- 35. Jeux de noix -->
             <a data-cat="adresse reflexion" href="noix.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-500 group-hover:bg-amber-600 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-cookie text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-500 transition">#33</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-500 transition">#35</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Jeux de noix</h2>
@@ -557,13 +586,13 @@
                 </div>
             </a>
 
-            <!-- 34. Kiné -->
+            <!-- 36. Kiné -->
             <a data-cat="outils" href="kine.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-child-reaching text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#34</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#36</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Kiné</h2>
@@ -571,13 +600,13 @@
                 </div>
             </a>
 
-            <!-- 35. Kung Fu -->
+            <!-- 37. Kung Fu -->
             <a data-cat="adresse" href="kung-fu.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-hand-fist text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#35</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#37</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Kung Fu</h2>
@@ -585,13 +614,13 @@
                 </div>
             </a>
 
-            <!-- 36. Labyrinthe -->
+            <!-- 38. Labyrinthe -->
             <a data-cat="reflexion" href="labyrinthe.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:bg-yellow-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-map text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#36</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#38</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-yellow-300 transition">Labyrinthe</h2>
@@ -599,13 +628,13 @@
                 </div>
             </a>
 
-            <!-- 37. Labyrinthe 3D -->
+            <!-- 39. Labyrinthe 3D -->
             <a data-cat="reflexion aventure" href="labyrinthe-3d.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-cube text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#37</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#39</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Labyrinthe 3D</h2>
@@ -613,13 +642,13 @@
                 </div>
             </a>
 
-            <!-- 38. Lecture base de données -->
+            <!-- 40. Lecture base de données -->
             <a data-cat="outils" href="base-de-donnees.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-database text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#38</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#40</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Lecture base de données</h2>
@@ -627,13 +656,13 @@
                 </div>
             </a>
 
-            <!-- 39. Les chats de Schrödinger -->
+            <!-- 41. Les chats de Schrödinger -->
             <a data-cat="cartes" href="schrodinger.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-cat text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#39</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#41</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Les chats de Schrödinger</h2>
@@ -641,13 +670,13 @@
                 </div>
             </a>
 
-            <!-- 40. Les œufs sont faits -->
+            <!-- 42. Les œufs sont faits -->
             <a data-cat="des" href="oeufs.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:bg-yellow-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-egg text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#40</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#42</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-yellow-300 transition">Les œufs sont faits</h2>
@@ -655,13 +684,13 @@
                 </div>
             </a>
 
-            <!-- 41. Loup-Garou -->
+            <!-- 43. Loup-Garou -->
             <a data-cat="societe" href="loup-garou.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-moon text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#41</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-red-400 transition">#43</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-red-300 transition">Loup-Garou</h2>
@@ -669,13 +698,13 @@
                 </div>
             </a>
 
-            <!-- 42. Love Letters -->
+            <!-- 44. Love Letters -->
             <a data-cat="cartes" href="love-letters.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-envelope-open-text text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#42</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#44</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-pink-300 transition">Love Letters</h2>
@@ -683,13 +712,13 @@
                 </div>
             </a>
 
-            <!-- 43. Mémory -->
+            <!-- 45. Mémory -->
             <a data-cat="reflexion" href="memory.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 group-hover:bg-fuchsia-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-clone text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-fuchsia-400 transition">#43</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-fuchsia-400 transition">#45</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-fuchsia-300 transition">Mémory</h2>
@@ -697,13 +726,27 @@
                 </div>
             </a>
 
-            <!-- 44. Minuteur -->
+            <!-- 46. MGT -->
+            <a data-cat="retro" href="mgt.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#46</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">MGT</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
+                </div>
+            </a>
+
+            <!-- 47. Minuteur -->
             <a data-cat="outils" href="minuteur.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-hourglass-half text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#44</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#47</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Minuteur</h2>
@@ -711,13 +754,13 @@
                 </div>
             </a>
 
-            <!-- 45. Monopoly -->
+            <!-- 48. Monopoly -->
             <a data-cat="societe" href="monopoly.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-house-flag text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#45</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#48</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Monopoly</h2>
@@ -725,13 +768,13 @@
                 </div>
             </a>
 
-            <!-- 46. Morpion -->
+            <!-- 49. Morpion -->
             <a data-cat="societe" href="morpion.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#46</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#49</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-rose-300 transition">Morpion</h2>
@@ -739,13 +782,13 @@
                 </div>
             </a>
 
-            <!-- 47. Moto -->
+            <!-- 50. Moto -->
             <a data-cat="adresse" href="moto.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-motorcycle text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#47</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#50</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Moto</h2>
@@ -753,13 +796,13 @@
                 </div>
             </a>
 
-            <!-- 48. Motus -->
+            <!-- 51. Motus -->
             <a data-cat="reflexion" href="motus.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-spell-check text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#48</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#51</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Motus</h2>
@@ -767,13 +810,13 @@
                 </div>
             </a>
 
-            <!-- 49. Musique -->
+            <!-- 52. Musique -->
             <a data-cat="outils" href="musique.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-music text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#49</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#52</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-pink-300 transition">Musique</h2>
@@ -781,13 +824,13 @@
                 </div>
             </a>
 
-            <!-- 50. N'importe quoi -->
+            <!-- 53. N'importe quoi -->
             <a data-cat="reflexion" href="n-importe-quoi.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 group-hover:bg-fuchsia-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-question text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-fuchsia-400 transition">#50</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-fuchsia-400 transition">#53</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-fuchsia-300 transition">N'importe quoi</h2>
@@ -795,13 +838,27 @@
                 </div>
             </a>
 
-            <!-- 51. Personne -->
+            <!-- 54. OK Cowboy -->
+            <a data-cat="retro" href="ok-cowboy.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#54</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">OK Cowboy</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
+                </div>
+            </a>
+
+            <!-- 55. Personne -->
             <a data-cat="outils" href="personne.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-user text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#51</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#55</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Personne</h2>
@@ -809,13 +866,13 @@
                 </div>
             </a>
 
-            <!-- 52. Photo -->
+            <!-- 56. Photo -->
             <a data-cat="outils" href="photo.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-camera text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#52</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-violet-400 transition">#56</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-violet-300 transition">Photo</h2>
@@ -823,13 +880,13 @@
                 </div>
             </a>
 
-            <!-- 53. Piano -->
+            <!-- 57. Piano -->
             <a data-cat="outils" href="piano.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-keyboard text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#53</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#57</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Piano</h2>
@@ -837,13 +894,13 @@
                 </div>
             </a>
 
-            <!-- 54. Piscine -->
+            <!-- 58. Piscine -->
             <a data-cat="outils" href="piscine.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-person-swimming text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#54</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#58</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">Piscine</h2>
@@ -851,13 +908,13 @@
                 </div>
             </a>
 
-            <!-- 55. Poker -->
+            <!-- 59. Poker -->
             <a data-cat="cartes" href="poker.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-diamond text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#55</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#59</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Poker</h2>
@@ -865,13 +922,13 @@
                 </div>
             </a>
 
-            <!-- 56. Pong -->
+            <!-- 60. Pong -->
             <a data-cat="adresse" href="pong.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-center justify-center text-slate-300 group-hover:bg-slate-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-table-tennis-paddle-ball text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-slate-300 transition">#56</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-slate-300 transition">#60</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-slate-300 transition">Pong</h2>
@@ -879,13 +936,13 @@
                 </div>
             </a>
 
-            <!-- 57. Puissance 4 -->
+            <!-- 61. Puissance 4 -->
             <a data-cat="societe" href="puissance-4.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 group-hover:bg-yellow-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-circle-dot text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#57</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-yellow-400 transition">#61</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-yellow-300 transition">Puissance 4</h2>
@@ -893,13 +950,13 @@
                 </div>
             </a>
 
-            <!-- 58. Qui Dès mieux -->
+            <!-- 62. Qui Dès mieux -->
             <a data-cat="des" href="qui-des-mieux.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-four text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#58</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#62</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Qui Dès mieux</h2>
@@ -907,13 +964,13 @@
                 </div>
             </a>
 
-            <!-- 59. Qui est-ce ? -->
+            <!-- 63. Qui est-ce ? -->
             <a data-cat="societe" href="qui-est-ce.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-user-secret text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#59</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#63</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">Qui est-ce ?</h2>
@@ -921,13 +978,13 @@
                 </div>
             </a>
 
-            <!-- 60. Qwantum -->
+            <!-- 64. Qwantum -->
             <a data-cat="des" href="qwantum.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-three text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#60</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#64</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Qwantum</h2>
@@ -935,13 +992,13 @@
                 </div>
             </a>
 
-            <!-- 61. Qwinto -->
+            <!-- 65. Qwinto -->
             <a data-cat="des" href="qwinto.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#61</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-orange-400 transition">#65</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-orange-300 transition">Qwinto</h2>
@@ -949,13 +1006,13 @@
                 </div>
             </a>
 
-            <!-- 62. Qwixxx -->
+            <!-- 66. Qwixxx -->
             <a data-cat="des" href="qwixxx.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-d6 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#62</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#66</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Qwixxx</h2>
@@ -963,13 +1020,13 @@
                 </div>
             </a>
 
-            <!-- 63. Recette de cuisine -->
+            <!-- 67. Recette de cuisine -->
             <a data-cat="outils" href="recettes.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-utensils text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#63</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-amber-400 transition">#67</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-amber-300 transition">Recette de cuisine</h2>
@@ -977,13 +1034,13 @@
                 </div>
             </a>
 
-            <!-- 64. Recherche -->
+            <!-- 68. Recherche -->
             <a data-cat="outils" href="recherche.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-magnifying-glass text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#64</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#68</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Recherche</h2>
@@ -991,13 +1048,13 @@
                 </div>
             </a>
 
-            <!-- 65. Skull -->
+            <!-- 69. Skull -->
             <a data-cat="cartes" href="skull.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-skull text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#65</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-rose-400 transition">#69</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-rose-300 transition">Skull</h2>
@@ -1005,13 +1062,13 @@
                 </div>
             </a>
 
-            <!-- 66. SkyJo -->
+            <!-- 70. SkyJo -->
             <a data-cat="cartes" href="skyjo.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-layer-group text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#66</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#70</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">SkyJo</h2>
@@ -1019,13 +1076,13 @@
                 </div>
             </a>
 
-            <!-- 67. SNAKE -->
+            <!-- 71. SNAKE -->
             <a data-cat="adresse" href="snake.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-staff-snake text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#67</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#71</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">SNAKE</h2>
@@ -1033,13 +1090,27 @@
                 </div>
             </a>
 
-            <!-- 68. Sudoku -->
+            <!-- 72. Sorcery -->
+            <a data-cat="retro" href="sorcery.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#72</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Sorcery</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
+                </div>
+            </a>
+
+            <!-- 73. Sudoku -->
             <a data-cat="reflexion" href="sudoku.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-grid-2 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#68</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-blue-400 transition">#73</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-blue-300 transition">Sudoku</h2>
@@ -1047,13 +1118,13 @@
                 </div>
             </a>
 
-            <!-- 69. T-Tris -->
+            <!-- 74. T-Tris -->
             <a data-cat="adresse" href="t-tris.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-cubes text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#69</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition">#74</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-cyan-300 transition">T-Tris</h2>
@@ -1061,13 +1132,13 @@
                 </div>
             </a>
 
-            <!-- 70. Tarot -->
+            <!-- 75. Tarot -->
             <a data-cat="cartes" href="tarot.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-hat-wizard text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#70</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-indigo-400 transition">#75</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-indigo-300 transition">Tarot</h2>
@@ -1075,13 +1146,13 @@
                 </div>
             </a>
 
-            <!-- 71. Taupe -->
+            <!-- 76. Taupe -->
             <a data-cat="tir" href="taupe.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-lime-500/10 border border-lime-500/20 flex items-center justify-center text-lime-400 group-hover:bg-lime-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-worm text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-lime-400 transition">#71</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-lime-400 transition">#76</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-lime-300 transition">Taupe</h2>
@@ -1089,13 +1160,13 @@
                 </div>
             </a>
 
-            <!-- 72. Test Périphériques -->
+            <!-- 77. Test Périphériques -->
             <a data-cat="outils" href="test-peripheriques.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-sliders text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#72</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-teal-400 transition">#77</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-teal-300 transition">Test Périphériques</h2>
@@ -1103,13 +1174,13 @@
                 </div>
             </a>
 
-            <!-- 73. Tir Au But -->
+            <!-- 78. Tir Au But -->
             <a data-cat="adresse tir" href="tir-au-but.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-futbol text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#73</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-emerald-400 transition">#78</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-emerald-300 transition">Tir Au But</h2>
@@ -1117,13 +1188,13 @@
                 </div>
             </a>
 
-            <!-- 74. Wheeling -->
+            <!-- 79. Wheeling -->
             <a data-cat="adresse" href="wheeling.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-bicycle text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#74</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-sky-400 transition">#79</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-sky-300 transition">Wheeling</h2>
@@ -1131,17 +1202,31 @@
                 </div>
             </a>
 
-            <!-- 75. Yams -->
+            <!-- 80. Yams -->
             <a data-cat="des" href="yams.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
                 <div class="flex items-start justify-between">
                     <div class="w-12 h-12 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition duration-300">
                         <i class="fa-solid fa-dice-d20 text-xl"></i>
                     </div>
-                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#75</span>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-pink-400 transition">#80</span>
                 </div>
                 <div class="mt-6">
                     <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-pink-300 transition">Yams</h2>
                     <p class="text-xs text-slate-400 mt-1">Jeu de dés classique</p>
+                </div>
+            </a>
+
+            <!-- 81. Yeti -->
+            <a data-cat="retro" href="yeti.html" class="card-item glass-card rounded-2xl p-5 flex flex-col justify-between group">
+                <div class="flex items-start justify-between">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition duration-300">
+                        <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    </div>
+                    <span class="text-xs font-mono text-slate-500 group-hover:text-purple-400 transition">#81</span>
+                </div>
+                <div class="mt-6">
+                    <h2 class="card-title text-lg font-bold text-slate-100 group-hover:text-purple-300 transition">Yeti</h2>
+                    <p class="text-xs text-slate-400 mt-1">Ancien jeu TO9</p>
                 </div>
             </a>
 
@@ -1155,7 +1240,7 @@
     </main>
 
     <footer class="py-6 border-t border-slate-800 text-center text-xs text-slate-500">
-        Portail de navigation • 75 modules répertoriés
+        Portail de navigation • 81 modules répertoriés
     </footer>
 
     <script>
