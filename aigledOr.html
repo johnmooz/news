@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L'Aigle d'Or — remake web</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#ff55ff;--yel:#ffff55;--cy:#55ffff;--bg:#000;--panel:#0b000f}
+*{box-sizing:border-box}
+body{margin:0;background:#050008;color:#eee;font-family:'VT323',ui-monospace,monospace;font-size:20px;line-height:1.15}
+header{text-align:center;padding:14px 8px 4px}
+h1{margin:0;font-size:46px;letter-spacing:6px;color:var(--yel);text-shadow:3px 3px 0 #aa5500}
+.sub{margin:2px 0 0;color:var(--pink)}
+main{max-width:980px;margin:0 auto;padding:8px}
+#screenwrap{position:relative;width:100%;aspect-ratio:320/200;background:#000;border:4px solid #333;box-shadow:0 0 0 2px #111,0 0 30px #300030}
+canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+#overlay{position:absolute;inset:0;display:none;justify-content:center;background:rgba(0,0,0,.88);padding:3% 4%;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:700px){#overlay{position:fixed;z-index:50;padding:16px}}
+#overlay.on{display:flex}
+#overlay .box{max-width:640px;width:100%;margin:auto;color:#fff;white-space:pre-wrap;font-size:clamp(17px,2.4vw,24px)}
+#overlay .t{color:var(--yel);font-size:1.5em}
+#overlay .p{color:var(--pink)}
+#overlay .c{color:var(--cy)}
+#overlay button{font:inherit;background:#14001a;border:1px solid #550055;border-radius:4px;color:var(--cy);cursor:pointer;padding:4px 10px;margin:3px 0;text-align:left;display:block;width:100%;max-width:420px}
+#overlay button:hover{color:var(--yel)}
+#status{margin-top:8px;background:var(--panel);border:2px solid #330033;padding:6px 10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px 16px}
+#status b{color:var(--pink);font-weight:normal}
+.bar{display:inline-block;width:110px;height:12px;border:1px solid var(--pink);vertical-align:middle;margin:0 6px}
+.bar i{display:block;height:100%;background:var(--yel)}
+.relic{color:#444}.relic.on{color:var(--yel)}
+#msg{min-height:30px;margin-top:6px;padding:4px 10px;color:var(--yel);background:#000;border-left:4px solid var(--pink)}
+#touch{display:none;margin-top:8px;gap:6px;flex-wrap:wrap;justify-content:center}
+#touch button{font:inherit;font-size:22px;min-width:54px;height:48px;background:#1a001f;color:#fff;border:2px solid #550055;border-radius:6px;touch-action:none;user-select:none}
+@media (pointer:coarse){#touch{display:flex}}
+body.touch #touch{display:flex}
+section{margin-top:16px;background:var(--panel);border:2px solid #220022;padding:10px 14px}
+section h2{margin:0 0 6px;color:var(--yel);font-weight:normal;font-size:28px}
+table{border-collapse:collapse}td{padding:1px 14px 1px 0;vertical-align:top}td:first-child{color:var(--cy);white-space:nowrap}
+details summary{cursor:pointer;color:var(--pink)}
+.small{color:#aaa}
+</style>
+</head>
+<body>
+<header>
+<h1>L'AIGLE D'OR</h1>
+<p class="sub">Remake web d'après la version Thomson (Loriciels, Louis-Marie Rocques)</p>
+</header>
+<main>
+<div id="screenwrap"><canvas id="c" width="320" height="200"></canvas><div id="overlay"><div class="box" id="obox"></div></div></div>
+<div id="status"></div>
+<div id="msg">&nbsp;</div>
+<div id="touch">
+<button data-k="ArrowLeft">◀</button><button data-k="ArrowRight">▶</button><button data-k="ArrowUp">▲</button><button data-k="ArrowDown">▼</button>
+<button data-k="Space">SAUT</button><button data-k="KeyE">ACT</button><button data-k="KeyB">BOIRE</button>
+<button data-k="Digit0">0</button><button data-k="Digit1">1</button><button data-k="Digit2">2</button><button data-k="Digit3">3</button><button data-k="Digit4">4</button><button data-k="Digit5">5</button><button data-k="Digit6">6</button>
+</div>
+
+<section>
+<h2>Commandes</h2>
+<table>
+<tr><td>← →</td><td>Marcher (Maj enfoncée : courir)</td></tr>
+<tr><td>↓</td><td>S'accroupir (pour esquiver les fléchettes)</td></tr>
+<tr><td>Espace</td><td>Saut en hauteur à l'arrêt, saut en longueur en marchant</td></tr>
+<tr><td>↑</td><td>Franchir une porte du fond, grimper à la corde, entrer dans une cheminée</td></tr>
+<tr><td>E</td><td>Agir : ouvrir un coffre ou une porte avec l'objet en main, prendre l'Aigle</td></tr>
+<tr><td>1 à 6</td><td>Objet en main : 1 Torche · 2 Pied de biche · 3 Clé en fer · 4 Clé en or · 5 Fiole · 6 Croix</td></tr>
+<tr><td>B</td><td>Boire une fiole</td></tr>
+<tr><td>R</td><td>Relire le parchemin</td></tr>
+<tr><td>D</td><td>Jeter la bague</td></tr>
+<tr><td>S</td><td>Suicide (abandonner la partie)</td></tr>
+<tr><td>0 à 4</td><td>Dans les menus : choisir (0 = partir / sortir). On peut aussi toucher ou cliquer les choix.</td></tr>
+<tr><td>Échap / M</td><td>Pause / couper le son</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Le jeu</h2>
+<p>Le château de Westphalie compte 64 pièces sur quatre niveaux. Tu dois y trouver trois reliques : le <b style="color:#55ffff">Diamant Bleu</b>, le <b style="color:#55ffff">Livre Sacré</b> et l'<b style="color:#ffff55">Aigle d'Or</b>, puis trouver comment sortir. Tes forces s'épuisent avec le temps, et il n'y a pas de sauvegarde.</p>
+<p>Au départ, le marchand vend fioles, torches, cordes et pieds de biche, mais tu n'as pas assez d'or pour tout acheter. Les bourses trouvées dans les coffres permettent de revenir le voir : il suffit de ressortir par la porte de l'entrée.</p>
+<p>Les torches s'allument en sautant sous une torche murale, avec la tienne en main. Elles finissent par se consumer. Sauter sous une torche murale fait aussi fuir les chauves-souris, pour un moment seulement. Le pied de biche force les portes qui résistent, mais il casse à l'usage. Une corde te tire d'une oubliette, ou permet de grimper par une trappe du plafond.</p>
+<details><summary>Traduction des parchemins (spoiler)</summary>
+<p>1 : <i>Der Goldene bahnt dir den Feuerweg.</i> — « Le doré t'ouvre le chemin du feu. » (la clé en or ouvre les cheminées)<br>
+2 : <i>Das Kreuz wendet den Blitz um.</i> — « La croix renvoie l'éclair. » (croix en main, saute quand l'éclair arrive)<br>
+3 : <i>Der Reif verdeckt dir das Übel.</i> — « L'anneau te cache le mal. » (la bague masque les marques des oubliettes)<br>
+Livre Sacré : <i>Auf den Stern wirst du dich erheben.</i> — « Sur l'étoile tu t'élèveras. »</p>
+</details>
+</section>
+
+<section>
+<h2>Fidélité à l'original</h2>
+<p class="small">Viennent de la cassette Thomson : les textes du jeu et les inscriptions allemandes, le marchand et ses prix (fiole 250, torche 170, corde 110, pied de biche 250 p.o.), les six objets qu'on peut tenir en main, le contenu des coffres et les messages. Viennent de la version Thomson : les fantômes et la croix, les chauves-souris, les fléchettes, les oubliettes visibles ou cachées, la bague, l'aigle de plomb à échanger contre l'Aigle d'Or, les cheminées reliées par la clé en or, les 64 pièces et l'absence de sauvegarde. Sont reconstitués : le plan du château et les réglages chiffrés (forces, durée des torches, usure du pied de biche), qui ne sont pas ceux de la carte d'origine.</p>
+</section>
+</main>
+
+<script>
+"use strict";
+//DATA-START
+const FLOORS=["Souterrains","Rez-de-chaussée","Premier étage","Combles"];
+const FIRE=[42,55,56];
+function rid(f,z,x){return f*16+z*8+x;}
+function buildCastle(){
+  const R=[];
+  for(let i=0;i<64;i++){
+    R.push({id:i,f:i>>4,z:(i>>3)&1,x:i&7,L:null,Rt:null,B:null,dark:false,torches:[100,225],
+      chest:null,chestOpen:false,bats:false,ghost:false,arrows:false,pits:[],hole:null,hatch:null,
+      fire:false,star:false,eagle:false,visited:false});
+  }
+  const spec={
+    0:{w0:[2],w1:[],d0:{},d1:{4:"fermee",6:"resiste"},p:{1:"ouverte",5:"fermee"}},
+    1:{w0:[],w1:[3],d0:{2:"fermee",5:"resiste"},d1:{6:"verrou"},p:{2:"fermee",6:"ouverte"}},
+    2:{w0:[],w1:[2],d0:{1:"resiste",5:"fermee"},d1:{3:"verrou"},p:{1:"ouverte",6:"fermee"}},
+    3:{w0:[5],w1:[0,1],d0:{2:"fermee",3:"resiste"},d1:{5:"fermee"},p:{4:"ouverte",7:"verrou"}}
+  };
+  const side=(a,b,s)=>{const d={s};R[a].Rt={to:b,d};R[b].L={to:a,d};};
+  const back=(a,b,s)=>{const d={s};R[a].B={to:b,d,x:140};R[b].B={to:a,d,x:140};};
+  for(let f=0;f<4;f++){
+    const s=spec[f];
+    for(let z=0;z<2;z++){
+      const w=z?s.w1:s.w0,dd=z?s.d1:s.d0;
+      for(let x=0;x<7;x++){if(w.includes(x))continue;side(rid(f,z,x),rid(f,z,x+1),dd[x]||"ouverte");}
+    }
+    for(const x in s.p)back(rid(f,0,+x),rid(f,1,+x),s.p[x]);
+  }
+  // escaliers
+  back(8,24,"resiste");back(20,36,"fermee");back(31,47,"verrou");back(34,50,"fermee");back(45,61,"verrou");
+  R[16].L={to:"DEHORS",d:{s:"ouverte"}};
+  // obscurité
+  for(let i=0;i<16;i++)if(i!==0&&i!==3)R[i].dark=true;
+  [26,43,50,56].forEach(i=>R[i].dark=true);
+  R.forEach(r=>{if(r.dark)r.torches=[];});
+  // coffres
+  const C={18:"parchemin",21:"bourse",23:"bourse",25:"vide",28:"bague",31:"crucifix",2:"cle_fer",6:"fiole_poison",
+    7:"bourse",15:"cle_or",32:"bourse",39:"bourse",40:"fiole",43:"aigle_plomb",49:"bourse",54:"diamant",56:"livre",58:"fiole"};
+  for(const k in C)R[k].chest=C[k];
+  [0,19,30,35,59].forEach(i=>R[i].bats=true);
+  [44,48,51,54,56].forEach(i=>R[i].ghost=true);
+  [29,37,62,10].forEach(i=>R[i].arrows=true);
+  R[12].pits=[{x0:150,x1:182,v:true}];R[14].pits=[{x0:110,x1:140,v:false}];
+  R[47].pits=[{x0:200,x1:232,v:true}];R[60].pits=[{x0:60,x1:92,v:false}];
+  R[23].pits=[{x0:150,x1:182,v:true}];R[25].pits=[{x0:80,x1:110,v:true}];
+  R[27].hole={x0:55,x1:90,to:11};R[57].hole={x0:55,x1:90,to:41};
+  R[41].hatch={x:250,to:57,roped:false};R[4].hatch={x:250,to:20,roped:false};
+  FIRE.forEach(i=>{R[i].fire=true;R[i].torches=R[i].dark?[]:[95];});
+  R[57].eagle=true;R[53].star=true;
+  return R;
+}
+//DATA-END
+
+const cv=document.getElementById("c"),ctx=cv.getContext("2d");
+const ov=document.getElementById("overlay"),obox=document.getElementById("obox");
+const stEl=document.getElementById("status"),msgEl=document.getElementById("msg");
+const PINK="#ff55ff",GROUND=176,CHESTX=245;
+const HAND=["TORCHE","PIED DE BICHE","CLE EN FER","CLE EN OR","FIOLE","CROIX"];
+const SHOP=[["Fiole de jouvence..",250],["Torche.............",170],["Corde..............",110],["Pied de biche......",250]];
+const ITEM_TXT={bourse:"une bourse",cle_or:"une clé en or",cle_fer:"une clé en fer",bague:"une bague",crucifix:"un crucifix",
+  aigle_plomb:"un aigle de plomb",parchemin:"un parchemin",fiole:"une fiole",fiole_poison:"une fiole",diamant:"le Diamant Bleu",livre:"le Livre Sacré"};
+let G,muted=false;
+
+function newGame(){
+  G={rooms:buildCastle(),room:16,mode:"title",
+    hero:{x:40,y:0,vx:0,vy:0,crouch:false,ground:true,face:1,walk:0,lit:false},
+    inv:{torches:0,lit:false,burn:0,crowbars:0,uses:0,ropes:0,fioles:[],cleFer:false,cleOr:false,croix:false,
+      bague:false,plomb:false,parchemin:false,diamant:false,livre:false,aigle:false},
+    eagleTaken:false,gold:500,force:100,hand:-1,t:0,bats:[],bolts:[],arrows:[],ghost:null,arrowT:120,
+    flee:0,lock:"",hurtT:0,shopMsg:"",jumpLit:false,starMsg:false,inCastle:false};
+  showTitle();
+}
+const cur=()=>G.rooms[G.room];
+const relics=()=>G.inv.diamant+G.inv.livre+G.inv.aigle;
+
+/* ---------- son ---------- */
+let AC=null;
+function audioInit(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}}
+function beep(f,d,type,vol){if(!AC||muted)return;try{const o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.value=f;
+  g.gain.value=vol||.035;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.stop(AC.currentTime+d+.02);}catch(e){}}
+
+/* ---------- messages ---------- */
+function say(t,f){msgEl.textContent=t;if(f!==0)beep(f||660,.06);}
+function lockMsg(t){if(G.lock!==t){G.lock=t;say(t,220);}}
+
+/* ---------- écrans ---------- */
+function overlay(html){obox.innerHTML=html;ov.classList.add("on");}
+function closeOverlay(){ov.classList.remove("on");}
+function opt(k,label){return `<button onclick="menuKey('${k}')">${label}</button>`;}
+function showTitle(){
+  G.mode="title";
+  overlay(`<span class="t">L'AIGLE D'OR</span>
+<span class="p">Westphalie.</span> Dans un château de 64 pièces reposent trois reliques :
+le Diamant Bleu, le Livre Sacré et l'Aigle d'Or.
+Fantômes, chauves-souris et oubliettes en gardent l'accès.
+
+Tu as ${G.gold} pièces d'or.
+
+${opt("1","1. Aller chez le marchand")}${opt("2","2. Entrer dans le château")}`);
+}
+function showShop(){
+  G.mode="shop";
+  let s=`<span class="t">Le marchand vend :</span>\n`;
+  SHOP.forEach((p,i)=>{s+=opt(String(i+1),`${i+1}. ${p[0]} ${p[1]} p.o.`);});
+  s+=opt("0","(0. Partir)");
+  s+=`\nTu as <span class="c">${G.gold}</span> pieces d'or.
+Fiole: ${G.inv.fioles.length}   Torche: ${G.inv.torches}   Corde: ${G.inv.ropes}   Pied de biche: ${G.inv.crowbars}
+Que veux-tu ?
+<span class="p">${G.shopMsg}</span>`;
+  overlay(s);
+}
+function buy(i){
+  const p=SHOP[i][1];
+  if(G.gold<p){G.shopMsg="Non, tu n'as pas assez d'or.";beep(150,.15);}
+  else{G.gold-=p;G.shopMsg="D'accord.";beep(880,.08);
+    if(i===0)G.inv.fioles.push("bonne");if(i===1)G.inv.torches++;if(i===2)G.inv.ropes++;
+    if(i===3){G.inv.crowbars++;if(G.inv.uses<=0)G.inv.uses=3;}}
+  showShop();
+}
+function showOutside(){
+  G.mode="outside";
+  overlay(`<span class="t">Tu sors du château.</span>
+La nuit tombe sur la Westphalie.
+
+${opt("1","1. Aller chez le marchand")}${opt("2","2. Retourner dans le château")}`);
+}
+function enterCastle(){
+  closeOverlay();G.mode="play";G.shopMsg="";
+  if(!G.inCastle){G.inCastle=true;say("Tu entres dans le château...");}
+  enterRoom(16,30);
+}
+function showRead(){
+  if(!G.inv.parchemin&&!G.inv.livre){say("Tu n'as rien à lire.");return;}
+  G.mode="read";let s="";
+  if(G.inv.parchemin)s+=`<span class="t">PARCHEMIN</span>
+1: Der Goldene bahnt dir den Feuerweg.
+2: Das Kreuz wendet den Blitz um.
+3: Der Reif verdeckt dir das Übel.\n\n`;
+  if(G.inv.livre)s+=`<span class="t">Le LIVRE SACRE :</span>  Auf den Stern wirst du dich erheben.\n\n`;
+  overlay(s+opt("Enter","[Entrée / 0] Continuer"));
+}
+function die(reason){
+  G.mode="dead";beep(110,.6,"sawtooth",.05);
+  overlay(`<span class="t">TU ES MORT.</span>
+${reason}
+
+Reliques trouvées : ${relics()} / 3
+Pièces visitées : ${G.rooms.filter(r=>r.visited).length} / 64
+
+${opt("Enter","[Entrée] Recommencer")}`);
+}
+function win(){
+  G.mode="win";[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.25,"triangle",.05),i*180));
+  const m=Math.floor(G.t/3600),s=Math.floor(G.t/60)%60;
+  overlay(`<span class="t">TU T'ÉLÈVES SUR L'ÉTOILE...</span>
+Une lumière t'emporte hors du château,
+avec le Diamant Bleu, le Livre Sacré et l'Aigle d'Or.
+
+<span class="c">BRAVO ! Tu as vaincu le château de Westphalie.</span>
+
+Temps : ${m} min ${String(s).padStart(2,"0")} s
+Pièces d'or : ${G.gold}
+Pièces visitées : ${G.rooms.filter(r=>r.visited).length} / 64
+
+${opt("Enter","[Entrée] Nouvelle partie")}`);
+}
+
+function menuKey(k){
+  audioInit();
+  const m=G.mode;
+  if(m==="title"){if(k==="1"){G.shopMsg="";showShop();}else if(k==="2")enterCastle();}
+  else if(m==="shop"){if(k>="1"&&k<="4")buy(+k-1);else if(k==="0"||k==="Escape"||k==="Enter")enterCastle();}
+  else if(m==="outside"){if(k==="1"){G.shopMsg="";showShop();}else if(k==="2"||k==="0"||k==="Escape")enterCastle();}
+  else if(m==="read"||m==="pause"){closeOverlay();G.mode="play";}
+  else if(m==="confirm"){if(k==="o")die("Tu as préféré en finir.");else if(k==="n"){closeOverlay();G.mode="play";}}
+  else if(m==="dead"||m==="win"){if(k==="Enter")newGame();}
+}
+
+/* ---------- entrée clavier ---------- */
+const keys={},pressed=new Set();
+const BLOCK=["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"];
+addEventListener("keydown",e=>{
+  if(BLOCK.includes(e.code))e.preventDefault();
+  audioInit();
+  if(e.code==="KeyM"&&!e.repeat){muted=!muted;say(muted?"Son coupé.":"Son activé.",0);return;}
+  if(G.mode!=="play"){
+    if(e.repeat)return;
+    let k=e.key;if(e.code.startsWith("Digit")||e.code.startsWith("Numpad"))k=e.code.slice(-1);
+    if(k===" ")k="Enter";
+    if(G.mode==="pause"&&e.code!=="Escape")return;
+    menuKey(k.length===1?k.toLowerCase():k);return;
+  }
+  if(e.code==="Escape"){G.mode="pause";overlay(`<span class="t">PAUSE</span>\n\n${opt("Escape","[Échap] Reprendre")}`);return;}
+  if(e.code==="KeyS"&&!e.repeat){G.mode="confirm";overlay(`<span class="t">Abandonner ?</span>\n\n${opt("o","O. Oui")}${opt("n","N. Non")}`);return;}
+  if(!e.repeat)pressed.add(e.code);
+  keys[e.code]=true;
+});
+addEventListener("keyup",e=>{keys[e.code]=false;});
+addEventListener("blur",()=>{for(const k in keys)keys[k]=false;});
+addEventListener("touchstart",()=>document.body.classList.add("touch"),{once:true,passive:true});
+document.querySelectorAll("#touch button").forEach(b=>{
+  const k=b.dataset.k;
+  b.addEventListener("pointerdown",e=>{e.preventDefault();audioInit();
+    if(G.mode!=="play"){if(G.mode==="pause"){menuKey("Escape");return;}if(k.startsWith("Digit"))menuKey(k.slice(-1));else if(k==="Space"||k==="KeyE")menuKey("Enter");return;}
+    keys[k]=true;pressed.add(k);});
+  const up=()=>{keys[k]=false;};b.addEventListener("pointerup",up);b.addEventListener("pointerleave",up);b.addEventListener("pointercancel",up);
+});
+
+/* ---------- logique ---------- */
+function enterRoom(id,x){
+  const h=G.hero;G.room=id;h.x=x;h.y=0;h.vy=0;h.vx=0;h.ground=true;G.lock="";
+  G.bats=[];G.bolts=[];G.arrows=[];G.flee=0;G.arrowT=90;
+  const r=cur();r.visited=true;
+  if(r.bats&&!r.dark){for(let i=0;i<2;i++)G.bats.push({x:i?330:-10,y:60+i*20,vx:0,vy:0,t:0,ph:Math.random()*6});}
+  G.ghost=r.ghost?{x:h.x<160?262:58,y:95,t:0,cd:110}:null;
+  if(r.dark&&!G.inv.lit)say("Il fait noir.",0);
+}
+function doorMsg(s){return s==="fermee"?"La porte est fermée.":s==="resiste"?"La porte resiste...":"La porte est verrouillée.";}
+function passSide(door,dir){
+  if(!door)return false;
+  if(door.to==="DEHORS"){showOutside();return true;}
+  if(door.d.s==="ouverte"){enterRoom(door.to,dir<0?300:20);beep(330,.05);return true;}
+  lockMsg(doorMsg(door.d.s));return false;
+}
+function tryOpen(d){
+  const I=G.inv;
+  if(d.s==="ouverte"){say("La porte est ouverte.");return;}
+  if(d.s==="fermee"){d.s="ouverte";say("La porte s'ouvre.",440);return;}
+  if(d.s==="resiste"){
+    if(G.hand===1&&I.crowbars>0){d.s="ouverte";I.uses--;
+      if(I.uses<=0){I.crowbars--;I.uses=I.crowbars>0?3:0;if(!I.crowbars&&G.hand===1)G.hand=-1;
+        say("La porte cède. Le pied de biche s'est cassé.",300);}
+      else say("La porte cède sous le pied de biche !",440);}
+    else say("La porte resiste...",220);
+    return;
+  }
+  if(G.hand===2&&I.cleFer){d.s="ouverte";say("La clé tourne dans la serrure.",520);}
+  else say("La porte est verrouillée.",220);
+}
+function openChest(r){
+  if(r.chestOpen||r.chest==="vide"){r.chestOpen=true;say("Le coffre est vide.");return;}
+  const it=r.chest,I=G.inv;r.chestOpen=true;let extra="";
+  switch(it){
+    case"bourse":G.gold+=200;extra=" (+200 pièces d'or)";break;
+    case"cle_or":I.cleOr=true;break;
+    case"cle_fer":I.cleFer=true;break;
+    case"bague":I.bague=true;break;
+    case"crucifix":I.croix=true;break;
+    case"aigle_plomb":I.plomb=true;break;
+    case"parchemin":I.parchemin=true;break;
+    case"fiole":I.fioles.push("bonne");break;
+    case"fiole_poison":I.fioles.push("poison");break;
+    case"diamant":I.diamant=true;break;
+    case"livre":I.livre=true;break;
+  }
+  say("C'est "+ITEM_TXT[it]+"."+extra,880);
+  if(it==="parchemin"||it==="livre")setTimeout(showRead,350);
+  if((it==="diamant"||it==="livre")&&relics()===3)setTimeout(()=>say("Tu possèdes les trois reliques ! Il faut maintenant sortir..."),1500);
+}
+function drink(){
+  const I=G.inv;
+  if(!I.fioles.length){say("Tu n'as pas de fiole.");return;}
+  const f=I.fioles.pop();
+  if(f==="poison"){hurt(25,"Pouah ! Cette fiole était empoisonnée !");}
+  else{G.force=Math.min(100,G.force+40);say("Tu bois une fiole de jouvence. Tu te sens mieux.",700);}
+  if(!I.fioles.length&&G.hand===4)G.hand=-1;
+}
+function selectHand(i){
+  const I=G.inv,has=[I.torches>0,I.crowbars>0,I.cleFer,I.cleOr,I.fioles.length>0,I.croix][i];
+  if(has){G.hand=i;say("Main : "+HAND[i],500);}else say("Tu n'as pas cet objet.",200);
+}
+function hurt(n,m){G.force-=n;G.hurtT=40;say(m,120);beep(90,.2,"sawtooth",.05);}
+function action(){
+  const r=cur(),h=G.hero,dark=r.dark&&!G.inv.lit;
+  if(r.chest&&Math.abs(h.x-CHESTX)<20){if(dark)say("Il fait trop noir pour voir.");else openChest(r);return;}
+  if(r.eagle&&Math.abs(h.x-160)<20){
+    if(G.eagleTaken)say("Le socle ne porte plus qu'un aigle de plomb.");
+    else if(G.inv.plomb){G.inv.plomb=false;G.inv.aigle=true;G.eagleTaken=true;say("Tu remplaces l'aigle de plomb par l'Aigle d'Or !",990);
+      if(relics()===3)setTimeout(()=>say("Tu possèdes les trois reliques ! Il faut maintenant sortir..."),1500);}
+    else say("L'Aigle est incrusté.",220);
+    return;
+  }
+  if(h.x<28&&r.L&&r.L.to!=="DEHORS"){tryOpen(r.L.d);return;}
+  if(h.x>292&&r.Rt){tryOpen(r.Rt.d);return;}
+  if(r.B&&Math.abs(h.x-r.B.x)<16){tryOpen(r.B.d);return;}
+  if(G.hand===4){drink();return;}
+  say("Rien à faire ici.",0);
+}
+function upAction(){
+  const r=cur(),h=G.hero;
+  if(r.B&&Math.abs(h.x-r.B.x)<14){
+    if(r.B.d.s==="ouverte"){const t=r.B.to;enterRoom(t,G.rooms[t].B.x);beep(330,.05);}
+    else lockMsg(doorMsg(r.B.d.s));
+    return;
+  }
+  if(r.hatch&&Math.abs(h.x-r.hatch.x)<16){
+    if(!r.hatch.roped){if(G.inv.ropes>0){G.inv.ropes--;r.hatch.roped=true;}else{say("Une trappe au plafond... Il te faudrait une corde.");return;}}
+    const t=G.rooms[r.hatch.to];enterRoom(t.id,t.hole?t.hole.x1+28:160);say("Tu grimpes à la corde.",600);return;
+  }
+  if(r.fire&&Math.abs(h.x-200)<18){
+    if(G.hand===3&&G.inv.cleOr){const n=FIRE[(FIRE.indexOf(r.id)+1)%3];enterRoom(n,200);G.hero.x=200;say("Le passage de la cheminée s'ouvre...",400);}
+    else say("Une cheminée. Une serrure dorée brille dans l'âtre.");
+  }
+}
+
+function step(){
+  const h=G.hero,I=G.inv;let r=cur();G.t++;
+  for(let i=1;i<=6;i++)if(pressed.has("Digit"+i)||pressed.has("Numpad"+i))selectHand(i-1);
+  if(pressed.has("KeyD")){if(I.bague){I.bague=false;say("Tu jettes la bague.");}else say("Tu n'as pas de bague.");}
+  if(pressed.has("KeyB"))drink();
+  if(pressed.has("KeyR")){pressed.clear();showRead();return;}
+  if(pressed.has("KeyE"))action();
+  if(pressed.has("ArrowUp")&&h.ground)upAction();
+  if(G.mode!=="play"){pressed.clear();return;}
+  r=cur();
+
+  // déplacements (avec un peu d'inertie, comme l'original)
+  h.crouch=!!keys.ArrowDown&&h.ground;
+  const run=keys.ShiftLeft||keys.ShiftRight;
+  let tg=0;if(!h.crouch){if(keys.ArrowLeft)tg-=1;if(keys.ArrowRight)tg+=1;}
+  if(h.ground){
+    const sp=run?2.2:1.3;h.vx+=(tg*sp-h.vx)*.16;if(Math.abs(h.vx)<.05)h.vx=0;
+    if(tg)h.face=tg;
+    if(pressed.has("Space")&&!h.crouch){
+      if(Math.abs(h.vx)>.6){h.vy=-3.6;h.vx=h.face*2.6;}else{h.vy=-5.2;h.vx*=.3;}
+      h.ground=false;G.jumpLit=false;G.starMsg=false;beep(300,.05);
+    }
+  }
+  pressed.clear();
+  h.x+=h.vx;
+  if(!h.ground){h.vy+=.22;h.y+=h.vy;if(h.y>=0){h.y=0;h.vy=0;h.ground=true;}}
+  if(h.ground&&Math.abs(h.vx)>.2)h.walk+=Math.abs(h.vx)*.13;
+
+  if(h.x<10){if(!passSide(r.L,-1)){h.x=10;h.vx=0;}if(G.mode!=="play")return;}
+  else if(h.x>310){if(!passSide(r.Rt,1)){h.x=310;h.vx=0;}}
+  else if(h.x>30&&h.x<290&&!(r.B&&Math.abs(h.x-r.B.x)<14))G.lock="";
+  r=cur();
+
+  // sol : oubliettes et trous
+  if(h.ground){
+    for(const p of r.pits)if(h.x>p.x0+3&&h.x<p.x1-3){
+      if(I.ropes>0){I.ropes--;G.force-=5;h.x=h.face>0?p.x0-12:p.x1+12;h.vx=0;say("Tu tombes dans une oubliette... ta corde te sauve !",200);}
+      else{die("Tu es tombé dans une oubliette.");return;}
+    }
+    if(r.hole&&h.x>r.hole.x0+3&&h.x<r.hole.x1-3){
+      const to=r.hole.to,x=h.x;enterRoom(to,x);G.force-=5;say("Le sol se dérobe ! Tu tombes à l'étage inférieur.",150);r=cur();
+    }
+  }else{
+    // sauter sous une torche murale
+    if(!r.dark&&!G.jumpLit&&h.y<-22){
+      for(const tx of r.torches)if(Math.abs(h.x-tx)<12){
+        G.jumpLit=true;
+        if(G.hand===0&&I.torches>0&&!I.lit){I.lit=true;I.burn=60*150;say("Ta torche est allumée.",780);}
+        if(G.bats.length){G.flee=60*8;say("Les chauves-souris s'enfuient !",780);}
+      }
+    }
+    if(r.star&&Math.abs(h.x-160)<14&&h.y<-25){
+      if(relics()===3){win();return;}
+      if(!G.starMsg){G.starMsg=true;say("Une étoile est gravée dans le sol...");}
+    }
+  }
+
+  // temps qui passe
+  if(G.t%300===0)G.force-=1;
+  if(I.lit){I.burn--;if(I.burn<=0){I.lit=false;I.torches--;if(G.hand===0&&!I.torches)G.hand=-1;say("La torche est consumée.",180);}}
+  if(G.hurtT>0)G.hurtT--;
+
+  // chauves-souris
+  const hy=GROUND+h.y;
+  for(const b of G.bats){
+    b.t++;
+    if(G.flee>0){b.vx+=b.x<160?-.25:.25;b.vy-=.12;}
+    else{const tx=h.x+Math.sin(b.t/20+b.ph)*22,ty=hy-28+Math.cos(b.t/13+b.ph)*10;b.vx+=(tx-b.x)*.004;b.vy+=(ty-b.y)*.006;}
+    b.vx*=.96;b.vy*=.96;const sp=Math.hypot(b.vx,b.vy);if(sp>2.2){b.vx*=2.2/sp;b.vy*=2.2/sp;}
+    b.x=Math.max(-60,Math.min(380,b.x+b.vx));b.y=Math.max(-40,Math.min(190,b.y+b.vy));
+    if(G.flee<=0&&G.hurtT<=0&&Math.abs(b.x-h.x)<9&&Math.abs(b.y-(hy-(h.crouch?12:22)))<14)hurt(3,"Une chauve-souris te mord !");
+  }
+  if(G.flee>0)G.flee--;
+
+  // fantôme
+  const g=G.ghost;
+  if(g){g.t++;g.y=95+Math.sin(g.t/25)*8;g.x+=Math.sin(g.t/70)*.3;
+    if(--g.cd<=0){const ty=hy-(h.crouch?10:18),dx=Math.abs(h.x-g.x)||1,n=dx/2.4;
+      G.bolts.push({x:g.x,y:g.y+8,vx:(h.x>g.x?1:-1)*2.4,vy:(ty-(g.y+8))/n,refl:false});g.cd=150+Math.random()*60;beep(1200,.08,"sawtooth",.03);}
+  }
+  for(const b of G.bolts){
+    b.x+=b.vx;b.y+=b.vy;
+    const top=hy-(h.crouch?16:30);
+    if(!b.refl&&Math.abs(b.x-h.x)<7&&b.y>top&&b.y<hy){
+      if(G.hand===5&&I.croix&&!h.ground){b.refl=true;b.vx=-b.vx;b.vy=-b.vy;say("La croix renvoie l'éclair !",990);}
+      else{b.dead=true;hurt(12,"Un éclair te frappe !");}
+    }
+    if(b.refl&&G.ghost&&Math.abs(b.x-G.ghost.x)<14&&Math.abs(b.y-G.ghost.y)<22){b.dead=true;G.ghost=null;cur().ghost=false;say("Le fantôme se dissipe dans un cri.",1400);}
+    if(b.x<-10||b.x>330||b.y<-10||b.y>210)b.dead=true;
+  }
+  G.bolts=G.bolts.filter(b=>!b.dead);
+
+  // fléchettes
+  if(r.arrows){if(--G.arrowT<=0){const s=Math.random()<.5;G.arrows.push({x:s?322:-2,y:GROUND-24,vx:s?-3.2:3.2});G.arrowT=150+Math.random()*80;beep(1500,.03,"square",.02);}}
+  for(const a of G.arrows){a.x+=a.vx;
+    if(Math.abs(a.x-h.x)<6&&a.y>hy-(h.crouch?16:30)&&a.y<hy){a.dead=true;hurt(10,"Une fléchette empoisonnée !");}
+    if(a.x<-10||a.x>330)a.dead=true;}
+  G.arrows=G.arrows.filter(a=>!a.dead);
+
+  if(G.force<=0){G.force=0;die(G.hurtT>0?"Tes blessures ont eu raison de toi.":"Tes forces t'ont abandonné.");}
+}
+
+/* ---------- dessin ---------- */
+function line(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function poly(pts,fill,stroke){ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
+function drawRoom(r,dim){
+  ctx.lineWidth=1;
+  ctx.strokeStyle=dim?"#2a002a":"#551155";
+  for(let i=1;i<8;i++){const bx=80+i*20,fx=i*40;line(bx,128,fx,200);}
+  for(const y of [140,156,178])line(80-(y-128)*80/72,y,240+(y-128)*80/72,y);
+  ctx.strokeStyle=dim?"#3a003a":PINK;
+  ctx.strokeRect(80.5,40.5,160,88);
+  line(0,0,80,40);line(320,0,240,40);line(0,200,80,128);line(320,200,240,128);
+  if(dim)return;
+  // pierres du mur du fond
+  ctx.strokeStyle="#440044";
+  for(let y=62;y<128;y+=22)line(81,y,239,y);
+  // portes latérales
+  if(r.L)sideDoor(-1,r.L);if(r.Rt)sideDoor(1,r.Rt);
+  if(r.B)backDoor(r.B.x,r.B);
+}
+function doorStyle(d,out){
+  if(out)return["#001133","#55ffff"];
+  return d.s==="ouverte"?["#000","#ffff55"]:["#552200","#ffaa00"];
+}
+function sideDoor(side,door){
+  const t1=.3,t2=.62,P=t=>{const x=side<0?80*t:320-80*t,fy=200-72*t,cy=40*t;return[x,fy,fy-(fy-cy)*.62];};
+  const a=P(t1),b=P(t2),[f,s]=doorStyle(door.d,door.to==="DEHORS");
+  poly([[a[0],a[1]],[a[0],a[2]],[b[0],b[2]],[b[0],b[1]]],f,s);
+  if(door.d.s==="resiste"){ctx.strokeStyle="#aa5500";line(a[0],(a[1]+a[2])/2,b[0],(b[1]+b[2])/2);}
+  if(door.d.s==="verrou"){ctx.fillStyle="#ffff55";const mx=(a[0]+b[0])/2;ctx.fillRect(mx-1,(a[1]+a[2])/2-2,2,4);}
+}
+function backDoor(x,B){
+  const [f,s]=doorStyle(B.d);ctx.fillStyle=f;ctx.fillRect(x-14,82,28,46);ctx.strokeStyle=s;ctx.strokeRect(x-13.5,82.5,27,45.5);
+  ctx.beginPath();ctx.arc(x,82,14,Math.PI,0);ctx.fillStyle=f;ctx.fill();ctx.stroke();
+  if(B.d.s==="resiste"){ctx.strokeStyle="#aa5500";line(x-13,100,x+13,110);}
+  if(B.d.s==="verrou"){ctx.fillStyle="#ffff55";ctx.fillRect(x+7,104,2,4);}
+  if(B.to!==undefined&&G.rooms[B.to].f!==G.rooms[G.room].f){ctx.strokeStyle="#777";for(let i=0;i<4;i++)line(x-10,124-i*9,x+10,124-i*9);}
+}
+function drawProps(r){
+  const fl=(G.t>>2)&1;
+  for(const tx of r.torches){ctx.fillStyle="#aa5500";ctx.fillRect(tx-1,78,3,11);
+    ctx.fillStyle=fl?"#ffff55":"#ffaa00";ctx.beginPath();ctx.ellipse(tx+.5,74,3,5,0,0,7);ctx.fill();
+    ctx.fillStyle="#ff5500";ctx.fillRect(tx-1,74,3,3);}
+  if(r.fire){ctx.strokeStyle="#aaaaaa";ctx.strokeRect(176.5,90.5,48,38);ctx.fillStyle="#777";ctx.fillRect(172,88,56,4);
+    ctx.fillStyle="#000";ctx.fillRect(184,100,32,28);
+    ctx.fillStyle=fl?"#ff5500":"#ffaa00";poly([[188,128],[194,112+fl*3],[200,128]],ctx.fillStyle);poly([[198,128],[205,108+fl*2],[212,128]],fl?"#ffff55":"#ff5500");
+    ctx.fillStyle="#ffdd33";ctx.fillRect(199,95,3,3);}
+  if(r.hatch){ctx.fillStyle="#000";ctx.strokeStyle=PINK;ctx.beginPath();ctx.ellipse(r.hatch.x,22,14,4,0,0,7);ctx.fill();ctx.stroke();
+    if(r.hatch.roped){ctx.strokeStyle="#cc8844";line(r.hatch.x,24,r.hatch.x,170);for(let y=40;y<170;y+=16){ctx.fillStyle="#cc8844";ctx.fillRect(r.hatch.x-2,y,4,3);}}}
+  if(r.chest){const x=CHESTX;ctx.fillStyle="#884400";ctx.fillRect(x-10,140,20,12);ctx.strokeStyle="#ffaa00";ctx.strokeRect(x-9.5,140.5,19,11);
+    if(r.chestOpen){ctx.fillStyle="#220000";ctx.fillRect(x-8,141,16,4);poly([[x-10,140],[x+10,140],[x+12,131],[x-8,131]],"#663300","#ffaa00");}
+    else{line(x-10,144,x+10,144);ctx.fillStyle="#ffff55";ctx.fillRect(x-1,143,2,3);}}
+  if(r.eagle){ctx.fillStyle="#555";ctx.fillRect(152,112,16,40);ctx.strokeStyle="#aaa";ctx.strokeRect(150.5,108.5,19,4);
+    const c=G.eagleTaken?"#888899":"#ffdd33";poly([[160,92],[146,98],[155,101],[160,108],[165,101],[174,98]],c,G.eagleTaken?"#555":"#aa7700");
+    ctx.fillStyle=c;ctx.fillRect(158,88,4,5);}
+  if(r.star){const pts=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?6:15;pts.push([160+Math.cos(a)*rr,186+Math.sin(a)*rr*.35]);}
+    poly(pts,null,(G.t>>4)&1?"#ffff55":"#ffaa00");}
+  for(const p of r.pits){if(!p.v||G.inv.bague)continue;
+    ctx.strokeStyle="#aa00aa";ctx.strokeRect(p.x0+.5,176.5,p.x1-p.x0,6);line(p.x0,177,p.x1,182);line(p.x0,182,p.x1,177);}
+  if(r.hole){const cx=(r.hole.x0+r.hole.x1)/2,rx=(r.hole.x1-r.hole.x0)/2;ctx.fillStyle="#000";ctx.strokeStyle="#777";
+    ctx.beginPath();ctx.ellipse(cx,180,rx,5,0,0,7);ctx.fill();ctx.stroke();}
+}
+function drawHero(dim){
+  const h=G.hero,x=Math.round(h.x),fy=Math.round(GROUND+h.y),cr=h.crouch,o=cr?11:0;
+  const hurt=G.hurtT>28&&(G.t>>1)&1;
+  const skin=dim?"#443333":hurt?"#ff0000":"#ffaa77",tun=dim?"#222244":hurt?"#ff0000":"#5555ff",leg=dim?"#221100":"#aa5500";
+  ctx.fillStyle=leg;
+  if(cr){ctx.fillRect(x-5,fy-6,10,6);}
+  else if(!h.ground){ctx.fillRect(x-5,fy-9,3,8);ctx.fillRect(x+2,fy-9,3,8);}
+  else{const f=Math.floor(h.walk)%2,mv=Math.abs(h.vx)>.2;ctx.fillRect(x-4+(mv&&f?-1:0),fy-9,3,9);ctx.fillRect(x+1+(mv&&!f?1:0),fy-9,3,9);}
+  ctx.fillStyle=tun;ctx.fillRect(x-5,fy-21+o,10,12);
+  ctx.fillStyle="#222";ctx.fillRect(x-5,fy-12+o,10,2);
+  ctx.fillStyle=skin;ctx.fillRect(x-3,fy-28+o,6,7);
+  ctx.fillStyle=dim?"#221100":"#aa5500";ctx.fillRect(x-4,fy-30+o,8,3);
+  ctx.fillStyle="#000";ctx.fillRect(x+(h.face>0?1:-2),fy-26+o,1,1);
+  const ax=x+h.face*6,ay=fy-17+o;ctx.fillStyle=skin;ctx.fillRect(Math.min(x+h.face*4,ax),ay,2,2);
+  if(dim&&!G.inv.lit)return;
+  if(G.hand===0&&G.inv.torches){ctx.fillStyle="#aa5500";ctx.fillRect(ax,ay-6,2,8);
+    if(G.inv.lit){ctx.fillStyle=(G.t>>2)&1?"#ffff55":"#ff8800";ctx.fillRect(ax-1,ay-10,4,5);}}
+  else if(G.hand===5){ctx.fillStyle="#ffff55";ctx.fillRect(ax,ay-7,2,9);ctx.fillRect(ax-2,ay-5,6,2);}
+  else if(G.hand===1){ctx.strokeStyle="#aaaaaa";line(ax,ay+3,ax+h.face*3,ay-8);}
+  else if(G.hand===2||G.hand===3){ctx.fillStyle=G.hand===2?"#aaaaaa":"#ffdd33";ctx.fillRect(ax,ay-1,5*h.face||5,2);ctx.fillRect(ax+h.face*4,ay-2,2,4);}
+  else if(G.hand===4){ctx.fillStyle="#55ffff";ctx.fillRect(ax,ay-4,3,5);}
+}
+function drawEntities(vis){
+  if(vis)for(const b of G.bats){const w=Math.sin(G.t/3+b.ph)*5;ctx.fillStyle="#aa55ff";
+    poly([[b.x,b.y],[b.x-9,b.y-w],[b.x-4,b.y+2]],"#7733cc");poly([[b.x,b.y],[b.x+9,b.y-w],[b.x+4,b.y+2]],"#7733cc");
+    ctx.fillRect(b.x-2,b.y-2,4,4);ctx.fillStyle="#ff0000";ctx.fillRect(b.x-1,b.y-1,1,1);ctx.fillRect(b.x+1,b.y-1,1,1);}
+  const g=G.ghost;
+  if(g){ctx.globalAlpha=.55+Math.sin(G.t/9)*.2;ctx.fillStyle="#eeeeff";ctx.beginPath();ctx.arc(g.x,g.y,10,Math.PI,0);
+    for(let i=0;i<=4;i++)ctx.lineTo(g.x+10-i*5,g.y+16+(i%2?-3:2));ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle="#000";ctx.fillRect(g.x-5,g.y-3,3,4);ctx.fillRect(g.x+2,g.y-3,3,4);ctx.fillRect(g.x-2,g.y+4,4,3);}
+  for(const b of G.bolts){ctx.strokeStyle=b.refl?"#55ffff":"#ffff55";const s=Math.sign(b.vx)*-1;
+    ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x+s*3,b.y-3);ctx.lineTo(b.x+s*6,b.y+1);ctx.lineTo(b.x+s*10,b.y-2);ctx.stroke();}
+  if(vis)for(const a of G.arrows){ctx.strokeStyle="#ffffff";line(a.x,a.y,a.x-Math.sign(a.vx)*9,a.y);ctx.fillStyle="#55ff55";ctx.fillRect(a.x-1,a.y-1,2,3);}
+}
+function drawTitleBg(){
+  ctx.fillStyle="#000";ctx.fillRect(0,0,320,200);
+  ctx.fillStyle="#ffff99";ctx.beginPath();ctx.arc(262,36,13,0,7);ctx.fill();ctx.fillStyle="#000";ctx.beginPath();ctx.arc(256,32,12,0,7);ctx.fill();
+  for(let i=0;i<40;i++){ctx.fillStyle="#666";ctx.fillRect((i*73)%320,(i*37)%90,1,1);}
+  ctx.strokeStyle=PINK;
+  const c=[[40,200],[40,110],[60,110],[60,80],[52,80],[52,70],[78,70],[78,80],[70,80],[70,110],[110,110],[110,60],[102,60],[102,48],[138,48],[138,60],[130,60],[130,110],[190,110],[190,60],[182,60],[182,48],[218,48],[218,60],[210,60],[210,110],[250,110],[250,80],[242,80],[242,70],[268,70],[268,80],[260,80],[260,110],[280,110],[280,200]];
+  poly(c,"#0b000f",PINK);
+  ctx.fillStyle="#ffaa00";[[120,80],[200,80],[65,95],[255,95],[150,140],[170,140]].forEach(p=>ctx.fillRect(p[0],p[1],3,5));
+  ctx.fillStyle="#000";ctx.beginPath();ctx.arc(160,170,16,Math.PI,0);ctx.lineTo(176,200);ctx.lineTo(144,200);ctx.fill();ctx.stroke();
+}
+function render(){
+  ctx.fillStyle="#000";ctx.fillRect(0,0,320,200);
+  if(G.mode==="title"||G.mode==="shop"||G.mode==="outside"){drawTitleBg();return;}
+  const r=cur(),vis=!r.dark||G.inv.lit;
+  drawRoom(r,!vis);if(vis)drawProps(r);
+  drawEntities(vis);drawHero(!vis);
+  if(r.dark&&G.inv.lit){const h=G.hero,gx=h.x,gy=GROUND+h.y-20,fl=(G.t>>2)&1;
+    const gr=ctx.createRadialGradient(gx,gy,30+fl*2,gx,gy,150);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(1,"rgba(0,0,0,.96)");
+    ctx.fillStyle=gr;ctx.fillRect(0,0,320,200);}
+}
+let lastSt="";
+function status(){
+  const I=G.inv,r=cur(),f=Math.max(0,G.force);
+  const obj=[I.cleFer&&"Clé en fer",I.cleOr&&"Clé en or",I.croix&&"Croix",I.bague&&"Bague",I.plomb&&"Aigle de plomb",I.parchemin&&"Parchemin"].filter(Boolean).join(", ")||"—";
+  const pb=I.crowbars?`${I.crowbars} <span class="small">(usure ${3-I.uses}/3)</span>`:"0";
+  const to=I.torches?`${I.torches}${I.lit?` <span class="small">(allumée ${Math.ceil(I.burn/60)} s)</span>`:""}`:"0";
+  const s=`<div><b>Points:</b><span class="bar"><i style="width:${f}%"></i></span>${f}</div>
+<div><b>Main:</b> ${G.hand<0?"rien":HAND[G.hand]}</div>
+<div><b>Pieces d'or:</b> ${G.gold}</div>
+<div><b>Pièce:</b> ${r.id+1}/64 · ${FLOORS[r.f]}</div>
+<div><b>Fiole:</b> ${I.fioles.length} &nbsp; <b>Corde:</b> ${I.ropes}</div>
+<div><b>Torche:</b> ${to}</div>
+<div><b>Pied de biche:</b> ${pb}</div>
+<div><b>Objets:</b> ${obj}</div>
+<div><b>Reliques:</b> <span class="relic ${I.diamant?"on":""}">◆ Diamant</span> <span class="relic ${I.livre?"on":""}">▣ Livre</span> <span class="relic ${I.aigle?"on":""}">▲ Aigle</span></div>`;
+  if(s!==lastSt){stEl.innerHTML=s;lastSt=s;}
+}
+
+let acc=0,last=performance.now();
+function loop(now){
+  acc+=Math.min(100,now-last);last=now;
+  while(acc>=1000/60){if(G.mode==="play")step();acc-=1000/60;}
+  render();status();
+  requestAnimationFrame(loop);
+}
+newGame();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
