@@ -3,1213 +3,537 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Lapin &amp; Carottes — Le Château</title>
+<title>Pépin et le Château Farfelu</title>
 <style>
-:root{--ink:#f7efe1;--muted:#b9acd6;--accent:#ff8a2a;--panel:#2a2046;--line:#4a3a78}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:radial-gradient(circle at 50% 0,#3a2c66,#120d22 75%);color:var(--ink);
-  font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
-#app{display:flex;flex-direction:column;align-items:center;height:100%;padding:8px;gap:8px}
-#hud{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;flex-wrap:wrap;justify-content:center}
-.chip{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:4px 12px;white-space:nowrap}
-.chip b{color:var(--accent)}
-.hbtn{background:var(--panel);border:2px solid var(--line);color:var(--ink);border-radius:10px;font-size:16px;padding:3px 10px;cursor:pointer}
-canvas{display:block;border-radius:10px;box-shadow:0 12px 40px #0009,0 0 0 3px var(--line)}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(14,10,28,.86);z-index:10;padding:14px;overflow:auto}
-.card{background:linear-gradient(#2e2350,#221a3d);border:3px solid var(--line);border-radius:18px;padding:22px 24px;max-width:620px;width:100%;text-align:center;box-shadow:0 20px 60px #000a;margin:auto}
-h1{margin:0 0 4px;font-size:clamp(28px,6vw,44px);color:var(--accent);letter-spacing:1px;text-shadow:0 3px 0 #6b2d0a}
-h2{margin:0 0 8px;font-size:26px;color:var(--accent)}
-p{margin:6px 0;line-height:1.4}
-.sub{color:var(--muted)}
-.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0 6px}
-button.big{font:inherit;font-weight:700;font-size:18px;padding:12px 20px;border-radius:14px;border:3px solid #ffb36b;background:var(--accent);color:#2a1300;cursor:pointer;box-shadow:0 4px 0 #8a3e0b;min-width:150px}
-button.big.alt{background:#3b2f66;color:var(--ink);border-color:#6f5cb0;box-shadow:0 4px 0 #1c1533}
-button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #8a3e0b}
-.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;text-align:left;margin-top:14px}
-.leg{display:flex;align-items:center;gap:10px;background:#1b1530;border-radius:10px;padding:6px 8px;font-size:14px;line-height:1.25}
-.leg canvas{box-shadow:none;border-radius:6px;flex:none;background:#2b2148}
-.leg b{color:#ffd29b}
-.hidden{display:none!important}
-#touch{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:12px 16px calc(12px + env(safe-area-inset-bottom));pointer-events:none;z-index:5}
-.dpad{display:grid;grid-template-columns:repeat(3,62px);grid-template-rows:repeat(3,62px);gap:6px;pointer-events:auto}
-.tb{background:rgba(59,47,102,.85);border:3px solid #7a66c0;border-radius:16px;color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;touch-action:none}
-.tb.on{background:#ff8a2a;border-color:#ffd0a0;color:#2a1300}
-.actions{display:flex;gap:12px;pointer-events:auto;align-items:flex-end}
-.tb.round{width:92px;height:92px;border-radius:50%;font-size:38px}
-.tb.small{width:62px;height:62px;border-radius:50%;font-size:22px}
-kbd{background:#140f24;border:1px solid #6f5cb0;border-radius:5px;padding:1px 6px;font-size:13px}
-#toast{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:#ff8a2a;color:#2a1300;font-weight:800;padding:8px 18px;border-radius:999px;z-index:20;transition:opacity .4s;opacity:0;pointer-events:none}
+  :root{--scr:#ececec;--hudbg:#111;--hudfg:#ececec;--ovbg:rgba(236,236,236,.96);--ovfg:#111;--shell:#c4c0b6;--brand:#333;--page:#1b1b1b;--sel:#111;--selfg:#ececec}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;height:100%;background:var(--page);color:#ddd;transition:background .3s;font-family:"Courier New",monospace;overflow:hidden;touch-action:none}
+  #wrap{display:flex;flex-direction:column;align-items:center;height:100%;padding:10px;gap:10px;max-width:640px;margin:0 auto}
+  #shell{width:100%;background:var(--shell);transition:background .3s;border-radius:12px 12px 40px 12px;padding:12px 12px 14px;box-shadow:0 6px 0 #8a877f}
+  #screen{position:relative;background:var(--scr);border:6px solid #4a4a5a;border-radius:6px}
+  #hud{display:flex;justify-content:space-between;background:var(--hudbg);color:var(--hudfg);font-weight:bold;font-size:13px;padding:3px 6px}
+  canvas{display:block;width:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+  #overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--ovbg);color:var(--ovfg);padding:6px;overflow:hidden}
+  #overlay h1{margin:0 0 4px;font-size:clamp(13px,4.2vw,20px);line-height:1.1}
+  #overlay p{margin:2px 0;font-size:clamp(9px,2.9vw,13px);line-height:1.25}
+  #overlay .blink{animation:bl 1s steps(2) infinite;font-weight:bold;margin-top:6px}
+  @keyframes bl{50%{opacity:0}}
+  #modes{display:flex;gap:8px;margin-top:6px}
+  .mode{font-family:inherit;font-weight:bold;font-size:clamp(11px,3.4vw,14px);padding:5px 10px;border:3px solid var(--ovfg);border-radius:8px;background:transparent;color:var(--ovfg);display:flex;flex-direction:column;align-items:center;gap:1px;min-width:96px}
+  .mode small{font-size:10px;font-weight:normal}
+  .mode .sw{display:flex;gap:2px;margin-top:3px}.mode .sw i{width:10px;height:10px;display:block;border:1px solid #0004}
+  .mode.sel{background:var(--sel);color:var(--selfg);border-color:var(--sel)}
+  .hidden{display:none!important}
+  #brand{color:var(--brand);font-weight:bold;font-style:italic;font-size:12px;margin-top:6px;text-align:left}
+  #pad{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 6px}
+  #dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,58px)}
+  .b{background:#2b2b2b;color:#777;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;touch-action:none}
+  .b.on{background:#555}
+  #up{grid-column:2;grid-row:1;border-radius:8px 8px 0 0}
+  #left{grid-column:1;grid-row:2;border-radius:8px 0 0 8px}
+  #mid{grid-column:2;grid-row:2;background:#2b2b2b}
+  #right{grid-column:3;grid-row:2;border-radius:0 8px 8px 0}
+  #down{grid-column:2;grid-row:3;border-radius:0 0 8px 8px}
+  #side{display:flex;flex-direction:column;gap:14px;align-items:center}
+  .round{width:66px;height:66px;border-radius:50%;background:#8b1d4a;color:#f3c;font-weight:bold;font-size:15px;border:none;box-shadow:0 4px 0 #5a1030;touch-action:none}
+  .round.on{transform:translateY(3px);box-shadow:0 1px 0 #5a1030}
+  .pill{background:#7a776f;color:#ddd;border:none;border-radius:10px;padding:6px 14px;font-size:11px;font-weight:bold;letter-spacing:1px;touch-action:none}
+  #help{font-size:11px;color:#9ab;text-align:center;line-height:1.4}
 </style>
 </head>
 <body>
-<div id="app">
-  <div id="hud">
-    <span class="chip">Niveau <b id="hLevel">1</b>/<span id="hMax">12</span></span>
-    <span class="chip" id="hLives">❤️ 5</span>
-    <span class="chip">🥕 <b id="hCarrots">0</b></span>
-    <span class="chip">🥊 <b id="hGloves">0</b></span>
-    <span class="chip">Score <b id="hScore">0</b></span>
-    <button class="hbtn" id="bPause" aria-label="Pause">⏸</button>
-    <button class="hbtn" id="bMusic" aria-label="Musique">🎵</button>
-    <button class="hbtn" id="bSound" aria-label="Son">🔊</button>
-  </div>
-  <canvas id="cv"></canvas>
-  <p id="rotateHint" class="sub hidden" style="font-size:13px;margin:0">📱 Astuce : tourne ton téléphone pour un écran plus grand</p>
-</div>
-
-<div id="touch" class="hidden">
-  <div class="dpad">
-    <span></span><div class="tb" data-k="up">▲</div><span></span>
-    <div class="tb" data-k="left">◀</div><div class="tb" data-k="down">▼</div><div class="tb" data-k="right">▶</div>
-    <span></span><span></span><span></span>
-  </div>
-  <div class="actions">
-    <div class="tb small" data-k="pipe">⤓</div>
-    <div class="tb round" data-k="action">🥊</div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<!-- Menu de départ -->
-<div class="overlay" id="ovMenu">
-  <div class="card">
-    <h1>Lapin &amp; Carottes</h1>
-    <p class="sub">Le château aux 12 étages — ramasse toutes les carottes de chaque niveau !</p>
-    <p style="margin-top:14px"><b>Comment veux-tu jouer ?</b></p>
-    <div class="row">
-      <button class="big" id="bKeyboard">⌨️ Clavier</button>
-      <button class="big alt" id="bTouch">👆 Tactile</button>
+<div id="wrap">
+  <div id="shell">
+    <div id="screen">
+      <div id="hud"><span id="hLevel">NIV 1</span><span id="hItems">★ 0/0</span><span id="hLives">♥3</span><span id="hScore">0</span></div>
+      <canvas id="c" width="320" height="208"></canvas>
+      <div id="overlay">
+        <h1>PÉPIN<br>et le Château Farfelu</h1>
+        <p>Ramasse toutes les étoiles ★. Pousse les caisses sur les monstres.</p>
+        <p>Potion = invincible · Porte numérotée + ↑ = téléport</p>
+        <div id="modes">
+          <button class="mode" data-mode="retro">RÉTRO<small>noir &amp; blanc</small><span class="sw"><i style="background:#111"></i><i style="background:#555"></i><i style="background:#aaa"></i><i style="background:#ececec"></i></span></button>
+          <button class="mode" data-mode="modern">MODERNE<small>couleur</small><span class="sw"><i style="background:#f6b26b"></i><i style="background:#5cc23a"></i><i style="background:#8fd3ff"></i><i style="background:#ff5fa8"></i></span></button>
+        </div>
+        <p class="blink" id="ovAction">CHOISIS UN MODE</p>
+      </div>
     </div>
-    <div class="row" id="continueRow" style="margin-top:4px"></div>
-    <p class="sub" style="font-size:14px">Clavier : <kbd>←</kbd><kbd>→</kbd> marcher · <kbd>↑</kbd><kbd>↓</kbd> escaliers (au pied ou en haut) · <kbd>↓</kbd> entrer dans un tuyau · <kbd>Espace</kbd> lancer le gant · <kbd>P</kbd> pause<br>(ZQSD / WASD fonctionnent aussi)</p>
-    <p class="sub" style="font-size:14px">5 vies au départ · +1 vie tous les 5 niveaux</p>
-    <div class="legend" id="legend"></div>
+    <div id="brand">POCKET PLAY · remake</div>
   </div>
-</div>
-
-<!-- Intro de niveau -->
-<div class="overlay hidden" id="ovIntro">
-  <div class="card">
-    <p class="sub" id="iNum">Niveau 1</p>
-    <h2 id="iName">Premiers pas</h2>
-    <p id="iHint"></p>
-    <div class="row"><button class="big" id="bGo">C'est parti !</button></div>
-  </div>
-</div>
-
-<!-- Pause -->
-<div class="overlay hidden" id="ovPause">
-  <div class="card">
-    <h2>Pause</h2>
-    <div class="row" style="flex-direction:column;align-items:center">
-      <button class="big" id="bResume">▶ Reprendre</button>
-      <button class="big alt" id="bRestart">↺ Recommencer le niveau (−1 vie)</button>
-      <button class="big alt" id="bSwitch">Changer de contrôles</button>
-      <button class="big alt" id="bMenu">Menu principal</button>
+  <div id="pad">
+    <div id="dpad">
+      <button class="b" id="up" data-k="up">▲</button>
+      <button class="b" id="left" data-k="left">◀</button>
+      <div id="mid"></div>
+      <button class="b" id="right" data-k="right">▶</button>
+      <button class="b" id="down" data-k="down">▼</button>
+    </div>
+    <div id="side">
+      <button class="round" id="btnA" data-k="up">A</button>
+      <button class="pill" id="btnStart">START</button>
+      <button class="pill" id="btnMusic">♪ ON</button>
     </div>
   </div>
+  <div id="help">Clavier : flèches / ZQSD · Entrée = start/pause · A = ↑ (porte, échelle) · M = musique</div>
 </div>
-
-<!-- Fin de niveau / game over / victoire -->
-<div class="overlay hidden" id="ovMsg">
-  <div class="card">
-    <h2 id="mTitle"></h2>
-    <p id="mText"></p>
-    <div class="row"><button class="big" id="mBtn">Continuer</button></div>
-  </div>
-</div>
-
 <script>
-"use strict";
-/* =========================================================
-   NIVEAUX — 20 colonnes × 13 lignes
-   #  brique        / \ escalier à 45° (monte vers la droite / la gauche)        C  carotte     R  lapin
-   G  gant de boxe  B  caisse (pousse d'une case)    O  pot (glisse jusqu'au mur et se casse)
-   1-9 tuyaux (même chiffre = reliés)
-   Ennemis : h hérisson · l loup · r renard · s sanglier · f fantôme
-   ========================================================= */
+// ===== LEVELS (BEGIN) =====
 const LEVELS = [
-{name:"Premiers pas", music:"level1", hint:"Ramasse toutes les carottes. Les escaliers permettent de changer d'étage. Le hérisson se promène au hasard et ne sait pas monter.",
-map:[
-"####################",
-"####################",
-"####################",
-"####################",
-"####################",
-"####################",
+[
 "####################",
 "#..................#",
-"#.C.....C.....C....#",
-"########/######/####",
-"#....../....../....#",
-"#.R......C......C.h#",
-"####################"]},
-{name:"Le loup", music:"stone", hint:"Le loup te fonce dessus quand tu es sur son étage, mais il ne sait pas prendre les escaliers. Ramasse le gant de boxe et lance-le avec Espace / 🥊 !",
-map:[
-"####################",
-"####################",
-"####################",
-"####################",
-"#..................#",
-"#.C....G......C..C.#",
-"######/#########/###",
-"#..../........./...#",
-"#.C......C.......l.#",
-"############/#######",
-"#........../.......#",
-"#R..C.........h..C.#",
-"####################"]},
-{name:"Les caisses", music:"stone", hint:"Pousse la caisse d'une case à la fois. Fais-la tomber dans le trou pour écraser l'ennemi en dessous !",
-map:[
+"#S..C..........C..1#",
+"####H#########H#####",
+"#...H.........H....#",
+"#.C.H...B.....H..C.#",
+"#########H######H###",
+"#........H......H..#",
+"#..C.....H..E...H.C#",
+"###H#######H########",
+"#..H.......H.......#",
+"#1.H.C..P..H...CE..#",
+"####################"],
+[
 "####################",
 "#..................#",
-"#..B..C.....C....C.#",
-"##.############/####",
-"#............./....#",
-"#.....h.........C..#",
-"########/#####\\#####",
-"#....../.......\\...#",
-"#.C.........l.....C#",
-"#####/##########/###",
-"#.../........../...#",
-"#....R...C.......C.#",
-"####################"]},
-{name:"Les tuyaux", music:"pipe", hint:"Place-toi sur un tuyau et appuie sur ↓ (ou ⤓) pour glisser jusqu'au tuyau du même numéro.",
-map:[
-"####################",
-"#........#.........#",
-"#.C..C..1#.2..C..C.#",
+"#1.C...S.....C...2.#",
+"###H######H######H##",
+"#..H......H......H.#",
+"#..H.C..B.H..C..EH.#",
+"#######H#####H######",
+"#......H.....H.....#",
+"#.C..E.H..P..H..C..#",
+"##H##########H###H##",
+"#.H..........H...H.#",
+"#2H.C...E..C.H.C.H1#",
+"####################"],
+[
 "####################",
 "#..................#",
-"#.C...2.....h....C.#",
-"#################/##",
-"#.............../..#",
-"#.C...1...l......C.#",
-"######/#############",
-"#..../.............#",
-"#.R......C.....C.h.#",
-"####################"]},
-{name:"Le renard et le pot", music:"stone", hint:"Le renard te traque partout et prend les escaliers. Pousse le pot : il file jusqu'au mur en renversant tout sur son passage, puis se casse.",
-map:[
+"#C..B....S....P...C#",
+"#####H#######H######",
+"#....H.......H.....#",
+"#.1..H..C....H..CE.#",
+"###H#####H#######H##",
+"#..H.....H.......H.#",
+"#..H..E..H..C..B.H.#",
+"#######H####H#######",
+"#......H....H......#",
+"#.C....H.E..H..C..1#",
+"####################"],
+[
 "####################",
 "#..................#",
-"#.C.....C....C...C.#",
-"#####/#########/####",
-"#.../........./....#",
-"#.....O..r......C..#",
-"##########/######/##",
-"#......../....../..#",
-"#.C........O.....C.#",
-"#####/########\\#####",
-"#.../..........\\...#",
-"#....R....C..h....C#",
-"####################"]},
-{name:"Le sanglier", music:"stone", hint:"Le sanglier fait des allers-retours… et charge à toute vitesse s'il te voit sur son étage !",
-map:[
+"#C....1..S.C......C#",
+"##H#####H####H####H#",
+"#.H.....H....H....H#",
+"#.H.C...H.B..H.CE.H#",
+"####H#####H####H####",
+"#...H.....H....H...#",
+"#E..H.E...H..P.H.C.#",
+"#H######H####H######",
+"#H......H....H.....#",
+"#H.C..E.H..C.H..E.1#",
+"####################"],
+[
 "####################",
 "#..................#",
-"#C.......s........C#",
-"######/##########/##",
-"#..../........../..#",
-"#.C....G..C..h...C.#",
-"###########/########",
-"#........./........#",
-"#.C..O.......l...C.#",
-"########/#####/#####",
-"#....../...../.....#",
-"#.R......C.....s.C.#",
-"####################"]},
-{name:"Le fantôme", music:"pipe", hint:"Le fantôme erre partout : il prend les escaliers… et même les tuyaux !",
-map:[
-"####################",
-"#.........#........#",
-"#.C..1..C.#.C..2.C.#",
-"####################",
-"#..................#",
-"#.2...C...f...C..1.#",
-"#######/####\\#######",
-"#...../......\\.....#",
-"#.C.....h........C.#",
-"###########/########",
-"#........./........#",
-"#.R..C.......G..C..#",
-"####################"]},
-{name:"Double renard", music:"stone", hint:"Deux renards ! Utilise le trou du haut pour leur échapper et le pot pour faire le ménage.",
-map:[
-"####################",
-"#..................#",
-"#.C...C..r...C...C.#",
-"####/###.#######/###",
-"#../.........../...#",
-"#...C..O...G.....C.#",
-"#######/#######/####",
-"#...../......./....#",
-"#.C.....r.........C#",
-"############/##\\####",
-"#........../....\\..#",
-"#.R..C.......l..C..#",
-"####################"]},
-{name:"Labyrinthe de tuyaux", music:"pipe", hint:"Trois paires de tuyaux mènent aux chambres du haut. Attention au sanglier et au fantôme.",
-map:[
-"####################",
-"#.....#......#.....#",
-"#.C.1.#.C.2..#.3.C.#",
-"####################",
-"#..................#",
-"#.3..C..s....C..1..#",
-"#####/##########/###",
-"#.../........../...#",
-"#.C.....f..2.....C.#",
-"#########/#######/##",
-"#......./......./..#",
-"#.R.......C..h...C.#",
-"####################"]},
-{name:"La grande tour", music:"pipe", hint:"Tout le monde est là ! Gant, pot, tuyau, trou… à toi de jouer. (Une vie bonus t'attend à la fin.)",
-map:[
-"####################",
-"#..................#",
-"#C..C...r....C...C.#",
-"#####/##.######/####",
-"#.../........./....#",
-"#....O..C..s....1C.#",
-"########/#######/###",
-"#....../......./...#",
-"#1.C.....f..G....C.#",
-"######/#######/#####",
-"#..../......./.....#",
-"#.R....C..l.....C.h#",
-"####################"]},
-{name:"Embouteillage", music:"pipe", hint:"Pas d'escalier au milieu : le trou descend, le tuyau 2 remonte. Deux sangliers gardent les étages.",
-map:[
-"####################",
-"#..................#",
-"#.C..s....O...C..C.#",
-"###/############\\###",
-"#./..............\\.#",
-"#..C..2..r....C....#",
-"#########.##########",
-"#..................#",
-"#.C.......2...s..C.#",
-"#####/#########/####",
-"#.../........./....#",
-"#....R..C..h...f.C.#",
-"####################"]},
-{name:"Le château final", music:"pipe", hint:"Le dernier étage du château. Deux renards, un loup, un sanglier, un fantôme… Bonne chance, lapin !",
-map:[
-"####################",
-"#....#........#....#",
-"#.C3.#.C..r..C#.4C.#",
-"############/#######",
-"#........../.......#",
-"#.C..f..O....G..C.4#",
-"#####/##########/###",
-"#.../........../...#",
-"#3....C..s......C..#",
-"########/######/####",
-"#....../....../....#",
-"#.R..C....l....r.C.#",
-"####################"]}
+"#.C......B.S....C1.#",
+"#H######H####H######",
+"#H......H....H.....#",
+"#H.C..P.H..C.H.E.C.#",
+"####H######H#####H##",
+"#...H......H.....H.#",
+"#E..H..E...H..C..H.#",
+"##H#####H######H####",
+"#.H.....H......H...#",
+"#1H.C.B.H..E...H.C.#",
+"####################"]
 ];
+// ===== LEVELS (END) =====
 
-const MUSIC = {level1:"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TAA9SFAdSAABRVAdRQA9QFAdQAABSlAdSgA9TVAdTQBbSlAdSgABTVAdTQA9SlAdSgABRlAdRgA9RVAdRQABRFAdRACBNURQHUQAW0dQHUcAAUpQHUoAPUtQHUsAAUxQHUwAPVFQHVEAW1RQHVQAAVFQHVEAH1RQHVQAAVFQHVEAAUxQHUwAPUhQHUgAAUxQHUwAgTVMUB1MAHlIUB1IAD1JUB1JAAFKUB1KAD1NUB1NAIFxSFAdSAA9SVAdSQABSlAdSgA9TVAdTQABSlAdSgA9S1AdSwABTFAdTAA9T1AdTwABSFAdSAA9SlAdSgABTVAdTQA9TVAdTQBbSFAdSAABSlAdSgA9SFAdSAABRFAdRAA9RVAdRQABQVAdQQBbVFAdVAA9UVAdUQABTVAdTQA9SFAdSAABRVAdRQA9QVAdQQABRVAdRQA9SFAdSAAA/y8ATVRyawAAAscA/yEBAADCFQCSNX93NQABOX93OQABMH93MAABOX93OQABNX93NQABOX93OQABMH93MAABOX93OQABNX93NQABOX93OQABMH93MAABOX93OQABNX93NQABOX93OQABMH93MAABOX93OQABNX93NQABOX93OQABMH93MAABOX93OQABNX93NQABOX93OQABMH93MAABOX93OQABNn93NgABOX93OQABMn93MgABOX93OQABNn93NgABOX93OQABMn93MgABOX93OQABN393NwABOn93OgABMn93MgABOn93OgABNH93NAABOX93OQABMH93MAABOn93OgABOX8dOQBbPH93PAABNX93NQABPH93PAABNn93NgABPH93PAABMn93MgABPH93PAABN393NwABOn93OgABMn93MgABOn93OgABN393NwABOn93OgABMn93MgABOn93OgABMH93MACGSTV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATZ/dzYAATl/dzkAATJ/dzIAATl/dzkAATZ/dzYAATl/dzkAATJ/dzIAATl/dzkAATp/dzoAAT5/dz4AATV/dzUAAT5/dz4AATt/dzsAAT5/dz4AATh/dzgAAT5/dz4AATl/dzkAATx/dzwAATR/dzQAATx/dzwAATZ/dzYAATx/dzwAATJ/dzIAATx/dzwAATd/dzcAATp/dzoAATJ/dzIAATp/dzoAATV/dzUAATl/dzkAATB/dzAAATl/dzkAATV/dzUAhFkwf3cwAHk1f3c1AAD/LwA=",
-pipe:"TVRoZAAAAAYAAQAEAHhNVHJrAAAAGQD/WAQEAhgIAP9ZAgAAAP9RAwaKGwD/LwBNVHJrAAAJBAD/IQEAAJkyZA4yABAyZA4yABAyZA4yABAyZA4yABAwZA4wABAwZA4wABAwZA4wABAwZA4wABAvZA4vAC4vZA4vAC4qZAA0ZA40AAAqABAqZA4qABAqZA4qABAuZA4uABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAqZA4qABAqZA4qABAmZAAqZA4qAAAmABAqZA4qABAqZA4qABAkZAAqZA4qAAAkABAkZAAqZA4qAAAkABAqZA4qABAkZAAqZA4qAAAkABAqZA4qABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmABAmZAAqZA4qAAAmAAD/LwBNVHJrAAABbgD/IQEAAMBQg2CQNGRZNAABNGQdNACCLTtkHTsAATxkHTwAATRkWTQAATRkHTQAgmk0ZFk0AAE0ZB00AIItO2QdOwABPGQdPAABNGRZNAABNGQdNACBcTRkHTQAATNkWTMAATJkWTIAATJkHTIAgi05ZB05AAE6ZB06AAEyZFkyAAEyZB0yAIJpMmRZMgABMmQdMgCCLTlkHTkAATpkHToAATJkWTIAATJkHTIAgXEyZB0yAAEzZFkzAAE0ZFk0AAE0ZB00AIItO2QdOwABPGQdPAABNGRZNAABNGQdNACCaTRkWTQAATRkHTQAgi07ZB07AAE8ZB08AAE0ZFk0AAE0ZB00AIFxNGQdNAABM2RZMwABMmRZMgABMmQdMgCCLTlkHTkAATpkHToAATJkWTIAATJkHTIAgmkyZFkyAAEyZB0yAIItOWQdOQABOmQdOgABMmRZMgABMmQdMgCBcTJkHTIAATNkWTMAAP8vAE1UcmsAAAFuAP8hAQAAwVGDYJEoZFkoAAEoZB0oAIItL2QdLwABMGQdMAABKGRZKAABKGQdKACCaShkWSgAAShkHSgAgi0vZB0vAAEwZB0wAAEoZFkoAAEoZB0oAIFxKGQdKAABJ2RZJwABJmRZJgABJmQdJgCCLS1kHS0AAS5kHS4AASZkWSYAASZkHSYAgmkmZFkmAAEmZB0mAIItLWQdLQABLmQdLgABJmRZJgABJmQdJgCBcSZkHSYAASdkWScAAShkWSgAAShkHSgAgi0vZB0vAAEwZB0wAAEoZFkoAAEoZB0oAIJpKGRZKAABKGQdKACCLS9kHS8AATBkHTAAAShkWSgAAShkHSgAgXEoZB0oAAEnZFknAAEmZFkmAAEmZB0mAIItLWQdLQABLmQdLgABJmRZJgABJmQdJgCCaSZkWSYAASZkHSYAgi0tZB0tAAEuZB0uAAEmZFkmAAEmZB0mAIFxJmQdJgABJ2RZJwAA/y8A",
-stone:"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"};
-const COLS = 20, ROWS = 13;
-const WALK = 6.2, CLIMB = 6.6, FALL = 9, PUSH = 4.2, POTSPD = 11, SHOT = 13;
-const ETYPES = {
-  h:{name:"Hérisson", speed:2.0, stairs:false, ai:"random", desc:"se promène au hasard, ne monte pas"},
-  l:{name:"Loup", speed:2.6, chase:4.2, stairs:false, ai:"chaseH", desc:"te fonce dessus sur son étage, ne monte pas"},
-  r:{name:"Renard", speed:2.7, stairs:true, ai:"hunt", desc:"te traque partout, prend les escaliers"},
-  s:{name:"Sanglier", speed:2.2, chase:7.5, stairs:false, ai:"patrol", desc:"allers-retours, charge s'il te voit"},
-  f:{name:"Fantôme", speed:1.9, stairs:true, pipes:true, ai:"random", desc:"erre partout, prend escaliers et tuyaux"}
+const T=16, W=20, H=13;
+const GR=['#111111','#555555','#aaaaaa','#ececec'];
+const THEMES={
+  retro:{label:'RÉTRO',sub:'noir & blanc',
+    css:{'--scr':'#ececec','--hudbg':'#111','--hudfg':'#ececec','--ovbg':'rgba(236,236,236,.96)','--ovfg':'#111','--shell':'#c4c0b6','--brand':'#333','--page':'#1b1b1b','--sel':'#111','--selfg':'#ececec'},
+    K:{bg:GR[3],dot:GR[2],wall:GR[1],wallLine:GR[0],wallTop:GR[2],rail:GR[0],rung:GR[1],starOut:GR[0],starIn:GR[2],potOut:GR[0],potA:GR[2],potB:GR[1],shine:GR[3],
+       doorOut:GR[0],doorIn:GR[1],doorTxt:GR[3],crateOut:GR[0],crateFill:GR[2],crateLine:GR[1],inv1:GR[0],inv2:GR[1],txt:GR[0],banner:GR[3],poof:GR[0],shade:'rgba(17,17,17,.7)',shadeTxt:GR[3]},
+    pepin:GR,blob:GR,spike:GR},
+  modern:{label:'MODERNE',sub:'couleur',
+    css:{'--scr':'#8fd3ff','--hudbg':'#1a1a2e','--hudfg':'#ffd23f','--ovbg':'rgba(255,248,224,.96)','--ovfg':'#1a1a2e','--shell':'#5b6ee1','--brand':'#fff','--page':'#151a3a','--sel':'#ff5fa8','--selfg':'#fff'},
+    K:{bg:'#8fd3ff',dot:'#c3e9ff',wall:'#b5562f',wallLine:'#6e2c14',wallTop:'#5cc23a',rail:'#7a4a1c',rung:'#d4934a',starOut:'#b86b00',starIn:'#ffd23f',potOut:'#3a1d5c',potA:'#ff5fa8',potB:'#c0307a',shine:'#ffffff',
+       doorOut:'#1d2f6e',doorIn:'#3f6fd8',doorTxt:'#ffffff',crateOut:'#5a3410',crateFill:'#e0a862',crateLine:'#9c6428',inv1:'#ffe066',inv2:'#ff8c42',txt:'#1a1a2e',banner:'#fff8e0',poof:'#ffb703',shade:'rgba(26,26,46,.7)',shadeTxt:'#ffd23f'},
+    pepin:['#2b1a10','#7a3e12','#6cc644','#f6b26b'],blob:['#2a0f3d','#9b5de5','#000000','#ffffff'],spike:['#3d0a0a','#e63946','#000000','#ffffff']}
 };
-const PIPE_COLORS = ["#4cc76a","#3fb4d8","#e2c43b","#d86fd0","#e86a4a","#8fd14f","#6f8cff","#ff9a3c","#55d6b5"];
+let theme=(()=>{try{return localStorage.getItem('pepin_theme')||'retro'}catch(e){return 'retro'}})();
+if(!THEMES[theme])theme='retro';
+let K, SP;
+const cv=document.getElementById('c'), ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
 
-/* ---------- état global ---------- */
-const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
-let CELL = 32, DPR = 1;
-const G = {mode:null, level:0, lives:5, score:0, state:"menu", muted:false};
-let L = null, P = null;
-let staticLayer = document.createElement("canvas");
+// ---------- Sprites (original designs) ----------
+function mk(rows,pal){
+  const c=document.createElement('canvas');c.width=16;c.height=16;const g=c.getContext('2d');
+  rows.forEach((r,y)=>{r=r.padEnd(16,'.').slice(0,16);for(let x=0;x<16;x++){const ch=r[x];if(ch==='.')continue;g.fillStyle=pal[+ch];g.fillRect(x,y,1,1);}});
+  return c;
+}
+const pepinBody=[
+".......00.......",
+"......0220......",
+"......022000....",
+".......0222.....",
+".....000000.....",
+"....03333330....",
+"...0333333330...",
+"...0330330330...",
+"...0330330330...",
+"...0333333330...",
+"...0333003330...",
+"....03333330....",
+".....000000....."];
+const pepinRowsA=[...pepinBody,"....010..010....","...0110..0110...","................"];
+const pepinRowsB=[...pepinBody,".....010010.....","....0110.0110...","................"];
+const pepinRowsC=[...pepinBody.slice(0,13),"...01......10...","..011......110..","................"];
+const blobRows=f=>[
+"................",
+".....000000.....",
+"....01111110....",
+"...0111111110...",
+"..011331133110..",
+"..010031100310..",
+"..011111111110..",
+"..011100001110..",
+"..011111111110..",
+"..011111111110..",
+"..011111111110..",
+f?"..0110110110110.":"..011011011010..",
+f?"...00.00.00.00..":"..0.00.00.00.0..",
+"................","................","................"];
 
-const $ = id => document.getElementById(id);
-const key = (x,y) => y*COLS + x;
+const spikeRows=f=>[
+"................",
+"..0....00....0..",
+"...0..0110..0...",
+"....00111100....",
+"..0011111111000.",
+".0.0113113110...",
+"...0110110110...",
+"..00111111110.0.",
+".0.0111001110...",
+"...0111111110...",
+"....01111110.0..",
+"...0.000000.....",
+f?"...00......00...":"....00....00....",
+f?"..000......000..":"...000....000...",
+"................","................"];
+function applyTheme(name){
+  theme=name;const th=THEMES[name];K=th.K;
+  SP={a:mk(pepinRowsA,th.pepin),b:mk(pepinRowsB,th.pepin),c:mk(pepinRowsC,th.pepin),
+      enemy:[[mk(blobRows(0),th.blob),mk(blobRows(1),th.blob)],[mk(spikeRows(0),th.spike),mk(spikeRows(1),th.spike)]]};
+  for(const k in th.css)document.documentElement.style.setProperty(k,th.css[k]);
+  try{localStorage.setItem('pepin_theme',name)}catch(e){}
+}
+applyTheme(theme);
 
-/* ---------- sauvegarde légère ---------- */
-function loadSave(){ try{ return JSON.parse(localStorage.getItem("lapin-carottes")||"{}"); }catch(e){ return {}; } }
-function saveProgress(){ try{ const s=loadSave(); s.best=Math.max(s.best||0,G.level); s.mode=G.mode; localStorage.setItem("lapin-carottes",JSON.stringify(s)); }catch(e){} }
+// ---------- Audio ----------
+let AC=null;
+function initAudio(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
+function beep(f,d,type='square',vol=.06,slide=0){
+  if(!AC)return;try{const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;
+  if(slide)o.frequency.linearRampToValueAtTime(f+slide,AC.currentTime+d);
+  g.gain.value=vol;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}
+}
+const sfx={
+  item:()=>{beep(880,.08);setTimeout(()=>beep(1320,.1),70)},
+  push:()=>beep(140,.12,'square',.07,-60),
+  ko:()=>{beep(600,.25,'square',.06,-500)},
+  door:()=>{beep(300,.15,'triangle',.08,500)},
+  potion:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.1),i*70))},
+  die:()=>{[400,300,220,150].forEach((f,i)=>setTimeout(()=>beep(f,.16,'square',.07),i*140))},
+  win:()=>{[523,523,784,1046,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.12),i*110))}
+};
 
-/* ---------- son ---------- */
-let AC = null;
-function sfx(name){
-  if(G.muted) return;
+// ---------- Music (original chiptune loop) ----------
+// 0 = silence ; numbers = MIDI notes ; one step = an eighth note
+const LEAD=[
+ 69,0,72,0,76,74,72,0, 71,0,74,0,77,76,74,0, 72,0,76,0,79,77,76,74, 72,71,69,0,71,0,0,0,
+ 69,0,72,0,76,74,72,0, 71,0,74,0,77,76,74,0, 72,0,76,79,81,79,77,76, 74,72,71,72,69,0,0,0,
+ 64,0,69,0,72,0,71,69, 65,0,69,0,72,0,74,72, 67,0,71,0,74,0,72,71, 69,0,68,0,69,0,64,0,
+ 65,0,69,0,72,0,74,0, 67,0,71,0,74,0,76,0, 76,0,77,76,74,72,71,72, 69,0,0,0,68,0,71,0];
+const CHORDS=[45,43,41,40, 45,43,41,40, 45,38,43,40, 41,43,40,40]; // A G F E / A D G E / F G E E
+const ARP=[0,7,12,7];
+let musicOn=(()=>{try{return localStorage.getItem('pepin_music')!=='0'}catch(e){return true}})();
+let mNext=0,mStep=0;
+function mNote(m,t,d,type,vol){
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=440*Math.pow(2,(m-69)/12);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02);
+}
+function mHat(t,vol){
+  const n=AC.sampleRate*.03,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;g.gain.value=vol;s.connect(g);g.connect(AC.destination);s.start(t);
+}
+function musicTick(){
+  if(!AC||!musicOn||!['play','intro','clear'].includes(state)){mNext=0;return;}
   try{
-    if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
-    const seq = {
-      carrot:[[880,.05],[1320,.07]], glove:[[520,.06],[780,.06],[1040,.08]], throw:[[300,.05],[200,.06]],
-      hit:[[660,.05],[330,.08],[165,.1]], push:[[140,.05]], kick:[[220,.04],[440,.05]], crash:[[120,.08],[80,.1]],
-      pipe:[[700,.05],[500,.05],[350,.05],[250,.06]], die:[[500,.1],[400,.1],[300,.12],[200,.2]],
-      win:[[523,.1],[659,.1],[784,.1],[1046,.25]], life:[[784,.08],[988,.08],[1318,.2]]
-    }[name]; if(!seq) return;
-    let t = AC.currentTime;
-    for(const [f,d] of seq){
-      const o=AC.createOscillator(), g=AC.createGain();
-      o.type = (name==="crash"||name==="push")?"sawtooth":"square";
-      o.frequency.setValueAtTime(f,t); g.gain.setValueAtTime(.06,t); g.gain.exponentialRampToValueAtTime(.0005,t+d);
-      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+d+.02); t+=d;
+    const fast=player&&player.inv>0, step=60/(fast?170:132)/2;
+    if(mNext<AC.currentTime)mNext=AC.currentTime+.05;
+    while(mNext<AC.currentTime+.2){
+      const i=mStep%LEAD.length, t=mNext, m=LEAD[i];
+      if(m)mNote(m+(fast?12:0),t,step*1.6,'square',.035);
+      const root=CHORDS[Math.floor(i/8)];
+      mNote(root+ARP[i%4]-12+12*(i%2),t,step*.9,'triangle',.09);
+      if(i%2===1)mHat(t,.025);
+      mNext+=step;mStep++;
     }
   }catch(e){}
 }
+function toggleMusic(){musicOn=!musicOn;try{localStorage.setItem('pepin_music',musicOn?'1':'0')}catch(e){}
+  document.getElementById('btnMusic').textContent=musicOn?'♪ ON':'♪ OFF';}
 
-/* ---------- musique : lecteur MIDI + petit synthé ---------- */
-function getAC(){ if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended") AC.resume(); return AC; }
-function parseMidi(b64){
-  const bin=atob(b64), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
-  let p=0;
-  const rd32=()=>{const v=(u8[p]<<24|u8[p+1]<<16|u8[p+2]<<8|u8[p+3])>>>0;p+=4;return v;};
-  const rd16=()=>{const v=u8[p]<<8|u8[p+1];p+=2;return v;};
-  const vlq=()=>{let v=0,b;do{b=u8[p++];v=(v<<7)|(b&127);}while(b&128);return v;};
-  const tag=()=>String.fromCharCode(u8[p],u8[p+1],u8[p+2],u8[p+3]);
-  p=4; const hl=rd32(); rd16(); const ntr=rd16(), div=rd16(); p=8+hl;
-  const evs=[];
-  for(let t=0;t<ntr && p<u8.length;t++){
-    while(p<u8.length-4 && tag()!=="MTrk") p++;
-    p+=4; const len=rd32(), end=p+len; let tick=0, rs=0;
-    while(p<end){
-      tick+=vlq(); let st=u8[p];
-      if(st&128){ p++; if(st<0xF0) rs=st; } else st=rs;
-      if(st===0xFF){ const ty=u8[p++], l=vlq(); if(ty===0x51) evs.push({tick,k:"tempo",v:u8[p]<<16|u8[p+1]<<8|u8[p+2]}); p+=l; if(ty===0x2F) break; }
-      else if(st===0xF0||st===0xF7){ p+=vlq(); }
-      else { const hi=st&0xF0, ch=st&15;
-        if(hi===0x80||hi===0x90){ const n=u8[p++], v=u8[p++]; evs.push({tick,k:(hi===0x90&&v>0)?"on":"off",ch,n,v}); }
-        else if(hi===0xC0){ evs.push({tick,k:"prog",ch,v:u8[p++]}); }
-        else if(hi===0xD0) p++; else p+=2; }
-    }
-    p=end;
-  }
-  evs.sort((a,b)=>a.tick-b.tick || (a.k==="off"?-1:b.k==="off"?1:0));
-  let us=500000, last=0, sec=0; const notes=[], open={}, prog={}, chMax={};
-  for(const e of evs){
-    sec+=(e.tick-last)*us/1e6/div; last=e.tick;
-    if(e.k==="tempo") us=e.v;
-    else if(e.k==="prog") prog[e.ch]=e.v;
-    else if(e.k==="on"){ (open[e.ch+":"+e.n]=open[e.ch+":"+e.n]||[]).push({t:sec,n:e.n,v:e.v,ch:e.ch,pg:prog[e.ch]||0}); chMax[e.ch]=Math.max(chMax[e.ch]||0,e.n); }
-    else { const q=open[e.ch+":"+e.n]; if(q&&q.length){ const o=q.shift(); o.d=Math.max(.04,sec-o.t); notes.push(o); } }
-  }
-  notes.sort((a,b)=>a.t-b.t);
-  notes.forEach(n=>n.bass = n.ch!==9 && (chMax[n.ch]||0) < 64);
-  // pistes en double (même mélodie sur 2 canaux) : on baisse leur volume
-  const perCh={}; notes.forEach(n=>perCh[n.ch]=(perCh[n.ch]||0)+1);
-  return {notes, dur: Math.ceil((sec)*4)/4 || 1, perCh};
-}
-const Music = {
-  songs:{}, cur:null, name:null, start:0, idx:0, timer:null, nodes:[], gain:null, noise:null, on:true, pausedAt:null,
-  song(name){ if(!this.songs[name]) this.songs[name]=parseMidi(MUSIC[name]); return this.songs[name]; },
-  play(name,pos){
-    this.stop(); this.pausedAt=null; if(!this.on||G.muted) { this.name=name; return; }
-    let ac; try{ ac=getAC(); }catch(e){ return; }
-    if(!this.gain){ this.gain=ac.createGain(); this.gain.gain.value=.55; this.gain.connect(ac.destination);
-      const len=ac.sampleRate*.5, buf=ac.createBuffer(1,len,ac.sampleRate), d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1; this.noise=buf; }
-    this.name=name; this.cur=this.song(name); pos=pos||0;
-    this.start=ac.currentTime+.08-pos; this.idx=this.cur.notes.findIndex(n=>n.t>=pos); if(this.idx<0) this.idx=this.cur.notes.length;
-    this.timer=setInterval(()=>this.tick(),50); this.tick();
-  },
-  tick(){
-    const ac=AC, s=this.cur; if(!s) return;
-    const horizon=ac.currentTime+.3;
-    while(true){
-      if(this.idx>=s.notes.length){ if(this.start+s.dur<horizon){ this.start+=s.dur; this.idx=0; } else break; }
-      const n=s.notes[this.idx], at=this.start+n.t;
-      if(at>horizon) break;
-      if(at>=ac.currentTime-.02) this.voice(n,Math.max(at,ac.currentTime),s);
-      this.idx++;
-    }
-    this.nodes=this.nodes.filter(x=>x.end>ac.currentTime);
-  },
-  voice(n,at,s){
-    const ac=AC, g=ac.createGain(); g.connect(this.gain);
-    const vel=n.v/127, dup=(n.ch<2 && !n.bass && Math.abs((s.perCh[0]||0)-(s.perCh[1]||-99))<=2) ? .55 : 1;
-    let src, end;
-    if(n.ch===9){ // batterie
-      if(n.n===35||n.n===36){ src=ac.createOscillator(); src.type="sine"; src.frequency.setValueAtTime(140,at); src.frequency.exponentialRampToValueAtTime(40,at+.12);
-        g.gain.setValueAtTime(.5*vel,at); g.gain.exponentialRampToValueAtTime(.001,at+.16); end=at+.17; }
-      else { src=ac.createBufferSource(); src.buffer=this.noise; const f=ac.createBiquadFilter();
-        const hat = n.n===42||n.n===44||n.n===46||n.n>=49; f.type=hat?"highpass":"bandpass"; f.frequency.value=hat?7000:1800;
-        src.connect(f); f.connect(g); const len=hat?(n.n===46?.12:.04):.12;
-        g.gain.setValueAtTime((hat?.12:.3)*vel,at); g.gain.exponentialRampToValueAtTime(.001,at+len); end=at+len+.01; src.start(at); src.stop(end);
-        this.nodes.push({src,end}); return; }
-    } else {
-      src=ac.createOscillator();
-      src.type = n.bass ? "triangle" : n.pg===81 ? "sawtooth" : "square";
-      src.frequency.value=440*Math.pow(2,(n.n-69)/12);
-      const peak=(n.bass?.32:(src.type==="square"?.07:.06))*(.4+.6*vel)*dup, d=Math.min(n.d,2.5);
-      g.gain.setValueAtTime(0,at); g.gain.linearRampToValueAtTime(peak,at+.008);
-      g.gain.setValueAtTime(peak*.8,at+Math.max(.01,d-.03)); g.gain.linearRampToValueAtTime(0,at+d+.04); end=at+d+.05;
-    }
-    src.connect(g); src.start(at); src.stop(end); this.nodes.push({src,end});
-  },
-  stop(){
-    clearInterval(this.timer); this.timer=null; this.cur=null;
-    for(const x of this.nodes){ try{ x.src.stop(); }catch(e){} } this.nodes=[];
-  },
-  pause(){ if(!this.cur) return; this.pausedAt={name:this.name, pos:AC.currentTime-this.start}; this.stop(); },
-  resume(){
-    const pz=this.pausedAt; this.pausedAt=null; if(!pz||!this.on||G.muted) return;
-    const s=this.song(pz.name); this.play(pz.name, ((pz.pos%s.dur)+s.dur)%s.dur);
-  }
-};
-
-/* ---------- chargement d'un niveau ---------- */
-function mkEnt(x,y){ return {x,y,fx:x,fy:y,tx:x,ty:y,moving:false,spd:0,face:1,anim:0,mdx:0,mdy:0,travel:null}; }
-
-function loadLevel(i){
-  const def = LEVELS[i];
-  L = {grid:[], carrots:new Set(), items:[], crates:[], pots:[], enemies:[], pipeAt:new Map(), pipePairs:[],
-       parts:[], pops:[], shots:[], start:{x:1,y:1}, time:0, total:0};
-  const pipeTmp = {};
-  for(let y=0;y<ROWS;y++){
-    L.grid.push([]);
-    for(let x=0;x<COLS;x++){
-      const ch = (def.map[y]||"")[x] || "#";
-      L.grid[y].push(ch==="#"?"#":(ch==="/"||ch==="\\")?ch:".");
-      if(ch==="C") L.carrots.add(key(x,y));
-      else if(ch==="R") L.start={x,y};
-      else if(ch==="G") L.items.push({x,y,type:"glove"});
-      else if(ch==="B"){ const c=mkEnt(x,y); c.falling=false; L.crates.push(c); }
-      else if(ch==="O"){ const p=mkEnt(x,y); p.slide=0; p.falling=false; L.pots.push(p); }
-      else if(/[1-9]/.test(ch)) (pipeTmp[ch]=pipeTmp[ch]||[]).push({x,y});
-      else if(ETYPES[ch]) L.enemies.push(mkEnemy(ch,x,y));
-    }
-  }
-  Object.keys(pipeTmp).sort().forEach((d,idx)=>{
-    const a = pipeTmp[d]; if(a.length!==2) return;
-    const color = PIPE_COLORS[idx%PIPE_COLORS.length];
-    L.pipeAt.set(key(a[0].x,a[0].y),{to:a[1],color,num:d});
-    L.pipeAt.set(key(a[1].x,a[1].y),{to:a[0],color,num:d});
-    L.pipePairs.push({a:a[0],b:a[1],color,num:d});
-  });
-  L.total = L.carrots.size;
-  P = mkEnt(L.start.x,L.start.y);
-  P.gloves = 0; P.inv = 1.5; P.dying = 0; P.pipeLock = false; P.falling=false;
-  buildStatic();
-  updateHud();
-}
-
-function mkEnemy(type,x,y){
-  const e = mkEnt(x,y); e.type=type; e.def=ETYPES[type]; e.sx=x; e.sy=y;
-  e.face = Math.random()<.5?-1:1; e.mdx=e.face; e.dead=0; e.appear=0; e.wait=.6+Math.random()*.6; e.charge=false; e.lastPipe=-1;
-  return e;
-}
-function resetEnemy(e){ Object.assign(e,{x:e.sx,y:e.sy,fx:e.sx,fy:e.sy,tx:e.sx,ty:e.sy,moving:false,travel:null,dead:0,charge:false,wait:.8,lastPipe:-1}); }
-
-/* ---------- requêtes de grille ---------- */
-const inB = (x,y) => x>=0 && y>=0 && x<COLS && y<ROWS;
-const isWall = (x,y) => !inB(x,y) || L.grid[y][x]==="#";
-const stairAt = (x,y) => { if(!inB(x,y)) return null; const c=L.grid[y][x]; return (c==="/"||c==="\\")?c:null; };
-const isStair = (x,y) => !!stairAt(x,y);
-const crateAt = (x,y) => L.crates.find(c=>c.tx===x&&c.ty===y);
-const potAt = (x,y) => L.pots.find(p=>p.tx===x&&p.ty===y);
-const pipeAt = (x,y) => L.pipeAt.get(key(x,y));
-const solid = (x,y) => isWall(x,y) || isStair(x,y) || !!crateAt(x,y);
-const supported = (x,y) => isStair(x,y) || solid(x,y+1);
-/* Escaliers à 45° : chaque marche fait avancer d'une case en diagonale.
-   "/" monte vers la droite, "\" monte vers la gauche. */
-function stairTarget(x,y,up){
-  let t=null; const s=stairAt(x,y);
-  if(s){ const dx=((s==="/")===up)?1:-1; t=[x+dx,y+(up?-1:1)]; }
-  else if(up){ if(stairAt(x+1,y-1)==="/") t=[x+1,y-1]; else if(stairAt(x-1,y-1)==="\\") t=[x-1,y-1]; }
-  else { if(stairAt(x-1,y+1)==="/") t=[x-1,y+1]; else if(stairAt(x+1,y+1)==="\\") t=[x+1,y+1]; }
-  if(!t || isWall(t[0],t[1]) || crateAt(t[0],t[1]) || potAt(t[0],t[1])) return null;
-  return t;
-}
-// case visée pour une direction ; def = null pour le lapin, sinon la fiche de l'ennemi
-function target(x,y,dir,def){
-  if(dir==="left"||dir==="right"){
-    const dx=dir==="left"?-1:1, s=stairAt(x,y);
-    if(s){ if(def&&!def.stairs) return null; return stairTarget(x,y,(s==="/")===(dx>0)); }
-    const nx=x+dx;
-    if(isWall(nx,y)||isStair(nx,y)) return null;
-    if(def && (blockedE(nx,y)||!supported(nx,y))) return null;
-    return [nx,y];
-  }
-  if(def&&!def.stairs) return null;
-  return stairTarget(x,y,dir==="up");
-}
-const enemyNear = (x,y) => L.enemies.some(e=>!e.dead && !e.travel && Math.abs(e.fx-x)<.9 && Math.abs(e.fy-y)<.9);
-
-function canCrateEnter(x,y){
-  return !isWall(x,y) && !isStair(x,y) && !isStair(x,y+1) && !crateAt(x,y) && !potAt(x,y)
-    && !L.carrots.has(key(x,y)) && !pipeAt(x,y) && !L.items.some(i=>i.x===x&&i.y===y) && !enemyNear(x,y);
-}
-
-/* ---------- mouvement générique ---------- */
-function startMove(e,dx,dy,spd){ e.tx=e.x+dx; e.ty=e.y+dy; e.moving=true; e.spd=spd; }
-function stepEnt(e,dt){
-  if(!e.moving) return false;
-  const d=e.spd*dt, ddx=e.tx-e.fx, ddy=e.ty-e.fy, dist=Math.hypot(ddx,ddy);
-  if(dist<=d){ e.fx=e.x=e.tx; e.fy=e.y=e.ty; e.moving=false; return true; }
-  e.fx+=ddx/dist*d; e.fy+=ddy/dist*d; return false;
-}
-function pipeCurve(a,b){
-  const ax=a.x+.5, ay=a.y+1, bx=b.x+.5, by=b.y+1;
-  const drop = 1.6;
-  return [ax,ay, ax,ay+drop, bx,by+drop, bx,by];
-}
-function bez(c,t){
-  const u=1-t;
-  return [u*u*u*c[0]+3*u*u*t*c[2]+3*u*t*t*c[4]+t*t*t*c[6], u*u*u*c[1]+3*u*u*t*c[3]+3*u*t*t*c[5]+t*t*t*c[7]];
-}
-function startTravel(e){
-  const p = pipeAt(e.x,e.y); if(!p) return false;
-  const from={x:e.x,y:e.y};
-  const dist = Math.hypot(p.to.x-from.x,p.to.y-from.y);
-  e.travel = {from,to:p.to,t:0,dur:.45+dist*.035,curve:pipeCurve(from,p.to)};
-  return true;
-}
-function advanceTravel(e,dt){
-  const tr=e.travel; tr.t += dt/tr.dur;
-  if(tr.t>=1){ e.x=e.tx=tr.to.x; e.y=e.ty=tr.to.y; e.fx=e.x; e.fy=e.y; e.travel=null; e.moving=false; return true; }
-  return false;
-}
-
-/* ---------- entrées ---------- */
-const held = {left:false,right:false,up:false,down:false,pipe:false};
-const order = [];
-let actionQueued = false;
-function press(k){
-  if(k==="action"){ actionQueued=true; return; }
-  if(!held[k]){ held[k]=true; if(k!=="pipe"){ const i=order.indexOf(k); if(i>=0) order.splice(i,1); order.push(k);} }
-}
-function release(k){ if(k==="action") return; held[k]=false; const i=order.indexOf(k); if(i>=0) order.splice(i,1); }
-const KEYMAP = {ArrowLeft:"left",KeyA:"left",ArrowRight:"right",KeyD:"right",ArrowUp:"up",KeyW:"up",ArrowDown:"down",KeyS:"down",
-                Space:"action",KeyX:"action",KeyK:"action",Enter:"action"};
-addEventListener("keydown",ev=>{
-  if(G.state==="intro" && (ev.code==="Space"||ev.code==="Enter")){ ev.preventDefault(); $("bGo").click(); return; }
-  if(G.state==="msg" && (ev.code==="Space"||ev.code==="Enter")){ ev.preventDefault(); $("mBtn").click(); return; }
-  if(ev.code==="KeyP"||ev.code==="Escape"){ togglePause(); ev.preventDefault(); return; }
-  const k=KEYMAP[ev.code]; if(!k) return;
-  ev.preventDefault(); if(ev.repeat && k==="action") return;
-  if(G.state==="play") press(k);
-});
-addEventListener("keyup",ev=>{ const k=KEYMAP[ev.code]; if(k) release(k); });
-addEventListener("blur",()=>{ for(const k in held) release(k); });
-
-document.querySelectorAll("#touch .tb").forEach(b=>{
+// ---------- Input ----------
+const keys={up:0,down:0,left:0,right:0};
+let upEdge=false;
+function setKey(k,v){if(k==='up'&&v&&!keys.up)upEdge=true;keys[k]=v;}
+const KM={ArrowUp:'up',KeyW:'up',KeyZ:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',KeyQ:'left',ArrowRight:'right',KeyD:'right'};
+addEventListener('keydown',e=>{initAudio();if(KM[e.code]){setKey(KM[e.code],1);e.preventDefault();}
+  if(state==='title'&&KM[e.code]&&(KM[e.code]==='left'||KM[e.code]==='right'))cycleTheme();
+  if(state==='title'&&e.code==='Digit1'){applyTheme('retro');markSel();}
+  if(state==='title'&&e.code==='Digit2'){applyTheme('modern');markSel();}
+  if(e.code==='Enter'||e.code==='Space'){pressStart();e.preventDefault();}});
+addEventListener('keyup',e=>{if(KM[e.code])setKey(KM[e.code],0);});
+document.querySelectorAll('[data-k]').forEach(b=>{
   const k=b.dataset.k;
-  const down=ev=>{ ev.preventDefault(); b.classList.add("on"); try{b.setPointerCapture(ev.pointerId);}catch(e){} if(G.state==="play") press(k); };
-  const up=ev=>{ ev.preventDefault(); b.classList.remove("on"); release(k); };
-  b.addEventListener("pointerdown",down); b.addEventListener("pointerup",up);
-  b.addEventListener("pointercancel",up); b.addEventListener("lostpointercapture",up);
+  const on=e=>{e.preventDefault();initAudio();b.classList.add('on');setKey(k,1);if(state==='title'&&(k==='left'||k==='right'))cycleTheme();else if(state!=='play'&&state!=='intro')pressStart();};
+  const off=e=>{e.preventDefault();b.classList.remove('on');setKey(k,0);};
+  b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,off));
 });
+document.getElementById('btnStart').addEventListener('pointerdown',e=>{e.preventDefault();initAudio();pressStart();});
+document.getElementById('btnMusic').addEventListener('pointerdown',e=>{e.preventDefault();initAudio();toggleMusic();});
+document.getElementById('btnMusic').textContent=musicOn?'♪ ON':'♪ OFF';
+addEventListener('keydown',e=>{if(e.code==='KeyM')toggleMusic();});
+document.getElementById('overlay').addEventListener('pointerdown',e=>{e.preventDefault();initAudio();pressStart();});
 
-/* ---------- joueur ---------- */
+// ---------- State ----------
+let freezeT=0, state='title', levelIdx=0, lives=3, score=0, grid, items, totalItems, player, enemies, crates, introT=0, deadT=0, tick=0;
+function load(){try{return +localStorage.getItem('pepin_lvl')||0}catch(e){return 0}}
+function save(n){try{localStorage.setItem('pepin_lvl',n)}catch(e){}}
+
+function startLevel(){
+  const m=LEVELS[levelIdx];
+  grid=m.map(r=>r.split(''));
+  enemies=[];crates=[];items=0;totalItems=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const ch=grid[y][x];
+    if(ch==='S'){player=ent(x,y,6.2);player.inv=0;player.face=1;grid[y][x]='.';}
+    else if(ch==='E'){const e=ent(x,y,2.6+levelIdx*.3);e.sx=x;e.sy=y;e.dir=enemies.length%2?1:-1;e.kind=(enemies.length+levelIdx)%2;e.ko=0;e.vdir=0;enemies.push(e);grid[y][x]='.';}
+    else if(ch==='B'){const c=ent(x,y,11);c.slide=0;crates.push(c);grid[y][x]='.';}
+    else if(ch==='C')totalItems++;
+  }
+  state='intro';introT=1.6;freezeT=2.5;player.safe=3;hud();
+}
+function ent(x,y,sp){return{x,y,tx:x,ty:y,mv:false,sp,dir:1,anim:0};}
+
+// ---------- Map helpers ----------
+const tile=(x,y)=>(x<0||y<0||x>=W||y>=H)?'#':grid[y][x];
+const wall=(x,y)=>tile(x,y)==='#';
+const ladder=(x,y)=>tile(x,y)==='H';
+const crateAt=(x,y,ex)=>crates.find(c=>c!==ex&&Math.round(c.tx)===x&&Math.round(c.ty)===y);
+function supported(x,y,self){return ladder(x,y)||wall(x,y+1)||ladder(x,y+1)||!!crateAt(x,y+1,self);}
+const midLadder=(x,y)=>ladder(x,y)&&ladder(x,y+1);
+function canH(x,y,d,self){const n=x+d;return !midLadder(x,y)&&!wall(n,y)&&!crateAt(n,y,self);}
+const canUp=(x,y)=>ladder(x,y)&&!wall(x,y-1)&&!crateAt(x,y-1);
+const canDown=(x,y)=>ladder(x,y+1);
+function go(e,nx,ny,sp){e.tx=nx;e.ty=ny;e.mv=true;e.cs=sp||e.sp;}
+function moveEnt(e,dt){
+  if(!e.mv)return false;
+  const dx=e.tx-e.x,dy=e.ty-e.y,d=Math.hypot(dx,dy),s=e.cs*dt;
+  if(d<=s){e.x=e.tx;e.y=e.ty;e.mv=false;return true;}
+  e.x+=dx/d*s;e.y+=dy/d*s;e.anim+=dt;return false;
+}
+
+// ---------- Player ----------
 function updatePlayer(dt){
-  if(P.dying>0){ P.dying-=dt; if(P.dying<=0) afterDeath(); return; }
-  if(P.inv>0) P.inv-=dt;
-  if(!held.down && !held.pipe) P.pipeLock=false;
-  if(P.travel){ if(advanceTravel(P,dt)){ P.pipeLock=true; onPlayerArrive(); } return; }
-  if(P.moving){ P.anim+=dt*12; if(!stepEnt(P,dt)) return; onPlayerArrive(); }
-
-  if(actionQueued){ actionQueued=false; throwGlove(); }
-
-  if(!supported(P.x,P.y)){ startMove(P,0,1,FALL); P.falling=true; return; }
-  if(P.falling){ P.falling=false; }
-
-  if((held.down||held.pipe) && !P.pipeLock && pipeAt(P.x,P.y)){ startTravel(P); sfx("pipe"); return; }
-
-  // la touche la plus récente d'abord ; si elle est impossible, on essaie les autres
-  // (ex. garder → et ↑ enfoncées : on marche puis on monte l'escalier en arrivant au pied)
-  for(let i=order.length-1;i>=0;i--){ if(tryPlayerDir(order[i], i===order.length-1)) break; }
-}
-function tryPlayerDir(d,primary){
-  const onStair=isStair(P.x,P.y);
-  if((d==="left"||d==="right") && !onStair){
-    const dx = d==="left"?-1:1; if(primary) P.face=dx;
-    const nx=P.x+dx, y=P.y;
-    const c=crateAt(nx,y);
-    if(c){ if(c.moving||c.falling) return primary;
-      if(canCrateEnter(nx+dx,y)){ startMove(c,dx,0,PUSH); startMove(P,dx,0,PUSH); P.face=dx; sfx("push"); return true; }
-      return primary; }
-    const pt=potAt(nx,y);
-    if(pt){ if(!pt.slide && !pt.falling){ pt.slide=dx; pt.kicked=true; sfx("kick"); } return true; }
+  const p=player;
+  if(p.inv>0)p.inv-=dt;
+  if(moveEnt(p,dt))arrive();
+  if(p.mv)return;
+  const x=p.tx,y=p.ty;
+  if(!supported(x,y)){go(p,x,y+1,10);return;}
+  const t=tile(x,y);
+  if(upEdge&&/[1-9]/.test(t)){
+    for(let yy=0;yy<H;yy++)for(let xx=0;xx<W;xx++)if(grid[yy][xx]===t&&(xx!==x||yy!==y)){p.x=p.tx=xx;p.y=p.ty=yy;sfx.door();upEdge=false;return;}
   }
-  const t=target(P.x,P.y,d,null);
-  if(!t) return false;
-  const dx=t[0]-P.x, dy=t[1]-P.y;
-  if(dx) P.face=Math.sign(dx);
-  startMove(P,dx,dy,dy?CLIMB:WALK);
-  return true;
-}
-function onPlayerArrive(){
-  const k=key(P.x,P.y);
-  if(L.carrots.has(k)){
-    L.carrots.delete(k); G.score+=100; sfx("carrot"); pop(P.x+.5,P.y,"+100","#ffb35c"); burst(P.x+.5,P.y+.5,"#ff8a2a",8);
-    updateHud();
-    if(L.carrots.size===0) levelClear();
+  upEdge=false;
+  if(keys.up&&canUp(x,y)){go(p,x,y-1);p.climb=true;return;}
+  if(keys.down&&canDown(x,y)){go(p,x,y+1);p.climb=true;return;}
+  const d=keys.left?-1:keys.right?1:0;
+  if(d){
+    p.face=d;p.climb=false;
+    const c=crateAt(x+d,y);
+    if(c&&!c.mv&&!midLadder(x,y)){ if(!c.slide&&canH(c.tx,c.ty,d,c)){c.slide=d;sfx.push();} return;}
+    if(canH(x,y,d))go(p,x+d,y);
   }
-  const it=L.items.findIndex(i=>i.x===P.x&&i.y===P.y);
-  if(it>=0){ L.items.splice(it,1); P.gloves+=2; sfx("glove"); pop(P.x+.5,P.y,"Gant ×2","#ff6b6b"); updateHud(); }
 }
-function throwGlove(){
-  if(P.gloves<=0 || P.travel || L.shots.length) return;
-  P.gloves--; updateHud(); sfx("throw");
-  L.shots.push({fx:P.fx+P.face*.3,fy:Math.round(P.fy),dir:P.face,life:3});
-}
-function hitPlayer(){
-  if(P.dying>0||P.inv>0||G.state!=="play") return;
-  P.dying=1.3; P.moving=false; G.lives--; sfx("die"); burst(P.fx+.5,P.fy+.5,"#ffffff",16); updateHud();
-}
-function afterDeath(){
-  if(G.lives<=0){ gameOver(); return; }
-  P.x=P.tx=L.start.x; P.y=P.ty=L.start.y; P.fx=P.x; P.fy=P.y; P.moving=false; P.travel=null; P.inv=2.2; P.falling=false;
-  L.enemies.forEach(e=>{ resetEnemy(e); e.appear=1; });
-  L.shots.length=0;
+function arrive(){
+  const p=player,t=tile(p.tx,p.ty);
+  if(!ladder(p.tx,p.ty))p.climb=false;
+  if(t==='C'){grid[p.ty][p.tx]='.';items++;score+=100;sfx.item();hud();
+    if(items>=totalItems){state='clear';deadT=2;score+=500*(levelIdx+1);hud();sfx.win();}}
+  else if(t==='P'){grid[p.ty][p.tx]='.';p.inv=7;score+=50;sfx.potion();hud();}
 }
 
-/* ---------- ennemis ---------- */
-const DIRS=["left","right","up","down"];
-function blockedE(x,y){ return isWall(x,y) || !!crateAt(x,y) || !!potAt(x,y); }
-// renard : plus court chemin (BFS) jusqu'au lapin, escaliers compris
-function huntStep(e,px,py){
-  const start=key(e.x,e.y), goal=key(px,py);
-  if(start===goal) return null;
-  const first=new Map([[start,null]]); const q=[[e.x,e.y]];
-  while(q.length){
-    const [x,y]=q.shift(), k0=key(x,y);
-    if(k0===goal) break;
-    for(const d of DIRS){
-      const t=target(x,y,d,e.def); if(!t) continue;
-      const k=key(t[0],t[1]); if(first.has(k)) continue;
-      first.set(k, k0===start ? t : first.get(k0)); q.push(t);
-    }
-  }
-  return first.get(goal) || null;
-}
-function lineClear(y,x1,x2){
-  const a=Math.min(x1,x2), b=Math.max(x1,x2);
-  for(let x=a+1;x<b;x++) if(blockedE(x,y)) return false;
-  return true;
-}
+// ---------- Enemies ----------
 function updateEnemy(e,dt){
-  if(e.dead>0){ e.dead-=dt; if(e.dead<=0){ resetEnemy(e); e.appear=1.2; burst(e.sx+.5,e.sy+.5,"#b9acd6",10);} return; }
-  if(e.appear>0) e.appear-=dt;
-  e.anim+=dt*(e.charge?16:8);
-  if(e.travel){ if(advanceTravel(e,dt)) e.lastPipe=key(e.x,e.y); return; }
-  if(e.moving){ if(!stepEnt(e,dt)) return; if(!pipeAt(e.x,e.y)) e.lastPipe=-1; }
-  if(!supported(e.x,e.y)){ startMove(e,0,1,FALL); return; }
-  if(e.wait>0){ e.wait-=dt; return; }
-
-  const def=e.def;
-  // options = déplacements possibles [dx,dy] (dédoublonnés : sur un escalier, ← → et ↑ ↓ visent les mêmes cases)
-  const opts=[];
-  for(const d of DIRS){ const t=target(e.x,e.y,d,def); if(!t) continue;
-    const v=[t[0]-e.x,t[1]-e.y]; if(!opts.some(o=>o[0]===v[0]&&o[1]===v[1])) opts.push(v); }
-  if(!opts.length){ e.wait=.25; return; }
-  const px=Math.round(P.fx), py=Math.round(P.fy);
-  const playerVisible = P.dying<=0 && !P.travel;
-  let choice=null, spd=def.speed;
-  const same = o => o[0]===e.mdx && o[1]===e.mdy;
-  const notBack = o => !(o[0]===-e.mdx && o[1]===-e.mdy);
-  const horiz = dx => opts.find(o=>o[0]===dx&&o[1]===0);
-  const rnd = a => a[Math.floor(Math.random()*a.length)];
-  const wander = () => { const c=opts.find(same); const nb=opts.filter(notBack);
-    // au pied ou en haut d'un escalier, on change parfois d'étage
-    const vert=opts.filter(o=>o[1]!==0&&notBack(o));
-    if(vert.length && !(c&&c[1]!==0) && Math.random()<.4) return rnd(vert);
-    return (c && Math.random()<.85) ? c : rnd(nb.length?nb:opts); };
-
-  switch(def.ai){
-    case "random":
-      if(def.pipes && pipeAt(e.x,e.y) && e.lastPipe!==key(e.x,e.y) && Math.random()<.45){ startTravel(e); return; }
-      choice = wander(); break;
-    case "chaseH":
-      if(playerVisible && py===e.y && lineClear(e.y,e.x,px)){ choice=horiz(Math.sign(px-e.x)||e.face); spd=def.chase; }
-      if(!choice) choice = horiz(e.mdx||e.face) || horiz(-(e.mdx||e.face)) || opts[0];
-      break;
-    case "hunt": {
-      const st = playerVisible ? huntStep(e,px,py) : null;
-      choice = (st && Math.random()<.9) ? [st[0]-e.x,st[1]-e.y] : wander(); break; }
-    case "patrol":
-      e.charge=false;
-      if(playerVisible && py===e.y && lineClear(e.y,e.x,px)){
-        const c=horiz(Math.sign(px-e.x)||e.face); if(c){ choice=c; spd=def.chase; e.charge=true; } }
-      if(!choice) choice = horiz(e.face) || horiz(-e.face) || opts[0];
-      break;
+  if(e.dead){if(e.poof>0)e.poof-=dt;return;}
+  moveEnt(e,dt);
+  if(e.mv)return;
+  const x=e.tx,y=e.ty,p=player,py=Math.round(p.ty),px=Math.round(p.tx);
+  if(!supported(x,y)){go(e,x,y+1,10);return;}
+  // continue on ladder
+  if(e.vdir===-1&&canUp(x,y)&&ladder(x,y)){go(e,x,y-1);return;}
+  if(e.vdir===1&&canDown(x,y)){go(e,x,y+1);return;}
+  e.vdir=0;
+  if(y===py&&!midLadder(x,y)){
+    const d=Math.sign(px-x)||e.dir;let clear=true;
+    for(let i=x;i!==px;i+=d)if(wall(i+d,y)||crateAt(i+d,y)){clear=false;break;}
+    if(clear&&canH(x,y,d)&&supported(x+d,y)){e.dir=d;go(e,x+d,y);return;}
   }
-  e.mdx=choice[0]; e.mdy=choice[1]; if(choice[0]) e.face=choice[0];
-  startMove(e,choice[0],choice[1],choice[1]?spd*1.4:spd);
-}
-function killEnemy(e,pts,why){
-  if(e.dead>0) return;
-  e.dead=9; e.moving=false; e.travel=null; G.score+=pts; updateHud(); sfx("hit");
-  burst(e.fx+.5,e.fy+.5,"#ffd29b",14); pop(e.fx+.5,e.fy,"+"+pts+(why?" "+why:""),"#ffe08a");
-}
-
-/* ---------- objets ---------- */
-function updateObjects(dt){
-  // caisses
-  for(let i=L.crates.length-1;i>=0;i--){
-    const c=L.crates[i];
-    if(c.moving){ stepEnt(c,dt);
-      if(c.falling){ L.enemies.forEach(e=>{ if(!e.dead && Math.abs(e.fx-c.fx)<.7 && Math.abs(e.fy-c.fy)<.7) killEnemy(e,300,"écrasé !"); });
-        if(Math.abs(P.fx-c.fx)<.6 && Math.abs(P.fy-c.fy)<.6 && !P.travel) hitPlayer(); }
-      if(c.moving) continue; }
-    const sup = isWall(c.x,c.y+1) || isStair(c.x,c.y+1) || L.crates.some(o=>o!==c&&o.tx===c.x&&o.ty===c.y+1);
-    if(!sup){ c.falling=true; startMove(c,0,1,FALL); }
-    else if(c.falling){ L.crates.splice(i,1); sfx("crash"); burst(c.x+.5,c.y+.6,"#c98a4b",18); }
-  }
-  // pots
-  for(let i=L.pots.length-1;i>=0;i--){
-    const p=L.pots[i];
-    if(p.moving){ stepEnt(p,dt);
-      L.enemies.forEach(e=>{ if(!e.dead && Math.abs(e.fx-p.fx)<.7 && Math.abs(e.fy-p.fy)<.7) killEnemy(e,300,"strike !"); });
-      if(p.moving) continue; }
-    const sup = isWall(p.x,p.y+1) || isStair(p.x,p.y+1) || !!crateAt(p.x,p.y+1);
-    if(!sup){ if(p.kicked){ p.falling=true; startMove(p,0,1,FALL); } continue; }
-    if(p.falling){ breakPot(i); continue; }
-    if(p.slide){
-      const nx=p.x+p.slide;
-      if(isWall(nx,p.y) || crateAt(nx,p.y) || L.pots.some(o=>o!==p&&o.tx===nx&&o.ty===p.y)) breakPot(i);
-      else startMove(p,p.slide,0,POTSPD);
-    }
-  }
-  // gants lancés
-  for(let i=L.shots.length-1;i>=0;i--){
-    const s=L.shots[i]; s.fx+=s.dir*SHOT*dt; s.life-=dt;
-    const cx=Math.round(s.fx);
-    let gone = s.life<=0 || isWall(cx,s.fy) || !!crateAt(cx,s.fy);
-    for(const e of L.enemies){ if(!e.dead && !e.travel && Math.abs(e.fx-s.fx)<.7 && Math.abs(e.fy-s.fy)<.6){ killEnemy(e,200,"K.O. !"); gone=true; break; } }
-    if(gone){ L.shots.splice(i,1); burst(s.fx+.5,s.fy+.5,"#ff5a5a",6); }
+  if(py<y&&canUp(x,y)&&Math.random()<.8){e.vdir=-1;go(e,x,y-1);return;}
+  if(py>y&&canDown(x,y)&&Math.random()<.8){e.vdir=1;go(e,x,y+1);return;}
+  if(midLadder(x,y)){ if(canDown(x,y)){e.vdir=1;go(e,x,y+1);} else if(canUp(x,y)){e.vdir=-1;go(e,x,y-1);} return;}
+  for(let k=0;k<2;k++){
+    if(canH(x,y,e.dir)&&supported(x+e.dir,y)&&!enemies.some(o=>o!==e&&!o.dead&&o.tx===x+e.dir&&o.ty===y)){go(e,x+e.dir,y);return;}
+    e.dir*=-1;
   }
 }
-function breakPot(i){ const p=L.pots[i]; L.pots.splice(i,1); sfx("crash"); burst(p.fx+.5,p.fy+.6,"#d9734a",20); }
 
-/* ---------- particules / textes ---------- */
-function burst(x,y,color,n){ for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, v=1+Math.random()*3;
-  L.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.5,life:.5+Math.random()*.4,color}); } }
-function pop(x,y,text,color){ L.pops.push({x,y,text,color,life:1.1}); }
+// ---------- Crates ----------
+function updateCrate(c,dt){
+  moveEnt(c,dt);
+  if(!c.mv){
+    const x=c.tx,y=c.ty;
+    if(!wall(x,y+1)&&!ladder(x,y+1)&&!crateAt(x,y+1,c)&&!ladder(x,y)){go(c,x,y+1,10);}
+    else if(c.slide){ if(canH(x,y,c.slide,c)&&!(player.tx===x+c.slide&&player.ty===y))go(c,x+c.slide,y,11); else {c.slide=0;sfx.push();} }
+  }
+  if(c.mv)for(const e of enemies)if(!e.dead&&Math.abs(e.x-c.x)<.8&&Math.abs(e.y-c.y)<.8)koEnemy(e,300);
+}
+function koEnemy(e,pts){e.ko=1;e.dead=true;e.poof=.6;e.kx=e.x;e.ky=e.y;score+=pts;sfx.ko();hud();}
 
-/* ---------- boucle ---------- */
+// ---------- Loop ----------
 function update(dt){
-  L.time+=dt;
+  tick+=dt;
+  if(state==='intro'){introT-=dt;if(introT<=0)state='play';return;}
+  if(state==='dead'){deadT-=dt;if(deadT<=0){if(lives<=0){state='over';showOverlay('GAME OVER',`Score : ${score}`,'TOUCHE POUR RÉESSAYER CE NIVEAU');}else startLevel();}return;}
+  if(state==='clear'){deadT-=dt;if(deadT<=0){levelIdx++;
+    if(levelIdx>=LEVELS.length){state='won';save(0);showOverlay('BRAVO !','Le Château Farfelu est vidé de ses étoiles.<br>Score final : '+score,'TOUCHE POUR REJOUER');}
+    else{save(levelIdx);startLevel();}}return;}
+  if(state!=='play')return;
   updatePlayer(dt);
-  if(G.state!=="play") return;
-  L.enemies.forEach(e=>updateEnemy(e,dt));
-  updateObjects(dt);
-  if(P.dying<=0 && P.inv<=0 && !P.travel){
-    for(const e of L.enemies){
-      if(e.dead>0 || e.appear>0 || e.travel) continue;
-      if(Math.abs(e.fx-P.fx)<.62 && Math.abs(e.fy-P.fy)<.62){ hitPlayer(); break; }
+  crates.forEach(c=>updateCrate(c,dt));
+  if(player.safe>0)player.safe-=dt;
+  if(freezeT>0)freezeT-=dt; else enemies.forEach(e=>updateEnemy(e,dt));
+  for(const e of enemies){
+    if(e.dead)continue;
+    if(Math.abs(e.x-player.x)<.7&&Math.abs(e.y-player.y)<.7){
+      if(player.safe>0)continue;
+      if(player.inv>0)koEnemy(e,500);
+      else{lives--;state='dead';deadT=1.6;sfx.die();hud();break;}
     }
   }
-  for(let i=L.parts.length-1;i>=0;i--){ const p=L.parts[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=9*dt; p.life-=dt; if(p.life<=0) L.parts.splice(i,1); }
-  for(let i=L.pops.length-1;i>=0;i--){ const p=L.pops[i]; p.y-=dt*.9; p.life-=dt; if(p.life<=0) L.pops.splice(i,1); }
 }
+
+// ---------- Render ----------
+function drawTile(ch,x,y){
+  const X=x*T,Y=y*T;
+  if(ch==='#'){
+    ctx.fillStyle=K.wall;ctx.fillRect(X,Y,T,T);ctx.fillStyle=K.wallLine;
+    ctx.fillRect(X,Y+7,T,1);ctx.fillRect(X,Y+15,T,1);
+    const o=(y%2)*4;ctx.fillRect(X+((4+o)%16),Y,1,7);ctx.fillRect(X+((12+o)%16),Y+8,1,7);
+    ctx.fillStyle=K.wallTop;ctx.fillRect(X,Y,T,(y>0&&tile(x,y-1)!=='#')?3:1);
+  }else if(ch==='H'){
+    ctx.fillStyle=K.rail;ctx.fillRect(X+3,Y,2,T);ctx.fillRect(X+11,Y,2,T);
+    ctx.fillStyle=K.rung;for(let i=2;i<T;i+=5)ctx.fillRect(X+5,Y+i,6,2);
+  }else if(ch==='C'){
+    const b=Math.sin(tick*5+x)*1.5|0;star(X+8,Y+8+b);
+  }else if(ch==='P'){
+    ctx.fillStyle=K.potOut;ctx.fillRect(X+6,Y+2,4,2);ctx.fillRect(X+7,Y+4,2,3);
+    ctx.fillRect(X+4,Y+7,8,7);ctx.fillStyle=(tick*4|0)%2?K.potA:K.potB;ctx.fillRect(X+5,Y+9,6,4);
+    ctx.fillStyle=K.shine;ctx.fillRect(X+6,Y+9,1,2);
+  }else if(/[1-9]/.test(ch)){
+    ctx.fillStyle=K.doorOut;ctx.fillRect(X+2,Y+2,12,14);ctx.fillRect(X+4,Y,8,2);
+    ctx.fillStyle=K.doorIn;ctx.fillRect(X+4,Y+3,8,13);
+    ctx.fillStyle=K.doorTxt;ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText(ch,X+8,Y+12);
+  }
+}
+function star(cx,cy){
+  ctx.fillStyle=K.starOut;
+  ctx.beginPath();for(let i=0;i<10;i++){const r=i%2?3:7,a=-Math.PI/2+i*Math.PI/5;ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}ctx.closePath();ctx.fill();
+  ctx.fillStyle=K.starIn;ctx.beginPath();for(let i=0;i<10;i++){const r=i%2?1.6:4.5,a=-Math.PI/2+i*Math.PI/5;ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}ctx.closePath();ctx.fill();
+}
+function drawCrate(c){
+  const X=Math.round(c.x*T),Y=Math.round(c.y*T);
+  ctx.fillStyle=K.crateOut;ctx.fillRect(X+1,Y+1,14,15);ctx.fillStyle=K.crateFill;ctx.fillRect(X+2,Y+2,12,13);
+  ctx.fillStyle=K.crateLine;for(let i=0;i<12;i++){ctx.fillRect(X+2+i,Y+2+i,1,1);ctx.fillRect(X+13-i,Y+2+i,1,1);}
+  ctx.fillRect(X+2,Y+2,12,1);ctx.fillRect(X+2,Y+14,12,1);
+}
+function render(){
+  ctx.fillStyle=K.bg;ctx.fillRect(0,0,cv.width,cv.height);
+  if(!grid)return;
+  ctx.fillStyle=K.dot;for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if((x*7+y*13)%11===0)ctx.fillRect(x*T+7,y*T+7,2,2);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)drawTile(grid[y][x],x,y);
+  crates.forEach(drawCrate);
+  for(const e of enemies){
+    if(e.dead){
+      if(e.poof>0){const k=1-e.poof/.6,cx=e.kx*T+8,cy=e.ky*T+8;ctx.fillStyle=K.poof;
+        for(let i=0;i<8;i++){const a=i*Math.PI/4,r=3+k*10;ctx.fillRect(cx+Math.cos(a)*r-1,cy+Math.sin(a)*r-1,3,3);}
+        if(k<.5)star(cx,cy);}
+      continue;}
+    const f=SP.enemy[e.kind][(e.anim*6|0)%2];
+    ctx.save();if(e.dir<0){ctx.translate(Math.round(e.x*T)+16,0);ctx.scale(-1,1);ctx.drawImage(f,0,Math.round(e.y*T));}else ctx.drawImage(f,Math.round(e.x*T),Math.round(e.y*T));ctx.restore();
+  }
+  const p=player;
+  if(p&&!(state==='dead'&&(tick*10|0)%2)&&!(p.inv>0&&p.inv<2&&(tick*12|0)%2)&&!(p.safe>0&&(tick*8|0)%2)){
+    let s=p.climb&&ladder(p.tx,p.ty)?SP.c:(p.mv?((p.anim*8|0)%2?SP.a:SP.b):SP.a);
+    const X=Math.round(p.x*T),Y=Math.round(p.y*T);
+    if(p.inv>0){ctx.fillStyle=(tick*10|0)%2?K.inv1:K.inv2;ctx.fillRect(X-1,Y,18,16);}
+    ctx.drawImage(s,X,Y);
+  }
+  if(state==='intro'||state==='clear'){
+    ctx.fillStyle=K.txt;ctx.fillRect(80,82,160,44);ctx.fillStyle=K.banner;ctx.fillRect(82,84,156,40);
+    ctx.fillStyle=K.txt;ctx.font='bold 14px monospace';ctx.textAlign='center';
+    ctx.fillText(state==='intro'?`NIVEAU ${levelIdx+1}`:'ÉTAGE NETTOYÉ !',160,103);
+    ctx.font='10px monospace';ctx.fillText(state==='intro'?`${totalItems} étoiles à trouver`:`+${500*(levelIdx+1)} pts`,160,117);
+  }
+  if(state==='play'&&freezeT>0){ctx.fillStyle=K.txt;ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText(freezeT>.6?'PRÊT ?':'GO !',160,14);}
+  if(state==='pause'){ctx.fillStyle=K.shade;ctx.fillRect(0,0,320,208);ctx.fillStyle=K.shadeTxt;ctx.font='bold 16px monospace';ctx.textAlign='center';ctx.fillText('PAUSE',160,108);}
+}
+function hud(){
+  document.getElementById('hLevel').textContent='NIV '+(levelIdx+1);
+  document.getElementById('hItems').textContent=`★ ${items}/${totalItems}`;
+  document.getElementById('hLives').textContent='♥'+Math.max(0,lives);
+  document.getElementById('hScore').textContent=String(score).padStart(6,'0');
+}
+const ov=document.getElementById('overlay');
+function showOverlay(t,p,a){ov.innerHTML=`<h1>${t}</h1><p>${p}</p><p class="blink">${a}</p>`;ov.classList.remove('hidden');}
+function pressStart(){
+  if(state==='title'){const l=load();levelIdx=l<LEVELS.length?l:0;lives=3;score=0;ov.classList.add('hidden');startLevel();}
+  else if(state==='over'){lives=3;score=0;ov.classList.add('hidden');startLevel();}
+  else if(state==='won'){levelIdx=0;lives=3;score=0;ov.classList.add('hidden');startLevel();}
+  else if(state==='play')state='pause';
+  else if(state==='pause')state='play';
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')state='pause';});
+function markSel(){document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('sel',b.dataset.mode===theme));}
+function cycleTheme(){applyTheme(theme==='retro'?'modern':'retro');markSel();beep(660,.05);}
+document.querySelectorAll('.mode').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();applyTheme(b.dataset.mode);markSel();pressStart();}));
+markSel();
+(function(){const l=load();document.getElementById('ovAction').textContent='CHOISIS UN MODE'+(l>0?` · REPRISE NIV ${l+1}`:'');})();
+
 let last=performance.now();
-function frame(now){
-  const dt=Math.min(.05,(now-last)/1000); last=now;
-  if(L && (G.state==="play")) update(dt);
-  else if(L && L.parts.length){ for(let i=L.parts.length-1;i>=0;i--){ const p=L.parts[i]; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=9*dt; p.life-=dt; if(p.life<=0) L.parts.splice(i,1);} }
-  if(L) draw();
-  requestAnimationFrame(frame);
-}
-
-/* ---------- flux de jeu ---------- */
-function show(id,on){ $(id).classList.toggle("hidden",!on); }
-function setMode(m){
-  G.mode=m; show("touch",m==="touch"); resize();
-}
-function startGame(level){
-  G.level=level; G.lives=5; G.score=0;
-  show("ovMenu",false); openIntro();
-}
-function openIntro(){
-  Music.stop(); Music.pausedAt=null; loadLevel(G.level); saveProgress();
-  const d=LEVELS[G.level];
-  $("iNum").textContent=`Niveau ${G.level+1} / ${LEVELS.length}`; $("iName").textContent=d.name; $("iHint").textContent=d.hint;
-  G.state="intro"; show("ovIntro",true);
-}
-function levelClear(){
-  G.state="msg"; Music.stop(); sfx("win");
-  const bonus = 500 + Math.max(0,Math.round(120-L.time))*5; G.score+=bonus;
-  let txt=`Toutes les carottes sont ramassées ! Bonus : +${bonus}`;
-  const lifeBonus = (G.level+1)%5===0;
-  if(lifeBonus){ G.lives++; txt+=" · Vie bonus : +1 ❤️"; setTimeout(()=>sfx("life"),450); }
-  updateHud();
-  if(G.level>=LEVELS.length-1){
-    G.level=LEVELS.length; saveProgress();
-    msg("🏆 Victoire !",`Tu as libéré le château et ramassé toutes les carottes ! Score final : ${G.score}`,"Rejouer",()=>{ show("ovMsg",false); showMenu(); });
-    return;
-  }
-  msg(`Niveau ${G.level+1} terminé !`,txt,"Niveau suivant ▶",()=>{ show("ovMsg",false); G.level++; openIntro(); });
-}
-function gameOver(){
-  G.state="msg"; Music.stop();
-  msg("Game over",`Plus de vies… Score : ${G.score}. Tu peux reprendre au niveau ${G.level+1} avec 5 vies.`,"Réessayer",()=>{ show("ovMsg",false); startGame(G.level); });
-}
-let msgCb=null;
-function msg(t,txt,btn,cb){ $("mTitle").textContent=t; $("mText").textContent=txt; $("mBtn").textContent=btn; msgCb=cb; show("ovMsg",true); }
-$("mBtn").onclick=()=>{ if(msgCb){ const c=msgCb; msgCb=null; c(); } };
-$("bGo").onclick=()=>{ show("ovIntro",false); Music.play(LEVELS[G.level].music); for(const k in held) release(k); actionQueued=false; G.state="play"; last=performance.now(); };
-function togglePause(){
-  if(G.state==="play"){ G.state="pause"; show("ovPause",true); for(const k in held) release(k); Music.pause(); }
-  else if(G.state==="pause"){ G.state="play"; show("ovPause",false); last=performance.now(); Music.resume(); }
-}
-$("bPause").onclick=togglePause;
-$("bResume").onclick=togglePause;
-$("bRestart").onclick=()=>{
-  show("ovPause",false); G.lives--; updateHud();
-  if(G.lives<=0){ gameOver(); return; }
-  const lives=G.lives, score=G.score; openIntro(); G.lives=lives; G.score=score; updateHud();
-};
-$("bSwitch").onclick=()=>{ setMode(G.mode==="touch"?"keyboard":"touch"); toast(G.mode==="touch"?"Contrôles tactiles":"Contrôles clavier"); };
-$("bMenu").onclick=()=>{ show("ovPause",false); showMenu(); };
-$("bSound").onclick=()=>{ G.muted=!G.muted; $("bSound").textContent=G.muted?"🔇":"🔊";
-  if(G.muted) Music.stop(); else if(G.state==="play") Music.play(LEVELS[G.level].music); };
-$("bMusic").onclick=()=>{ Music.on=!Music.on; $("bMusic").style.opacity=Music.on?1:.4; toast(Music.on?"Musique activée":"Musique coupée");
-  if(!Music.on) Music.stop(); else if(G.state==="play") Music.play(LEVELS[G.level].music); };
-$("bKeyboard").onclick=()=>{ setMode("keyboard"); startGame(0); };
-$("bTouch").onclick=()=>{ setMode("touch"); startGame(0); };
-function showMenu(){
-  G.state="menu"; show("ovMenu",true); Music.stop(); Music.pausedAt=null;
-  const s=loadSave(), row=$("continueRow"); row.innerHTML="";
-  const best=Math.min(s.best||0,LEVELS.length-1);
-  if(best>0){
-    const b=document.createElement("button"); b.className="big alt"; b.textContent=`↻ Reprendre au niveau ${best+1}`;
-    b.onclick=()=>{ setMode(G.mode||s.mode||"keyboard"); startGame(best); }; row.appendChild(b);
-  }
-}
-function toast(t){ const el=$("toast"); el.textContent=t; el.style.opacity=1; clearTimeout(toast.t); toast.t=setTimeout(()=>el.style.opacity=0,1400); }
-function updateHud(){
-  $("hLevel").textContent=Math.min(G.level+1,LEVELS.length); $("hMax").textContent=LEVELS.length;
-  $("hLives").textContent="❤️ "+Math.max(0,G.lives);
-  if(L){ $("hCarrots").textContent=L.carrots.size; }
-  $("hGloves").textContent=P?P.gloves:0; $("hScore").textContent=G.score;
-}
-
-/* ---------- mise à l'échelle ---------- */
-function resize(){
-  DPR=Math.min(window.devicePixelRatio||1,2);
-  const hud=$("hud").offsetHeight+24;
-  let availW=innerWidth-16, availH=innerHeight-hud;
-  const portrait = innerWidth<=innerHeight*1.15;
-  show("rotateHint", G.mode==="touch" && portrait && innerWidth<700);
-  if(G.mode==="touch"){
-    if(!portrait) availW=innerWidth-2*230;
-    else availH-=250;
-  }
-  CELL=Math.max(10,Math.floor(Math.min(availW/COLS,availH/ROWS)));
-  cv.style.width=CELL*COLS+"px"; cv.style.height=CELL*ROWS+"px";
-  cv.width=Math.round(CELL*COLS*DPR); cv.height=Math.round(CELL*ROWS*DPR);
-  if(L) buildStatic();
-}
-addEventListener("resize",resize);
-
-/* =========================================================
-   DESSIN (unités = cases)
-   ========================================================= */
-function buildStatic(){
-  staticLayer.width=cv.width; staticLayer.height=cv.height;
-  const c=staticLayer.getContext("2d"), s=CELL*DPR;
-  c.setTransform(s,0,0,s,0,0);
-  // fond du château
-  const g=c.createLinearGradient(0,0,0,ROWS); g.addColorStop(0,"#2b2150"); g.addColorStop(1,"#1a1433");
-  c.fillStyle=g; c.fillRect(0,0,COLS,ROWS);
-  // pierres de fond
-  c.strokeStyle="rgba(255,255,255,.035)"; c.lineWidth=.04;
-  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){ if(L.grid[y][x]==="#") continue;
-    c.strokeRect(x+.06,y+.06,.88,.88); }
-  // fenêtres décoratives
-  for(let y=1;y<ROWS;y+=3) for(let x=3;x<COLS-2;x+=7){
-    if(L.grid[y][x]!=="."||L.grid[y+1]?.[x]!==".") continue;
-    c.fillStyle="#141026"; c.beginPath(); c.moveTo(x+.25,y+1.6); c.lineTo(x+.25,y+.55); c.arc(x+.5,y+.55,.25,Math.PI,0); c.lineTo(x+.75,y+1.6); c.fill();
-    c.fillStyle="rgba(255,220,140,.08)"; c.fill();
-  }
-  // tuyaux (derrière)
-  for(const pp of L.pipePairs){
-    const cu=pipeCurve(pp.a,pp.b);
-    c.lineCap="round";
-    c.strokeStyle="rgba(0,0,0,.45)"; c.lineWidth=.42; c.beginPath(); c.moveTo(cu[0],cu[1]); c.bezierCurveTo(cu[2],cu[3],cu[4],cu[5],cu[6],cu[7]); c.stroke();
-    c.strokeStyle=pp.color; c.globalAlpha=.55; c.lineWidth=.32; c.stroke();
-    c.globalAlpha=.35; c.strokeStyle="#fff"; c.lineWidth=.06; c.setLineDash([.15,.2]); c.stroke(); c.setLineDash([]); c.globalAlpha=1;
-  }
-  // briques
-  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
-    if(L.grid[y][x]!=="#") continue;
-    c.fillStyle="#9c4f3c"; c.fillRect(x,y,1,1);
-    c.fillStyle="#b4614a"; c.fillRect(x+.04,y+.04,.92,.42); c.fillRect(x+.04,y+.54,.42,.42); c.fillRect(x+.54,y+.54,.42,.42);
-    c.fillStyle="rgba(0,0,0,.18)"; c.fillRect(x+.04,y+.4,.92,.06); c.fillRect(x+.04,y+.9,.42,.06); c.fillRect(x+.54,y+.9,.42,.06);
-    if(y>0 && L.grid[y-1][x]!=="#"){ c.fillStyle="#e7a36f"; c.fillRect(x,y,1,.12); c.fillStyle="#7bc56b"; c.fillRect(x,y,1,.05); }
-  }
-  // escaliers à 45° : d'abord on ouvre la trémie dans le plancher, puis on pose les marches
-  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
-    const s=stairAt(x,y); if(!s || !(isWall(x-1,y)||isWall(x+1,y))) continue;
-    c.fillStyle=g; c.beginPath();
-    if(s==="/"){ c.moveTo(x-.3,y); c.lineTo(x+1.5,y); c.lineTo(x+.5,y+1); c.lineTo(x-.3,y+1); }
-    else { c.moveTo(x+1.3,y); c.lineTo(x-.5,y); c.lineTo(x+.5,y+1); c.lineTo(x+1.3,y+1); }
-    c.closePath(); c.fill();
-  }
-  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
-    const s=stairAt(x,y); if(!s) continue;
-    const d = s==="/" ? 1 : -1;
-    if(stairAt(x-d,y+1)===s) continue;              // pas le bas d'une volée
-    let ex=x, ey=y; while(stairAt(ex+d,ey-1)===s){ ex+=d; ey--; }
-    // A = pieds sur la case de départ, B = pieds sur la case d'arrivée (pente exacte de 45°)
-    drawStairRun(c, x-d+.5, y+2, ex+d+.5, ey, d);
-  }
-  // embouchures de tuyaux
-  for(const [k,p] of L.pipeAt){
-    const x=k%COLS, y=Math.floor(k/COLS);
-    c.fillStyle="rgba(0,0,0,.35)"; c.fillRect(x+.14,y+.62,.72,.4);
-    c.fillStyle=p.color; c.fillRect(x+.18,y+.62,.64,.38);
-    c.fillRect(x+.08,y+.5,.84,.16);
-    c.fillStyle="rgba(255,255,255,.35)"; c.fillRect(x+.24,y+.66,.1,.32); c.fillRect(x+.12,y+.52,.76,.04);
-    c.fillStyle="#141026"; c.fillRect(x+.16,y+.54,.68,.06);
-    c.fillStyle="#fff"; c.font="bold .3px sans-serif"; c.textAlign="center"; c.fillText(p.num,x+.5,y+.93);
-  }
-}
-
-function drawStairRun(c,ax,ay,bx,by,d){
-  const n=Math.round(Math.abs(bx-ax)*3), sx=(bx-ax)/n, sy=(by-ay)/n;
-  // ombre portée
-  c.fillStyle="rgba(0,0,0,.28)"; c.beginPath(); c.moveTo(ax+d*.1,ay); c.lineTo(bx+d*.1,by+.1); c.lineTo(bx+d*.1,by+.6); c.lineTo(ax+d*.7,ay); c.closePath(); c.fill();
-  // limon + marches en dents de scie
-  c.beginPath(); c.moveTo(ax,ay);
-  for(let i=0;i<n;i++){ const px=ax+i*sx, py=ay+i*sy; c.lineTo(px,py+sy); c.lineTo(px+sx,py+sy); }
-  c.lineTo(bx,by+.45); c.lineTo(ax+d*.45,ay); c.closePath();
-  c.fillStyle="#7b4a27"; c.fill();
-  c.lineWidth=.03; c.strokeStyle="#3d2412"; c.stroke();
-  // nez de marche clairs
-  c.lineCap="butt";
-  for(let i=0;i<n;i++){ const px=ax+i*sx, py=ay+(i+1)*sy;
-    c.strokeStyle="#e4a868"; c.lineWidth=.07; c.beginPath(); c.moveTo(px,py+.035); c.lineTo(px+sx,py+.035); c.stroke();
-    c.strokeStyle="#5c361b"; c.lineWidth=.04; c.beginPath(); c.moveTo(px,py-sy*.02); c.lineTo(px,py-sy); c.stroke(); }
-  // rambarde fine
-  c.strokeStyle="rgba(228,168,104,.55)"; c.lineWidth=.04;
-  c.beginPath(); c.moveTo(ax+d*.3,ay-.85); c.lineTo(bx-d*.8,by+.25); c.stroke();
-  for(let i=1;i<Math.abs(bx-ax);i++){ const px=ax+d*i, py=ay-i; c.beginPath(); c.moveTo(px,py); c.lineTo(px,py-.55); c.stroke(); }
-}
-
-function draw(){
-  const s=CELL*DPR;
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.drawImage(staticLayer,0,0);
-  ctx.setTransform(s,0,0,s,0,0);
-  const t=L.time;
-  // carottes
-  for(const k of L.carrots){ const x=k%COLS, y=Math.floor(k/COLS); drawCarrot(ctx,x+.5,y+.55+Math.sin(t*3+x)*.05,1); }
-  // objets
-  for(const it of L.items) drawGloveItem(ctx,it.x+.5,it.y+.6+Math.sin(t*3)*.05,1);
-  for(const c of L.crates) drawCrate(ctx,c.fx,c.fy);
-  for(const p of L.pots) drawPot(ctx,p.fx+.5,p.fy+1,p.slide?t*14*p.slide:0);
-  // ennemis
-  for(const e of L.enemies){
-    if(e.dead>0){ if(e.dead<1.5 && Math.floor(e.dead*8)%2){ ctx.globalAlpha=.3; drawEnemy(ctx,e.type,e.sx+.5,e.sy+1,e.face,0,false); ctx.globalAlpha=1; } continue; }
-    let x=e.fx+.5, y=e.fy+1;
-    if(e.travel){ const tr=e.travel; const [bx,by]=bez(tr.curve,tr.t); if(tr.t<.12||tr.t>.88){ x=bx; y=by; ctx.globalAlpha=.5; } else continue; }
-    if(e.appear>0 && Math.floor(e.appear*10)%2) ctx.globalAlpha=.35;
-    drawEnemy(ctx,e.type,x,y,e.face,e.anim,e.charge);
-    ctx.globalAlpha=1;
-  }
-  // lapin
-  drawPlayer(t);
-  // gants lancés
-  for(const sh of L.shots) drawGloveShot(ctx,sh.fx+.5,sh.fy+.55,sh.dir,t);
-  // particules
-  for(const p of L.parts){ ctx.globalAlpha=Math.max(0,p.life*1.6); ctx.fillStyle=p.color; ctx.fillRect(p.x-.05,p.y-.05,.1,.1); }
-  ctx.globalAlpha=1;
-  // textes flottants (en pixels)
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.textAlign="center"; ctx.font=`bold ${Math.round(s*.42)}px "Trebuchet MS",sans-serif`;
-  for(const p of L.pops){ ctx.globalAlpha=Math.min(1,p.life*2); ctx.lineWidth=s*.08; ctx.strokeStyle="#1a1030"; ctx.strokeText(p.text,p.x*s,p.y*s); ctx.fillStyle=p.color; ctx.fillText(p.text,p.x*s,p.y*s); }
-  ctx.globalAlpha=1;
-}
-
-function drawPlayer(t){
-  let x=P.fx+.5, y=P.fy+1, rot=0, alpha=1;
-  if(P.travel){ const [bx,by]=bez(P.travel.curve,P.travel.t); x=bx; y=by; const tt=P.travel.t;
-    if(tt>.15&&tt<.85){ // petite boule dans le tuyau
-      ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x,y,.16,0,7); ctx.fill(); return; }
-    alpha=.7; }
-  if(P.dying>0){ rot=(1.3-P.dying)*10; y-=Math.sin((1.3-P.dying)/1.3*Math.PI)*1.2; }
-  if(P.inv>0 && P.dying<=0 && Math.floor(P.inv*10)%2) alpha=.35;
-  ctx.globalAlpha=alpha;
-  drawRabbit(ctx,x,y,P.face,P.moving&&!P.falling?P.anim:0,rot,P.gloves>0,P.moving&&P.ty!==P.y&&!P.falling);
-  ctx.globalAlpha=1;
-}
-
-/* ----- sprites dessinés en code (origine : centre des pieds) ----- */
-function ell(c,x,y,rx,ry,fill,rot){ c.beginPath(); c.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2); c.fillStyle=fill; c.fill(); }
-function outlineEll(c,x,y,rx,ry,fill,rot){ ell(c,x,y,rx,ry,fill,rot); c.stroke(); }
-
-function drawRabbit(c,x,y,face,anim,rot,glove,climb){
-  c.save(); c.translate(x,y); c.scale(face,1);
-  if(rot){ c.translate(0,-.4); c.rotate(rot); c.translate(0,.4); }
-  const bob=Math.abs(Math.sin(anim))*.06, step=Math.sin(anim)*.07;
-  c.translate(0,-bob);
-  c.lineWidth=.035; c.strokeStyle="#3a2c4a";
-  // queue
-  outlineEll(c,-.2,-.3,.08,.08,"#ffffff");
-  // pieds
-  outlineEll(c,-.07+step,-.05,.11,.05,"#e9e4dc");
-  outlineEll(c,.1-step,-.05,.11,.05,"#e9e4dc");
-  // corps
-  outlineEll(c,0,-.3,.19,.23,"#f3efe8");
-  ell(c,.05,-.26,.1,.14,"#fff8ef");
-  // écharpe bleue
-  c.fillStyle="#3c7be0"; c.beginPath(); c.ellipse(.02,-.5,.15,.05,0,0,7); c.fill();
-  c.fillRect(-.12,-.5,.07,.16);
-  // oreilles
-  const ew=climb?Math.sin(anim*2)*.1:Math.sin(anim)*.05;
-  c.save(); c.translate(-.03,-.74); c.rotate(-.25+ew); outlineEll(c,0,-.17,.065,.2,"#f3efe8"); ell(c,0,-.16,.03,.14,"#f6a7b8"); c.restore();
-  c.save(); c.translate(.07,-.75); c.rotate(.12-ew); outlineEll(c,0,-.17,.065,.2,"#f3efe8"); ell(c,0,-.16,.03,.14,"#f6a7b8"); c.restore();
-  // tête
-  outlineEll(c,.06,-.64,.16,.14,"#f3efe8");
-  ell(c,.16,-.6,.07,.05,"#fff8ef");
-  ell(c,.12,-.67,.032,.04,"#2a1d3a"); ell(c,.13,-.68,.012,.012,"#fff");
-  ell(c,.21,-.62,.025,.02,"#f07a9a");
-  // bras / gant
-  if(glove){ outlineEll(c,.2,-.32,.08,.07,"#e23b3b"); c.fillStyle="#fff"; c.fillRect(.12,-.36,.04,.08); }
-  else outlineEll(c,.15,-.3,.05,.07,"#f3efe8");
-  c.restore();
-}
-
-function drawEnemy(c,type,x,y,face,anim,charge){
-  c.save(); c.translate(x,y); c.scale(face,1);
-  c.lineWidth=.035; c.strokeStyle="#22182e";
-  const step=Math.sin(anim)*.06, bob=Math.abs(Math.sin(anim))*.04;
-  if(type==="h"){ // hérisson
-    c.translate(0,-bob);
-    c.fillStyle="#5a3b25";
-    c.beginPath(); for(let i=0;i<=8;i++){ const a=Math.PI+i/8*Math.PI*.9, r=i%2?.3:.42; c.lineTo(-.04+Math.cos(a)*r,-.12+Math.sin(a)*r); } c.lineTo(.15,-.08); c.closePath(); c.fill(); c.stroke();
-    outlineEll(c,-.03,-.16,.24,.15,"#7a5233");
-    outlineEll(c,.2,-.14,.12,.09,"#e6c79a");
-    ell(c,.31,-.15,.03,.03,"#1a1020"); ell(c,.2,-.18,.02,.025,"#1a1020");
-    outlineEll(c,-.1+step,-.03,.05,.03,"#3a2616"); outlineEll(c,.1-step,-.03,.05,.03,"#3a2616");
-  } else if(type==="l"){ // loup
-    c.translate(0,-bob);
-    c.beginPath(); c.moveTo(-.22,-.35); c.quadraticCurveTo(-.45,-.45,-.42,-.2); c.lineWidth=.08; c.strokeStyle="#6d7280"; c.stroke(); c.lineWidth=.035; c.strokeStyle="#22182e";
-    outlineEll(c,-.12+step,-.05,.06,.05,"#5d6270"); outlineEll(c,.12-step,-.05,.06,.05,"#5d6270");
-    outlineEll(c,0,-.28,.24,.17,"#8a8f9c");
-    ell(c,.05,-.23,.13,.09,"#c9ccd4");
-    c.fillStyle="#8a8f9c"; c.beginPath(); c.moveTo(.06,-.6); c.lineTo(.1,-.82); c.lineTo(.18,-.62); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(.18,-.6); c.lineTo(.26,-.8); c.lineTo(.3,-.58); c.fill(); c.stroke();
-    outlineEll(c,.16,-.5,.16,.13,"#8a8f9c");
-    c.beginPath(); c.moveTo(.22,-.55); c.lineTo(.45,-.47); c.lineTo(.42,-.4); c.lineTo(.22,-.4); c.closePath(); c.fillStyle="#c9ccd4"; c.fill(); c.stroke();
-    ell(c,.44,-.46,.03,.025,"#111");
-    ell(c,.2,-.54,.035,.03,"#ffd23a"); ell(c,.21,-.54,.015,.02,"#111");
-  } else if(type==="r"){ // renard
-    c.translate(0,-bob);
-    c.save(); c.translate(-.2,-.25); c.rotate(-.5+Math.sin(anim)*.15); outlineEll(c,-.12,0,.2,.09,"#e8762c"); ell(c,-.27,0,.07,.06,"#fff4e6"); c.restore();
-    outlineEll(c,-.08+step,-.05,.05,.05,"#3a2010"); outlineEll(c,.12-step,-.05,.05,.05,"#3a2010");
-    outlineEll(c,0,-.27,.19,.16,"#e8762c");
-    ell(c,.08,-.24,.09,.1,"#fff4e6");
-    c.fillStyle="#e8762c"; c.beginPath(); c.moveTo(.04,-.58); c.lineTo(.06,-.8); c.lineTo(.16,-.6); c.fill(); c.stroke();
-    c.beginPath(); c.moveTo(.16,-.58); c.lineTo(.24,-.79); c.lineTo(.28,-.56); c.fill(); c.stroke();
-    outlineEll(c,.15,-.48,.15,.12,"#e8762c");
-    c.beginPath(); c.moveTo(.2,-.5); c.lineTo(.42,-.43); c.lineTo(.2,-.38); c.closePath(); c.fillStyle="#fff4e6"; c.fill(); c.stroke();
-    ell(c,.42,-.43,.03,.025,"#111");
-    ell(c,.19,-.52,.03,.035,"#1a1020");
-  } else if(type==="s"){ // sanglier
-    if(charge){ c.fillStyle="rgba(230,200,150,.5)"; for(let i=0;i<3;i++) { c.beginPath(); c.arc(-.35-i*.12,-.06-Math.random()*.05,.06+Math.random()*.04,0,7); c.fill(); } }
-    c.translate(0,-bob);
-    outlineEll(c,-.14+step,-.05,.05,.06,"#2c1c12"); outlineEll(c,.14-step,-.05,.05,.06,"#2c1c12");
-    outlineEll(c,-.02,-.27,.3,.2,"#5b3a26");
-    c.fillStyle="#3a2418"; c.beginPath(); for(let i=0;i<6;i++){ c.lineTo(-.25+i*.08,-.45-(i%2)*.06); } c.lineTo(.15,-.4); c.lineTo(-.25,-.4); c.fill();
-    outlineEll(c,.26,-.27,.13,.12,"#6c4630");
-    outlineEll(c,.39,-.24,.06,.07,"#d89a86");
-    ell(c,.39,-.26,.012,.02,"#3a1a10"); ell(c,.41,-.22,.012,.02,"#3a1a10");
-    c.fillStyle="#fff7e0"; c.beginPath(); c.moveTo(.33,-.18); c.quadraticCurveTo(.4,-.2,.38,-.33); c.lineTo(.36,-.2); c.fill(); c.stroke();
-    ell(c,.28,-.34,.03,.03,charge?"#ff3030":"#1a1020");
-    c.fillStyle="#5b3a26"; c.beginPath(); c.moveTo(.18,-.36); c.lineTo(.17,-.48); c.lineTo(.25,-.38); c.fill(); c.stroke();
-  } else if(type==="f"){ // fantôme
-    const fl=Math.sin(anim*.6)*.05;
-    c.translate(0,-.06+fl);
-    c.globalAlpha*=.88;
-    c.fillStyle="#eef0ff"; c.beginPath(); c.moveTo(-.24,-.05); c.lineTo(-.24,-.5); c.arc(0,-.5,.24,Math.PI,0); c.lineTo(.24,-.05);
-    for(let i=0;i<4;i++){ const xx=.24-i*.12; c.quadraticCurveTo(xx-.03,-.15+((i+Math.floor(anim))%2)*.06,xx-.12,-.05); }
-    c.closePath(); c.fill(); c.stroke();
-    ell(c,.04,-.5,.04,.06,"#2a2050"); ell(c,.15,-.5,.04,.06,"#2a2050");
-    ell(c,.1,-.35,.04,.03,"#2a2050");
-  }
-  c.restore();
-}
-
-function drawCarrot(c,x,y,sc){
-  c.save(); c.translate(x,y); c.scale(sc,sc);
-  c.fillStyle="#3fae4a";
-  for(const a of [-.5,0,.5]){ c.save(); c.rotate(a); c.beginPath(); c.ellipse(0,-.22,.05,.14,0,0,7); c.fill(); c.restore(); }
-  c.beginPath(); c.moveTo(-.13,-.12); c.quadraticCurveTo(0,-.2,.13,-.12); c.lineTo(.02,.3); c.lineTo(-.02,.3); c.closePath();
-  c.fillStyle="#ff8a2a"; c.fill(); c.lineWidth=.03; c.strokeStyle="#8a3e0b"; c.stroke();
-  c.strokeStyle="#c85d14"; c.beginPath(); c.moveTo(-.07,-.02); c.lineTo(0,-.01); c.moveTo(.06,.08); c.lineTo(-.01,.09); c.stroke();
-  c.restore();
-}
-function drawGloveItem(c,x,y,sc){
-  c.save(); c.translate(x,y); c.scale(sc,sc);
-  c.fillStyle="rgba(255,90,90,.18)"; c.beginPath(); c.arc(0,0,.38,0,7); c.fill();
-  c.lineWidth=.035; c.strokeStyle="#3a0d12";
-  c.fillStyle="#fff"; c.fillRect(-.22,-.1,.12,.2); c.strokeRect(-.22,-.1,.12,.2);
-  outlineEll(c,.04,-.02,.18,.16,"#e23b3b"); outlineEll(c,.06,-.14,.07,.05,"#e23b3b");
-  ell(c,.1,-.06,.05,.04,"rgba(255,255,255,.4)");
-  c.restore();
-}
-function drawGloveShot(c,x,y,dir,t){
-  c.save(); c.translate(x,y); c.scale(dir,1);
-  c.strokeStyle="rgba(255,255,255,.5)"; c.lineWidth=.04;
-  for(let i=1;i<4;i++){ c.beginPath(); c.moveTo(-.2-i*.14,-.08+i*.04); c.lineTo(-.32-i*.14,-.08+i*.04); c.stroke(); }
-  drawGloveItem(c,0,0,.9); c.restore();
-}
-function drawCrate(c,x,y){
-  c.fillStyle="#2a1a0e"; c.fillRect(x+.06,y+.08,.88,.92);
-  c.fillStyle="#c98a4b"; c.fillRect(x+.1,y+.12,.8,.84);
-  c.strokeStyle="#7a4a22"; c.lineWidth=.07; c.strokeRect(x+.14,y+.16,.72,.76);
-  c.beginPath(); c.moveTo(x+.16,y+.18); c.lineTo(x+.84,y+.9); c.moveTo(x+.84,y+.18); c.lineTo(x+.16,y+.9); c.stroke();
-}
-function drawPot(c,x,y,spin){
-  c.save(); c.translate(x,y-.3); if(spin) c.rotate(spin*.1);
-  c.lineWidth=.035; c.strokeStyle="#4a1d0e";
-  c.fillStyle="#d9734a"; c.beginPath(); c.moveTo(-.22,-.18); c.lineTo(.22,-.18); c.lineTo(.16,.28); c.lineTo(-.16,.28); c.closePath(); c.fill(); c.stroke();
-  c.fillStyle="#e88a5d"; c.fillRect(-.27,-.28,.54,.12); c.strokeRect(-.27,-.28,.54,.12);
-  c.fillStyle="rgba(255,255,255,.25)"; c.fillRect(-.14,-.12,.05,.32);
-  c.restore();
-}
-
-/* ---------- légende du menu ---------- */
-function buildLegend(){
-  const items=[
-    ["r",ETYPES.r],["l",ETYPES.l],["h",ETYPES.h],["s",ETYPES.s],["f",ETYPES.f],
-    ["glove",{name:"Gant de boxe",desc:"2 lancers à distance, met K.O."}],
-    ["crate",{name:"Caisse",desc:"avance d'une case à chaque poussée, écrase en tombant"}],
-    ["pot",{name:"Pot",desc:"glisse jusqu'au mur en renversant tout, puis se casse"}],
-    ["pipe",{name:"Tuyau",desc:"↓ dessus pour glisser jusqu'au tuyau jumeau"}],
-    ["stair",{name:"Escalier à 45°",desc:"↑ au pied pour monter, ↓ en haut pour descendre"}],
-  ];
-  const box=$("legend");
-  for(const [t,d] of items){
-    const div=document.createElement("div"); div.className="leg";
-    const c=document.createElement("canvas"); const px=44, r=Math.min(window.devicePixelRatio||1,2);
-    c.width=px*r; c.height=px*r; c.style.width=c.style.height=px+"px";
-    const g=c.getContext("2d"); g.setTransform(px*r,0,0,px*r,0,0);
-    if(ETYPES[t]) drawEnemy(g,t,.45,.92,1,0,false);
-    else if(t==="glove") drawGloveItem(g,.5,.5,1.1);
-    else if(t==="crate") drawCrate(g,0,0);
-    else if(t==="pot") drawPot(g,.5,.95,0);
-    else if(t==="stair"){ drawStairRun(g,.05,.95,.95,.05,1); }
-    else if(t==="pipe"){ g.fillStyle="#4cc76a"; g.fillRect(.2,.45,.6,.55); g.fillRect(.1,.32,.8,.18); g.fillStyle="#141026"; g.fillRect(.18,.36,.64,.07); }
-    div.appendChild(c);
-    const tx=document.createElement("div"); tx.innerHTML=`<b>${d.name}</b><br>${d.desc}`; div.appendChild(tx);
-    box.appendChild(div);
-  }
-}
-
-/* ---------- démarrage ---------- */
-buildLegend();
-resize();
-loadLevel(0);
-showMenu();
-requestAnimationFrame(frame);
-window.__game={G,get L(){return L},get P(){return P},LEVELS,loadLevel,press,release};
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);render();musicTick();requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
