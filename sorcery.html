@@ -1,0 +1,337 @@
+	<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Sortilège — aventure 8 bits</title>
+<style>
+html,body{margin:0;height:100%;background:#141414;color:#ddd;font-family:ui-monospace,Menlo,Consolas,monospace;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#wrap{display:flex;align-items:center;justify-content:center;height:100%}
+body.touch.portrait #wrap{align-items:flex-start;padding-top:10px;box-sizing:border-box}
+#bezel{background:linear-gradient(#e9e3d2,#cfc7b2);padding:12px 12px 6px;border-radius:12px;box-shadow:0 10px 40px #000a,inset 0 1px 0 #fff8}
+#scr{outline:none;display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;border-radius:4px;box-shadow:inset 0 0 0 2px #000}
+#plate{display:flex;justify-content:space-between;align-items:center;color:#6b6250;font-size:11px;letter-spacing:.12em;padding:5px 2px 0}
+#plate b{color:#4a4335}
+.led{width:8px;height:8px;border-radius:50%;background:#e33;box-shadow:0 0 6px #f44}
+#ui{position:fixed;top:8px;right:8px;display:flex;gap:6px;z-index:5}
+#ui button{font:inherit;font-size:12px;background:#2a2a2a;color:#ddd;border:1px solid #444;border-radius:6px;padding:5px 9px;cursor:pointer}
+#stick,#fire{display:none;position:fixed;z-index:4;touch-action:none}
+body.touch #stick,body.touch #fire{display:block}
+#stick{left:18px;bottom:22px;width:150px;height:150px;border-radius:50%;background:radial-gradient(#ffffff14,#ffffff08);border:2px solid #ffffff30}
+#knob{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:#f0e03055;border:2px solid #f0e030aa}
+#fire{right:22px;bottom:40px;width:96px;height:96px;border-radius:50%;background:#e0181855;border:3px solid #ff5050cc;color:#fff;font:bold 18px ui-monospace,monospace;letter-spacing:.08em}
+#fire.on{background:#e01818aa}
+</style>
+</head>
+<body>
+<div id="ui"><button id="bPad">COMMANDES À L'ÉCRAN</button><button id="bSnd">SON : OUI</button><button id="bPause">PAUSE</button></div>
+<div id="wrap"><div id="bezel"><canvas id="scr" width="320" height="200" tabindex="0"></canvas>
+<div id="plate"><b>SORTILÈGE</b><span class="led"></span><span>STYLE TO9 · 320×200 · 16 COULEURS</span></div></div></div>
+<div id="stick"><div id="knob"></div></div>
+<button id="fire">FEU</button>
+<script>
+'use strict';
+const W=320,H=200,GH=160;
+const cv=document.getElementById('scr'),ctx=cv.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+const PAL={K:'#000000',R:'#e01818',G:'#18c020',Y:'#f0e030',B:'#2838e0',M:'#c828d0',C:'#28d0e0',W:'#f4f4f4',g:'#909090',P:'#f4a0a8',L:'#90f080',y:'#f8f0a0',b:'#88a8ff',c:'#b0f4f4',O:'#f08020',D:'#086818',N:'#8a4a18',d:'#505050',m:'#6a1c8a'};
+const rnd=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)};
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function px(g,col,x,y,w=1,h=1){g.fillStyle=PAL[col]||col;g.fillRect(x|0,y|0,w,h)}
+function newCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
+
+/* ---------- sprites ---------- */
+function mk(rows){const h=rows.length,w=rows[0].length,a=newCanvas(w,h),b=newCanvas(w,h),x=a.getContext('2d'),y=b.getContext('2d');
+ for(let j=0;j<h;j++)for(let i=0;i<w;i++){const ch=rows[j][i];if(ch!=='.'&&PAL[ch]){px(x,ch,i,j);px(y,ch,w-1-i,j)}}
+ return{c:a,f:b,w,h}}
+function spr(s,x,y,flip){ctx.drawImage(flip?s.f:s.c,Math.round(x),Math.round(y))}
+const WIZ=["......O.....",".....OO.....",".....OOO....","....OOOO....","..OOOOOOOO..","....PPPKP...","....PPPPP...","...WWWWWW...","..RWWWWWWR..",".RRRWWWWRRP.",".RRRRWWRRR..","..RRRRRRRR..","..RRRYRRRR..",".RRRRYRRRRR.",".RRRRRRRRRR."];
+const S_WIZ=[mk([...WIZ,"..YYY..YYY.."]),mk([...WIZ,"...YYY.YYY.."])];
+const S_CAP=mk([...WIZ,"..YYY..YYY.."].map(r=>r.replace(/R/g,'B').replace(/O/g,'b')));
+const GH1=["...WWWW...","..WWWWWW..",".WWKWWKWW.",".WWKWWKWW.",".WWWWWWWW.",".WWWKKWWW.",".WWWWWWWW.",".cWWWWWWc."];
+const S_GHOST=[mk([...GH1,".W.WW.WW.W","W..W..W..W"]),mk([...GH1,"W.WW.WW.W.",".........."])];
+const S_BAT=[mk(["M..........M","MM...MM...MM","MMMMMMMMMMMM",".MMMMYYMMMM.","...MMMMMM...",".....MM....."]),
+ mk(["............",".....MM.....","..MMMMMMMM..",".MMMMYYMMMM.","MM.MMMMMM.MM","M....MM....M"])];
+const S_DEMON=mk(["O........O","OO.RRRR.OO",".ORRRRRRO.","RRYYRRYYRR","RRYKRRKYRR","RRRRRRRRRR","RRWKWKWKRR",".RRWKWKWR.","..RRRRRR..","...RRRR..."]);
+const S_BOSS=mk(["......mmmm......",".....mmmmmm.....","....mmmmmmmm....","...mmWWWWWWmm...","...mWKKWWKKWm...","...mWKRWWRKWm...","...mWWWKKWWWm...","....mWKWKWKm....","....mmWWWWmm....","...mmmmmmmmmm...","..mmMMmmmmMMmm..",".mmMMMmmmmMMMmm.","WmMMmmmmmmmmMMmW","W.mmmmmMMmmmmm.W","..mmmmmMMmmmmm..","..mmmmmMMmmmmm..","...mmmmMMmmmm...","...mmmmMMmmmm...","....mmmMMmmm....",".....mmmmmm.....","......mmmm......",".......mm......."]);
+const SPR={
+ couronne:mk(["Y..YY..Y","YY.YY.YY","YYYYYYYY","YRYYCYRY","YYYYYYYY"]),
+ cle:mk([".YYY....","Y...Y...","Y...YYYY","Y...Y.YY",".YYY..Y."]),
+ lyre:mk(["Y......Y","YY....YY",".Y.cc.Y.",".YccccY.",".YccccY.",".YccccY.","..YYYY..","...YY..."]),
+ livre:mk(["RRRRRRRR","RWWWWWWR","RWKKKKWR","RWWWWWWR","RWKKKKWR","RWWWWWWR","RRRRRRRR"]),
+ fiole:mk(["...WW...","...gg...","..g..g..",".gMMMMg.",".gMMMMg.",".gMMMMg.","..gggg.."]),
+ epee:mk(["..c..",".cWc.",".cWc.",".cWc.",".cWc.",".cWc.",".cWc.","YYYYY","..N..","..N..","..Y.."])};
+const NAME={couronne:'LA COURONNE',cle:'LA CLE',lyre:'LA LYRE',livre:'LE GRIMOIRE',fiole:'LA FIOLE',epee:"L'EPEE MAGIQUE"};
+const HINT={couronne:'UN PRISONNIER : TROUVE-MOI UNE COURONNE',lyre:'UN PRISONNIER : JOUE-MOI DE LA LYRE',livre:'UN PRISONNIER : APPORTE LE GRIMOIRE',fiole:'UN PRISONNIER : DONNE-MOI LA FIOLE'};
+
+/* ---------- police bitmap 5x7 ---------- */
+const FONT={A:'0E11111F111111',B:'1E11111E11111E',C:'0E11101010110E',D:'1E11111111111E',E:'1F10101E10101F',F:'1F10101E101010',G:'0E11101711110F',H:'1111111F111111',I:'0E04040404040E',J:'0702020202120C',K:'11121418141211',L:'1010101010101F',M:'111B1515111111',N:'11111915131111',O:'0E11111111110E',P:'1E11111E101010',Q:'0E11111115120D',R:'1E11111E141211',S:'0F10100E01011E',T:'1F040404040404',U:'1111111111110E',V:'11111111110A04',W:'1111111515150A',X:'11110A040A1111',Y:'11110A04040404',Z:'1F01020408101F',
+'0':'0E11131519110E','1':'040C040404040E','2':'0E11010204081F','3':'1F02040201110E','4':'02060A121F0202','5':'1F101E0101110E','6':'0608101E11110E','7':'1F010204080808','8':'0E11110E11110E','9':'0E11110F01020C',
+'%':'18190204081303','.':'00000000000C0C',':':'000C0C000C0C00','!':'04040404040004',"'":'04040800000000','-':'0000001F000000','/':'01010204081010','?':'0E110102040004',',':'000000000C0408','(':'02040808080402',')':'08040202020408','+':'0004041F040400'};
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
+const tcache=new Map();
+function txt(s,x,y,col,sc=1){s=norm(s);const key=s+'|'+col+'|'+sc;let c=tcache.get(key);
+ if(!c){if(tcache.size>300)tcache.clear();c=newCanvas(Math.max(1,s.length*6*sc),7*sc);const g=c.getContext('2d');g.fillStyle=PAL[col]||col;
+  [...s].forEach((ch,k)=>{const gl=FONT[ch];if(!gl)return;for(let r=0;r<7;r++){const v=parseInt(gl.substr(r*2,2),16);for(let b=0;b<5;b++)if(v&(16>>b))g.fillRect(k*6*sc+b*sc,r*sc,sc,sc)}});
+  tcache.set(key,c)}
+ ctx.drawImage(c,Math.round(x),Math.round(y))}
+function txtC(s,y,col,sc=1){txt(s,(W-norm(s).length*6*sc)/2,y,col,sc)}
+
+/* ---------- monde ---------- */
+const ROOMS=[
+{id:0,name:'DANS LE BOIS',style:'grass',outdoor:1,exits:[null,1],plats:[[0,150,320,10],[50,105,90,8],[190,72,100,8]],
+ trees:[[22,150],[160,150],[95,105],[250,150]],dead:[],doors:[{id:'a',x:290,y:128,to:[4,'a']}],mons:[['bat',100,40],['demon',200,110]]},
+{id:1,name:"AUX CHUTES D'EAU",style:'grass',outdoor:1,exits:[0,2],plats:[[0,150,60,10],[260,150,60,10],[90,82,150,8]],
+ water:[[60,150,200,10]],falls:[[150,0,18,82],[214,90,16,60]],clouds:[[40,22],[260,16]],trees:[[300,150]],doors:[{id:'a',x:20,y:128,to:[5,'a']}],mons:[['ghost',260,40],['bat',120,120]]},
+{id:2,name:'DANS LA TOUR',style:'stone',exits:[1,null],plats:[[0,150,320,10],[30,122,56,6],[100,96,56,6],[170,70,56,6],[240,46,70,6]],
+ cauldron:[190,140],torches:[[14,70],[160,40],[300,100]],mons:[['bat',60,60],['demon',140,120],['ghost',280,120]]},
+{id:3,name:'AU CIMETIERE',style:'grass',outdoor:1,exits:[null,null],plats:[[0,150,320,10],[80,104,76,8],[196,72,90,8]],
+ tombs:[[120,150],[160,150],[250,150],[290,150]],dead:[[60,150]],doors:[{id:'a',x:14,y:128,to:[6,'a'],group:'g1'}],mons:[['ghost',200,120],['ghost',60,40],['bat',150,30]]},
+{id:4,name:'DANS LES TERRES INCULTES',style:'grass',outdoor:1,exits:[null,5],plats:[[0,150,320,10],[70,110,90,8],[190,78,100,8],[16,64,60,8]],
+ trees:[[125,110],[270,78],[40,64]],dead:[[110,150],[200,150]],cauldron:[40,140],doors:[{id:'a',x:290,y:128,to:[0,'a']}],mons:[['bat',230,120],['ghost',40,20]]},
+{id:5,name:'AU BORD DE LA RIVIERE',style:'grass',outdoor:1,exits:[4,6],plats:[[0,150,90,10],[230,150,90,10],[110,106,80,8],[20,72,70,8],[220,60,84,8]],
+ water:[[90,150,140,10]],trees:[[55,72],[262,60]],dead:[[20,150]],clouds:[[150,20]],doors:[{id:'a',x:280,y:128,to:[1,'a']}],mons:[['demon',150,40],['bat',60,110]]},
+{id:6,name:'AU CHATEAU',style:'stone',exits:[5,null],plats:[[0,150,320,10],[40,112,60,6],[130,82,60,6],[220,112,60,6]],
+ torches:[[110,50],[200,50]],doors:[{id:'a',x:14,y:128,to:[3,'a'],lock:'cle',group:'g1'},{id:'b',x:292,y:128,to:[7,'a'],lock:'four'}],mons:[['ghost',160,130],['demon',60,40]]},
+{id:7,name:"DANS L'ANTRE DU NECROMANCIEN",style:'brick',exits:[null,null],plats:[[0,150,320,10],[30,96,60,6],[230,96,60,6]],
+ torches:[[100,90],[214,90]],skulls:[[40,20],[150,14],[270,24],[90,60],[230,58]],doors:[{id:'a',x:14,y:128,to:[6,'b']}],mons:[]}
+];
+
+/* ---------- décor statique (pré-rendu) ---------- */
+function drawPlat(g,s,style,seed){const[x,y,w,h]=s;
+ for(let j=0;j<h;j++)for(let i=0;i<w;i++){const X=x+i,Y=y+j,r=rnd(X*7.13+Y*3.71+seed);let col;
+  if(style==='grass'){
+   if(j===0)col=r<.25?'G':(r<.3?'y':'L');else if(j===1)col=((X+Y)&1)?'L':'G';
+   else if(j<h-2)col=(j>h/2&&((X+Y)&1)&&r<.6)?'D':'G';
+   else{if(j===h-1&&r<.45&&y+h<GH)continue;col=((X+Y)&1)?'D':'G'}
+  }else if(style==='stone'){const row=j>>2,off=(row&1)*5,mortar=(j%4===3)||((i+off)%10===0);col=j===0?'W':(mortar?'d':(r<.15?'c':'g'))}
+  else{const row=(j/3)|0,off=(row&1)*4,mortar=(j%3===2)||((i+off)%8===0);col=j===0?'M':(mortar?'K':(r<.2?'M':'m'))}
+  px(g,col,X,Y)}
+ if(style==='grass')for(let i=0;i<w;i++){const r=rnd(x+i+seed*3.3+y);if(r<.18){px(g,'L',x+i,y-1);if(r<.07)px(g,'G',x+i,y-2)}}}
+function blob(g,cx,cy,r,seed){for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){if(x*x+y*y>r*r-rnd(seed+x*31+y*17)*r*1.5)continue;
+ let col='G';if(y<-r/3&&x<1&&((x+y)&1)===0)col='L';else if(y>r/3&&((x+y)&1)===0)col='D';px(g,col,cx+x,cy+y)}}
+function drawTree(g,x,b){px(g,'N',x-1,b-14,3,14);px(g,'R',x,b-10,1,6);px(g,'N',x-3,b-1,7,1);blob(g,x-7,b-14,6,x*3);blob(g,x+7,b-14,6,x*5);blob(g,x,b-20,8,x*7)}
+function drawDead(g,x,b){px(g,'R',x-1,b-22,3,22);px(g,'R',x-4,b-1,9,1);
+ for(const[sx,sy,dx,dy,n]of[[-1,-14,-1,-1,9],[1,-17,1,-1,8],[0,-22,-1,-1,5],[1,-23,1,-1,5],[-1,-8,-1,0,6],[1,-10,1,0,5]])
+  for(let i=0;i<n;i++){px(g,'R',x+sx+dx*i,b+sy+dy*i);if(i===n-1)px(g,'R',x+sx+dx*i+dx,b+sy+dy*i-1)}}
+function drawTomb(g,x,b){px(g,'g',x-5,b-12,10,12);px(g,'d',x+3,b-11,2,11);px(g,'K',x-5,b-12);px(g,'K',x+4,b-12);px(g,'W',x-1,b-10,2,7);px(g,'W',x-3,b-8,6,2)}
+function drawCloud(g,x,y){for(const[cx,cy,r]of[[0,0,6],[8,-3,7],[16,0,6],[8,2,6]])for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++)if(i*i+j*j<=r*r)px(g,(j>r/3&&((i+j)&1))?'c':'W',x+cx+i,y+cy+j)}
+function drawDoor(g,d){const{x,y}=d;
+ for(let j=0;j<22;j++)for(let i=0;i<14;i++){const cx=i-6.5;if(j<6&&cx*cx+(6-j)*(6-j)*1.6>46)continue;
+  let col='Y';if(i%4===1)col='N';if(j===10||j===16)col='O';if(i===0||i===13)col='y';px(g,col,x+i,y+j)}
+ if(d.lock==='cle'&&!S.unlocked[d.group]){px(g,'g',x+5,y+8,4,1);px(g,'g',x+4,y+9,1,2);px(g,'g',x+9,y+9,1,2);px(g,'R',x+3,y+11,8,6);px(g,'K',x+6,y+13,2,3)}
+ if(d.lock==='four'&&S.freed<4){for(let k=0;k<14;k++){px(g,'M',x+k,y+4+k*1.2);px(g,'M',x+13-k,y+4+k*1.2)}px(g,'m',x+4,y+10,6,5);px(g,'W',x+6,y+11,2,2)}}
+function renderBG(r){const c=newCanvas(W,GH),g=c.getContext('2d');px(g,'K',0,0,W,GH);
+ if(r.outdoor)for(let i=0;i<45;i++)px(g,rnd(i+r.id*7)>.75?'y':'d',rnd(i*3+r.id*97)*W,rnd(i*7+r.id*13)*95);
+ if(r.style!=='grass'){const lc=r.style==='stone'?'#141438':'#2a0a14';
+  for(let y=0;y<GH;y+=8){px(g,lc,0,y,W,1);for(let x=((y/8)&1)*8;x<W;x+=16)px(g,lc,x,y,1,8)}}
+ (r.clouds||[]).forEach(([x,y])=>drawCloud(g,x,y));
+ (r.skulls||[]).forEach(([x,y])=>{px(g,'W',x,y,5,4);px(g,'K',x+1,y+1);px(g,'K',x+3,y+1);px(g,'W',x+1,y+4,3,1)});
+ (r.trees||[]).forEach(([x,b])=>drawTree(g,x,b));(r.dead||[]).forEach(([x,b])=>drawDead(g,x,b));(r.tombs||[]).forEach(([x,b])=>drawTomb(g,x,b));
+ r.plats.forEach((s,k)=>drawPlat(g,s,r.style,r.id*50+k));(r.doors||[]).forEach(d=>drawDoor(g,d));return c}
+
+/* ---------- son ---------- */
+let AC=null,muted=false;
+function audio(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}catch(e){}}
+function beep(f1,f2,dur,type='square',vol=.06,delay=0){if(muted||!AC)return;try{const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type=type;
+ o.frequency.setValueAtTime(f1,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,f2),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+ o.connect(g).connect(AC.destination);o.start(t);o.stop(t+dur+.02)}catch(e){}}
+const SFX={shoot:()=>beep(900,300,.08,'square',.04),pick:()=>beep(500,1200,.12,'triangle',.08),door:()=>beep(220,70,.25,'square',.05),
+ hurt:()=>beep(160,60,.2,'sawtooth',.07),kill:()=>beep(320,40,.18,'square',.06),no:()=>beep(120,100,.15,'square',.05),fb:()=>beep(240,110,.12,'sawtooth',.03),
+ free:()=>[523,659,784,1047].forEach((f,i)=>beep(f,f,.12,'square',.05,i*.1)),win:()=>[392,523,659,784,659,784,1047].forEach((f,i)=>beep(f,f,.18,'square',.05,i*.15)),
+ over:()=>[440,349,294,220].forEach((f,i)=>beep(f,f*.97,.25,'triangle',.08,i*.22)),bub:()=>beep(300,600,.06,'sine',.03)};
+
+/* ---------- état ---------- */
+let S=null,bg=null,mode='title',paused=false,frame=0,endT=0,tapStart=false,prevFire=0,prevDown=0;
+let best=null;try{best=JSON.parse(localStorage.getItem('sortilege-best'))}catch(e){}
+const R=()=>ROOMS[S.room];
+function mkItem(id,room,x,top){return{id,room,x,y:top-SPR[id].h}}
+function newGame(){
+ S={room:4,t:0,energy:99,carry:null,freed:0,kills:0,unlocked:{},msg:'',msgT:0,msgKey:'',bossDead:false,winT:0,
+  items:[mkItem('couronne',4,235,78),mkItem('cle',5,145,106),mkItem('lyre',1,110,82),mkItem('livre',6,244,112),mkItem('fiole',3,110,104),mkItem('epee',2,52,122)],
+  caps:[[0,232,72,'couronne'],[2,270,46,'lyre'],[6,154,82,'fiole'],[3,236,72,'livre']].map(([room,x,top,needs])=>({room,x,y:top-16,needs,freed:false})),
+  p:{x:150,y:134,vx:0,vy:0,face:1,inv:60,cd:0,lock:false},bolts:[],fbs:[],mons:[],parts:[],boss:null,nearDoor:null};
+ enterRoom(4);mode='play';paused=false;say('LIBEREZ LES 4 SORCIERS PRISONNIERS !')}
+function mkMon(type,x,y){const s=type==='bat'?S_BAT[0]:type==='ghost'?S_GHOST[0]:S_DEMON;
+ return{type,x,y,by:y,vx:type==='bat'?(rnd(x)>.5?1.1:-1.1):type==='demon'?.9:0,vy:type==='demon'?.7:0,hp:type==='demon'?2:1,t:rnd(x+y)*100,w:s.w,h:s.h,flash:0}}
+function enterRoom(id){S.room=id;const r=R();S.mons=r.mons.map(([t,x,y])=>mkMon(t,x,y));S.bolts=[];S.fbs=[];S.parts=[];
+ S.boss=(id===7&&!S.bossDead)?{x:150,y:40,hp:10,t:0,cd:120,flash:0}:null;S.p.inv=Math.max(S.p.inv,45);bg=renderBG(r);
+ if(id===7&&S.boss)say("LE NECROMANCIEN VOUS ATTEND...")}
+function say(m,key=''){S.msg=m;S.msgT=170;S.msgKey=key}
+
+/* ---------- physique ---------- */
+const ov=(ax,ay,aw,ah,bx,by,bw,bh)=>ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;
+const hitSolid=(x,y,w,h)=>R().plats.some(s=>ov(x,y,w,h,s[0],s[1],s[2],s[3]));
+function moveX(p,dx){p.x+=dx;for(const s of R().plats)if(ov(p.x+1,p.y,10,16,s[0],s[1],s[2],s[3])){p.x=dx>0?s[0]-11:s[0]+s[2]-1;p.vx=0}}
+function moveY(p,dy){p.y+=dy;for(const s of R().plats)if(ov(p.x+1,p.y,10,16,s[0],s[1],s[2],s[3])){p.y=dy>0?s[1]-16:s[1]+s[3];p.vy=0}}
+function unstick(p){for(let k=0;k<90&&hitSolid(p.x+1,p.y,10,16);k++)p.y--;if(p.y<0)p.y=0}
+function go(room,x,y){enterRoom(room);Object.assign(S.p,{x,y});unstick(S.p)}
+function burst(x,y,n,cols,sp=1.5,life=30){for(let i=0;i<n;i++){const a=Math.random()*6.28,v=Math.random()*sp;S.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:life*(.5+Math.random()*.5),col:cols[i%cols.length]})}}
+function hurt(n){const p=S.p;if(p.inv>0)return;S.energy-=n;p.inv=50;p.vy=-1.2;SFX.hurt();burst(p.x+6,p.y+8,10,['R','O','Y'])}
+
+function useDoor(d){const p=S.p;
+ if(d.lock==='cle'&&!S.unlocked[d.group]){if(S.carry==='cle'){S.unlocked[d.group]=true;say("LA CLE TOURNE... LA PORTE S'OUVRE");SFX.free();bg=renderBG(R())}else{say('PORTE VERROUILLEE : IL FAUT UNE CLE');SFX.no()}return}
+ if(d.lock==='four'&&S.freed<4){say('PORTE SCELLEE PAR LE NECROMANCIEN');SFX.no();return}
+ const[tr,tid]=d.to,td=ROOMS[tr].doors.find(o=>o.id===tid);enterRoom(tr);p.x=td.x+1;p.y=td.y+6;p.vx=p.vy=0;SFX.door()}
+
+function update(){
+ S.t++;const p=S.p,r=R();if(S.msgT>0)S.msgT--;if(p.inv>0)p.inv--;if(p.cd>0)p.cd--;
+ const downEdge=K.down&&!prevDown;prevDown=K.down;
+ if(S.winT>0){S.winT--;if(S.t%6===0)burst(80+Math.random()*160,30+Math.random()*90,12,['Y','M','C','W','O'],2.5,40);
+  updParts();if(S.winT===0){mode='win';endT=0;SFX.win();const tm=Math.round(S.t/60);if(!best||tm<best){best=tm;try{localStorage.setItem('sortilege-best',JSON.stringify(tm))}catch(e){}}}return}
+ // déplacement du sorcier
+ const ax=(K.left?-1:0)+(K.right?1:0);p.vx=ax*1.35;if(ax)p.face=ax;
+ if(K.up)p.vy-=.24;else p.vy+=.11;if(K.down)p.vy+=.12;p.vy=clamp(p.vy,-1.7,2);
+ moveX(p,p.vx);
+ if(p.x<-5){if(r.exits[0]!=null)return go(r.exits[0],W-12,p.y);p.x=-5}
+ if(p.x>W-7){if(r.exits[1]!=null)return go(r.exits[1],-4,p.y);p.x=W-7}
+ if(p.x<-1&&r.exits[0]==null)p.x=-1;if(p.x>W-11&&r.exits[1]==null)p.x=W-11;
+ moveY(p,p.vy);if(p.y<0){p.y=0;p.vy=0}if(p.y>GH-16){p.y=GH-16;p.vy=0}
+ // tir
+ if(K.fire&&p.cd<=0){S.bolts.push({x:p.face>0?p.x+11:p.x-3,y:p.y+9,vx:p.face*3.6,life:110});p.cd=16;SFX.shoot()}
+ // portes
+ S.nearDoor=null;for(const d of r.doors||[])if(ov(p.x+1,p.y,10,16,d.x,d.y,14,22)){S.nearDoor=d;if(downEdge){useDoor(d);return}}
+ // objets (un seul porté à la fois, échange au contact)
+ let touching=false;
+ for(let i=0;i<S.items.length;i++){const it=S.items[i];if(it.room!==S.room)continue;const s=SPR[it.id];
+  if(ov(p.x+1,p.y,10,16,it.x-2,it.y-2,s.w+4,s.h+4)){touching=true;if(!p.lock){const base=it.y+s.h;S.items.splice(i,1);
+   if(S.carry){const c=SPR[S.carry];S.items.push({id:S.carry,room:S.room,x:it.x+(s.w-c.w)/2|0,y:base-c.h})}
+   S.carry=it.id;say('VOUS PRENEZ '+NAME[it.id]);SFX.pick();burst(it.x+4,it.y+3,8,['Y','W']);p.lock=true}break}}
+ if(!touching)p.lock=false;
+ // prisonniers
+ for(const c of S.caps){if(c.freed||c.room!==S.room)continue;
+  if(ov(p.x+1,p.y,10,16,c.x-2,c.y-3,16,19)){
+   if(S.carry===c.needs){c.freed=true;S.carry=null;S.freed++;SFX.free();burst(c.x+6,c.y+8,40,['C','W','Y','b'],2,50);
+    say(S.freed<4?'SORCIER LIBERE ! ('+S.freed+'/4)':"TOUS LIBRES ! L'ANTRE EST DESCELLEE")}
+   else if(S.msgKey!=='cap'||S.msgT<40)say(HINT[c.needs],'cap')}}
+ // chaudron magique
+ if(r.cauldron){const[cx,cy]=r.cauldron;if(ov(p.x+1,p.y,10,16,cx,cy-4,14,14)&&S.energy<99){S.energy=Math.min(99,S.energy+.4);if(S.t%6===0)burst(p.x+6,p.y+4,2,['L','C'],.8,25);if(S.t%18===0)SFX.bub()}}
+ // eau
+ for(const w of r.water||[])if(ov(p.x+1,p.y,10,16,w[0],w[1]-2,w[2],w[3]+2)){S.energy-=.3;if(S.t%5===0)burst(p.x+6,p.y+14,2,['C','W'],.8,20);if(S.t%30===0)SFX.no()}
+ S.energy-=.004;
+ // monstres
+ for(const m of S.mons){m.t++;if(m.flash>0)m.flash--;
+  if(m.type==='bat'){m.x+=m.vx;if(m.x<0||m.x>W-m.w)m.vx*=-1;m.y=m.by+Math.sin(m.t*.08)*14}
+  else if(m.type==='ghost'){const dx=p.x-m.x,dy=p.y-m.y;m.x+=clamp(dx*.01,-.4,.4)+Math.sin(m.t*.05)*.3;m.y+=clamp(dy*.01,-.35,.35)+Math.cos(m.t*.07)*.25}
+  else{m.x+=m.vx;m.y+=m.vy;if(m.x<0||m.x>W-m.w)m.vx*=-1;if(m.y<0||m.y>GH-10-m.h)m.vy*=-1}
+  if(ov(p.x+2,p.y+1,8,14,m.x+1,m.y+1,m.w-2,m.h-2))hurt(8)}
+ // nécromancien
+ const b=S.boss;if(b){b.t++;if(b.flash>0)b.flash--;b.x=152+Math.sin(b.t*.017)*110-8;b.y=36+Math.sin(b.t*.043)*26;
+  if(--b.cd<=0){b.cd=Math.max(40,100-(10-b.hp)*6);const dx=p.x+6-(b.x+8),dy=p.y+8-(b.y+11),d=Math.hypot(dx,dy)||1;S.fbs.push({x:b.x+8,y:b.y+12,vx:dx/d*1.7,vy:dy/d*1.7,life:260});SFX.fb()}
+  if(ov(p.x+2,p.y+1,8,14,b.x+2,b.y+2,12,18))hurt(10)}
+ // sorts du joueur
+ for(const o of S.bolts){o.x+=o.vx;o.life--;if(S.t%2===0)S.parts.push({x:o.x+2,y:o.y+1,vx:0,vy:0,life:8,col:'Y'});
+  if(o.x<-6||o.x>W+6)o.life=0;else if(hitSolid(o.x,o.y,4,3)){o.life=0;burst(o.x+2,o.y+1,5,['Y','W'],1,14)}
+  for(const m of S.mons)if(o.life>0&&m.hp>0&&ov(o.x,o.y,4,3,m.x,m.y,m.w,m.h)){o.life=0;m.hp--;m.flash=8;if(m.hp<=0){S.kills++;SFX.kill();burst(m.x+m.w/2,m.y+m.h/2,18,['W','M','R','Y'],1.8,30)}else SFX.no()}
+  if(b&&o.life>0&&ov(o.x,o.y,4,3,b.x+1,b.y,14,22)){o.life=0;
+   if(S.carry==='epee'){b.hp--;b.flash=10;SFX.kill();burst(o.x,o.y,10,['M','W'],1.5,25);
+    if(b.hp<=0){S.bossDead=true;S.boss=null;S.fbs=[];S.winT=200;S.kills+=10;burst(b.x+8,b.y+11,80,['M','m','W','Y','R'],3,70);say('LE NECROMANCIEN EST VAINCU !')}}
+   else{burst(o.x,o.y,6,['g','W'],1,15);SFX.no();if(S.msgKey!=='boss'||S.msgT<40)say("VOS SORTS NE L'ATTEIGNENT PAS ! IL FAUT L'EPEE",'boss')}}}
+ S.bolts=S.bolts.filter(o=>o.life>0);S.mons=S.mons.filter(m=>m.hp>0);
+ for(const f of S.fbs){f.x+=f.vx;f.y+=f.vy;f.life--;if(f.x<-8||f.x>W+8||f.y<-8||f.y>GH||hitSolid(f.x-2,f.y-2,4,4))f.life=0;
+  else if(ov(p.x+2,p.y+1,8,14,f.x-2,f.y-2,4,4)){f.life=0;hurt(10)}}
+ S.fbs=S.fbs.filter(f=>f.life>0);
+ updParts();
+ if(S.energy<=0){S.energy=0;mode='over';endT=0;SFX.over()}}
+function updParts(){for(const q of S.parts){q.x+=q.vx;q.y+=q.vy;q.vy+=.03;q.life--}S.parts=S.parts.filter(q=>q.life>0)}
+
+/* ---------- rendu ---------- */
+function drawDyn(r){const t=S.t;
+ for(const[x,y,w,h]of r.falls||[])for(let i=0;i<w;i++){px(ctx,(i%3===0)?'c':'C',x+i,y,1,h);for(let k=0;k<h;k+=9){const yy=(k+t*2+i*5)%h;px(ctx,'W',x+i,y+yy,1,Math.min(3,h-yy))}}
+ for(const[x,y,w,h]of r.water||[]){px(ctx,'B',x,y,w,h);for(let i=0;i<w;i++){const X=x+i,yy=y+Math.round(Math.sin((X+t*.6)*.3)*1.2)+1;px(ctx,'C',X,yy);if((X+t)%11===0)px(ctx,'W',X,yy-1);if((X*3+t)%13===0)px(ctx,'C',X,y+5+(X%3))}}
+ for(const[x,y]of r.torches||[]){px(ctx,'g',x,y+4,3,6);const f=(t>>2)&3;px(ctx,'R',x,y+1,3,3);px(ctx,'O',x,y+(f&1),3,2);px(ctx,'Y',x+1,y-1+(f>>1),1,2)}
+ if(r.cauldron){const[x,y]=r.cauldron;px(ctx,'d',x+2,y+9,2,1);px(ctx,'d',x+10,y+9,2,1);px(ctx,'C',x+1,y+3,12,5);px(ctx,'B',x+2,y+6,10,2);px(ctx,'C',x+2,y+8,10,1);px(ctx,'W',x,y+2,14,1);
+  for(let k=0;k<3;k++){const by=y+1-((t+k*13)%24)/4;px(ctx,k===1?'C':'L',x+3+k*4,by);}px(ctx,'L',x+2,y+1,10,1);
+  if((t>>3)&1)px(ctx,'O',x+4,y+10,6,1)}
+ if(r.outdoor){const k=(t*1.1+r.id*90)%520,cx=W+20-k,cy=6+k*.12;for(let j=1;j<12;j++)px(ctx,j<4?'Y':j<8?'O':'R',cx+j,cy-j*.35-(j&1));px(ctx,'W',cx-1,cy,3,1);px(ctx,'W',cx,cy-1,1,3)}}
+function draw(){
+ px(ctx,'K',0,0,W,H);
+ if(mode==='title'){drawTitle();focusHint();return}
+ const p=S.p,r=R();ctx.drawImage(bg,0,0);drawDyn(r);
+ for(const it of S.items)if(it.room===S.room){spr(SPR[it.id],it.x,it.y+((S.t>>4)&1?0:-1))}
+ for(const c of S.caps)if(c.room===S.room&&!c.freed){spr(S_CAP,c.x,c.y);for(let k=0;k<5;k++)px(ctx,'g',c.x-2+k*4,c.y-3,1,19);px(ctx,'g',c.x-2,c.y-3,17,1);if((S.t>>4)&1)txt('!',c.x+3,c.y-12,'Y')}
+ const d=S.nearDoor;if(d&&(S.t>>3)&1){const x=d.x+3,y=d.y-9;px(ctx,'Y',x,y,8,1);px(ctx,'Y',x+1,y+1,6,1);px(ctx,'Y',x+2,y+2,4,1);px(ctx,'Y',x+3,y+3,2,1)}
+ for(const m of S.mons){if(m.flash&&(m.flash&2))continue;const fr=(m.t>>3)&1;
+  if(m.type==='bat')spr(S_BAT[fr],m.x,m.y);else if(m.type==='ghost')spr(S_GHOST[fr],m.x,m.y,p.x<m.x);else spr(S_DEMON,m.x,m.y)}
+ const b=S.boss;if(b&&!(b.flash&2)){spr(S_BOSS,b.x,b.y,p.x<b.x);for(let k=0;k<b.hp;k++)px(ctx,'M',4+k*6,4,4,3)}
+ for(const f of S.fbs){px(ctx,'R',f.x-2,f.y-2,4,4);px(ctx,(S.t>>1)&1?'Y':'O',f.x-1,f.y-1,2,2)}
+ for(const o of S.bolts){const c=['Y','W','C'][(S.t>>1)%3];px(ctx,c,o.x,o.y+1,4,1);px(ctx,c,o.x+1,o.y,2,3)}
+ if(!(p.inv>0&&(p.inv>>2)&1)&&mode==='play'||S.winT>0)spr(S_WIZ[(S.t>>3)&1],p.x,p.y,p.face<0);
+ for(const q of S.parts)px(ctx,q.col,q.x,q.y);
+ // HUD
+ px(ctx,'K',0,GH,W,40);
+ txt(S.msgT>0?S.msg:'VOUS ETES '+r.name,4,164,'Y');
+ txt('AVEC '+(S.carry?NAME[S.carry]:'RIEN'),4,175,'Y');
+ const e=Math.max(0,Math.ceil(S.energy));txt('ENERGIE '+String(e).padStart(2,' ')+'%',4,187,e<25&&(S.t>>4)&1?'R':'G');
+ txt('SORCIERS '+S.freed+'/4',118,187,'C');
+ px(ctx,'R',290,166,28,28);px(ctx,'K',292,168,24,24);if(S.carry){const s=SPR[S.carry];spr(s,304-s.w/2,180-s.h/2)}
+ if(paused&&mode==='play')box(['PAUSE','','P OU BOUTON PAUSE POUR REPRENDRE'],'Y');
+ if(mode==='over')box(['VOTRE ENERGIE EST EPUISEE...','','LES SORCIERS RESTENT CAPTIFS.','SORCIERS LIBERES : '+S.freed+'/4','',endT>60&&(frame>>4)&1?'ESPACE OU TOUCHER POUR CONTINUER':''],'R');
+ focusHint();
+ if(mode==='win'){const tm=Math.round(S.t/60);box(['VICTOIRE !','','LE NECROMANCIEN EST VAINCU','ET LA MAGIE EST RENDUE AU PAYS.','TEMPS : '+Math.floor(tm/60)+' MIN '+String(tm%60).padStart(2,'0')+' S  -  MONSTRES : '+S.kills,best!=null?'RECORD : '+Math.floor(best/60)+' MIN '+String(best%60).padStart(2,'0')+' S':'',endT>60&&(frame>>4)&1?'ESPACE OU TOUCHER POUR CONTINUER':''],'Y')}}
+function focusHint(){let f=true;try{f=document.hasFocus()}catch(e){}if(!f&&!document.body.classList.contains('touch')&&(frame>>5)&1){px(ctx,'R',0,0,W,11);txtC("CLIQUEZ SUR L'ECRAN POUR ACTIVER LE CLAVIER",2,'W')}}
+function box(lines,col){const h=lines.length*11+16,y=(GH-h)/2;px(ctx,col,22,y-2,276,h+4);px(ctx,'K',24,y,272,h);lines.forEach((l,i)=>l&&txtC(l,y+9+i*11,i===0?col:'W'))}
+function drawTitle(){const t=frame;
+ for(let i=0;i<70;i++){const x=rnd(i*3)*W,y=(rnd(i*7)*H+t*(0.1+rnd(i)*.3))%H;px(ctx,rnd(i+9)>.8?'y':'d',x,y)}
+ const T='SORTILEGE',cols=['Y','O','R','M','C','L'];
+ [...T].forEach((ch,i)=>{const y=22+Math.round(Math.sin(t*.06+i*.6)*2);txt(ch,(W-T.length*18)/2+i*18+1,y+1,'m',3);txt(ch,(W-T.length*18)/2+i*18,y,cols[(i+(t>>3))%cols.length],3)});
+ txtC('UNE AVENTURE DE SORCIER EN 8 BITS',52,'C');
+ const wx=152+Math.sin(t*.02)*120,wy=66+Math.sin(t*.07)*5;spr(S_WIZ[(t>>3)&1],wx,wy,Math.cos(t*.02)<0);
+ for(let j=1;j<8;j++)px(ctx,['Y','W','C'][j%3],wx+6-Math.sign(Math.cos(t*.02))*j*3,wy+10+Math.sin(t*.2+j)*2);
+ txtC('FLECHES OU ZQSD : VOLER   ESPACE : TIRER',96,'W');
+ txtC('BAS : FRANCHIR UNE PORTE',106,'W');
+ txtC('TOUCHEZ UN OBJET POUR LE PRENDRE',116,'W');
+ txtC('LES CHAUDRONS RENDENT L\'ENERGIE',126,'L');
+ txtC('LIBEREZ LES 4 SORCIERS PRISONNIERS',140,'P');
+ txtC('PUIS TERRASSEZ LE NECROMANCIEN',150,'P');
+ if((t>>4)&1)txtC("ESPACE OU TOUCHER L'ECRAN POUR JOUER",170,'Y');
+ txtC('HOMMAGE AUX AVENTURES 8 BITS DES ANNEES 80',188,'g')}
+
+/* ---------- boucle ---------- */
+function step(){frame++;const fireEdge=K.fire&&!prevFire;
+ if(mode==='title'){if(fireEdge||tapStart)newGame()}
+ else if(mode==='play'){if(!paused)update()}
+ else{endT++;if(S&&S.winT===0)updParts();if(endT>60&&(fireEdge||tapStart))mode='title'}
+ tapStart=false;prevFire=K.fire}
+let last=performance.now(),acc=0;
+function loop(now){acc+=Math.min(100,now-last);last=now;while(acc>=1000/60){step();acc-=1000/60}draw();requestAnimationFrame(loop)}
+
+/* ---------- commandes ---------- */
+const K={left:0,right:0,up:0,down:0,fire:0};
+const KEYMAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',Space:'fire',KeyX:'fire',ControlLeft:'fire',ControlRight:'fire',Enter:'fire'};
+document.addEventListener('keydown',e=>{audio();const k=KEYMAP[e.code];if(k){K[k]=1;e.preventDefault()}
+ if(e.code==='KeyP'||e.code==='Escape')togglePause();if(e.key&&e.key.toLowerCase()==='m')toggleMute()});
+document.addEventListener('keyup',e=>{const k=KEYMAP[e.code];if(k)K[k]=0});
+addEventListener('blur',()=>{for(const k in K)K[k]=0});
+const bSnd=document.getElementById('bSnd'),bPause=document.getElementById('bPause');
+function toggleMute(){muted=!muted;bSnd.textContent='SON : '+(muted?'NON':'OUI')}
+function togglePause(){if(mode==='play'){paused=!paused;bPause.textContent=paused?'REPRENDRE':'PAUSE'}}
+bSnd.onclick=()=>{audio();toggleMute();bSnd.blur()};bPause.onclick=()=>{togglePause();bPause.blur()};
+function grabFocus(){try{window.focus();cv.focus({preventScroll:true})}catch(e){}}
+cv.addEventListener('pointerdown',e=>{audio();grabFocus();if(mode!=='play')tapStart=true;e.preventDefault()});
+document.addEventListener('pointerdown',grabFocus);
+const bPad=document.getElementById('bPad');bPad.onclick=()=>{document.body.classList.toggle('touch');fit();bPad.blur();grabFocus()};
+grabFocus();
+// joystick tactile 8 directions
+const stick=document.getElementById('stick'),knob=document.getElementById('knob');let sid=null;
+function stickAt(e){const r=stick.getBoundingClientRect(),rad=r.width/2;let dx=(e.clientX-r.left-rad)/rad,dy=(e.clientY-r.top-rad)/rad;const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}
+ K.left=dx<-.35?1:0;K.right=dx>.35?1:0;K.up=dy<-.35?1:0;K.down=dy>.45?1:0;knob.style.transform=`translate(${dx*45}px,${dy*45}px)`}
+function stickOff(){sid=null;K.left=K.right=K.up=K.down=0;knob.style.transform=''}
+stick.addEventListener('pointerdown',e=>{audio();sid=e.pointerId;try{stick.setPointerCapture(sid)}catch(_){}stickAt(e);e.preventDefault()});
+stick.addEventListener('pointermove',e=>{if(e.pointerId===sid)stickAt(e)});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>stick.addEventListener(ev,e=>{if(e.pointerId===sid)stickOff()}));
+const fire=document.getElementById('fire');
+fire.addEventListener('pointerdown',e=>{audio();K.fire=1;fire.classList.add('on');try{fire.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>fire.addEventListener(ev,()=>{K.fire=0;fire.classList.remove('on')}));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+// mise à l'échelle
+function fit(){const touch=document.body.classList.contains('touch'),land=innerWidth>innerHeight;document.body.classList.toggle('portrait',!land);
+ let aw,ah;if(!touch){aw=innerWidth-40;ah=innerHeight-90}else if(land){aw=innerWidth-2*190;ah=innerHeight-50}else{aw=innerWidth-40;ah=innerHeight-260}
+ let s=Math.max(.8,Math.min(aw/320,ah/200));if(s>=2)s=Math.floor(s*2)/2;cv.style.width=320*s+'px';cv.style.height=200*s+'px'}
+function setTouch(){if(!document.body.classList.contains('touch')){document.body.classList.add('touch');fit()}}
+try{if(matchMedia('(pointer: coarse)').matches)document.body.classList.add('touch')}catch(e){}
+addEventListener('touchstart',setTouch,{passive:true});addEventListener('resize',fit);fit();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
