@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vampire : la crypte (TO9)</title>
+<style>
+html,body{margin:0;background:#1a1a1a;color:#ddd;font-family:monospace;height:100%}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:10px;box-sizing:border-box}
+.tv{background:#2b2b2b;padding:18px;border-radius:18px;box-shadow:0 0 0 3px #444,0 10px 30px #000}
+canvas{display:block;image-rendering:pixelated;width:min(92vw,960px);aspect-ratio:320/200;background:#000;border-radius:6px}
+.pad{display:none;gap:6px;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,54px)}
+.pad button{font:bold 22px monospace;background:#333;color:#eee;border:2px solid #555;border-radius:10px;touch-action:none}
+.pad .u{grid-column:2}.pad .l{grid-column:1;grid-row:2}.pad .d{grid-column:2;grid-row:2}.pad .r{grid-column:3;grid-row:2}
+@media (pointer:coarse){.pad{display:grid}}
+small{color:#888}
+</style></head><body>
+<div class="tv"><canvas id="c" width="320" height="200" tabindex="0"></canvas></div>
+<div class="pad"><button class="u" data-d="0">▲</button><button class="l" data-d="3">◀</button><button class="d" data-d="2">▼</button><button class="r" data-d="1">▶</button></div>
+<small>Flèches ou Z Q S D · Entrée/clic pour commencer · M : son</small>
+<script>
+const LEVELS=[["########################################", "#+....#.....#.#....B......#.#.......#P##", "#.#.###.#.#.#.#.#.#.#.#.#.#.#.###.#.#.##", "#.......#.#.#.........#...#...#...#...##", "#.#.###.#.#.#.#####.#.#.#.#.#.#.#####.##", "#*.......B...*..#...#........*#...#*..##", "###.#.###.#.###.#.#.#.#.###.#.#.#.#.####", "#...#.......#...#.#.#.#.......#.....#.##", "#.###.#.#.#####.#.....#.#.#.#.#.#.#.#.##", "#...#.#.#*.....*...V........#...#*....##", "###.#.#.#.###.#.#.....#####.#.###.#.#.##", "#...#.#.#...#.................#.....#.##", "#.#.#.#.#.#.#.#.#.#.#####.#####.#####.##", "#.....#.#.#.....#............B#...#...##", "#.#.#.#.#.#####.###.#####.#.#.###.#.####", "#.#.#.#*..#.......#.#...#.........#...##", "#.#.###.#.#.#.#.#.#.#.#.#####.###.###.##", "#.#...#...#.#.........#.#...#.......#.##", "#.#.#.###.#.###.#####.#.#.#.###.###.#.##", "#H.............*......#.........#*...+##", "########################################"], ["########################################", "#+.....*..#.......#B....#............P##", "#.#.#####.###.###.#.#.#.#.#.#.#####.#.##", "#...........#.........#..*#.......#...##", "#.###.#.###.#.#.#############.###.#.#.##", "#.....#..B#.....#*..#.......#...#.#...##", "#.#.#.###.#.#####.#.#.###.#.###.#.#.####", "#.#.#...#*#.....#*#.#.#...#.......#...##", "#.#.#.#.#####.#.#.....###.#.###.#.######", "#.......#.....#....V..#...#...........##", "#.#.#.#.#.#.###.#.....#.#.#.#.#.#.#.#.##", "#.........#...#...#......*......#.....##", "#.###.#######.#.#.#.#.#.#.###.#######.##", "#.#...#.........#*#...#*#....B#.....#.##", "#.#.###.#####.#.#.###.#.#.#.###.#.#.#.##", "#...#......*#..*#.....#.#.........#...##", "#.#.#.#.###.#.#####.#.#.#.#.###.###.#.##", "#.#...#.....#.#...#*..#.#.......#*#...##", "#.#.#.#.#.###.#.#.#.#.#.#.###.#.#.#.#.##", "#H......#.......#....................+##", "########################################"], ["########################################", "#+......#......*...B..#..............P##", "#.#.#.#.#.#.#.###.#.#.#.#.#.#.###.#.#.##", "#*..#.#*....#.........#.#........*#.#.##", "#.###.###.###.#.#.#.###.#.#########.#.##", "#.#.....#B..#.#...........#.#.......#.##", "#.#.###.###.#.#.#######.#.#.#.#.#.#.#.##", "#.....#...............#.#.#..*..#...#.##", "#.###.###.#######.....#.#.#.#.#.#.###.##", "#.#...#............V..#...#..*..#...#.##", "#.#.###.#####.#.#.....#.###.###.###.#.##", "#.#..*#.....#.#...#...#*......#.#.#...##", "#.#.#.#.###.#.###.#.#######.#.#.#.#.#.##", "#...#...#.#.....#.........#.#B#*..#...##", "#####.#.#.#.###.#.#.#.###.#.#.###.#.####", "#...#.#.#.#*#.....#...#...#.....#.#...##", "#.#.#.#.#.#.###.#.#.#.#.#.#####.#.#.#.##", "#.#...#...#*....................#.#...##", "#.#.###.#.###.#.###.#########.###.#.#.##", "#H#.........#........*...*.....*.....+##", "########################################"]];
+const PAL=['#000','#f00','#0f0','#ff0','#00f','#f0f','#0ff','#fff'];
+const SPR=[
+["..XXXX..",".XXXXXX.","...XX...","..XXXX.X",".X.XX..X","...XX..X","..X..X..",".X....X."],
+["..XXXX..",".X.XX.X.",".XXXXXX.","XX.XX.XX","X.XXXX.X","XXXXXXXX",".XXXXXX.",".X....X."],
+["........","X......X","XX.XX.XX","XXXXXXXX",".XX..XX.","X......X","........","........"],
+["...XX...","...XX...","..X..X..",".X....X.",".XXXXXX.",".XXXXXX.","..XXXX..","........"],
+["...XX...","...XX...",".XXXXXX.",".XXXXXX.","...XX...","...XX...","...XX...","........"],
+["..XXXX..",".X....X.","X......X","X......X","X....X.X","X......X","X......X","XXXXXXXX"],
+["XXXXXXX.","XXXXXXX.","........","XXX.XXXX","XXX.XXXX","........","XXXXXXX.","XXXXXXX."]];
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+// 8x8 font for text: draw using canvas text at small size, crisp enough
+function cell(x,y,bg){g.fillStyle=PAL[bg];g.fillRect(x*8,y*8,8,8);}
+function spr(x,y,n,fg,bg=0){cell(x,y,bg);g.fillStyle=PAL[fg];const s=SPR[n];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(s[r][c]=='X')g.fillRect(x*8+c,y*8+r,1,1);}
+g.textBaseline='top';
+function txt(x,y,s,fg=7,bg=0,big=false){
+  const w=big?16:8,h=big?16:8;
+  for(let i=0;i<s.length;i++){g.fillStyle=PAL[bg];g.fillRect((x)*8+i*w,y*8,w,h);}
+  g.fillStyle=PAL[fg];g.font=(big?'bold 16px':'bold 8px')+' monospace';
+  for(let i=0;i<s.length;i++)g.fillText(s[i],x*8+i*w+(big?3:1),y*8+(big?1:0));
+}
+// --- son ---
+let ac=null,mute=false;
+function tone(f,d,t=0,type='square'){if(mute)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),v=ac.createGain();o.type=type;o.frequency.value=f;v.gain.value=.06;o.connect(v);v.connect(ac.destination);const s=ac.currentTime+t;o.start(s);v.gain.setValueAtTime(.06,s);v.gain.exponentialRampToValueAtTime(.001,s+d);o.stop(s+d);}catch(e){}}
+function tune(ns,step=.12){ns.forEach((f,i)=>tone(f,step*.9,i*step));}
+const NOTE={DO:262,RE:294,MI:330,FA:349,SO:392,LA:440,SI:494,DO5:523};
+// --- jeu ---
+const DX=[0,1,0,-1],DY=[-1,0,1,0];
+let st='title',hs=0;try{hs=+localStorage.getItem('vamp_hs')||0}catch(e){}
+let M,hx,hy,ix,iy,vx,vy,sx,sy,px,py,bats,nv,sc,vi,lv,fe,tm,tt,vs,fc,bc,ld,msg,msgT,pause=0,flash=0;
+function at(x,y){return M[y][x]} function put(x,y,c){M[y]=M[y].slice(0,x)+c+M[y].slice(x+1)}
+function drawCell(x,y){const c=at(x,y);if(c=='#'){spr(x,y+2,6,1,4);return}
+ if(c=='*')spr(x,y+2,3,6);else if(c=='+')spr(x,y+2,4,3);else if(c=='P')spr(x,y+2,5,2);else cell(x,y+2,0);}
+function say(s){msg=s;}
+function load(){
+ const L=LEVELS[(lv-1)%3];M=[];bats=[];nv=0;
+ L.forEach((row,r)=>{let a='';for(let x=0;x<40;x++){let c=row[x];
+  if(c=='H'){ix=x;iy=r;c='.'}else if(c=='V'){sx=x;sy=r;c='.'}else if(c=='P'){px=x;py=r;c='.'}
+  else if(c=='B'){bats.push({kx:x,ky:r,x,y:r});c='.'}else if(c=='*')nv++;a+=c}M.push(a)});
+ bats=bats.slice(0,Math.min(lv,3));
+ vs=lv==1?3:2; if(lv>3)vs=lv>6?1:2;
+ tt=Math.max(160,320-20*(lv-1));
+ hx=ix;hy=iy;vx=sx;vy=sy;fe=0;tm=tt;fc=0;bc=0;ld=-1;
+ say('Niveau '+lv+' : trouve les '+nv+' fioles !');tune([440,440,392,440,330],.1);
+}
+function lose(why){say(why);vi--;tune([392,349,330,294,262],.15);hx=ix;hy=iy;vx=sx;vy=sy;fe=0;tm=tt;ld=-1;pause=10;flash=6;if(vi<=0){st='over';if(sc>hs){hs=sc;try{localStorage.setItem('vamp_hs',hs)}catch(e){}}}}
+function vampHit(){if(hx!=vx||hy!=vy)return;
+ if(fe>0){sc+=50;vx=sx;vy=sy;ld=-1;tune([523,392,262],.1);say('Le vampire retourne au cercueil !');}
+ else lose("Le vampire t'a mordu !");}
+function batHit(){for(const b of bats)if(b.x==hx&&b.y==hy){tm-=40;b.x=b.kx;b.y=b.ky;tone(120,.25,0,'sawtooth');say('Une chauve-souris souffle ta bougie !');}}
+let held=-1,queued=-1;
+function movePlayer(d){const nx=hx+DX[d],ny=hy+DY[d],c=at(nx,ny);if(c=='#')return;hx=nx;hy=ny;
+ if(c=='*'){nv--;sc+=10;put(hx,hy,'.');tone(880,.06);if(nv==0){put(px,py,'P');say('La porte de la crypte est ouverte !');tune([392,440,494,523],.12);}}
+ else if(c=='+'){fe=60;sc+=5;put(hx,hy,'.');say('La croix ! Le vampire a peur...');tune([660,990],.08);}
+ else if(c=='P'){sc+=Math.max(0,tm);say('Bravo ! Tu as quitte la crypte !');tune([262,330,392,523],.15);lv++;pause=14;st='next';return;}
+ vampHit();batHit();}
+function moveVamp(){let bd=-1,bs=fe>0?-99:999;
+ for(let d=0;d<4;d++){const nx=vx+DX[d],ny=vy+DY[d];if(at(nx,ny)=='#')continue;
+  let s=Math.abs(nx-hx)+Math.abs(ny-hy)+Math.random()*3;if(d==ld)s+=fe>0?-2:2;
+  if(fe==0?s<bs:s>bs){bs=s;bd=d}}
+ if(bd<0)return;vx+=DX[bd];vy+=DY[bd];ld=(bd+2)%4;vampHit();}
+function moveBats(){for(const b of bats){const d=Math.random()*4|0,nx=b.x+DX[d],ny=b.y+DY[d];if(at(nx,ny)!='#'){b.x=nx;b.y=ny}}batHit();}
+function tick(){
+ if(st=='play'){
+  if(pause>0){pause--;}else{
+   const d=queued>=0?queued:held;queued=-1;if(d>=0)movePlayer(d);
+   if(st=='play'){
+    if(++fc>=vs){fc=0;moveVamp();}
+    if(st=='play'&&++bc>=2){bc=0;moveBats();}
+    if(fe>0&&--fe==0)say('La croix ne te protege plus !');
+    if(--tm<=0&&st=='play')lose("Ta bougie s'est eteinte...");
+   }}
+ } else if(st=='next'){if(--pause<=0){st='play';load();}}
+ render();
+}
+function render(){
+ g.fillStyle='#000';g.fillRect(0,0,320,200);
+ if(st=='title')return title();
+ if(st=='over')return over();
+ txt(0,0,('SCORE '+sc+'   VIES '+vi+'   NIVEAU '+lv).padEnd(40),3);
+ txt(0,1,(msg||'').padEnd(40).slice(0,40),7);
+ for(let y=0;y<21;y++)for(let x=0;x<40;x++)drawCell(x,y);
+ for(const b of bats)spr(b.x,b.y+2,2,5);
+ spr(vx,vy+2,1,fe>0?(fe<15&&fe%2?1:7):1);
+ if(!(flash>0&&flash--%2))spr(hx,hy+2,0,3);
+ txt(0,24,'BOUGIE ',3);const l=Math.max(0,Math.min(30,tm/10|0));
+ g.fillStyle=PAL[3];g.fillRect(56,192,l*8,8);
+ if(tm<60&&tm%4<2){g.fillStyle=PAL[1];g.fillRect(56,192,l*8,8);}
+}
+function title(){
+ txt(6,2,'VAMPIRE',1,0,true);txt(13,5,'- LA CRYPTE -',5);
+ txt(2,8,'Chasseur de vampires, tu es piege',7);txt(2,9,'dans la crypte du comte.',7);
+ const rows=[[0,3,"C'est toi. Ta bougie fond vite."],[3,6,'Ramasse toutes les fioles...'],[5,2,"...et la porte s'ouvrira."],[1,1,'Le vampire te poursuit !'],[4,3,'La croix le fait fuir: attrape-le'],[2,5,'Les chauves-souris soufflent']];
+ rows.forEach((r,i)=>{spr(2,11+i,r[0],r[1]);txt(4,11+i,r[2],7)});txt(4,17,'ta bougie.',7);
+ txt(2,19,'Fleches ou Z Q S D pour bouger',6);
+ if(hs)txt(2,21,'Meilleur score : '+hs,3);
+ if((Date.now()/500|0)%2)txt(6,23,'Appuie sur ENTREE ou clique',2);
+}
+function over(){txt(11,6,'GAME OVER',1,0,true);txt(12,11,'Score : '+sc,7);txt(12,13,'Niveau : '+lv,7);txt(12,15,'Record : '+hs,3);
+ if((Date.now()/500|0)%2)txt(7,19,'ENTREE ou clic pour rejouer',3);}
+function start(){if(st=='title'||st=='over'){sc=0;vi=3;lv=1;msg='';st='play';load();}}
+const KEYS={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3,z:0,Z:0,w:0,W:0,d:1,D:1,s:2,S:2,q:3,Q:3,a:3,A:3};
+addEventListener('keydown',e=>{if(e.key in KEYS){e.preventDefault();const d=KEYS[e.key];if(held!=d)queued=d;held=d;if(st!='play')start();}
+ else if(e.key=='Enter'||e.key==' '){e.preventDefault();start();}else if(e.key=='m'||e.key=='M')mute=!mute;});
+addEventListener('keyup',e=>{if(e.key in KEYS&&KEYS[e.key]==held)held=-1;});
+cv.addEventListener('pointerdown',()=>{cv.focus();start();});
+document.querySelectorAll('.pad button').forEach(b=>{const d=+b.dataset.d;
+ b.addEventListener('pointerdown',e=>{e.preventDefault();queued=d;held=d;start();});
+ ['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,()=>{if(held==d)held=-1}));});
+setInterval(tick,130);render();cv.focus();
+</script></body></html>
