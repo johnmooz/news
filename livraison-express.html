@@ -51,6 +51,7 @@ body.game #ind{display:block}
 #ov button.mode{background:#ffffff14;border:1px solid #ffffff22}
 #ov button.mode.cur{background:#e9b872;color:#1b1a17}
 #ov button.hide{display:none}
+#ov p.lbl{margin:14px 0 -8px;font-weight:700;font-size:13px;opacity:.75}
 #ov .card{max-height:92vh;overflow:auto}
 .pill.money.duo{background:#14161cd9;color:#fff}
 .joy{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 16px);width:124px;height:124px;border-radius:50%;background:#ffffff12;border:3px solid;display:none;touch-action:none;pointer-events:auto;z-index:4}
@@ -302,7 +303,7 @@ function booth(xc,zc,len){for(const s of [-1,1]){boxB(len,.45,.5,M.leather,xc,0,
   block(xc,zc,len,2.5);
   const t=makeTable(len-.2,.7,[0]);t.position.set(xc,0,zc);scene.add(t);setPlace(xc-.35,zc-.15);setPlace(xc+.35,zc+.15);
   const r=regTable(xc,zc,len-.2,.7,t.children[0]);r.big=true;for(const s of [-1,1])for(const dx of [-.4,.4])r.seats.push({x:xc+dx,z:zc+s*.85});}
-booth(-9.6,-2.0,1.6);booth(-9.6,-4.4,1.6);booth(-7.0,-2.0,1.6);
+booth(-9.6,-2.0,1.6);booth(-9.6,-4.4,1.6);
 
 // Numéros de table peints au centre de chaque plateau
 TABLES.forEach((r,i)=>{const n=i+1;const t=tex(128,128,(g)=>{g.fillStyle='#1d2647';g.beginPath();g.arc(64,64,62,0,7);g.fill();g.fillStyle='#f7f5ef';g.beginPath();g.arc(64,64,54,0,7);g.fill();
@@ -394,7 +395,7 @@ const $=id=>document.getElementById(id);
 
 /* --- grille de déplacement + A* --- */
 const CELL=.2,GX0=-11,GZ0=-7,GW=110,GH=65;let grid=null;
-function buildGrid(){grid=new Uint8Array(GW*GH);const R=.24;for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=GX0+(i+.5)*CELL,z=GZ0+(j+.5)*CELL;let b=x<-10.9+R||x>10.9-R||z<-6.9+R||z>5.9-R;if(!b)for(const o of OBST){if(x>o[0]-R&&x<o[2]+R&&z>o[1]-R&&z<o[3]+R){b=true;break;}}grid[j*GW+i]=b?1:0;}}
+function buildGrid(za,zb){za=za==null?-11:za;zb=zb==null?11:zb;grid=new Uint8Array(GW*GH);const R=.24;for(let j=0;j<GH;j++)for(let i=0;i<GW;i++){const x=GX0+(i+.5)*CELL,z=GZ0+(j+.5)*CELL;let b=x<Math.max(-10.9,za)+R||x>Math.min(10.9,zb)-R||z<-6.9+R||z>5.9-R;if(!b)for(const o of OBST){if(x>o[0]-R&&x<o[2]+R&&z>o[1]-R&&z<o[3]+R){b=true;break;}}grid[j*GW+i]=b?1:0;}}
 const cellOf=(x,z)=>[Math.floor((x-GX0)/CELL),Math.floor((z-GZ0)/CELL)];
 const freeC=(i,j)=>i>=0&&j>=0&&i<GW&&j<GH&&!grid[j*GW+i];
 const freeAt=(x,z)=>{const c=cellOf(x,z);return freeC(c[0],c[1]);};
@@ -471,7 +472,7 @@ const multi=()=>GAME.mode!=='solo';
 const elapsed=()=>GAME.dur-GAME.time;
 const icons=items=>items.map(i=>i.e).join('');
 
-function spawn(){const c=TABLES.filter(r=>r.state==='free'&&r.cool<=0&&ACT().every(w=>Math.hypot(r.x-w.pos.x,r.z-w.pos.z)>1.2));if(!c.length)return;
+function spawn(){const c=TABLES.filter(r=>r.play!==false&&r.state==='free'&&r.cool<=0&&ACT().every(w=>Math.hypot(r.x-w.pos.x,r.z-w.pos.z)>1.2));if(!c.length)return;
   const r=pick(c);const ns=r.seats.length;let n=r.big?Math.min(ns,2+Math.floor(Math.random()*(ns-1))):(ns<2?1:(Math.random()<.5?1:2));
   const seats=r.seats.slice().sort(()=>Math.random()-.5).slice(0,n);
   r.cust=seats.map(seat=>{const g=seated(seat,r);const ic=mkSprite(300,96,.36);ic.position.set(seat.x,1.62,seat.z);return {g,ic,seat,items:[]};});
@@ -606,8 +607,8 @@ soundBtn();
 /* --- écrans --- */
 GAME.mode='solo';
 const MODES={solo:'👤 Solo',duo:'👥 2 joueurs',ordi:'🤖 Contre l\'ordi'};
-function best(lv){try{return +localStorage.getItem('restoTrainBest_'+(lv||GAME.level))||0;}catch(_){return 0;}}
-function setBest(v){try{localStorage.setItem('restoTrainBest_'+GAME.level,v);}catch(_){}}
+function best(lv){try{return +localStorage.getItem('restoTrainBest_'+(lv||GAME.level)+'_'+GAME.size)||0;}catch(_){return 0;}}
+function setBest(v){try{localStorage.setItem('restoTrainBest_'+GAME.level+'_'+GAME.size,v);}catch(_){}}
 function overlay(html,btns){$('ovCard').innerHTML=html+'<div class="row">'+btns.map((b,i)=>(b.br?'</div><div class="row">':'')+`<button data-i="${i}" class="${b.main?'main':''} ${b.cls||''}">${b.t}</button>`).join('')+'</div>';
   $('ovCard').querySelectorAll('button').forEach(el=>el.addEventListener('click',()=>btns[+el.dataset.i].f()));$('ov').classList.add('show');}
 const levelBtns=()=>Object.keys(DIFF).map((k,i)=>({br:i===0,t:`${DIFF[k].n}<small>${DIFF[k].d}${GAME.mode==='solo'?`<br>record : ${best(k)} €`:''}</small>`,cls:'lvl third'+(k===GAME.level?' cur':''),f:()=>beginService(k)}));
@@ -617,35 +618,52 @@ function setupWaiters(){const m=GAME.mode;WAITERS[0].active=true;WAITERS[1].acti
   for(const w of WAITERS){w.g.visible=w.active;w.path=[];w.carry=[];w.money=w.tips=w.served=0;w.tk='';w.think=0;w.spr.visible=false;w.tag.visible=false;
     if(w.active&&multi())bubble(w.tag,`${w.col.ic} ${w.col.n}`,w.col.css,w.col.fg);}
   document.body.classList.toggle('duo',m==='duo');}
-function openGame(){initGame();audioInit();GAME.on=true;GAME.running=false;document.body.classList.add('game');resetService();setupWaiters();GAME.camInit=true;hud();
-  const how=GAME.mode==='duo'?`<li><b style="color:#e9b872">🟡 J1</b> : joystick gauche (ou ZQSD) · <b style="color:#38bdf8">🔵 J2</b> : joystick droit (ou flèches). Tenez le téléphone à l'horizontale.</li>`
+/* --- taille de la salle jouable --- */
+GAME.size='moyenne';
+const ZONES={petite:{n:'🔹 Petite',a:-7.6,b:.6,d:'≈ 1/3'},moyenne:{n:'🔷 Moyenne',a:-8.3,b:8.2,d:'≈ 2/3'},grande:{n:'🟦 Grande',a:-11,b:11,d:'toute la salle'}};
+const tapeTex=tex(64,16,(g,w,h)=>{for(let i=-2;i<10;i++){g.fillStyle=i%2?'#f5f5f5':'#d42020';g.beginPath();g.moveTo(i*8,0);g.lineTo(i*8+8,0);g.lineTo(i*8,h);g.lineTo(i*8-8,h);g.fill();}});
+const zoneFx=[0,1].map(()=>{const g=new THREE.Group();g.visible=false;scene.add(g);
+  const sh=new THREE.Mesh(new THREE.PlaneGeometry(1,13),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.55,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.set(0,.04,-.5);sh.renderOrder=2;g.add(sh);g.userData.sh=sh;
+  const bar=new THREE.Group();g.add(bar);g.userData.bar=bar;
+  const tape=new THREE.Mesh(new THREE.BoxGeometry(.04,.08,12.8),new THREE.MeshBasicMaterial({map:rep(tapeTex,40,1)}));tape.position.set(0,.95,-.5);bar.add(tape);
+  for(let z=-6.7;z<=5.8;z+=1.55){const p=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1,8),M.iron);p.position.set(0,.5,z);bar.add(p);const f=new THREE.Mesh(new THREE.CylinderGeometry(.16,.18,.04,16),M.iron);f.position.set(0,.02,z);bar.add(f);}
+  return g;});
+function applyZone(){const Z=ZONES[GAME.size];buildGrid(Z.a,Z.b);
+  TABLES.forEach(r=>{r.play=r.x>Z.a&&r.x<Z.b;r.numDisc.visible=r.play;});
+  const [L,R]=zoneFx;L.visible=Z.a>-11;R.visible=Z.b<11;
+  L.userData.sh.scale.x=Z.a+11;L.userData.sh.position.x=(-11+Z.a)/2;L.userData.bar.position.x=Z.a;
+  R.userData.sh.scale.x=11-Z.b;R.userData.sh.position.x=(Z.b+11)/2;R.userData.bar.position.x=Z.b;}
+function clearZone(){zoneFx.forEach(g=>g.visible=false);TABLES.forEach(r=>r.numDisc.visible=true);}
+const nPlay=k=>{const Z=ZONES[k];return TABLES.filter(r=>r.x>Z.a&&r.x<Z.b).length;};
+const sizeBtns=()=>Object.keys(ZONES).map(k=>({t:`${ZONES[k].n}<small>${ZONES[k].d} · ${nPlay(k)} tables</small>`,cls:'mode third'+(k===GAME.size?' cur':''),f:()=>{GAME.size=k;openGame();}}));
+function btnRow(btns){const row=document.createElement('div');row.className='row';btns.forEach(b=>{const el=document.createElement('button');el.className=b.cls||'';el.innerHTML=b.t;el.addEventListener('click',b.f);row.appendChild(el);});return row;}
+function openGame(){initGame();audioInit();GAME.on=true;GAME.running=false;document.body.classList.add('game');resetService();setupWaiters();applyZone();GAME.camInit=true;hud();
+  const how=GAME.mode==='duo'?`<li><b style="color:#e9b872">🟡 J1</b> : joystick gauche (ou ZQSD) · <b style="color:#38bdf8">🔵 J2</b> : joystick droit (ou flèches). Téléphone à l'horizontale.</li>`
     :`<li><b>Touche le sol</b> pour déplacer le serveur (ou flèches / ZQSD).</li>`;
   const goal=GAME.mode==='solo'?'<li>But : gagner le plus d\'argent possible en 3 minutes.</li>':`<li>Chacun garde son argent : <b>celui qui a le plus d'argent à la fin gagne</b>. Celui qui dépose la commande encaisse.</li>`;
-  overlay(`<h2>🍽️ Mode serveur</h2><p><b>Choisis le mode :</b></p>`,[...modeBtns(),
-    {br:true,t:'',cls:'hide',f:()=>{}}]);
-  $('ovCard').insertAdjacentHTML('beforeend',`<ul>${how}<li>Une <b style="color:#4ade80">table verte</b> veut commander : va la voir pour prendre la commande. Elle passe alors en <b style="color:#a78bfa">violet</b> tant qu'elle attend d'être servie.</li>
-   <li>La commande part en cuisine puis arrive <b>au bar</b> : va la chercher (2 max sur le plateau), puis dépose-la à la table entourée de ta couleur.</li>
+  const card=$('ovCard');card.innerHTML=`<h2>🍽️ Mode serveur</h2><p class="lbl">1. Mode de jeu</p>`;card.appendChild(btnRow(modeBtns()));
+  card.insertAdjacentHTML('beforeend','<p class="lbl">2. Taille de la salle</p>');card.appendChild(btnRow(sizeBtns()));
+  card.insertAdjacentHTML('beforeend',`<ul>${how}<li>Une <b style="color:#4ade80">table verte</b> veut commander : va la voir. Elle passe en <b style="color:#a78bfa">violet</b> tant qu'elle attend d'être servie.</li>
+   <li>La commande arrive <b>au bar</b> : va la chercher (2 max), puis dépose-la à la table entourée de ta couleur.</li>
    <li>Le chrono au-dessus de la table montre le temps restant. Sers vite pour les <b>pourboires</b> !</li>${goal}</ul>
-   <div class="menu">${MENU.map(m=>`<span>${m.e} ${m.p} €</span>`).join('')}</div><p><b>Choisis le niveau pour commencer :</b></p>`);
-  const extra=[...levelBtns(),{br:true,t:'Retour',cls:'full',f:quitGame}];
-  const row=document.createElement('div');row.className='row';extra.forEach(b=>{const el=document.createElement('button');el.className=`${b.cls||''}`;el.innerHTML=b.t;el.addEventListener('click',b.f);row.appendChild(el);});
-  $('ovCard').appendChild(row);}
+   <div class="menu">${MENU.map(m=>`<span>${m.e} ${m.p} €</span>`).join('')}</div><p class="lbl">3. Niveau — touche pour commencer</p>`);
+  card.appendChild(btnRow(levelBtns()));card.appendChild(btnRow([{t:'Retour',cls:'full',f:quitGame}]));$('ov').classList.add('show');}
 function resetService(){for(const r of TABLES){if(r.cust.length)clearTable(r);r.cool=0;r.state='free';r.hl.visible=false;r.ring.visible=false;r.top.material.color.setHex(BEIGE);r.top.material.emissive.setHex(0);}
   for(const o of GAME.orders)removeTray(o);GAME.orders=[];for(const w of WAITERS){w.carry=[];w.path=[];w.money=w.tips=w.served=0;drawCarry(w);}floats.splice(0).forEach(f=>killSprite(f.s));
   Object.assign(GAME,{tips:0,served:0,lost:0,time:GAME.dur,spawnT:1.2,lastSec:99});}
 function beginService(lv){if(lv)GAME.level=lv;$('ov').classList.remove('show');resetService();setupWaiters();GAME.running=true;spawn();if(GAME.mode!=='solo')spawn();
-  audioInit();musicStart();play('start');toast(`${MODES[GAME.mode]} · ${LV().n} — le service commence !`);}
+  audioInit();musicStart();play('start');toast(`${MODES[GAME.mode]} · ${ZONES[GAME.size].n} · ${LV().n} — c'est parti !`);}
 function endGame(){GAME.running=false;for(const w of WAITERS)w.path=[];musicStop();play('end');
   const again=[{t:'Rejouer',main:true,cls:'full',f:()=>beginService()},{t:'Changer de mode',f:openGame},{t:'Quitter',f:quitGame}];
   const lostTxt=`✅ ${GAME.served} tables servies · 😠 ${GAME.lost} parties sans payer`;
   if(GAME.mode==='solo'){const w=waiter,b=best(),rec=w.money>b;if(rec)setBest(w.money);
-    overlay(`<h2>Service terminé ! <small style="opacity:.6;font-size:14px">${LV().n}</small></h2><div class="big">${w.money} €</div><p>dont <b>${w.tips} €</b> de pourboires<br>${lostTxt}</p>
+    overlay(`<h2>Service terminé ! <small style="opacity:.6;font-size:14px">${ZONES[GAME.size].n} · ${LV().n}</small></h2><div class="big">${w.money} €</div><p>dont <b>${w.tips} €</b> de pourboires<br>${lostTxt}</p>
      <p>${rec?'🏆 <b>Nouveau record !</b>':`Meilleur score : <b>${Math.max(b,w.money)} €</b>`}</p>`,again);return;}
   const [a,b]=WAITERS;const win=a.money===b.money?null:(a.money>b.money?a:b);
   const title=!win?'🤝 Égalité !':(win.ai?'🤖 L\'ordi a gagné !':`🏆 ${win.col.ic} ${win.col.n} a gagné !`);
   const line=w=>`<p style="font-size:18px;margin:6px 0"><b style="color:${w.col.css}">${w.col.ic} ${w.col.n}</b> : <b>${w.money} €</b> <small style="opacity:.7">(${w.served} tables, ${w.tips} € de pourboires)</small></p>`;
-  overlay(`<h2>${title}</h2><p style="opacity:.6;font-size:13px;margin:0 0 8px">${MODES[GAME.mode]} · ${LV().n}</p>${line(a)}${line(b)}<p>${lostTxt}</p>`,again);}
-function quitGame(){$('ov').classList.remove('show');resetService();musicStop();for(const r of TABLES){r.top.material.color.setHex(r.base);}
+  overlay(`<h2>${title}</h2><p style="opacity:.6;font-size:13px;margin:0 0 8px">${MODES[GAME.mode]} · ${ZONES[GAME.size].n} · ${LV().n}</p>${line(a)}${line(b)}<p>${lostTxt}</p>`,again);}
+function quitGame(){$('ov').classList.remove('show');resetService();musicStop();clearZone();for(const r of TABLES){r.top.material.color.setHex(r.base);}
   GAME.on=false;GAME.running=false;for(const w of WAITERS){w.g.visible=false;w.spr.visible=false;w.tag.visible=false;}marker.material.opacity=0;indicators([]);document.body.classList.remove('game','duo');
   ctl.mode='orbit';ctl.target.copy(waiter.pos);document.querySelectorAll('nav button[data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v==='3d'));goTo('3d');}
 
@@ -686,7 +704,7 @@ function updateGame(dt,now){
   if(run){const sec=Math.ceil(GAME.time);if(sec<=10&&sec!==GAME.lastSec){GAME.lastSec=sec;play('tick');}}
   marker.material.opacity=Math.max(0,marker.material.opacity-dt*(waiter.path.length?.2:1.5));
   // arrivées de clients (un peu plus nombreux à deux)
-  if(run){GAME.spawnT-=dt;const active=TABLES.filter(r=>r.state!=='free').length;const bonus=multi()?2:0;const maxA=Math.min(LV().cap+bonus,3+LV().act+bonus+Math.floor(elapsed()/25));
+  if(run){GAME.spawnT-=dt;const active=TABLES.filter(r=>r.state!=='free').length;const bonus=multi()?2:0;const maxA=Math.min(LV().cap+bonus,Math.max(2,Math.ceil(TABLES.filter(r=>r.play).length*.75)),3+LV().act+bonus+Math.floor(elapsed()/25));
     if(GAME.spawnT<=0&&active<maxA){spawn();GAME.spawnT=(Math.max(3.2,8.5-elapsed()/28)+Math.random()*2)*LV().spawn*(multi()?.7:1);}}
   // tables
   const pulse=.5+.5*Math.sin(now*.008),ws=ACT();
