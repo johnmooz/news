@@ -116,6 +116,8 @@ body.veng .top,body.veng .act{background:rgba(23,13,34,.95);border-color:#4a2347
 .tg button small{display:block;color:var(--muted);font-weight:600;font-size:12px}
 .wait{color:var(--muted);font-size:14px;text-align:center;padding:8px}
 .risk{font-weight:800}
+.rk{position:relative;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:6px 8px 9px;border-radius:10px;background:rgba(0,0,0,.22);font-size:12.5px;color:var(--muted);overflow:hidden}
+.rk i{position:absolute;left:0;bottom:0;height:3px;transition:width .3s}
 /* ---------- Log ---------- */
 .log{margin-top:12px;background:var(--panel);border-radius:14px;padding:10px 12px;font-size:13px;color:var(--muted);max-height:200px;overflow:auto}
 .log div{padding:3px 0;border-bottom:1px solid #22335a}
@@ -461,6 +463,18 @@ function riskFor(p){
   const pool=G.deck.length?G.deck:G.discard; if(!pool.length)return 0;
   return pool.filter(c=>c.t==="num"&&!canTake(p,c.v)).length/pool.length;
 }
+function sevenRisk(p){
+  if(!isV()||!canTake(p,7)||(p.nums.length===0&&p.mods.filter(m=>!m.virtual).length===0))return 0;
+  const pool=G.deck.length?G.deck:G.discard;if(!pool.length)return 0;
+  return pool.filter(c=>c.t==="num"&&c.v===7).length/pool.length;
+}
+const riskCol=r=>r<20?"var(--ok)":r<35?"var(--accent)":"var(--danger)";
+function riskHTML(p){
+  if(p.status!=="active")return "";
+  const r=Math.round(riskFor(p)*100),r7=Math.round(sevenRisk(p)*100);
+  const main=p.second?'<span class="risk" style="color:var(--ok)">protégé ♥</span>':`<span class="risk" style="color:${riskCol(r)}">${r} %</span>`;
+  return `<div class="rk"><span>💥 Risque de sauter : ${main}</span>${isV()&&r7?`<span>☠️ 7 : <span class="risk" style="color:${riskCol(r7*1.5)}">${r7} %</span></span>`:""}<i style="width:${p.second?0:r}%;background:${riskCol(r)}"></i></div>`;
+}
 function drawCard(){
   if(!G.deck.length){
     if(!G.discard.length)return null;
@@ -782,6 +796,7 @@ function render(){
       <div class="bar"><i style="width:${Math.min(100,p.total/TARGET*100)}%"></i></div>
       <div class="row">${cards||'<span class="empty">Aucune carte</span>'}</div>
       <div class="pf"><span style="display:flex;align-items:center">${st}<span class="dots">${dots}</span></span><span class="pts">Manche : <b>${roundScore(p)}</b></span></div>
+      ${riskHTML(p)}
     </div>`;
   }).join("");
 
@@ -789,8 +804,8 @@ function render(){
   const pr=G.prompt;
   if(pr&&pr.kind==="turn"){
     const p=pr.p,r=Math.round(riskFor(p)*100);
-    const rc=r<20?"var(--ok)":r<35?"var(--accent)":"var(--danger)";
-    act=`<div class="q"><span>À toi, ${nm(p)} — manche : <b>${roundScore(p)}</b> pts</span><span>Risque de doublon : <span class="risk" style="color:${rc}">${p.second?"protégé ♥":r+" %"}</span></span></div>
+    const rc=riskCol(r),r7=Math.round(sevenRisk(p)*100);
+    act=`<div class="q"><span>À toi, ${nm(p)} — manche : <b>${roundScore(p)}</b> pts</span><span>💥 Risque de sauter : <span class="risk" style="color:${rc}">${p.second?"protégé ♥":r+" %"}</span>${isV()&&r7?` · ☠️ 7 : <span class="risk" style="color:${riskCol(r7*1.5)}">${r7} %</span>`:""}</span></div>
       <div class="btns"><button class="b-draw" onclick="answer('draw')">🃏 Piocher</button><button class="b-stop" onclick="answer('stop')">✋ S'arrêter</button></div>`;
   }else if(pr&&pr.kind==="opts"){
     act=`<div class="q"><span>${nm(pr.p)} : <b>${pr.title}</b></span></div><div class="tg">${pr.opts.map((o,k)=>`<button onclick="answer(${k})" style="border-left:4px solid ${o.col}">${esc(o.label)}<small>${esc(o.sub)}</small></button>`).join("")}</div>`;
