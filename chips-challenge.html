@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Puce Panique</title>
+<style>
+:root{--bg:#0d1f14;--pcb:#14361f;--line:#1f5a33;--gold:#f2c94c;--p1:#ff8c42;--p2:#36d6a8;--txt:#eaf5ec;--panel:#0a140e}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+body{background:
+ linear-gradient(90deg,transparent 48%,var(--line) 48% 52%,transparent 52%) 0 0/60px 60px,
+ linear-gradient(0deg,transparent 48%,var(--line) 48% 52%,transparent 52%) 30px 0/60px 120px,
+ var(--pcb)}
+#app{height:100dvh;max-width:760px;margin:0 auto;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom)}
+#hud{display:flex;align-items:center;gap:8px;padding:8px 4px;flex-wrap:wrap}
+.lcd{background:#000;border:2px solid #444;border-radius:6px;padding:3px 8px;font-family:"Courier New",monospace;font-weight:bold;color:#ffd84a;text-shadow:0 0 6px #ff9d00;font-size:15px;white-space:nowrap}
+.lcd small{color:#c9a227;font-size:11px;margin-right:4px;text-shadow:none}
+#lvname{flex:1;min-width:90px;font-weight:bold;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#keys{display:flex;gap:3px}
+.kslot{width:26px;height:26px;border-radius:5px;background:#000;border:2px solid #333;position:relative}
+.kslot canvas{width:100%;height:100%}
+.kslot b{position:absolute;right:1px;bottom:-1px;font-size:10px;color:#fff;text-shadow:0 0 3px #000}
+.ibtn{background:#22382a;color:var(--txt);border:2px solid #3d6b4c;border-radius:8px;font-size:17px;width:38px;height:34px;cursor:pointer}
+#stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+#cv{border:4px solid #8e8e96;border-radius:6px;box-shadow:0 0 0 3px #3a3a42,0 10px 30px #0008;background:#222;image-rendering:auto}
+#overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:5}
+#overlay.on{display:flex}
+#overlay.peek{pointer-events:none;align-items:flex-start;padding-top:8px}
+.card{max-height:94%;overflow-y:auto;background:linear-gradient(#1b2a20,#0e1812);border:3px solid var(--gold);border-radius:14px;padding:18px 20px;max-width:92%;width:420px;text-align:center;box-shadow:0 10px 40px #000a}
+.card h1{font-size:30px;color:var(--gold);letter-spacing:2px;text-shadow:0 3px 0 #7a5a00}
+.card h2{font-size:22px;color:var(--gold);margin-bottom:6px}
+.card p{margin:8px 0;line-height:1.4;font-size:15px}
+.btn{display:inline-block;margin:6px 4px;padding:11px 18px;font-size:16px;font-weight:bold;border-radius:10px;border:none;cursor:pointer;color:#1a1200;background:linear-gradient(#ffe27a,#f2b705);box-shadow:0 4px 0 #8a6400}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a6400}
+.btn.alt{background:linear-gradient(#bde9c8,#6fbf87);box-shadow:0 4px 0 #2f6b41}
+.btn.sel{outline:3px solid #fff}
+#lvgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}
+#lvgrid button{padding:8px 0;font-size:15px;font-weight:bold;border-radius:8px;border:2px solid #3d6b4c;background:#22382a;color:var(--txt);cursor:pointer}
+#lvgrid button:disabled{opacity:.35}
+#lvgrid button.done{border-color:var(--gold)}
+#controls{display:flex;justify-content:space-around;align-items:center;padding:6px 0 10px;gap:10px}
+.pad{width:min(42vw,170px);height:min(42vw,170px);border-radius:50%;position:relative;touch-action:none;background:radial-gradient(circle,#2b2f38 0 30%,#1b1e25 31%);border:4px solid #555;box-shadow:inset 0 0 0 3px #111,0 6px 0 #000}
+.pad.solo{width:min(48vw,190px);height:min(48vw,190px)}
+.pad i{position:absolute;width:0;height:0;border:14px solid transparent;opacity:.8}
+.pad .u{left:50%;top:9%;transform:translateX(-50%);border-bottom:20px solid #ddd;border-top:0}
+.pad .d{left:50%;bottom:9%;transform:translateX(-50%);border-top:20px solid #ddd;border-bottom:0}
+.pad .l{top:50%;left:9%;transform:translateY(-50%);border-right:20px solid #ddd;border-left:0}
+.pad .r{top:50%;right:9%;transform:translateY(-50%);border-left:20px solid #ddd;border-right:0}
+.pad span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:bold;font-size:14px}
+.pad.act{border-color:#fff}
+#help{font-size:12px;opacity:.8;text-align:center;padding:4px}
+.who{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <button class="ibtn" id="bMenu" title="Menu">☰</button>
+    <div id="lvname">Puce Panique</div>
+    <div class="lcd"><small>PUCES</small><span id="hChips">0</span></div>
+    <div class="lcd"><small>TEMPS</small><span id="hTime">0</span></div>
+    <div id="keys"></div>
+    <button class="ibtn" id="bMusic" title="Musique">🎵</button>
+    <button class="ibtn" id="bRestart" title="Recommencer">⟲</button>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas><div id="overlay"></div></div>
+  <div id="controls"></div>
+  <div id="help"></div>
+</div>
+
+<script id="core">
+// ======================= CŒUR DU JEU (logique pure) =======================
+const TICK_MS=50, MOVE_T=4, SLIDE_T=2;
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+const OPP={up:'down',down:'up',left:'right',right:'left'};
+const CONV={'^':'up','v':'down','<':'left','>':'right'};
+const KEYS='rbgy', DOORS='RBGY';
+/* Légende : # mur  . sol  c puce  S grille à puces  E sortie
+   r b g y clés   R B G Y portes   T téléporteur   X caisse   ~ eau
+   ^ v < > tapis roulants   ? indice   1 2 joueurs
+   m insecte (horizontal)  n insecte (vertical)  z fantôme chasseur */
+const LEVELS=[
+{name:"Premiers pas",time:150,hint:"Ramasse toutes les puces pour ouvrir la grille, puis rejoins la sortie. Chaque clé ouvre la porte de sa couleur.",map:[
+"###########",
+"#c..#E#..c#",
+"#...#S#...#",
+"#.r.....b.#",
+"##B##.##R##",
+"#c..#?#..c#",
+"#...#1#...#",
+"#...#2#...#",
+"###########"]},
+{name:"Sentinelles",time:120,hint:"Les insectes rouges font des allers-retours. Observe leur rythme avant de traverser !",map:[
+"#############",
+"#c....#....c#",
+"#.###.#.###.#",
+"#...m...m...#",
+"###.#####.###",
+"#c..##E##..c#",
+"#.#.##S##.#.#",
+"#...#...#...#",
+"#.#.##.##.#.#",
+"#c...2.1...c#",
+"#############"]},
+{name:"Caisses et ponts",time:150,hint:"Pousse les caisses dans l'eau pour construire des ponts. Attention à ne pas bloquer une caisse contre un mur !",map:[
+"#############",
+"#.....#.....#",
+"#.1.X.~..c..#",
+"#.2...#.....#",
+"#..X..###~###",
+"#.....#...c.#",
+"#.X...~..X..#",
+"#.....#.....#",
+"###~###~##S##",
+"#c..#...#...#",
+"#...#.c.#.E.#",
+"#############"]},
+{name:"Tapis roulants",time:150,hint:"Les tapis roulants t'emportent dans leur direction : impossible de lutter contre eux !",map:[
+"###############",
+"#1..#######..c#",
+"#2..>>>>>>>...#",
+"#...#~~~~~#.y.#",
+"#.c.#~~~~~#...#",
+"#...#~~~~~#.c.#",
+"#...<<<<<<<.n.#",
+"#c..#######...#",
+"##Y############",
+"#..S.........E#",
+"###############"]},
+{name:"Téléporteurs",time:150,hint:"Chaque téléporteur bleu t'envoie vers le téléporteur suivant. Explore pour trouver le bon chemin !",map:[
+"#############",
+"#1..#...#..T#",
+"#2..#.c.#...#",
+"#.T.#...#.c.#",
+"#...##.##m..#",
+"#c..#.T.#..b#",
+"#####...#B###",
+"#.E.S...#..c#",
+"#############"]},
+{name:"Le chasseur",time:150,hint:"Le fantôme violet te poursuit ! Tourne autour des piliers et pousse les caisses pour le bloquer.",map:[
+"#############",
+"#c....#....c#",
+"#.#.#...#.#.#",
+"#.....z.....#",
+"#.#.#.#.#.#.#",
+"#c...X.X...c#",
+"#.#.#.#.#.#.#",
+"#....2.1....#",
+"#.#.#.#.#.#.#",
+"#c.........c#",
+"######S######",
+"######E######",
+"#############"]},
+{name:"Grand mélange",time:200,hint:"Clés, caisses, téléporteurs et tapis : tout ce que tu as appris est réuni ici.",map:[
+"###############",
+"#1.#c..~..c#.c#",
+"#2.#...~...#..#",
+"#..R...~...#..#",
+"#..#.X.~..y#.T#",
+"#r.#########v##",
+"#..#g.....T#v##",
+"#..#..m..c.#v##",
+"#..Y.......#v##",
+"############.##",
+"#####...c...G##",
+"######S########",
+"######E########",
+"###############"]},
+{name:"Le grand final",time:260,hint:"Le dernier défi ! Prends ton temps, chaque élément compte.",map:[
+"#################",
+"#1..#c.......#.c#",
+"#2..#..m.....#..#",
+"#.X.R.....b..#.T#",
+"#...#.......c#..#",
+"#..r######.######",
+"#~~~#>>>>v.#c..z#",
+"#.c.#.c#.v.#....#",
+"#...#..#.v.B....#",
+"##X##..#.<<#..T.#",
+"#..g#....G.#....#",
+"#...######S######",
+"##########E######",
+"#################"]},
+// ---- 30 niveaux supplémentaires ----
+{name:"Couloirs croisés",time:140,hint:"Les clés ne servent qu'une fois : choisis bien quelle porte ouvrir.",map:[
+"#############",
+"#...#...#...#",
+"#...S.E.#...#",
+"#..c#...#2.1#",
+"##.######...#",
+"#.c.#...#...#",
+"#......cYc..#",
+"#...#...#.y.#",
+"#############"]},
+{name:"Le petit dédale",time:140,hint:"Les clés ne servent qu'une fois : choisis bien quelle porte ouvrir.",map:[
+"#############",
+"#..c#...#...#",
+"#c......#.E.#",
+"#...#...#...#",
+"##G###.###S##",
+"#.c.#.......#",
+"#.cg#.......#",
+"#2.1#.......#",
+"#############"]},
+{name:"Porte après porte",time:140,hint:"Observe le rythme des insectes. Les clés ne servent qu'une fois : choisis bien quelle porte ouvrir.",map:[
+"#############",
+"#...#....c..#",
+"#.E.S.......#",
+"#...#.......#",
+"##########.##",
+"#2.1#.c.#...#",
+"#.crRn.c....#",
+"#...#...#...#",
+"#############"]},
+{name:"Ponts flottants",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Observe le rythme des insectes.",map:[
+"#############",
+"#...#cc.#.n.#",
+"#...Y.X.~...#",
+"#...#..c#...#",
+"#...######S##",
+"#...#..2#...#",
+"#..y....#.E.#",
+"#...#1.c#...#",
+"#############"]},
+{name:"Clés en série",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Observe le rythme des insectes.",map:[
+"#############",
+"#...#...#...#",
+"#...~.X.~.X.#",
+"#c..#c..#...#",
+"##S######...#",
+"#...#c..#...#",
+"#.E.#...B...#",
+"#...#2b1#nc.#",
+"#############"]},
+{name:"Le grand détour",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Observe le rythme des insectes.",map:[
+"#############",
+"#...#2..#.m.#",
+"#.E.#.Xc#.y.#",
+"#...#1..#...#",
+"##S###~###.##",
+"#...#..c#..c#",
+"#.c.Y.X.~...#",
+"#...#..c#...#",
+"#############"]},
+{name:"Usine à puces",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#...#...#...#",
+"#..m#.......#",
+"#T.c#..T#cc.#",
+"##.######...#",
+"#...#...#...#",
+"#.X.~...#...#",
+"#...#..c#...#",
+"##S#######G##",
+"#...#1..#...#",
+"#.E.#g..Yc..#",
+"#...#.y2#..m#",
+"#############"]},
+{name:"Station téléport",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#...#T..#..2#",
+"#cX.~.X.#..r#",
+"#...#...#1.T#",
+"##~##########",
+"#...#...#cn.#",
+"#...#.X.~...#",
+"#c..#...#...#",
+"##R###B###S##",
+"#...#bc.#...#",
+"#.X.~...#.E.#",
+"#.c.#..n#...#",
+"#############"]},
+{name:"Circuit fermé",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Observe le rythme des insectes.",map:[
+"#############",
+"#.m.#...#...#",
+"#...#.X.~.X.#",
+"#...#..c#n..#",
+"##.###~###R##",
+"#...#c..#...#",
+"#..c....#..r#",
+"#...#...#...#",
+"##.#######G##",
+"#...#...#...#",
+"#...S.E.#cgc#",
+"#...#...#2.1#",
+"#############"]},
+{name:"Tapis infernal",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#...#...#T..#",
+"#.E.#...#.X.#",
+"#...#.mT#...#",
+"##S###B###~##",
+"#..c#2b1#...#",
+"#...#y..#<<<#",
+"#..c#cc.#..n#",
+"##~######...#",
+"#...#...#...#",
+"#cXc....Y...#",
+"#...#...#...#",
+"#############"]},
+{name:"Les quatre clés",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#...#..T#.cn#",
+"#.E.S...#>>>#",
+"#...#...#.cT#",
+"######~######",
+"#.......#gc1#",
+"#.....X.#c..#",
+"#..n....#..2#",
+"##.#######G##",
+"#...#.cb#...#",
+"#...Bc..~.X.#",
+"#...#...#...#",
+"#############"]},
+{name:"Marée basse",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#############",
+"#...#...#...#",
+"#.X.R...Yyc.#",
+"#...#..n#ccr#",
+"##~#######~##",
+"#...#1.....c#",
+"#...#c....X.#",
+"#..c#2......#",
+"##.##########",
+"#mv.#...#...#",
+"#.v.....S.E.#",
+"#.v.#...#...#",
+"#############"]},
+{name:"Nid d'insectes",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#...#...#c..#",
+"#.E.#.X.~.X.#",
+"#...#..n#...#",
+"##S###~###Y##",
+"#.c.#..c#...#",
+"#...Rc..#<<<#",
+"#...#...#n.m#",
+"##########~##",
+"#1.2#Tvc#...#",
+"#...#yvgG.X.#",
+"#T..#cv.#r..#",
+"#############"]},
+{name:"Carrefour",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#T.n#.c.#...#",
+"#>>>#c..#...#",
+"#...#T..#.cm#",
+"##~###B###.##",
+"#...#...#...#",
+"#.Xc#.c.G>>>#",
+"#...#c.g#..m#",
+"#...######Y##",
+"#2..#...#...#",
+"#..b#.E.Sc..#",
+"#y.1#...#...#",
+"#############"]},
+{name:"Fantôme en vadrouille",time:140,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#############",
+"#..c#...#..c#",
+"#.......~.X.#",
+"#...#...#mzc#",
+"######S###G##",
+"#..c#...#.cm#",
+"#.g.#.E.#<<<#",
+"#2.1#...#c..#",
+"##.#######~##",
+"#..y#.vm#...#",
+"#.b.B.v.Y.X.#",
+"#.c.#.v.#...#",
+"#############"]},
+{name:"Salle des machines",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#############",
+"#.v.#c..#...#",
+"#.v.B...S.E.#",
+"#.g.#..m#...#",
+"##~##########",
+"#n..#...#rc.#",
+"#cX.~.X.R...#",
+"#...#...#T..#",
+"##G##########",
+"#..c..vc#1cT#",
+"#....mv.#.bc#",
+"#.....v.#2..#",
+"#############"]},
+{name:"L'île aux puces",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#m..#..T#...#...#",
+"#...~.X.#...B...#",
+"#.y.#mc.#...#..c#",
+"#...######S###~##",
+"#...#.c2#...#...#",
+"#...#.c.#.E.#.X.#",
+"#...#1.T#...#...#",
+"##Y##########...#",
+"#..c#.c.#.v.#...#",
+"#......b..v.R>>>#",
+"#...#mr.#.v.#.c.#",
+"#################"]},
+{name:"Double détour",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#################",
+"#...#...#...#...#",
+"#.E.#nX.~.X.R.r.#",
+"#...#...#...#..c#",
+"##S###~#######G##",
+"#ccc#c..#.v.#.g.#",
+"#<<<#.....v.#...#",
+"#.c.#c..#.v.#...#",
+"##~#######.###Y##",
+"#...#..c#.m.#..1#",
+"#.X.~.X.~.X.#..y#",
+"#...#...#m..#..2#",
+"#################"]},
+{name:"Bureau des clés",time:170,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#...#...#...#",
+"#.E.S..nR..c....#",
+"#...#z..#c..#.r.#",
+"######.#######Y##",
+"#.c2#...#.cg#..c#",
+"#...#...#>>>B>>>#",
+"#1.T#c..#...#m..#",
+"#########...##G##",
+"#T..#cc.#...#..y#",
+"#.X.~.X.~...#...#",
+"#...#nb.#.n.#...#",
+"#################"]},
+{name:"Zone inondée",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#...#n^T#T.c#",
+"#.E.#.....^.#..m#",
+"#...#n.y#.^c#...#",
+"##S##...######B##",
+"#.c.#...#2..#...#",
+"#...#.r.#.b.#...#",
+"#..c#c..#..1#...#",
+"##R###Y###.###G##",
+"#.^.#...#...#.c.#",
+"#.^.~.X.#.X.~c.m#",
+"#.^.#...#g.c#...#",
+"#################"]},
+{name:"Chaîne de montage",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#################",
+"#...#..c#c.y#...#",
+"#...R...Yc.c#...#",
+"#...#.r.#2.1#.c.#",
+"##.###########.##",
+"#...#.v.#...#...#",
+"#...G.v.#...B>>>#",
+"#..g#cv.#b..#...#",
+"######.###~###S##",
+"#.m.#.c.#...#...#",
+"#..c..X.~.X.#.E.#",
+"#..m#mn.#...#...#",
+"#################"]},
+{name:"Le dédale",time:180,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#...#.c.#...#",
+"#.E.Sc.c..X.~...#",
+"#...#c..#.n.#...#",
+"##########.######",
+"#Tcc#...#...#...#",
+"#g.r#...#...~.X.#",
+"#...#.nT#..c#...#",
+"##B###R#######Y##",
+"#1b2#.c.#m^.#.^.#",
+"#...#.X.~.^.G.^c#",
+"#.y.#...#n^.#.^.#",
+"#################"]},
+{name:"Le repaire",time:170,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#m.....T#..T#",
+"#.c.G..z.n.n#cX.#",
+"#...#.......#c..#",
+"##########~###~##",
+"#1......#...#..b#",
+"#.y...X.~.X.#...#",
+"#c.2....#c..#g..#",
+"##############B##",
+"#...#...#c^.#.c.#",
+"#.E.S.....^.Y<<<#",
+"#...#..m#c^c#...#",
+"#################"]},
+{name:"Haute tension",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#################",
+"#.^.#...#...#...#",
+"#n^.S.E.#.X.~c..#",
+"#.^.#...#.c.#.y.#",
+"##~#######~###Y##",
+"#...#1..#..r#..n#",
+"#.X.#.c.GcXc#..n#",
+"#...#.g2#...#...#",
+"##B###########R##",
+"#.cc....#...#...#",
+"#<<<....~.X...n.#",
+"#.c.....#.c.#b..#",
+"#################"]},
+{name:"Mission circuit",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#..T#.^.#.v.#c..#",
+"#r>>R.^.B.vcY.Xn#",
+"#bm.#.^.#.v.#...#",
+"##############~##",
+"#T..#2y1#c..#...#",
+"#.c.#..c#.X.~.X.#",
+"#..c#.c.#...#mcz#",
+"##G###.###~######",
+"#...#...#..m#...#",
+"#...~.X.#...S.E.#",
+"#..c#..g#m..#...#",
+"#################"]},
+{name:"Les catacombes",time:170,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#c^.#...#Tc.#",
+"#.E.S.^.#...B<<<#",
+"#...#m^z#.c.#cc.#",
+"######~###Y######",
+"#1c.#n..#..n#T.c#",
+"#...#.X..c..#...#",
+"#2..#...#...#c..#",
+"##.###########R##",
+"#..m#...#c^.#...#",
+"#.....X.~.^rG...#",
+"#...#.g.#y^.#b.n#",
+"#################"]},
+{name:"Labo secret",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#################",
+"#.^.#...#..m#.v.#",
+"#.^.S.E.#.b.Gnvy#",
+"#c^n#...#.rg#.v.#",
+"##.######...##Y##",
+"#..c#c.c#...#...#",
+"#.X.~.X.#..c#.Xz#",
+"#...#..c#2.1#...#",
+"##~###R#######~##",
+"#..n#.^.#.c.#...#",
+"#c..#.^.~.X.Bc..#",
+"#...#.^n#...#c..#",
+"#################"]},
+{name:"Course contre la montre",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#T..#2..#...#.n.#",
+"#<<<..c.#.E.S..m#",
+"#cg.#..1#...#...#",
+"##############.##",
+"#..n#...#..n...c#",
+"#...#.r.G....>>>#",
+"#..T#..c#.......#",
+"#...##B#######Y##",
+"#cz.#.m.#cvc#.c.#",
+"#.X.~..y#.v.R...#",
+"#.cb#...#cv.#...#",
+"#################"]},
+{name:"Dernière ligne droite",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Un téléporteur cache un passage secret.",map:[
+"#################",
+"#...#.z.#...#cn.#",
+"#.E.Sc..~.X.~.X.#",
+"#...#...#c..#...#",
+"##############~##",
+"#gvn#..c#.vc#...#",
+"#.v...X.~.v.#.X.#",
+"#cvT#.n.#.b.#...#",
+"##########R###G##",
+"#2.r#n..#.v.#c..#",
+"#...#.y.B.vcY.n.#",
+"#1.T#c..#.vc#...#",
+"#################"]},
+{name:"Le cœur du processeur",time:150,hint:"Pousse les caisses dans l'eau pour faire des ponts. Méfie-toi des tapis roulants.",map:[
+"#################",
+"#...#n..#m..#z.c#",
+"#.E.#.X.Yc..~.X.#",
+"#...#...#...#ccy#",
+"##S###~#######G##",
+"#.^c#..m#b..#g..#",
+"#.^c#.Xc#.c.#...#",
+"#.^.#c..#1.2#...#",
+"##.###~###B###.##",
+"#..n#cc.#...#.^.#",
+"#<<<~.X.#...R.^.#",
+"#n..#...#.r.#.^.#",
+"#################"]}
+];
+
+function mkEnt(x,y,o){return Object.assign({x,y,fx:x,fy:y,mt:-99,md:1},o||{});}
+function parseLevel(idx,n){
+  const L=LEVELS[idx],h=L.map.length,w=L.map[0].length;
+  const s={idx,name:L.name,hint:L.hint,w,h,grid:[],players:[],crates:[],enemies:[],teleports:[],
+    chipsLeft:0,chipsTotal:0,keys:{r:0,b:0,g:0,y:0},time:L.time,tick:0,status:'play',events:[],nPlayers:n};
+  for(let y=0;y<h;y++){const row=[];for(let x=0;x<w;x++){let c=L.map[y][x];
+    if(c==='1'||c==='2'){const i=+c-1;if(i<n)s.players[i]=mkEnt(x,y,{id:i,facing:'down',cool:0});c='.';}
+    else if(c==='X'){s.crates.push(mkEnt(x,y));c='.';}
+    else if(c==='m'){s.enemies.push(mkEnt(x,y,{kind:'bug',dir:'right',speed:6}));c='.';}
+    else if(c==='n'){s.enemies.push(mkEnt(x,y,{kind:'bug',dir:'down',speed:6}));c='.';}
+    else if(c==='z'){s.enemies.push(mkEnt(x,y,{kind:'ghost',dir:'down',speed:9}));c='.';}
+    else if(c==='c'){s.chipsLeft++;}
+    else if(c==='T'){s.teleports.push({x,y});}
+    row.push(c);}s.grid.push(row);}
+  s.chipsTotal=s.chipsLeft;
+  return s;
+}
+const inb=(s,x,y)=>x>=0&&y>=0&&x<s.w&&y<s.h;
+const isFloor=t=>t==='.'||t==='d';
+function ev(s,type,d){s.events.push(Object.assign({type},d||{}));}
+function livePlayers(s){return s.players.filter(p=>p&&!p.dead&&!p.exited);}
+function playerAt(s,x,y,ex){return s.players.find(p=>p&&p!==ex&&!p.dead&&!p.exited&&p.x===x&&p.y===y);}
+function crateAt(s,x,y){return s.crates.findIndex(c=>c.x===x&&c.y===y);}
+function enemyAt(s,x,y){return s.enemies.findIndex(e=>e.x===x&&e.y===y);}
+function setPos(s,e,x,y,d){e.fx=e.x;e.fy=e.y;e.x=x;e.y=y;e.mt=s.tick;e.md=d;}
+function kill(s,p,cause){if(s.status!=='play')return;p.dead=true;s.status='dead';s.cause=cause;ev(s,'death',{cause,x:p.x,y:p.y});}
+
+function pushCrate(s,ci,dx,dy,dur){
+  const c=s.crates[ci],bx=c.x+dx,by=c.y+dy;
+  if(!inb(s,bx,by))return false;
+  const t=s.grid[by][bx];
+  if(!(t==='.'||t==='d'||t==='~'||CONV[t]))return false;
+  if(crateAt(s,bx,by)>=0||enemyAt(s,bx,by)>=0||playerAt(s,bx,by))return false;
+  setPos(s,c,bx,by,dur);
+  if(t==='~'){s.grid[by][bx]='d';s.crates.splice(ci,1);ev(s,'splash',{x:bx,y:by});}
+  else ev(s,'push');
+  return true;
+}
+function tryMove(s,p,dir,dur){
+  const [dx,dy]=DIRS[dir],nx=p.x+dx,ny=p.y+dy;
+  p.facing=dir;
+  if(!inb(s,nx,ny))return false;
+  const t=s.grid[ny][nx];
+  if(t==='#')return false;
+  if(playerAt(s,nx,ny,p))return false;
+  if(DOORS.includes(t)&&s.keys[t.toLowerCase()]<=0){ev(s,'bump');return false;}
+  if(t==='S'&&s.chipsLeft>0){ev(s,'bump');return false;}
+  const ci=crateAt(s,nx,ny);
+  if(ci>=0&&!pushCrate(s,ci,dx,dy,dur))return false;
+  if(DOORS.includes(t)){s.keys[t.toLowerCase()]--;s.grid[ny][nx]='.';ev(s,'door',{x:nx,y:ny,c:t});}
+  if(t==='S'){s.grid[ny][nx]='.';ev(s,'socket',{x:nx,y:ny});}
+  setPos(s,p,nx,ny,dur);
+  if(enemyAt(s,nx,ny)>=0){kill(s,p,'enemy');return true;}
+  enter(s,p);
+  return true;
+}
+function enter(s,p){
+  const t=s.grid[p.y][p.x];
+  if(t==='c'){s.chipsLeft--;s.grid[p.y][p.x]='.';ev(s,'chip',{x:p.x,y:p.y});
+    if(s.chipsLeft===0){const pos=[];s.grid.forEach((r,y)=>r.forEach((c,x)=>{if(c==='S')pos.push({x,y});}));ev(s,'unlock',{pos});}}
+  else if(KEYS.includes(t)){s.keys[t]++;s.grid[p.y][p.x]='.';ev(s,'key',{k:t,x:p.x,y:p.y});}
+  else if(t==='~'){kill(s,p,'water');}
+  else if(t==='E'){p.exited=true;ev(s,'exit',{id:p.id,x:p.x,y:p.y});if(livePlayers(s).length===0){s.status='won';ev(s,'win');}}
+  else if(t==='T'){teleport(s,p);}
+  else if(t==='?'){ev(s,'hint');}
+}
+function teleport(s,p){
+  const T=s.teleports,n=T.length;if(n<2)return;
+  const i=T.findIndex(q=>q.x===p.x&&q.y===p.y);
+  for(let k=1;k<n;k++){const q=T[(i+k)%n];
+    if(!playerAt(s,q.x,q.y,p)&&crateAt(s,q.x,q.y)<0&&enemyAt(s,q.x,q.y)<0){
+      ev(s,'teleport',{fx:p.x,fy:p.y,x:q.x,y:q.y});
+      p.x=q.x;p.y=q.y;p.fx=q.x;p.fy=q.y;p.mt=s.tick;p.md=1;return;}}
+}
+function enemyCan(s,x,y){
+  if(!inb(s,x,y))return false;
+  if(playerAt(s,x,y))return true;
+  return isFloor(s.grid[y][x])&&crateAt(s,x,y)<0&&enemyAt(s,x,y)<0;
+}
+function enemyGo(s,e,dir){
+  const [dx,dy]=DIRS[dir],nx=e.x+dx,ny=e.y+dy;
+  if(!enemyCan(s,nx,ny))return false;
+  e.dir=dir;setPos(s,e,nx,ny,e.speed);
+  const p=playerAt(s,nx,ny);if(p)kill(s,p,'enemy');
+  return true;
+}
+function moveEnemy(s,e,rnd){
+  if(e.kind==='bug'){if(!enemyGo(s,e,e.dir))enemyGo(s,e,OPP[e.dir]);return;}
+  let best=null,bd=1e9;
+  for(const p of livePlayers(s)){const d=Math.abs(p.x-e.x)+Math.abs(p.y-e.y);if(d<bd){bd=d;best=p;}}
+  if(!best)return;
+  const dx=best.x-e.x,dy=best.y-e.y;
+  const h=dx>0?'right':dx<0?'left':null,v=dy>0?'down':dy<0?'up':null;
+  const order=Math.abs(dx)>=Math.abs(dy)?[h,v]:[v,h];
+  for(const d of order)if(d&&enemyGo(s,e,d))return;
+  if((rnd||Math.random)()<0.5){const ds=['up','down','left','right'];enemyGo(s,e,ds[Math.floor((rnd||Math.random)()*4)]);}
+}
+function step(s,getInput){
+  if(s.status!=='play')return;
+  s.tick++;
+  for(const p of s.players){
+    if(!p||p.dead||p.exited)continue;
+    if(p.cool>0){p.cool--;if(p.cool>0)continue;}
+    const t=s.grid[p.y][p.x];
+    if(CONV[t]){if(tryMove(s,p,CONV[t],SLIDE_T)){p.cool=SLIDE_T;p.sliding=true;if(s.status!=='play')return;continue;}}
+    p.sliding=false;
+    const d=getInput(p.id);
+    if(d){if(tryMove(s,p,d,MOVE_T))p.cool=MOVE_T;if(s.status!=='play')return;}
+  }
+  if(s.tick>20)for(const e of s.enemies){if(s.tick%e.speed===0){moveEnemy(s,e);if(s.status!=='play')return;}}
+  if(s.tick%20===0){s.time--;if(s.time<=0){s.time=0;s.status='dead';s.cause='time';ev(s,'death',{cause:'time'});}}
+}
+</script>
+
+<script>
+// ======================= INTERFACE, RENDU, CONTRÔLES =======================
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const overlay=document.getElementById('overlay');
+const $=id=>document.getElementById(id);
+const COL={r:'#e8423f',b:'#3a7bff',g:'#2fbf4a',y:'#f5cf1d'};
+const PCOL=['#ff8c42','#36d6a8'],PDARK=['#b4541a','#1c8f6e'];
+const coarse=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window)||navigator.maxTouchPoints>0;
+let S=null,mode=1,curLevel=0,running=false,acc=0,last=0,effects=[],TS=32,hintShown=false;
+let save={unlocked:1,done:[]};
+try{const v=JSON.parse(localStorage.getItem('pucepanique')||'null');if(v)save=v;}catch(e){}
+function persist(){try{localStorage.setItem('pucepanique',JSON.stringify(save));}catch(e){}}
+
+// ---------- son ----------
+let actx=null,muted=false,master=null,musicOn=true,musicTimer=null,musicStep=0,musicNext=0;
+function unlockAudio(){try{
+  if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)();master=actx.createGain();master.gain.value=1;master.connect(actx.destination);}
+  if(actx.state!=='running')actx.resume();
+  // un son muet joué pendant le geste débloque l'audio sur iOS
+  const b=actx.createBuffer(1,1,22050),src=actx.createBufferSource();src.buffer=b;src.connect(actx.destination);src.start(0);
+  if(musicOn&&!muted&&!musicTimer)startMusic();
+}catch(e){}}
+// Musique originale en boucle (mélodie + basse + percussion), programmée à l'avance
+const MEL=[72,0,75,77,79,0,77,75,72,0,70,72,75,0,0,0, 72,0,75,77,79,0,82,79,77,0,75,77,79,0,0,0,
+           84,0,82,79,77,0,79,82,84,0,82,79,77,75,0,0, 72,0,75,77,79,0,77,75,74,0,72,70,72,0,0,0];
+const BAS=[48,48,55,48,51,51,58,51,46,46,53,46,43,43,50,55];
+const midi=n=>440*Math.pow(2,(n-69)/12);
+function note(f,t,d,type,vol){const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(master);o.start(t);o.stop(t+d+.02);}
+function hat(t){const n=actx.createBufferSource(),b=actx.createBuffer(1,2205,44100),dd=b.getChannelData(0);for(let i=0;i<dd.length;i++)dd[i]=(Math.random()*2-1)*(1-i/dd.length);
+  n.buffer=b;const g=actx.createGain(),hp=actx.createBiquadFilter();hp.type='highpass';hp.frequency.value=6000;g.gain.value=.025;n.connect(hp).connect(g).connect(master);n.start(t);}
+function startMusic(){if(!actx||musicTimer||muted||!musicOn)return;musicNext=actx.currentTime+.1;
+  const SP=60/150/2; // croches à 150 BPM
+  musicTimer=setInterval(()=>{while(musicNext<actx.currentTime+.25){
+    const i=musicStep%MEL.length,m=MEL[i];
+    if(m)note(midi(m),musicNext,SP*1.6,'square',.022);
+    if(i%2===0){const bn=BAS[(i>>1)%BAS.length]+(Math.floor(i/32)%2?0:0);note(midi(bn),musicNext,SP*1.8,'triangle',.06);}
+    if(i%2===1)hat(musicNext);
+    musicNext+=SP;musicStep++;}},60);}
+function stopMusic(){clearInterval(musicTimer);musicTimer=null;}
+function beep(f,d,type,vol,slide,delay){if(muted)return;try{
+  if(!actx)unlockAudio();
+  const t0=actx.currentTime+(delay||0),o=actx.createOscillator(),g=actx.createGain();
+  o.type=type||'square';o.frequency.setValueAtTime(f,t0);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+d);
+  g.gain.setValueAtTime(vol||.05,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g).connect(actx.destination);o.start(t0);o.stop(t0+d+.02);}catch(e){}}
+const SFX={
+  chip:()=>{beep(880,.08);beep(1320,.1,'square',.05,0,.07);},
+  key:()=>{beep(660,.08,'triangle',.08);beep(990,.12,'triangle',.08,0,.08);},
+  door:()=>beep(220,.15,'sawtooth',.05,440),
+  socket:()=>{beep(300,.1);beep(450,.1,'square',.05,0,.1);beep(600,.15,'square',.05,0,.2);},
+  splash:()=>beep(400,.25,'sine',.1,80),
+  push:()=>beep(110,.05,'square',.03),
+  teleport:()=>beep(300,.25,'sine',.08,1800),
+  bump:()=>beep(90,.05,'square',.03),
+  death:()=>{beep(400,.5,'sawtooth',.07,60);},
+  exit:()=>beep(523,.15,'triangle',.08,1046),
+  win:()=>{[523,659,784,1046].forEach((f,i)=>beep(f,.15,'square',.05,0,i*.12));},
+  hint:()=>beep(700,.06,'sine',.06),
+  unlock:()=>{ // son magique : arpège scintillant + carillon + écho
+    const notes=[523,659,784,1046,1318,1568,2093];
+    notes.forEach((f,i)=>{beep(f,.5,'sine',.07,0,i*.07);beep(f*2,.25,'triangle',.02,0,i*.07+.02);});
+    [1568,2093,2637].forEach((f,i)=>beep(f,.9,'sine',.04,0,.55+i*.05));
+    notes.slice(-4).forEach((f,i)=>beep(f,.4,'sine',.02,0,.9+i*.08));
+    beep(200,1.2,'sine',.05,1600,.05);
+  }
+};
+
+// ---------- entrées ----------
+const inputs=[{keys:[],pad:null,pending:null},{keys:[],pad:null,pending:null}];
+function getInput(id){const i=inputs[id];const d=i.pad||i.keys[i.keys.length-1]||i.pending;i.pending=null;return d;}
+const KMAP={ArrowUp:[0,'up'],ArrowDown:[0,'down'],ArrowLeft:[0,'left'],ArrowRight:[0,'right'],
+  KeyW:[1,'up'],KeyS:[1,'down'],KeyA:[1,'left'],KeyD:[1,'right']};
+addEventListener('keydown',e=>{
+  const m=KMAP[e.code];
+  if(m){e.preventDefault();const id=mode===2?m[0]:0,i=inputs[id];
+    if(!i.keys.includes(m[1])){i.keys.push(m[1]);i.pending=m[1];}
+    if(hintShown&&running)hideHintCard();}
+  else if(e.code==='KeyR'&&running)restart();
+  else if((e.code==='Enter'||e.code==='Space')&&overlay.classList.contains('on')){const b=overlay.querySelector('.btn');if(b){e.preventDefault();b.click();}}
+});
+addEventListener('keyup',e=>{const m=KMAP[e.code];if(m){const id=mode===2?m[0]:0,i=inputs[id];i.keys=i.keys.filter(k=>k!==m[1]);}});
+addEventListener('blur',()=>inputs.forEach(i=>{i.keys=[];i.pad=null;}));
+
+function makePad(id,solo){
+  const pad=document.createElement('div');pad.className='pad'+(solo?' solo':'');
+  pad.innerHTML='<i class="u"></i><i class="d"></i><i class="l"></i><i class="r"></i>'+
+    (solo?'':`<span style="color:${PCOL[id]}">J${id+1}</span>`);
+  if(!solo)pad.style.borderColor=PCOL[id];
+  const dirFrom=(X,Y)=>{const r=pad.getBoundingClientRect(),dx=X-(r.left+r.width/2),dy=Y-(r.top+r.height/2);
+    if(Math.hypot(dx,dy)<r.width*.1)return null;return Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');};
+  const press=(X,Y)=>{unlockAudio();const d=dirFrom(X,Y);inputs[id].pad=d;if(d)inputs[id].pending=d;pad.classList.add('act');if(hintShown&&running)hideHintCard();};
+  const drag=(X,Y)=>{const d=dirFrom(X,Y);if(d&&d!==inputs[id].pad)inputs[id].pending=d;inputs[id].pad=d;};
+  const release=()=>{inputs[id].pad=null;pad.classList.remove('act');};
+  // Événements tactiles (les plus fiables sur iPhone/iPad), avec repli souris/stylet
+  let tid=null;
+  pad.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];tid=t.identifier;press(t.clientX,t.clientY);},{passive:false});
+  pad.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===tid)drag(t.clientX,t.clientY);},{passive:false});
+  const tend=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;release();}};
+  pad.addEventListener('touchend',tend);pad.addEventListener('touchcancel',tend);
+  let mdown=false;
+  pad.addEventListener('mousedown',e=>{e.preventDefault();mdown=true;press(e.clientX,e.clientY);});
+  addEventListener('mousemove',e=>{if(mdown)drag(e.clientX,e.clientY);});
+  addEventListener('mouseup',()=>{if(mdown){mdown=false;release();}});
+  return pad;
+}
+function buildControls(){
+  const c=$('controls');c.innerHTML='';
+  if(coarse){if(mode===1)c.appendChild(makePad(0,true));else{c.appendChild(makePad(1));c.appendChild(makePad(0));}}
+  $('help').innerHTML=coarse?'':(mode===1?'Flèches ou ZQSD pour bouger · R pour recommencer':
+    `<span class="who" style="background:${PCOL[0]}"></span>J1 : flèches &nbsp; <span class="who" style="background:${PCOL[1]}"></span>J2 : ZQSD (WASD) · R pour recommencer`);
+}
+
+// ---------- HUD ----------
+const keyCanvases={};
+(function(){const k=$('keys');for(const c of KEYS){const d=document.createElement('div');d.className='kslot';
+  const cc=document.createElement('canvas');cc.width=52;cc.height=52;d.appendChild(cc);const b=document.createElement('b');d.appendChild(b);
+  k.appendChild(d);keyCanvases[c]={cc,b,d};}})();
+function updateHud(){
+  if(!S)return;
+  $('lvname').textContent=`${S.idx+1}. ${S.name}`;
+  $('hChips').textContent=String(S.chipsLeft).padStart(2,'0');
+  $('hTime').textContent=String(S.time).padStart(3,'0');
+  for(const c of KEYS){const o=keyCanvases[c],n=S.keys[c],x=o.cc.getContext('2d');
+    x.clearRect(0,0,52,52);if(n>0){drawKey(x,0,0,52,COL[c]);}o.b.textContent=n>1?n:'';}
+}
+
+// ---------- dessin ----------
+function rr(x,X,Y,W,H,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath();}
+function drawFloor(x,X,Y,s){x.fillStyle='#c4c8ce';x.fillRect(X,Y,s,s);x.fillStyle='#dde0e4';x.fillRect(X,Y,s,s*.06);x.fillRect(X,Y,s*.06,s);
+  x.fillStyle='#a2a7ae';x.fillRect(X,Y+s*.94,s,s*.06);x.fillRect(X+s*.94,Y,s*.06,s);}
+function drawWall(x,X,Y,s){x.fillStyle='#4f5463';x.fillRect(X,Y,s,s);x.fillStyle='#8a90a2';x.fillRect(X,Y,s,s*.12);x.fillRect(X,Y,s*.12,s);
+  x.fillStyle='#2f323b';x.fillRect(X,Y+s*.88,s,s*.12);x.fillRect(X+s*.88,Y,s*.12,s);x.fillStyle='#626879';x.fillRect(X+s*.2,Y+s*.2,s*.6,s*.6);}
+function drawKey(x,X,Y,s,c){x.save();x.translate(X+s/2,Y+s/2);x.rotate(-0.6);
+  x.strokeStyle='#0008';x.lineWidth=s*.05;x.fillStyle=c;
+  x.beginPath();x.arc(-s*.18,0,s*.16,0,7);x.fill();x.stroke();
+  x.fillStyle='#0006';x.beginPath();x.arc(-s*.18,0,s*.06,0,7);x.fill();
+  x.fillStyle=c;x.fillRect(-s*.04,-s*.045,s*.4,s*.09);x.strokeRect(-s*.04,-s*.045,s*.4,s*.09);
+  x.fillRect(s*.22,s*.04,s*.06,s*.1);x.fillRect(s*.3,s*.04,s*.06,s*.08);x.restore();}
+function drawChip(x,X,Y,s,t){const w=s*.5,h=s*.36,cx=X+s/2,cy=Y+s/2+Math.sin(t*4+X)*s*.02;
+  x.fillStyle='#d9b23a';for(let i=0;i<4;i++){const px=cx-w/2+w*(i+.5)/4-s*.025;x.fillRect(px,cy-h/2-s*.08,s*.05,s*.08);x.fillRect(px,cy+h/2,s*.05,s*.08);}
+  x.fillStyle='#1d1f24';rr(x,cx-w/2,cy-h/2,w,h,s*.04);x.fill();
+  x.fillStyle='#3be37a';x.fillRect(cx-w*.3,cy-h*.12,w*.6,h*.24);x.fillStyle='#ffffff55';x.fillRect(cx-w/2+2,cy-h/2+2,w*.3,h*.15);}
+function drawDoor(x,X,Y,s,c){x.fillStyle=COL[c.toLowerCase()];x.fillRect(X+s*.06,Y+s*.06,s*.88,s*.88);
+  x.fillStyle='#0003';x.fillRect(X+s*.06,Y+s*.84,s*.88,s*.1);x.fillStyle='#fff5';x.fillRect(X+s*.06,Y+s*.06,s*.88,s*.08);
+  x.strokeStyle='#0006';x.lineWidth=2;x.strokeRect(X+s*.14,Y+s*.14,s*.72,s*.72);
+  x.fillStyle='#111';x.beginPath();x.arc(X+s/2,Y+s*.42,s*.1,0,7);x.fill();x.beginPath();x.moveTo(X+s*.44,Y+s*.45);x.lineTo(X+s*.56,Y+s*.45);x.lineTo(X+s*.6,Y+s*.68);x.lineTo(X+s*.4,Y+s*.68);x.fill();}
+function drawSocket(x,X,Y,s,left){x.fillStyle='#2a2d36';x.fillRect(X,Y,s,s);
+  x.fillStyle='#8f96a8';for(let i=0;i<4;i++)x.fillRect(X+s*(.12+i*.22),Y+s*.05,s*.08,s*.9);
+  x.fillStyle='#6b7180';x.fillRect(X,Y+s*.3,s,s*.08);x.fillRect(X,Y+s*.62,s,s*.08);
+  x.fillStyle='#000c';rr(x,X+s*.22,Y+s*.32,s*.56,s*.36,s*.06);x.fill();
+  x.fillStyle='#ffd84a';x.font=`bold ${Math.floor(s*.3)}px monospace`;x.textAlign='center';x.textBaseline='middle';x.fillText(left,X+s/2,Y+s*.51);}
+function drawTele(x,X,Y,s,t){x.fillStyle='#08303d';x.fillRect(X,Y,s,s);
+  for(let i=0;i<4;i++){const k=((i/4+t*.8)%1),m=s*(.05+.4*k);x.strokeStyle=`rgba(120,235,255,${1-k*.7})`;x.lineWidth=s*.07;x.strokeRect(X+m,Y+m,s-2*m,s-2*m);}
+  x.fillStyle='#bff6ff';x.fillRect(X+s*.44,Y+s*.44,s*.12,s*.12);}
+function drawExit(x,X,Y,s,t){const g=x.createRadialGradient(X+s/2,Y+s/2,1,X+s/2,Y+s/2,s*.7);g.addColorStop(0,'#fff');g.addColorStop(.3,'#ffd84a');g.addColorStop(1,'#7a1fa0');
+  x.fillStyle=g;x.fillRect(X,Y,s,s);x.save();x.translate(X+s/2,Y+s/2);x.rotate(t*1.5);
+  x.strokeStyle='#ffffffcc';x.lineWidth=s*.06;for(let i=0;i<4;i++){x.rotate(Math.PI/2);x.beginPath();x.arc(s*.12,0,s*.22,-1.2,1.2);x.stroke();}x.restore();
+  x.strokeStyle='#3c0a55';x.lineWidth=s*.08;x.strokeRect(X+s*.04,Y+s*.04,s*.92,s*.92);}
+function drawWater(x,X,Y,s,t){x.fillStyle='#1e5fc9';x.fillRect(X,Y,s,s);x.strokeStyle='#7fb8ff';x.lineWidth=s*.05;
+  for(let i=0;i<3;i++){const yy=Y+s*(.22+i*.28);x.beginPath();for(let k=0;k<=8;k++){const xx=X+s*k/8;const v=yy+Math.sin(t*3+k*1.2+i+X*.1)*s*.04;k?x.lineTo(xx,v):x.moveTo(xx,v);}x.stroke();}}
+function drawBridge(x,X,Y,s){x.fillStyle='#7a4c22';x.fillRect(X,Y,s,s);x.fillStyle='#9a6431';for(let i=0;i<4;i++)x.fillRect(X+s*.04,Y+s*(.04+i*.24),s*.92,s*.18);
+  x.fillStyle='#3a2410';for(let i=0;i<4;i++){x.fillRect(X+s*.12,Y+s*(.1+i*.24),s*.05,s*.05);x.fillRect(X+s*.82,Y+s*(.1+i*.24),s*.05,s*.05);}}
+function drawConv(x,X,Y,s,d,t){x.fillStyle='#3d424d';x.fillRect(X,Y,s,s);x.save();x.beginPath();x.rect(X,Y,s,s);x.clip();
+  x.translate(X+s/2,Y+s/2);x.rotate({right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2}[d]);
+  x.strokeStyle='#f5cf1d';x.lineWidth=s*.1;x.lineCap='round';const off=(t*2%1)*s/2;
+  for(let i=-2;i<2;i++){const cx=i*s/2+off;x.beginPath();x.moveTo(cx-s*.12,-s*.22);x.lineTo(cx+s*.1,0);x.lineTo(cx-s*.12,s*.22);x.stroke();}
+  x.restore();x.fillStyle='#222';x.fillRect(X,Y,s,s*.06);x.fillRect(X,Y+s*.94,s,s*.06);}
+function drawHint(x,X,Y,s,t){const r=s*(.32+Math.sin(t*3)*.02);x.fillStyle='#f5cf1d';x.beginPath();x.arc(X+s/2,Y+s/2,r,0,7);x.fill();x.strokeStyle='#9a7a00';x.lineWidth=s*.05;x.stroke();
+  x.fillStyle='#1d4fd8';x.font=`bold ${Math.floor(s*.46)}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('?',X+s/2,Y+s*.53);}
+function drawCrate(x,X,Y,s){const m=s*.06;x.fillStyle='#b4762f';x.fillRect(X+m,Y+m,s-2*m,s-2*m);x.strokeStyle='#6b4316';x.lineWidth=s*.08;x.strokeRect(X+m*1.5,Y+m*1.5,s-3*m,s-3*m);
+  x.beginPath();x.moveTo(X+m*2,Y+m*2);x.lineTo(X+s-m*2,Y+s-m*2);x.moveTo(X+s-m*2,Y+m*2);x.lineTo(X+m*2,Y+s-m*2);x.stroke();}
+function drawRobot(x,cx,cy,s,id,facing,t,moving){
+  const bob=moving?Math.abs(Math.sin(t*14))*s*.05:Math.sin(t*3)*s*.015;cy-=bob;
+  x.fillStyle='#0004';x.beginPath();x.ellipse(cx,cy+s*.38+bob,s*.28,s*.08,0,0,7);x.fill();
+  x.strokeStyle='#333';x.lineWidth=s*.05;x.beginPath();x.moveTo(cx,cy-s*.3);x.lineTo(cx,cy-s*.44);x.stroke();
+  x.fillStyle=(Math.sin(t*6)>0)?'#ff3b3b':'#ffd84a';x.beginPath();x.arc(cx,cy-s*.45,s*.06,0,7);x.fill();
+  x.fillStyle=PDARK[id];x.fillRect(cx-s*.24,cy+s*.22,s*.14,s*.14);x.fillRect(cx+s*.1,cy+s*.22,s*.14,s*.14);
+  x.fillStyle=PCOL[id];x.strokeStyle=PDARK[id];x.lineWidth=s*.05;rr(x,cx-s*.32,cy-s*.3,s*.64,s*.58,s*.18);x.fill();x.stroke();
+  const [fx,fy]=DIRS[facing]||[0,1];
+  if(facing!=='up'){x.fillStyle='#1b2030';rr(x,cx-s*.22+fx*s*.06,cy-s*.18,s*.44,s*.24,s*.1);x.fill();
+    x.fillStyle='#7ff3ff';const ex=fx*s*.08,ey=fy*s*.02;x.beginPath();x.arc(cx-s*.09+ex,cy-s*.06+ey,s*.05,0,7);x.arc(cx+s*.09+ex,cy-s*.06+ey,s*.05,0,7);x.fill();}
+  else{x.fillStyle=PDARK[id];x.fillRect(cx-s*.14,cy-s*.12,s*.28,s*.06);x.fillRect(cx-s*.14,cy,s*.28,s*.06);}
+  x.fillStyle='#fff';x.font=`bold ${Math.floor(s*.18)}px sans-serif`;x.textAlign='center';x.textBaseline='middle';
+  if(mode===2)x.fillText(id+1,cx,cy+s*.17);}
+function drawBug(x,cx,cy,s,dir,t){x.save();x.translate(cx,cy);x.rotate({right:0,down:Math.PI/2,left:Math.PI,up:-Math.PI/2}[dir]);
+  x.strokeStyle='#3a0000';x.lineWidth=s*.05;const w=Math.sin(t*20)*s*.05;
+  for(let i=-1;i<=1;i++){x.beginPath();x.moveTo(i*s*.12,0);x.lineTo(i*s*.12+w*(i?1:-1),-s*.34);x.moveTo(i*s*.12,0);x.lineTo(i*s*.12-w*(i?1:-1),s*.34);x.stroke();}
+  x.fillStyle='#d62828';x.beginPath();x.ellipse(-s*.04,0,s*.26,s*.2,0,0,7);x.fill();x.strokeStyle='#5a0000';x.stroke();
+  x.beginPath();x.moveTo(-s*.28,0);x.lineTo(s*.2,0);x.stroke();
+  x.fillStyle='#3a0000';x.beginPath();x.arc(s*.24,0,s*.11,0,7);x.fill();
+  x.fillStyle='#fff';x.beginPath();x.arc(s*.28,-s*.05,s*.04,0,7);x.arc(s*.28,s*.05,s*.04,0,7);x.fill();x.restore();}
+function drawGhost(x,cx,cy,s,t,tx,ty){cy+=Math.sin(t*4)*s*.04;x.fillStyle='#8e44ff';x.beginPath();x.arc(cx,cy-s*.06,s*.3,Math.PI,0);
+  const b=cy+s*.3;x.lineTo(cx+s*.3,b);for(let i=0;i<4;i++){const xx=cx+s*.3-s*.15*(i+1);x.quadraticCurveTo(xx+s*.075,b-s*.1*((i+Math.floor(t*6))%2?1:-1),xx,b);}
+  x.closePath();x.fill();x.strokeStyle='#4b1a99';x.lineWidth=s*.04;x.stroke();
+  const a=Math.atan2(ty-cy,tx-cx),ox=Math.cos(a)*s*.05,oy=Math.sin(a)*s*.05;
+  x.fillStyle='#fff';x.beginPath();x.arc(cx-s*.11,cy-s*.08,s*.08,0,7);x.arc(cx+s*.11,cy-s*.08,s*.08,0,7);x.fill();
+  x.fillStyle='#111';x.beginPath();x.arc(cx-s*.11+ox,cy-s*.08+oy,s*.04,0,7);x.arc(cx+s*.11+ox,cy-s*.08+oy,s*.04,0,7);x.fill();}
+
+function lerpPos(e,alpha){const f=Math.min(1,Math.max(0,(S.tick+alpha-e.mt)/e.md));return[e.fx+(e.x-e.fx)*f,e.fy+(e.y-e.fy)*f,f<1];}
+function render(alpha,t){
+  if(!S)return;const s=TS;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  for(let y=0;y<S.h;y++)for(let x=0;x<S.w;x++){const c=S.grid[y][x],X=x*s,Y=y*s;
+    if(c==='#'){drawWall(ctx,X,Y,s);continue;}
+    if(c==='~'){drawWater(ctx,X,Y,s,t);continue;}
+    if(c==='d'){drawBridge(ctx,X,Y,s);continue;}
+    if(c==='T'){drawTele(ctx,X,Y,s,t);continue;}
+    if(c==='E'){drawExit(ctx,X,Y,s,t);continue;}
+    if(c==='S'){drawSocket(ctx,X,Y,s,S.chipsLeft);continue;}
+    if(CONV[c]){drawConv(ctx,X,Y,s,CONV[c],t);continue;}
+    drawFloor(ctx,X,Y,s);
+    if(c==='c')drawChip(ctx,X,Y,s,t);
+    else if(KEYS.includes(c))drawKey(ctx,X,Y,s,COL[c]);
+    else if(DOORS.includes(c))drawDoor(ctx,X,Y,s,c);
+    else if(c==='?')drawHint(ctx,X,Y,s,t);}
+  for(const c of S.crates){const[x,y]=lerpPos(c,alpha);drawCrate(ctx,x*s,y*s,s);}
+  // effets
+  effects=effects.filter(f=>t-f.t0<f.dur);
+  for(const f of effects){if(t<f.t0)continue;const k=(t-f.t0)/f.dur;
+    if(f.type==='flash'){ctx.fillStyle=`rgba(255,230,140,${.35*(1-k)})`;ctx.fillRect(0,0,S.w*s,S.h*s);continue;}
+    const X=f.x*s+s/2,Y=f.y*s+s/2;
+    if(f.type==='spark'){ctx.strokeStyle=f.col;ctx.lineWidth=s*.06;ctx.globalAlpha=1-k;for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(X+Math.cos(a)*s*.2*k,Y+Math.sin(a)*s*.2*k);ctx.lineTo(X+Math.cos(a)*s*.6*k,Y+Math.sin(a)*s*.6*k);ctx.stroke();}ctx.globalAlpha=1;}
+    else if(f.type==='ring'){ctx.strokeStyle=f.col;ctx.lineWidth=s*.08*(1-k);ctx.beginPath();ctx.arc(X,Y,s*.7*k,0,7);ctx.stroke();}
+    else if(f.type==='sink'){ctx.globalAlpha=1-k;const m=s*.3*k;drawCrate(ctx,f.x*s+m,f.y*s+m,s-2*m);ctx.globalAlpha=1;}}
+  // ennemis
+  const lp=livePlayers(S);
+  for(const e of S.enemies){const[x,y]=lerpPos(e,alpha);
+    if(e.kind==='bug')drawBug(ctx,x*s+s/2,y*s+s/2,s,e.dir,t);
+    else{const p=lp[0]||S.players[0];drawGhost(ctx,x*s+s/2,y*s+s/2,s,t,p.x*s+s/2,p.y*s+s/2);}}
+  // joueurs
+  for(const p of S.players){if(!p||p.exited)continue;const[x,y,mv]=lerpPos(p,alpha);
+    if(p.dead){ctx.globalAlpha=.5+.5*Math.sin(t*20);}
+    drawRobot(ctx,x*s+s/2,y*s+s/2,s,p.id,p.facing,t,mv);ctx.globalAlpha=1;}
+}
+
+// ---------- taille ----------
+function resize(){if(!S)return;const st=$('stage'),aw=st.clientWidth-14,ah=st.clientHeight-14;
+  TS=Math.max(12,Math.floor(Math.min(aw/S.w,ah/S.h)));
+  cv.style.width=TS*S.w+'px';cv.style.height=TS*S.h+'px';cv.width=TS*S.w*devicePixelRatio;cv.height=TS*S.h*devicePixelRatio;}
+addEventListener('resize',resize);
+
+// ---------- écrans ----------
+function show(html){overlay.classList.remove('peek');overlay.innerHTML=`<div class="card">${html}</div>`;overlay.classList.add('on');}
+function hide(){overlay.classList.remove('on','peek');hintShown=false;}
+function hideHintCard(){if(hintShown){hide();}}
+function menu(){
+  running=false;
+  const grid=LEVELS.map((L,i)=>`<button ${i<save.unlocked?'':'disabled'} class="${save.done.includes(i)?'done':''}" data-act="startLevel" data-arg="${i}">${i+1}</button>`).join('');
+  show(`<h1>PUCE PANIQUE</h1><p>Aide le petit robot Bip à récupérer toutes les puces et à atteindre la sortie !</p>
+  <div><button class="btn ${mode===1?'sel':''}" data-act="setMode" data-arg="1">1 joueur</button><button class="btn ${mode===2?'sel':''}" data-act="setMode" data-arg="2">2 joueurs</button></div>
+  <p style="font-size:13px;opacity:.8">${mode===2?'Coopération : les deux robots doivent atteindre la sortie. Clés et puces sont partagées.':'Choisis un niveau :'}</p>
+  <div id="lvgrid">${grid}</div>
+  <button class="btn alt" data-act="toggleMute" data-arg="this">${muted?'🔇 Son coupé':'🔊 Son activé'}</button>`);
+}
+function setMode(m){mode=m;buildControls();menu();}
+function toggleMute(b){muted=!muted;b.textContent=muted?'🔇 Son coupé':'🔊 Son activé';if(muted)stopMusic();else{unlockAudio();startMusic();}}
+function startLevel(i){
+  curLevel=i;S=parseLevel(i,mode);effects=[];inputs.forEach(q=>{q.keys=[];q.pad=null;q.pending=null;});
+  resize();updateHud();running=false;render(0,0);
+  show(`<h2>Niveau ${i+1} · ${S.name}</h2><p>${S.hint}</p><p style="font-size:13px;opacity:.8">Puces à ramasser : ${S.chipsTotal} · Temps : ${S.time} s</p><button class="btn" data-act="go" data-arg="">Jouer ▶</button>`);
+}
+function go(){hide();beep(1,.01,'sine',.0001);running=true;acc=0;last=performance.now();}
+function restart(){startLevel(curLevel);go();}
+const DEATH={enemy:"Un ennemi t'a attrapé !",water:"Plouf ! Les robots ne savent pas nager.",time:"Temps écoulé !"};
+
+function handleEvents(t){
+  for(const e of S.events){
+    if(SFX[e.type])SFX[e.type]();
+    if(e.type==='chip')effects.push({type:'spark',x:e.x,y:e.y,t0:t,dur:.4,col:'#3be37a'});
+    if(e.type==='key')effects.push({type:'spark',x:e.x,y:e.y,t0:t,dur:.4,col:COL[e.k]});
+    if(e.type==='door'||e.type==='socket')effects.push({type:'ring',x:e.x,y:e.y,t0:t,dur:.4,col:'#fff'});
+    if(e.type==='teleport'){effects.push({type:'ring',x:e.fx,y:e.fy,t0:t,dur:.5,col:'#7fe8ff'});effects.push({type:'ring',x:e.x,y:e.y,t0:t,dur:.5,col:'#7fe8ff'});}
+    if(e.type==='splash'){effects.push({type:'sink',x:e.x,y:e.y,t0:t,dur:.4});effects.push({type:'ring',x:e.x,y:e.y,t0:t,dur:.6,col:'#bfe0ff'});}
+    if(e.type==='unlock'){
+      // une pluie d'étincelles dorées et bleues sur chaque grille, plusieurs vagues
+      for(const q of e.pos)for(let k=0;k<4;k++){effects.push({type:'ring',x:q.x,y:q.y,t0:t+k*.18,dur:.7,col:k%2?'#7fe8ff':'#ffd84a'});
+        effects.push({type:'spark',x:q.x,y:q.y,t0:t+k*.18,dur:.6,col:k%2?'#ffffff':'#ffd84a'});}
+      effects.push({type:'flash',t0:t,dur:.5});
+    }
+    if(e.type==='exit')effects.push({type:'spark',x:e.x,y:e.y,t0:t,dur:.6,col:'#ffd84a'});
+    if(e.type==='hint'&&!hintShown){show(`<h2>💡 Indice</h2><p>${S.hint}</p>`);overlay.classList.add('peek');hintShown=true;setTimeout(()=>{if(hintShown)hide();},4000);}
+    if(e.type==='death'){const cause=e.cause;setTimeout(()=>{running=false;show(`<h2>Oups !</h2><p>${DEATH[cause]}</p><button class="btn" data-act="restart" data-arg="">Recommencer ⟲</button><button class="btn alt" data-act="menu" data-arg="">Menu</button>`);},700);}
+    if(e.type==='win'){const lv=curLevel,tl=S.time;if(!save.done.includes(lv))save.done.push(lv);save.unlocked=Math.max(save.unlocked,Math.min(LEVELS.length,lv+2));persist();
+      setTimeout(()=>{running=false;
+        if(lv+1<LEVELS.length)show(`<h2>Niveau réussi ! 🎉</h2><p>Temps restant : ${tl} s</p><button class="btn" data-act="startLevel" data-arg="${lv+1}">Niveau suivant ▶</button><button class="btn alt" data-act="menu" data-arg="">Menu</button>`);
+        else show(`<h1>BRAVO !</h1><p>Tu as terminé tous les niveaux de Puce Panique ! 🏆</p><button class="btn" data-act="menu" data-arg="">Menu</button>`);},500);}
+  }
+  S.events.length=0;
+}
+function frame(now){
+  const t=now/1000;
+  if(running&&S){acc+=Math.min(200,now-last);last=now;
+    while(acc>=TICK_MS&&S.status==='play'){step(S,getInput);acc-=TICK_MS;}
+    handleEvents(t);updateHud();}
+  else last=now;
+  render(S&&S.status==='play'&&running?acc/TICK_MS:1,t);
+  requestAnimationFrame(frame);
+}
+// boutons des écrans : un seul écouteur délégué (pas de onclick dans le HTML)
+const ACTS={startLevel:a=>startLevel(+a),setMode:a=>setMode(+a),toggleMute:(a,el)=>toggleMute(el),go:()=>go(),restart:()=>restart(),menu:()=>menu()};
+overlay.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;unlockAudio();const f=ACTS[b.dataset.act];if(f)f(b.dataset.arg,b);});
+$('bMenu').addEventListener('click',()=>{unlockAudio();menu();});
+$('bRestart').addEventListener('click',()=>{unlockAudio();if(S)restart();});
+$('bMusic').addEventListener('click',()=>{unlockAudio();musicOn=!musicOn;$('bMusic').style.opacity=musicOn?1:.4;if(musicOn)startMusic();else stopMusic();});
+// déblocage du son au tout premier contact (obligatoire sur iPhone)
+['touchstart','pointerdown','keydown','click'].forEach(t=>addEventListener(t,unlockAudio,{capture:true,passive:true}));
+
+// ---------- toucher l'écran de jeu : le robot va vers ton doigt ----------
+(function(){let tid=null;
+  const dirAt=(cx,cy)=>{if(!S)return null;const p=livePlayers(S)[0];if(!p)return null;const r=cv.getBoundingClientRect();
+    const dx=(cx-r.left)/TS-(p.x+.5),dy=(cy-r.top)/TS-(p.y+.5);if(Math.abs(dx)<.5&&Math.abs(dy)<.5)return null;
+    return Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');};
+  const who=()=>{const p=livePlayers(S)[0];return p?p.id:0;};
+  cv.addEventListener('touchstart',e=>{e.preventDefault();unlockAudio();const t=e.changedTouches[0];tid=t.identifier;const d=dirAt(t.clientX,t.clientY);const i=inputs[who()];i.pad=d;if(d)i.pending=d;if(hintShown&&running)hideHintCard();},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===tid){inputs[who()].pad=dirAt(t.clientX,t.clientY);}},{passive:false});
+  const end=e=>{for(const t of e.changedTouches)if(t.identifier===tid){tid=null;inputs.forEach(i=>i.pad=null);}};
+  cv.addEventListener('touchend',end);cv.addEventListener('touchcancel',end);
+})();
+buildControls();
+S=parseLevel(0,1);resize();updateHud();menu();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
