@@ -1,1 +1,1269 @@
-pandas
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trash Pandas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#1a1e3d; --bg2:#0b0e22; --panel:rgba(255,255,255,.06); --panel2:rgba(255,255,255,.1);
+  --line:rgba(255,255,255,.12); --txt:#eef0ff; --mute:#a7acd6; --amber:#ffb547; --teal:#46d3b5;
+  --pink:#ff6f91; --red:#ff5a5a; --green:#7ee08a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;}
+body{font-family:Nunito,system-ui,sans-serif;color:var(--txt);
+  background:radial-gradient(1200px 600px at 50% -200px, rgba(255,181,71,.18), transparent 60%),
+             radial-gradient(900px 700px at 100% 100%, rgba(70,211,181,.08), transparent 60%),
+             linear-gradient(180deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;}
+h1,h2,h3,.fred{font-family:Fredoka,Nunito,sans-serif}
+button{font-family:inherit}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:800;font-size:15px;cursor:pointer;
+  background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line);transition:transform .08s, background .2s}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:linear-gradient(180deg,#ffc76b,#ff9f2e);color:#2b1a00;box-shadow:0 4px 0 #b86a0b}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.teal{background:linear-gradient(180deg,#5ee6c9,#2fb497);color:#05261f;box-shadow:0 4px 0 #1d7a66}
+.btn.danger{background:rgba(255,90,90,.18);box-shadow:inset 0 0 0 1px rgba(255,90,90,.5);color:#ffd0d0}
+.btn.big{font-size:20px;padding:14px 26px;border-radius:16px}
+.btn.icon{padding:8px 10px;font-size:18px;min-width:42px}
+.btn.off{opacity:.45}
+.hidden{display:none !important}
+
+/* ---------- SETUP ---------- */
+#setup{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+.logo{text-align:center;margin:10px 0 24px}
+.logo .big{font-size:64px;line-height:1;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
+.logo h1{font-size:52px;margin:6px 0 0;letter-spacing:.5px;color:var(--amber);text-shadow:0 4px 0 #6b3e00, 0 10px 30px rgba(255,181,71,.35)}
+.logo p{color:var(--mute);margin:6px 0 0;font-size:16px}
+.card-box{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px 18px;margin-bottom:16px;backdrop-filter:blur(6px)}
+.card-box h2{margin:0 0 12px;font-size:20px;color:#fff;display:flex;align-items:center;gap:8px}
+.nb-row{display:flex;gap:8px;flex-wrap:wrap}
+.nb-row button{width:52px;height:52px;border-radius:14px;font-size:22px;font-family:Fredoka}
+.nb-row button.sel{background:var(--amber);color:#2b1a00;box-shadow:0 4px 0 #b86a0b}
+.prow{display:grid;grid-template-columns:34px 1fr auto auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.prow:last-child{border-bottom:0}
+@media (max-width:620px){.prow{grid-template-columns:34px 1fr auto}.prow .seg{grid-column:2/3}.prow select{grid-column:3/4}.tok{width:70px;height:82px}.card{width:84px;height:120px}}
+.dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:17px;box-shadow:0 0 0 3px rgba(255,255,255,.08)}
+.prow input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--line);color:#fff;border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;font-weight:700}
+.prow input:focus{outline:2px solid var(--amber)}
+.seg{display:inline-flex;background:rgba(0,0,0,.3);border-radius:11px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--mute);padding:7px 10px;border-radius:9px;font-weight:800;cursor:pointer;font-size:13px}
+.seg button.sel{background:var(--panel2);color:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+select{background:rgba(0,0,0,.3);color:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;font-family:inherit;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(0,0,0,.18);border-radius:12px;padding:10px 12px}
+.opt small{display:block;color:var(--mute);font-weight:600}
+.switch{position:relative;width:50px;height:28px;border-radius:20px;background:#3a3f66;border:0;cursor:pointer;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}
+.switch.on{background:var(--teal)}
+.switch.on::after{left:25px}
+.note{color:var(--mute);font-size:14px;margin-top:10px}
+.start-row{display:flex;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap}
+
+/* ---------- GAME ---------- */
+#game{display:none;min-height:100vh;padding:10px;gap:10px}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 12px}
+.topbar .ttl{font-family:Fredoka;font-size:22px;color:var(--amber);font-weight:700;margin-right:auto;white-space:nowrap}
+.pile{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.25);border-radius:12px;padding:6px 10px;font-weight:800;cursor:default}
+.pile.click{cursor:pointer}
+.pile .n{font-family:Fredoka;font-size:20px}
+.layout{display:grid;grid-template-columns:270px 1fr 280px;gap:10px;margin-top:10px;align-items:start}
+@media (max-width:1100px){.layout{grid-template-columns:1fr}.logp{order:5}}
+.side{display:flex;flex-direction:column;gap:8px}
+.pl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;position:relative;transition:box-shadow .3s, transform .3s}
+.pl.cur{box-shadow:0 0 0 2px var(--pc), 0 8px 30px -8px var(--pc);transform:translateX(3px)}
+.pl .hd{display:flex;align-items:center;gap:8px}
+.pl .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:19px;background:var(--pc);box-shadow:0 0 0 3px rgba(0,0,0,.25)}
+.pl .name{font-weight:800;font-size:15px;line-height:1.1}
+.pl .sub{font-size:12px;color:var(--mute);font-weight:700}
+.pl .stats{display:flex;gap:10px;margin-top:8px;font-size:13px;font-weight:800;color:var(--mute);flex-wrap:wrap}
+.pl .stats b{color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:12px;font-weight:800;background:rgba(0,0,0,.3);border-radius:8px;padding:2px 6px;display:inline-flex;gap:3px;align-items:center}
+.chip.up{box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.turnarrow{position:absolute;right:10px;top:10px;font-size:18px;animation:bob 1s infinite ease-in-out}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+.table{background:radial-gradient(500px 260px at 50% 30%, rgba(255,181,71,.12), transparent 70%), var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:380px}
+.banner{display:flex;align-items:center;justify-content:center;gap:10px;font-family:Fredoka;font-size:22px;margin-bottom:10px;text-align:center;flex-wrap:wrap}
+.banner .tag{font-size:13px;font-family:Nunito;font-weight:800;padding:3px 9px;border-radius:20px;background:rgba(255,181,71,.2);color:var(--amber)}
+.tokens{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.tok{width:82px;height:92px;border-radius:16px;background:rgba(0,0,0,.25);border:2px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;transition:all .25s;user-select:none}
+.tok .e{font-size:32px;line-height:1}
+.tok .l{font-size:11px;font-weight:800;color:var(--mute);text-align:center;line-height:1.1;padding:0 4px}
+.tok.taken{background:linear-gradient(180deg,rgba(255,181,71,.35),rgba(255,181,71,.12));border-color:var(--amber);transform:translateY(-4px);box-shadow:0 8px 20px -6px rgba(255,181,71,.6)}
+.tok.taken .l{color:#fff}
+.tok.clash{border-color:var(--red);background:rgba(255,90,90,.3);animation:shake .45s}
+.tok.res{cursor:pointer;border-color:var(--teal);background:rgba(70,211,181,.2);animation:pulse 1.4s infinite}
+.tok.done{opacity:.35;transform:none}
+.tok .pie{position:absolute;top:-8px;right:-8px;font-size:20px}
+.tok .ck{position:absolute;top:-8px;left:-6px;font-size:18px}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(70,211,181,.15)}}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.mid{display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin:8px 0}
+.die{width:96px;height:96px;border-radius:22px;background:linear-gradient(160deg,#fffdf6,#e7dcc6);color:#222;display:grid;place-items:center;font-size:52px;box-shadow:0 8px 0 #a8996f, 0 14px 30px rgba(0,0,0,.45);transition:transform .2s}
+.die.rolling{animation:roll .18s infinite linear}
+@keyframes roll{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(12deg) translateY(-6px)}50%{transform:rotate(-8deg) translateY(2px)}75%{transform:rotate(10deg) translateY(-4px)}100%{transform:rotate(0)}}
+.risk{min-width:240px;max-width:340px;background:rgba(0,0,0,.25);border-radius:14px;padding:10px 12px}
+.risk .t{font-size:13px;font-weight:800;color:var(--mute)}
+.risk .v{font-family:Fredoka;font-size:28px;line-height:1.1}
+.bar{height:10px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;border-radius:6px;transition:width .4s, background .4s}
+.risk .x{font-size:12.5px;color:var(--mute);font-weight:700}
+.flash{text-align:center;min-height:26px;font-weight:800;font-size:16px;margin:6px 0;color:#fff}
+.controls{background:rgba(0,0,0,.22);border-radius:16px;padding:12px;text-align:center;margin-top:8px}
+.controls .prompt{font-weight:800;font-size:16px;margin-bottom:10px}
+.controls .btns{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.thinking{color:var(--mute);font-weight:800}
+.thinking span{display:inline-block;animation:bob 1s infinite}
+.handbox{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:12px;margin-top:10px}
+.handbox .hh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.handbox .hh h3{margin:0;font-size:18px}
+.hand{display:flex;gap:8px;flex-wrap:wrap;min-height:120px;align-items:flex-end}
+.mystash{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--mute);font-weight:800}
+
+/* ---------- CARDS ---------- */
+.card{width:96px;height:134px;border-radius:12px;position:relative;padding:6px;display:flex;flex-direction:column;align-items:center;color:#fff;
+  box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.25);transition:transform .15s, box-shadow .15s;flex:none;overflow:hidden}
+.card .pts{font-size:10.5px;font-weight:800;background:rgba(0,0,0,.28);border-radius:6px;padding:1px 5px;align-self:stretch;text-align:center}
+.card .emo{font-size:38px;line-height:1;margin:6px 0 2px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+.card .nm{font-family:Fredoka;font-weight:700;font-size:15px;line-height:1}
+.card .ds{font-size:9.5px;line-height:1.15;text-align:center;margin-top:3px;font-weight:700;opacity:.95}
+.card.sm{width:62px;height:86px;padding:4px}
+.card.sm .emo{font-size:26px;margin:3px 0 1px}
+.card.sm .nm{font-size:11px}
+.card.sm .pts{font-size:9px}
+.card.back{background:repeating-linear-gradient(45deg,#2b2f55 0 8px,#252948 8px 16px);justify-content:center;font-size:30px}
+.card.back.sm{font-size:22px}
+.card.play{cursor:pointer;box-shadow:0 0 0 3px var(--teal), 0 8px 18px -4px rgba(70,211,181,.7)}
+.card.play:hover{transform:translateY(-8px)}
+.card .badge{position:absolute;bottom:4px;left:4px;right:4px;background:var(--teal);color:#05261f;font-size:10px;font-weight:900;border-radius:6px;padding:2px 3px;text-align:center}
+.card .lock{position:absolute;top:22px;right:4px;font-size:11px;background:rgba(0,0,0,.45);border-radius:6px;padding:0 3px}
+.card.sel{transform:translateY(-10px);box-shadow:0 0 0 3px var(--amber), 0 10px 20px -4px rgba(255,181,71,.7)}
+.card.pick{cursor:pointer}
+.card.new{animation:pop .4s}
+@keyframes pop{0%{transform:scale(.6) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
+.t-doggo{background:linear-gradient(160deg,#d59a60,#8f5a2c)}
+.t-kitteh{background:linear-gradient(160deg,#f7ad5e,#c86a1c)}
+.t-shiny{background:linear-gradient(160deg,#86d2ff,#3b7fc4)}
+.t-yumyum{background:linear-gradient(160deg,#a26c4a,#5a3420)}
+.t-feesh{background:linear-gradient(160deg,#5cc7bc,#2a7f78)}
+.t-pie{background:linear-gradient(160deg,#ff8a63,#c4402a)}
+.t-nanners{background:linear-gradient(160deg,#ffe36b,#d8a915);color:#3a2a00}
+.t-nanners .pts{background:rgba(0,0,0,.15)}
+.t-blammo{background:linear-gradient(160deg,#ff6fa8,#b52a65)}
+
+/* ---------- LOG ---------- */
+.logp{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;max-height:calc(100vh - 110px);display:flex;flex-direction:column}
+.logp h3{margin:0 0 6px;font-size:16px}
+.log{overflow:auto;font-size:13px;line-height:1.35;display:flex;flex-direction:column;gap:4px;padding-right:4px}
+.log div{padding:4px 6px;border-radius:8px;background:rgba(0,0,0,.18)}
+.log .turn{background:rgba(255,181,71,.14);font-weight:800}
+.log .bad{background:rgba(255,90,90,.15)}
+.log .good{background:rgba(126,224,138,.14)}
+
+/* ---------- MODAL ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(5,7,20,.66);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.modal{background:linear-gradient(180deg,#262b52,#1a1d3a);border:1px solid var(--line);border-radius:20px;padding:18px;max-width:640px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:rise .25s}
+.modal.wide{max-width:920px}
+@keyframes rise{from{transform:translateY(16px) scale(.98);opacity:0}}
+.modal h3{margin:0 0 10px;font-size:22px}
+.modal .for{display:inline-block;background:var(--pink);color:#2a0010;font-weight:900;border-radius:20px;padding:3px 10px;font-size:13px;margin-bottom:8px}
+.modal .mbody{margin-bottom:14px;line-height:1.45}
+.modal .mbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pbtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;margin-bottom:6px}
+.rules h4{margin:14px 0 4px;color:var(--amber);font-family:Fredoka;font-size:17px}
+.rules p,.rules li{font-size:14.5px;color:#dfe2ff}
+.rules ul{padding-left:20px;margin:4px 0}
+table.sc{width:100%;border-collapse:collapse;font-size:14px}
+table.sc th,table.sc td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line)}
+table.sc td:first-child,table.sc th:first-child{text-align:left}
+table.sc tr.win td{background:rgba(255,181,71,.15);font-weight:900}
+.small{font-size:12px;color:var(--mute)}
+.confetti{position:fixed;top:-40px;font-size:26px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+</style>
+</head>
+<body>
+
+<!-- ================= SETUP ================= -->
+<div id="setup">
+  <div class="logo">
+    <div class="big">🦝🗑️</div>
+    <h1>Trash Pandas</h1>
+    <p>Fouillez les poubelles, tentez votre chance au dé et cachez votre butin !</p>
+  </div>
+
+  <div class="card-box">
+    <h2>👥 Nombre de joueurs</h2>
+    <div class="nb-row" id="nbRow"></div>
+    <div class="note" id="nbNote"></div>
+  </div>
+
+  <div class="card-box">
+    <h2 style="justify-content:space-between">
+      <span>🦝 Les ratons</span>
+      <button class="btn" id="allRandom" style="font-size:13px;padding:7px 12px">🎲 Tous les noms au hasard</button>
+    </h2>
+    <div id="plist"></div>
+  </div>
+
+  <div class="card-box">
+    <h2>⚙️ Options</h2>
+    <div class="opts">
+      <div class="opt"><div>📊 Pourcentages de risque<small>Affiche le risque de ratage</small></div><button class="switch" data-opt="showRisk"></button></div>
+      <div class="opt"><div>🎵 Musique d'ambiance<small>Douce et relaxante</small></div><button class="switch" data-opt="music"></button></div>
+      <div class="opt"><div>🔊 Bruitages<small>Dé, cartes, vols…</small></div><button class="switch" data-opt="sfx"></button></div>
+      <div class="opt"><div>⏱️ Vitesse des ordinateurs</div>
+        <select id="speedSel"><option value="lent">Lente</option><option value="normal">Normale</option><option value="rapide">Rapide</option></select></div>
+    </div>
+  </div>
+
+  <div class="start-row">
+    <button class="btn" id="rulesBtn0">📖 Règles</button>
+    <button class="btn primary big" id="startBtn">Jouer ! 🎲</button>
+  </div>
+</div>
+
+<!-- ================= GAME ================= -->
+<div id="game">
+  <div class="topbar">
+    <div class="ttl">🦝 Trash Pandas</div>
+    <div class="pile" title="Pioche (la poubelle)">🗑️ <span class="n" id="deckN">0</span></div>
+    <div class="pile click" id="discardPile" title="Voir la défausse">🃏 Défausse <span class="n" id="discN">0</span></div>
+    <button class="btn icon" id="tMusic" title="Musique">🎵</button>
+    <button class="btn icon" id="tSfx" title="Bruitages">🔊</button>
+    <button class="btn icon" id="tRisk" title="Pourcentages de risque">📊</button>
+    <button class="btn icon" id="rulesBtn" title="Règles">📖</button>
+    <button class="btn icon" id="quitBtn" title="Quitter">✖</button>
+  </div>
+  <div class="layout">
+    <div class="side" id="players"></div>
+    <div>
+      <div class="table">
+        <div class="banner" id="banner"></div>
+        <div class="tokens" id="tokens"></div>
+        <div class="mid">
+          <div class="die" id="die">🎲</div>
+          <div class="risk" id="risk"></div>
+        </div>
+        <div class="flash" id="flash"></div>
+        <div class="controls" id="controls"></div>
+      </div>
+      <div class="handbox">
+        <div class="hh"><h3 id="handTitle">Ma main</h3><div class="mystash" id="mystash"></div></div>
+        <div class="hand" id="hand"></div>
+      </div>
+    </div>
+    <div class="logp"><h3>📜 Journal</h3><div class="log" id="log"></div></div>
+  </div>
+</div>
+
+<div id="modals"></div>
+
+<script>
+/* =========================================================
+   DONNÉES
+   ========================================================= */
+const TYPES = {
+  doggo:  {name:'Doggo',   emoji:'🐶', count:3,  pts:[6,4,2], short:'Bloque un vol, puis pioche 2', desc:'Quand on tente de te voler (main ou réserve), défausse-le pour bloquer le vol, puis pioche 2 cartes.'},
+  kitteh: {name:'Kitteh',  emoji:'🐱', count:3,  pts:[6,4,2], short:'Contre-vol quand on te vole', desc:'Quand on tente de te voler, défausse-le : c’est toi qui voles l’attaquant (une carte de sa main, ou de sa réserve contre un Shiny). Il peut se défendre avec Doggo ou Kitteh.'},
+  shiny:  {name:'Shiny',   emoji:'💎', count:3,  pts:[6,4,2], short:'Vole une carte cachée', desc:'Pendant ton tour : vole une carte de la réserve d’un adversaire et mets-la dans ta main. La cible peut bloquer avec Doggo ou Kitteh.'},
+  yumyum: {name:'Yum Yum', emoji:'🍫', count:5,  pts:[5,3,1], short:'Force un adversaire à relancer', desc:'Pendant le tour d’un autre joueur, quand il s’arrête : force-le à relancer le dé.'},
+  feesh:  {name:'Feesh',   emoji:'🐟', count:7,  pts:[5,3,1], short:'Prends 1 carte de la défausse', desc:'Pendant ton tour : prends la carte de ton choix dans la défausse. Tu peux l’utiliser tout de suite.'},
+  pie:    {name:'MMM Pie!',emoji:'🍕', count:9,  pts:[4,2,1], short:'Résous un jeton 2 fois', desc:'En résolvant tes jetons : résous un jeton une deuxième fois (une seule pizza par jeton).'},
+  nanners:{name:'Nanners', emoji:'🍌', count:11, pts:[3,2,1], short:'Annule le dernier lancer & stop', desc:'Quand tu vas rater : annule ton dernier lancer et arrête-toi (tu gardes tes jetons).'},
+  blammo: {name:'Blammo!', emoji:'🥤', count:13, each:1,     short:'Relance le dé', desc:'Quand tu vas rater : relance le dé en ignorant le résultat précédent. Vaut 1 point par carte cachée.'}
+};
+const TYPE_ORDER = ['doggo','kitteh','shiny','yumyum','feesh','pie','nanners','blammo'];
+const TOKENS = [
+  {id:'trash',     name:'Poubelle',        emoji:'🗑️', desc:'Pioche jusqu’à 2 cartes de la poubelle.'},
+  {id:'tree',      name:'Arbre',           emoji:'🌳', desc:'Cache jusqu’à 2 cartes de ta main dans ta réserve.'},
+  {id:'trashtree', name:'Poubelle ou Arbre',emoji:'🍂', desc:'Pioche 1 carte OU cache 1 carte.'},
+  {id:'bandit',    name:'Masque de bandit',emoji:'🥷', desc:'Vole 1 carte au hasard dans la main d’un adversaire.'},
+  {id:'masq',      name:'Masque de bal',   emoji:'🎭', desc:'Révèle la carte du dessus et prends-la. Les autres peuvent cacher une carte identique face visible : tu pioches 1 carte pour chacune.'},
+  {id:'recycle',   name:'Recyclage',       emoji:'♻️', desc:'Échange ce jeton contre un jeton que tu n’as pas pris ce tour-ci.'}
+];
+const TOK = Object.fromEntries(TOKENS.map(t=>[t.id,t]));
+const COLORS = ['#ffb547','#46d3b5','#ff6f91','#8fa8ff','#b7e35a','#c792ea','#ff8a4c','#5ad1ff'];
+const NAMES = ['Fripouille','Moustache','Bandit','Grignotte','Filou','Noisette','Biscotte','Gribouille','Zorro','Pétoche','Croquette','Chipie','Poubellito','Patapouf','Sardine','Marmelade','Rocky','Pistache','Brindille','Cornichon','Tartine','Mistigri','Loustic','Praline','Chaussette','Trognon','Pouf','Gaufrette','Caramel','Ronron'];
+const LEVELS = {prudent:'Prudent', equilibre:'Équilibré', temeraire:'Téméraire'};
+
+/* =========================================================
+   UTILITAIRES
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const pct = x => Math.round(x*100)+' %';
+function store(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function load(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+
+/* =========================================================
+   AUDIO (Web Audio, tout est synthétisé)
+   ========================================================= */
+const mf = m => 440*Math.pow(2,(m-69)/12);
+const AU = {
+  ctx:null, timer:null, musicOn:false, chordIdx:0,
+  init(){
+    if(this.ctx) return true;
+    try{ const C = window.AudioContext||window.webkitAudioContext; this.ctx = new C(); }catch(e){ return false; }
+    const c=this.ctx;
+    this.master=c.createGain(); this.master.gain.value=.85; this.master.connect(c.destination);
+    this.sfxG=c.createGain(); this.sfxG.gain.value=.5; this.sfxG.connect(this.master);
+    this.musG=c.createGain(); this.musG.gain.value=0; this.musG.connect(this.master);
+    this.verb=c.createConvolver(); this.verb.buffer=this.impulse(4.5,2.4);
+    const vg=c.createGain(); vg.gain.value=.7; this.verb.connect(vg); vg.connect(this.musG);
+    this.dry=c.createGain(); this.dry.gain.value=.45; this.dry.connect(this.musG);
+    return true;
+  },
+  impulse(sec,decay){ const c=this.ctx, len=Math.floor(c.sampleRate*sec), b=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay); } return b; },
+  resume(){ if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+  tone(f,dur,o={}){ const c=this.ctx, t=c.currentTime+(o.at||0); const osc=c.createOscillator(), g=c.createGain();
+    osc.type=o.type||'sine'; osc.frequency.setValueAtTime(f,t); if(o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide,t+dur);
+    const v=o.vol||.18; g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(v,t+(o.attack||.006)); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    osc.connect(g); g.connect(this.sfxG); osc.start(t); osc.stop(t+dur+.05); },
+  noise(dur,o={}){ const c=this.ctx, t=c.currentTime+(o.at||0); const len=Math.max(1,Math.floor(c.sampleRate*dur));
+    const b=c.createBuffer(1,len,c.sampleRate), d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const s=c.createBufferSource(); s.buffer=b; const f=c.createBiquadFilter(); f.type=o.type||'bandpass'; f.frequency.setValueAtTime(o.freq||2000,t);
+    if(o.slideF) f.frequency.exponentialRampToValueAtTime(o.slideF,t+dur); f.Q.value=o.q||1;
+    const g=c.createGain(); g.gain.setValueAtTime(o.vol||.2,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    s.connect(f); f.connect(g); g.connect(this.sfxG); s.start(t); s.stop(t+dur+.02); },
+  sfx(name){
+    if(!S.sfx || !this.ctx) return; this.resume();
+    const T=(f,d,o)=>this.tone(f,d,o), N=(d,o)=>this.noise(d,o);
+    switch(name){
+      case 'roll': for(let i=0;i<7;i++){ N(.05,{at:i*.07+Math.random()*.02,freq:1800+Math.random()*2500,q:3,vol:.35}); T(180+Math.random()*120,.04,{at:i*.07,type:'square',vol:.04}); } break;
+      case 'token': T(660,.1,{type:'triangle',vol:.2}); T(990,.16,{type:'triangle',vol:.18,at:.07}); break;
+      case 'uhoh': T(520,.18,{type:'square',vol:.07}); T(390,.3,{type:'square',vol:.07,at:.16}); break;
+      case 'bust': T(392,.22,{type:'sawtooth',vol:.07}); T(370,.22,{type:'sawtooth',vol:.07,at:.22}); T(349,.22,{type:'sawtooth',vol:.07,at:.44}); T(330,.6,{type:'sawtooth',vol:.07,at:.66,slide:250}); N(.4,{at:.1,freq:300,type:'lowpass',vol:.25}); break;
+      case 'draw': N(.18,{freq:1200,slideF:6000,type:'bandpass',q:.8,vol:.28}); break;
+      case 'stash': T(150,.18,{slide:60,vol:.3}); N(.12,{freq:900,type:'lowpass',vol:.2}); break;
+      case 'steal': T(300,.22,{slide:1300,vol:.15,type:'triangle'}); T(1500,.08,{at:.22,vol:.12}); break;
+      case 'block': T(880,.12,{type:'square',vol:.07}); T(1320,.22,{type:'square',vol:.06,at:.08}); N(.1,{freq:4000,vol:.15}); break;
+      case 'play': T(523,.12,{type:'triangle',vol:.16}); T(659,.12,{type:'triangle',vol:.16,at:.08}); T(784,.2,{type:'triangle',vol:.16,at:.16}); break;
+      case 'yum': [0,1,2].forEach(i=>T([600,750,900][i],.12,{type:'sine',vol:.18,at:i*.09,slide:[700,850,1000][i]})); break;
+      case 'six': [60,64,67,72,76,79].forEach((m,i)=>T(mf(m+12),.25,{type:'triangle',vol:.14,at:i*.07})); break;
+      case 'win': [60,64,67,72].forEach((m,i)=>T(mf(m+12),.3,{type:'triangle',vol:.16,at:i*.13})); [72,76,79,84].forEach(m=>T(mf(m),1.4,{type:'triangle',vol:.09,at:.6})); break;
+      case 'click': T(1200,.03,{type:'square',vol:.03}); break;
+      case 'turn': T(mf(79),.6,{vol:.07}); T(mf(84),.8,{vol:.05,at:.08}); break;
+      case 'reveal': T(mf(76),.15,{type:'triangle',vol:.12}); T(mf(83),.3,{type:'triangle',vol:.1,at:.1}); break;
+    }
+  },
+  startMusic(){
+    if(!this.init()) return; this.resume(); this.musicOn=true;
+    const c=this.ctx; this.musG.gain.cancelScheduledValues(c.currentTime); this.musG.gain.setTargetAtTime(.55,c.currentTime,1.5);
+    if(!this.timer){ this.nextChord=c.currentTime+.1; this.nextBell=c.currentTime+2.5; this.timer=setInterval(()=>this.tick(),200); }
+  },
+  stopMusic(){
+    this.musicOn=false; if(!this.ctx) return;
+    this.musG.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.musG.gain.setTargetAtTime(0,this.ctx.currentTime,.5);
+    setTimeout(()=>{ if(!this.musicOn && this.timer){ clearInterval(this.timer); this.timer=null; } },3000);
+  },
+  tick(){
+    const c=this.ctx, now=c.currentTime;
+    const CH=[[48,55,59,64],[45,52,57,60],[41,48,52,57],[43,50,55,62]];
+    while(this.nextChord < now+.6){
+      const ch=CH[this.chordIdx%4]; this.chordIdx++;
+      ch.forEach(m=>this.pad(mf(m),this.nextChord,9,.03));
+      this.pad(mf(ch[0]-12),this.nextChord,9,.035);
+      this.nextChord += 8;
+    }
+    while(this.nextBell < now+.6){
+      if(Math.random()<.65) this.bell(mf(pick([72,74,76,79,81,84,86,88])),this.nextBell);
+      this.nextBell += pick([.75,1.5,1.5,2.25,3,3]);
+    }
+  },
+  pad(f,t,dur,vol){
+    const c=this.ctx;
+    [-5,5].forEach(det=>{
+      const o=c.createOscillator(); o.type='triangle'; o.frequency.value=f; o.detune.value=det;
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=850;
+      const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(vol,t+2.8);
+      g.gain.setValueAtTime(vol,t+dur-3); g.gain.linearRampToValueAtTime(.0001,t+dur+1.8);
+      o.connect(lp); lp.connect(g); g.connect(this.dry); g.connect(this.verb); o.start(t); o.stop(t+dur+2);
+    });
+  },
+  bell(f,t){
+    const c=this.ctx;
+    [[1,.04],[2.01,.012]].forEach(([mul,v])=>{
+      const o=c.createOscillator(); o.type='sine'; o.frequency.value=f*mul;
+      const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(v,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+3);
+      o.connect(g); g.connect(this.dry); g.connect(this.verb); o.start(t); o.stop(t+3.1);
+    });
+  }
+};
+const sfx = n => { try{ AU.sfx(n); }catch(e){} };
+
+/* =========================================================
+   RÉGLAGES & ÉCRAN DE DÉPART
+   ========================================================= */
+let S = load('tp_settings', null) || {
+  nb:3, players:[], showRisk:true, music:true, sfx:true, speed:'normal'
+};
+function defaultPlayer(i){ return {name: i===0?'Joueur 1':randomName([]), type: i===0?'human':'ai', level:'equilibre'}; }
+function randomName(exclude){ const pool=NAMES.filter(n=>!exclude.includes(n)); return pick(pool.length?pool:NAMES); }
+while(S.players.length<8) S.players.push(defaultPlayer(S.players.length));
+
+function renderSetup(){
+  const nb=$('nbRow'); nb.innerHTML='';
+  for(let i=1;i<=8;i++){ const b=document.createElement('button'); b.className='btn'+(S.nb===i?' sel':''); b.textContent=i;
+    b.onclick=()=>{ S.nb=i; sfx('click'); renderSetup(); }; nb.appendChild(b); }
+  $('nbNote').innerHTML = S.nb===1 ? '🏆 <b>Mode solo</b> : chaque type caché rapporte ses points de 1re place. Battez votre record !'
+    : S.nb>4 ? '🗑️ À partir de 5 joueurs, la poubelle contient <b>deux paquets</b> (108 cartes).' : 'Le jeu original se joue de 2 à 4 joueurs.';
+  const pl=$('plist'); pl.innerHTML='';
+  for(let i=0;i<S.nb;i++){
+    const p=S.players[i];
+    const row=document.createElement('div'); row.className='prow';
+    row.innerHTML=`<div class="dot" style="background:${COLORS[i]}">🦝</div>
+      <input maxlength="18" value="${esc(p.name)}" aria-label="Nom du joueur ${i+1}">
+      <button class="btn icon" title="Nom au hasard">🎲</button>
+      <div class="seg"><button class="${p.type==='human'?'sel':''}" data-t="human">🙂 Joueur</button><button class="${p.type==='ai'?'sel':''}" data-t="ai">🤖 Ordi</button></div>
+      <select class="${p.type==='ai'?'':'hidden'}" title="Style de l’ordinateur">${Object.entries(LEVELS).map(([k,v])=>`<option value="${k}" ${p.level===k?'selected':''}>${v}</option>`).join('')}</select>`;
+    const inp=row.querySelector('input'); inp.oninput=()=>{ p.name=inp.value; };
+    row.querySelector('.btn.icon').onclick=()=>{ p.name=randomName(S.players.slice(0,S.nb).map(x=>x.name)); sfx('click'); renderSetup(); };
+    row.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ p.type=b.dataset.t; sfx('click'); renderSetup(); });
+    row.querySelector('select').onchange=e=>{ p.level=e.target.value; };
+    pl.appendChild(row);
+  }
+  document.querySelectorAll('.switch[data-opt]').forEach(sw=>{ sw.classList.toggle('on',!!S[sw.dataset.opt]); });
+  $('speedSel').value=S.speed;
+}
+document.querySelectorAll('.switch[data-opt]').forEach(sw=>sw.onclick=()=>{ S[sw.dataset.opt]=!S[sw.dataset.opt]; if(sw.dataset.opt==='sfx'&&S.sfx){AU.init();} sfx('click'); renderSetup(); });
+$('speedSel').onchange=e=>{ S.speed=e.target.value; };
+$('allRandom').onclick=()=>{ const used=[]; for(let i=0;i<S.nb;i++){ const n=randomName(used); used.push(n); S.players[i].name=n; } AU.init(); sfx('click'); renderSetup(); };
+$('startBtn').onclick=()=>{ AU.init(); AU.resume(); startGame(); };
+$('rulesBtn0').onclick=()=>showRules();
+
+/* =========================================================
+   ÉTAT DE PARTIE
+   ========================================================= */
+let G = null, GEN = 0, uid = 0;
+const D = () => ({lent:1300, normal:800, rapide:330})[S.speed] || 800;
+function sleep(ms){ const g=GEN; return new Promise((res,rej)=>setTimeout(()=>{ g===GEN?res():rej('abort'); },ms)); }
+
+function buildDeck(copies){ const d=[]; for(let k=0;k<copies;k++) for(const t of TYPE_ORDER) for(let i=0;i<TYPES[t].count;i++) d.push({id:++uid,type:t,faceUp:false,lock:-1}); return shuffle(d); }
+
+function startGame(){
+  GEN++;
+  document.querySelectorAll('.modal-back').forEach(m=>m.remove());
+  const used=[];
+  const players = S.players.slice(0,S.nb).map((p,i)=>{
+    let name=(p.name||'').trim(); if(!name){ name=randomName(used); }
+    used.push(name);
+    return {id:i, name, type:p.type, level:p.level||'equilibre', color:COLORS[i], hand:[], stash:[]};
+  });
+  store('tp_settings', S);
+  G = { players, deck:buildDeck(S.nb>4?2:1), discard:[], cur:0, turnNo:0, collected:[], phase:'idle', bonus:false,
+        ending:false, over:false, log:[], dieFace:null, rolling:false, viewerId:null, pending:null, resolveList:null, pieArmed:null, flash:'' };
+  players.forEach((p,i)=>{ for(let k=0;k<3+i;k++) p.hand.push(G.deck.pop()); });
+  $('setup').style.display='none'; $('game').style.display='block';
+  if(S.music) AU.startMusic(); else AU.stopMusic();
+  addLog(`La partie commence ! ${players.length} raton${players.length>1?'s':''}, ${G.deck.length} cartes dans la poubelle.`,'good');
+  updateToggles();
+  render();
+  gameLoop().catch(e=>{ if(e!=='abort') console.error(e); });
+}
+
+const humans = () => G.players.filter(p=>p.type==='human');
+const opponents = p => G.players.filter(o=>o!==p);
+const nm = p => `<b style="color:${p.color}">${esc(p.name)}</b>`;
+const isCur = p => G.players[G.cur]===p;
+function usable(p,type){ return p.hand.find(c=>c.type===type && (c.lock!==G.turnNo || c.feeshed)); }
+function hasType(p,type){ return p.hand.find(c=>c.type===type); }
+function addLog(html,cls=''){ G.log.unshift({html,cls}); if(G.log.length>150) G.log.pop(); renderLog(); }
+function flash(html){ G.flash=html; const f=$('flash'); if(f) f.innerHTML=html; }
+function showDetail(a,b){ // dévoiler le détail d'une carte volée dans le journal ?
+  const h=humans().length; if(h===0) return true; if(h>1) return false;
+  return a.type==='human' || (b && b.type==='human');
+}
+function tname(t){ return `${TYPES[t].emoji} ${TYPES[t].name}`; }
+
+/* ---------- Pioche / défausse / réserve ---------- */
+function draw(p,n){
+  let got=0;
+  for(let i=0;i<n;i++){
+    if(!G.deck.length){ triggerEnd(); break; }
+    const c=G.deck.pop(); c.lock=G.turnNo; c.feeshed=false; c.faceUp=false; c.fresh=true; p.hand.push(c); got++;
+    if(!G.deck.length) triggerEnd();
+  }
+  if(got) sfx('draw');
+  return got;
+}
+function triggerEnd(){ if(!G.ending){ G.ending=true; addLog('🗑️ La poubelle est vide ! La partie se termine à la fin de ce tour.','bad'); flash('🗑️ La poubelle est vide !'); } }
+function discardCard(p,c){ const i=p.hand.indexOf(c); if(i>=0) p.hand.splice(i,1); c.faceUp=false; c.feeshed=false; G.discard.push(c); }
+function stashCards(p,ids,faceUp=false){
+  ids.forEach(id=>{ const i=p.hand.findIndex(c=>c.id===id); if(i>=0){ const c=p.hand.splice(i,1)[0]; c.faceUp=faceUp; p.stash.push(c); } });
+  if(ids.length) sfx('stash');
+}
+
+/* =========================================================
+   BOUCLE DE JEU
+   ========================================================= */
+async function gameLoop(){
+  while(!G.over){
+    const p=G.players[G.cur];
+    await takeTurn(p);
+    if(G.ending){ await endGame(); return; }
+    G.cur=(G.cur+1)%G.players.length;
+  }
+}
+
+async function ensureViewer(p){
+  const h=humans();
+  if(h.length===1) G.viewerId=h[0].id;
+  else if(h.length===0) G.viewerId=p.id;
+  else if(p.type==='human'){
+    G.viewerId=null; render();
+    await openModal({title:`🦝 Au tour de ${esc(p.name)}`, body:`<p>Passe l’appareil à <b>${esc(p.name)}</b>. Les autres, on ne regarde pas&nbsp;! 🙈</p>`,
+      buttons:[{id:'ok',label:`Je suis ${esc(p.name)} — voir ma main`,cls:'primary'}]});
+    G.viewerId=p.id;
+  } else G.viewerId=null;
+}
+
+async function takeTurn(p){
+  G.turnNo++; G.collected=[]; G.bonus=false; G.dieFace=null; G.phase='roll'; G.resolveList=null; G.pieArmed=null;
+  G.players.forEach(x=>x.hand.forEach(c=>c.fresh=false));
+  flash('');
+  addLog(`— Tour de ${nm(p)} —`,'turn'); sfx('turn');
+  await ensureViewer(p);
+  render();
+  await sleep(p.type==='ai'?D()*.6:120);
+
+  let r = await rollPhase(p,6);
+  if(r==='bust'){ await consolation(p); return endTurn(); }
+  if(r==='six'){
+    addLog(`🎉 ${nm(p)} a les 6 jetons ! Résolution immédiate, puis tour bonus (3 jetons max).`,'good');
+    flash('🎉 Les 6 jetons ! Tour bonus après résolution'); sfx('six');
+    await sleep(D()*.6);
+    await resolvePhase(p);
+    G.collected=[]; G.bonus=true; G.phase='roll'; G.dieFace=null; render();
+    r = await rollPhase(p,3);
+    if(r==='bust'){ await consolation(p); return endTurn(); }
+  }
+  await resolvePhase(p);
+  endTurn();
+}
+function endTurn(){ G.collected=[]; G.phase='idle'; G.resolveList=null; G.pieArmed=null; G.pending=null; render(); }
+
+async function consolation(p){
+  addLog(`💥 ${nm(p)} rate son tour et perd ses jetons. Lot de consolation : 1 carte.`,'bad');
+  flash(`💥 Ratage ! ${esc(p.name)} pioche 1 carte de consolation.`);
+  sfx('bust');
+  G.collected=[]; G.phase='idle'; render();
+  await sleep(D()*.5);
+  draw(p,1); render();
+  await sleep(p.type==='ai'?D():500);
+}
+
+/* ---------- Phase de lancer ---------- */
+async function rollPhase(p,max){
+  let forced=false, first=true;
+  while(true){
+    if(G.collected.length>=max){
+      if(max===6) return 'six';
+      addLog(`${nm(p)} a ses 3 jetons bonus.`); return 'stop';
+    }
+    G.phase='roll'; render();
+    let act;
+    if(forced){ act={kind:'roll'}; forced=false; }
+    else act = p.type==='human' ? await humanRollAction(p,first) : await aiRollAction(p,first,max);
+
+    if(act.kind==='card'){ await playActiveCard(p, p.hand.find(c=>c.id===act.id)); continue; }
+    if(act.kind==='stop'){
+      addLog(`${nm(p)} s’arrête avec ${G.collected.length} jeton${G.collected.length>1?'s':''}.`);
+      if(await yumYumCheck(p,max)){ forced=true; continue; }
+      return 'stop';
+    }
+    first=false;
+    let face = await rollDie(p);
+    let nanners=false;
+    while(G.collected.includes(face)){
+      const res = await bustPending(p,face);
+      if(res==='blammo'){ face = await rollDie(p); continue; }
+      if(res==='nanners'){ nanners=true; break; }
+      return 'bust';
+    }
+    G.phase='roll';
+    if(nanners){
+      G.dieFace=null; render();
+      if(await yumYumCheck(p,max)){ forced=true; continue; }
+      return 'stop';
+    }
+    G.collected.push(face); sfx('token');
+    addLog(`${nm(p)} obtient ${TOK[face].emoji} ${TOK[face].name}.`);
+    flash(`${TOK[face].emoji} ${TOK[face].name} !`);
+    render();
+    await sleep(p.type==='ai'?D()*.5:150);
+  }
+}
+
+async function rollDie(p){
+  G.rolling=true; render(); sfx('roll');
+  const el=$('die'); const dur=Math.max(450, Math.min(900, D()*.8));
+  const t0=Date.now();
+  while(Date.now()-t0<dur){ el.textContent=pick(TOKENS).emoji; await sleep(70); }
+  const face=pick(TOKENS).id;
+  G.rolling=false; G.dieFace=face; render();
+  await sleep(220);
+  return face;
+}
+
+async function humanRollAction(p,first){
+  const cards={};
+  const fe=usable(p,'feesh'); if(fe && G.discard.length) cards[fe.id]='Défausse';
+  const sh=usable(p,'shiny'); if(sh && opponents(p).some(o=>o.stash.length)) cards[sh.id]='Voler réserve';
+  const buttons=[{id:'roll',label:'🎲 Lancer le dé',cls:'primary big'}];
+  if(G.collected.length) buttons.push({id:'stop',label:'✋ S’arrêter et résoudre',cls:'teal big'});
+  const prompt = first && !G.collected.length ? (G.bonus?'Tour bonus ! Lance le dé (3 jetons max).':'À toi ! Lance le dé.')
+    : 'Tenter ta chance encore… ou t’arrêter ?';
+  const a = await humanChoice({prompt, buttons, cards});
+  if(a.kind==='card') return a;
+  return {kind:a.id};
+}
+
+async function bustPending(p,face){
+  G.phase='bust'; G.bustFace=face; render(); sfx('uhoh');
+  addLog(`${nm(p)} fait ${TOK[face].emoji} — déjà pris ! Ratage imminent…`,'bad');
+  flash(`😱 ${TOK[face].emoji} déjà pris !`);
+  while(true){
+    const bl=usable(p,'blammo'), na=usable(p,'nanners'), fe=G.discard.length?usable(p,'feesh'):null;
+    let choice;
+    if(p.type==='human'){
+      const cards={}, buttons=[];
+      if(bl){ cards[bl.id]='Relancer'; buttons.push({id:'blammo',label:'🥤 Blammo! — relancer'}); }
+      if(na){ cards[na.id]='Annuler'; buttons.push({id:'nanners',label:'🍌 Nanners — annuler et s’arrêter'}); }
+      if(fe){ cards[fe.id]='Défausse'; buttons.push({id:'feesh',label:'🐟 Feesh — fouiller la défausse'}); }
+      buttons.push({id:'bust',label:'😩 Accepter le ratage',cls:'danger'});
+      let hint='';
+      if(S.showRisk && bl) hint=` <span class="small">(relance réussie : ${pct((6-G.collected.length)/6)})</span>`;
+      const a = await humanChoice({prompt:`Ratage ! ${TOK[face].emoji} est déjà pris.${hint}`, buttons, cards});
+      choice = a.kind==='btn' ? a.id : p.hand.find(c=>c.id===a.id).type;
+    } else {
+      await sleep(D()*.7);
+      const k=G.collected.length;
+      if(na && (k>=4 || !bl)) choice='nanners';
+      else if(bl) choice='blammo';
+      else if(fe && G.discard.some(c=>c.type==='blammo'||c.type==='nanners')) choice='feesh';
+      else choice='bust';
+    }
+    if(choice==='blammo'){ discardCard(p,bl); sfx('play'); addLog(`${nm(p)} joue ${tname('blammo')} et relance !`); flash('🥤 Blammo ! On relance…'); G.phase='roll'; render(); return 'blammo'; }
+    if(choice==='nanners'){ discardCard(p,na); sfx('play'); addLog(`${nm(p)} joue ${tname('nanners')} : lancer annulé, il s’arrête.`,'good'); flash('🍌 Nanners ! Ratage évité.'); render(); return 'nanners'; }
+    if(choice==='feesh'){ await doFeesh(p,fe,true); G.phase='bust'; render(); continue; }
+    G.phase='roll'; return 'bust';
+  }
+}
+
+async function yumYumCheck(p,max){
+  if(G.collected.length>=max || G.collected.length===0) return false;
+  const k=G.collected.length;
+  const order=[]; for(let i=1;i<G.players.length;i++) order.push(G.players[(G.cur+i)%G.players.length]);
+  for(const o of order){
+    const y=hasType(o,'yumyum'); if(!y) continue;
+    let yes;
+    if(o.type==='human'){
+      const r = await openModal({forName:o.name, title:'🍫 Jouer un Yum Yum ?',
+        body:`<p>${nm(p)} s’arrête avec <b>${k} jeton${k>1?'s':''}</b>${S.showRisk?` (risque de ratage s’il relance : <b>${pct(k/6)}</b>)`:''}.</p><p>Veux-tu jouer ton Yum Yum pour l’obliger à relancer le dé&nbsp;?</p>`,
+        buttons:[{id:'no',label:'Non merci'},{id:'yes',label:'🍫 Oui, qu’il relance !',cls:'primary'}]});
+      yes = r==='yes';
+    } else {
+      await sleep(D()*.35);
+      const pr = k>=4?.75 : k===3?.5 : k===2?.15 : 0;
+      yes = Math.random()<pr;
+    }
+    if(yes){
+      discardCard(o,y); sfx('yum');
+      addLog(`${nm(o)} joue ${tname('yumyum')} : ${nm(p)} doit relancer !`,'bad');
+      flash(`🍫 ${esc(o.name)} force ${esc(p.name)} à relancer !`);
+      render(); await sleep(D()*.6);
+      return true;
+    }
+  }
+  return false;
+}
+
+/* ---------- Cartes jouées pendant son tour ---------- */
+async function playActiveCard(p,c){
+  if(!c) return;
+  if(c.type==='feesh') return doFeesh(p,c,false);
+  if(c.type==='shiny') return doShiny(p,c);
+}
+
+async function doFeesh(p,c,urgent){
+  const i=p.hand.indexOf(c); if(i>=0) p.hand.splice(i,1);
+  sfx('play');
+  let chosen;
+  if(p.type==='human'){
+    const ids = await pickCards(G.discard, {title:'🐟 Feesh : choisis une carte dans la défausse', min:1, max:1, forName: humans().length>1?null:null});
+    chosen = G.discard.find(x=>x.id===ids[0]);
+  } else {
+    await sleep(D()*.5);
+    const pref = urgent ? ['nanners','blammo'] : ['doggo','kitteh','shiny','blammo','nanners','feesh','pie','yumyum'];
+    for(const t of pref){ chosen=G.discard.find(x=>x.type===t); if(chosen) break; }
+    if(!chosen) chosen=pick(G.discard);
+  }
+  G.discard.splice(G.discard.indexOf(chosen),1);
+  chosen.lock=-1; chosen.feeshed=true; chosen.fresh=true; p.hand.push(chosen);
+  G.discard.push(c); c.feeshed=false;
+  addLog(`${nm(p)} joue ${tname('feesh')} et repêche ${tname(chosen.type)} dans la défausse.`);
+  render();
+}
+
+async function doShiny(p,c){
+  const targets=opponents(p).filter(o=>o.stash.length);
+  if(!targets.length) return;
+  let tgt, cid;
+  if(p.type==='human'){
+    const tid = await pickPlayer(targets,'💎 Shiny : à qui voler une carte cachée ?', o=>`${o.stash.length} carte(s) en réserve`);
+    if(tid==null) return;
+    tgt=G.players[tid];
+    cid = await pickStashCard(p,tgt);
+    if(cid==null) return;
+  } else {
+    tgt = targets.slice().sort((a,b)=>b.stash.length-a.stash.length)[0];
+    cid = aiPickStashCard(p,tgt);
+  }
+  discardCard(p,c); sfx('play');
+  addLog(`${nm(p)} joue ${tname('shiny')} sur la réserve de ${nm(tgt)} !`);
+  render();
+  await stealAttempt(p,tgt,'stash',cid);
+  render();
+}
+
+/* ---------- Vol (main ou réserve) avec Doggo / Kitteh ---------- */
+async function stealAttempt(att,tgt,kind,cid){
+  const block = await askBlock(tgt,att,kind);
+  if(block==='doggo'){
+    sfx('block'); addLog(`${nm(tgt)} lâche son ${tname('doggo')} : vol bloqué ! Il pioche 2 cartes.`,'good');
+    flash(`🐶 ${esc(tgt.name)} bloque le vol !`);
+    draw(tgt,2); render(); await sleep(D()*.5); return;
+  }
+  if(block==='kitteh'){
+    sfx('block'); addLog(`${nm(tgt)} sort ${tname('kitteh')} : c’est lui qui vole ${nm(att)} !`,'good');
+    flash(`🐱 Contre-attaque de ${esc(tgt.name)} !`);
+    render(); await sleep(D()*.5);
+    if(kind==='hand'){ if(!att.hand.length){ addLog(`…mais la main de ${nm(att)} est vide.`); return; } return stealAttempt(tgt,att,'hand'); }
+    if(!att.stash.length){ addLog(`…mais la réserve de ${nm(att)} est vide.`); return; }
+    const c2 = tgt.type==='human' ? await pickStashCard(tgt,att) : aiPickStashCard(tgt,att);
+    return stealAttempt(tgt,att,'stash',c2);
+  }
+  if(kind==='hand'){
+    if(!tgt.hand.length){ addLog(`${nm(att)} ne trouve rien dans la main de ${nm(tgt)}.`); return; }
+    const c=tgt.hand.splice(rnd(tgt.hand.length),1)[0]; c.lock=G.turnNo; c.feeshed=false; c.fresh=true; att.hand.push(c);
+    sfx('steal');
+    addLog(`${nm(att)} vole une carte dans la main de ${nm(tgt)}${showDetail(att,tgt)?` (${tname(c.type)})`:''}.`);
+    flash(`🥷 ${esc(att.name)} vole une carte à ${esc(tgt.name)} !`);
+  } else {
+    let i=tgt.stash.findIndex(x=>x.id===cid); if(i<0) i=rnd(tgt.stash.length);
+    const c=tgt.stash.splice(i,1)[0]; const wasUp=c.faceUp; c.faceUp=false; c.lock=G.turnNo; c.feeshed=false; c.fresh=true; att.hand.push(c);
+    sfx('steal');
+    addLog(`${nm(att)} vole ${wasUp||showDetail(att,tgt)?tname(c.type):'une carte cachée'} dans la réserve de ${nm(tgt)}.`);
+    flash(`💎 ${esc(att.name)} chipe une carte de la réserve de ${esc(tgt.name)} !`);
+  }
+  render(); await sleep(D()*.5);
+}
+
+async function askBlock(tgt,att,kind){
+  const dg=hasType(tgt,'doggo'), kt=hasType(tgt,'kitteh');
+  if(!dg && !kt) return null;
+  let r;
+  if(tgt.type==='human'){
+    const buttons=[{id:'none',label:'Laisser faire'}];
+    if(kt) buttons.push({id:'kitteh',label:'🐱 Kitteh — contre-voler'});
+    if(dg) buttons.push({id:'doggo',label:'🐶 Doggo — bloquer + piocher 2',cls:'primary'});
+    r = await openModal({forName:tgt.name, title:'🚨 Tentative de vol !',
+      body:`<p>${nm(att)} essaie de te voler une carte ${kind==='hand'?'<b>de ta main</b>':'<b>de ta réserve</b>'}.</p><p>Veux-tu réagir&nbsp;?</p>`, buttons});
+  } else {
+    await sleep(D()*.4);
+    r = dg && Math.random()<.92 ? 'doggo' : kt && Math.random()<.85 ? 'kitteh' : 'none';
+  }
+  if(r==='doggo'){ discardCard(tgt,dg); return 'doggo'; }
+  if(r==='kitteh'){ discardCard(tgt,kt); return 'kitteh'; }
+  return null;
+}
+
+/* ---------- Phase de résolution ---------- */
+async function resolvePhase(p){
+  G.phase='resolve';
+  G.resolveList = G.collected.map(t=>({tok:t, done:false, pie:false}));
+  G.untaken = TOKENS.map(t=>t.id).filter(t=>!G.collected.includes(t));
+  G.pieArmed=null; G.dieFace=null;
+  render();
+  if(p.type==='ai') await aiResolve(p);
+  else {
+    while(true){
+      const remaining=G.resolveList.filter(r=>!r.done);
+      const cards={};
+      const fe=usable(p,'feesh'); if(fe && G.discard.length) cards[fe.id]='Défausse';
+      const sh=usable(p,'shiny'); if(sh && opponents(p).some(o=>o.stash.length)) cards[sh.id]='Voler réserve';
+      const pie=usable(p,'pie');
+      if(pie && !G.pieArmed && remaining.some(r=>!r.pie && r.tok!=='recycle')) cards[pie.id]='Doubler un jeton';
+      const buttons=[];
+      if(G.pieArmed) buttons.push({id:'unpie',label:'Annuler la pizza'});
+      buttons.push({id:'end', label: remaining.length?'Terminer le tour':'✔ Terminer le tour', cls: remaining.length?'':'primary big'});
+      const prompt = !remaining.length ? 'Tous tes jetons sont résolus. Tu peux encore jouer Feesh ou Shiny, ou terminer.'
+        : G.pieArmed ? '🍕 Clique le jeton à résoudre deux fois.'
+        : 'Clique un jeton (en vert) pour le résoudre, dans l’ordre de ton choix.';
+      const a = await humanChoice({prompt, buttons, cards, tokens:true});
+      if(a.kind==='btn'){
+        if(a.id==='unpie'){ G.pieArmed=null; continue; }
+        if(a.id==='end'){
+          if(remaining.length){
+            const r = await openModal({title:'Terminer le tour ?', body:`<p>Il te reste ${remaining.length} jeton(s) non résolu(s). Ils seront perdus.</p>`,
+              buttons:[{id:'no',label:'Retour'},{id:'yes',label:'Terminer quand même',cls:'danger'}]});
+            if(r!=='yes') continue;
+          }
+          break;
+        }
+      } else if(a.kind==='card'){
+        const c=p.hand.find(x=>x.id===a.id);
+        if(c.type==='pie'){ G.pieArmed=c.id; continue; }
+        await playActiveCard(p,c);
+      } else if(a.kind==='token'){
+        const r=G.resolveList.find(x=>x.tok===a.tok && !x.done); if(!r) continue;
+        if(G.pieArmed){
+          if(r.tok==='recycle'){ flash('🍕 La pizza ne s’utilise pas sur le Recyclage.'); continue; }
+          const pc=p.hand.find(x=>x.id===G.pieArmed); G.pieArmed=null;
+          if(pc){ discardCard(p,pc); r.pie=true; sfx('play'); addLog(`${nm(p)} mange une ${tname('pie')} : ${TOK[r.tok].emoji} sera résolu deux fois !`); }
+        }
+        await resolveEntry(p,r);
+      }
+    }
+  }
+  G.resolveList=null; G.collected=[]; G.pieArmed=null; G.phase='idle'; render();
+}
+
+async function resolveEntry(p,r){
+  if(r.tok==='recycle'){
+    if(!G.untaken.length){ addLog(`${nm(p)} : le Recyclage n’a aucun effet (tous les jetons pris).`); r.done=true; render(); return; }
+    let nt;
+    if(p.type==='human'){
+      nt = await openModal({title:'♻️ Recyclage : échanger contre quel jeton ?', body:'<p>Choisis un jeton que tu n’as pas pris ce tour-ci. Il sera résolu immédiatement.</p>',
+        buttons:G.untaken.map(t=>({id:t,label:`${TOK[t].emoji} ${TOK[t].name}`}))});
+    } else nt = aiPickRecycle(p);
+    G.untaken=G.untaken.filter(t=>t!==nt);
+    addLog(`${nm(p)} recycle ♻️ en ${TOK[nt].emoji} ${TOK[nt].name}.`);
+    r.tok=nt; sfx('token'); render();
+    await sleep(p.type==='ai'?D()*.4:100);
+  }
+  const times=r.pie?2:1;
+  for(let i=0;i<times;i++) await resolveToken(p,r.tok);
+  r.done=true; render();
+}
+
+async function resolveToken(p,tok){
+  const H=p.type==='human';
+  if(tok==='trash'){
+    let n=2;
+    if(H){ const r=await openModal({title:'🗑️ Poubelle', body:'<p>Pioche jusqu’à 2 cartes.</p>', buttons:[{id:'0',label:'Rien'},{id:'1',label:'Piocher 1'},{id:'2',label:'Piocher 2',cls:'primary'}]}); n=+r; }
+    const g=draw(p,n); if(g) addLog(`${nm(p)} pioche ${g} carte${g>1?'s':''} 🗑️.`);
+  }
+  else if(tok==='tree'){
+    let ids=[];
+    if(!p.hand.length){ addLog(`${nm(p)} n’a rien à cacher.`); }
+    else if(H) ids=await pickCards(p.hand,{title:'🌳 Arbre : cache jusqu’à 2 cartes', min:0, max:2, sort:true});
+    else ids=aiPickStash(p,2);
+    stashCards(p,ids); if(ids.length) addLog(`${nm(p)} cache ${ids.length} carte${ids.length>1?'s':''} dans sa réserve 🌳.`);
+  }
+  else if(tok==='trashtree'){
+    let mode;
+    if(H){ mode=await openModal({title:'🍂 Poubelle ou Arbre', body:'<p>Pioche 1 carte, ou cache 1 carte de ta main.</p>', buttons:[{id:'none',label:'Rien'},{id:'stash',label:'🌳 Cacher 1',disabled:!p.hand.length},{id:'draw',label:'🗑️ Piocher 1',cls:'primary'}]}); }
+    else { const best=aiPickStash(p,1); mode = (best.length && p.hand.length>=3) ? 'stash' : 'draw'; }
+    if(mode==='draw'){ if(draw(p,1)) addLog(`${nm(p)} pioche 1 carte 🍂.`); }
+    else if(mode==='stash'){
+      const ids = H ? await pickCards(p.hand,{title:'🌳 Cache 1 carte', min:0, max:1, sort:true}) : aiPickStash(p,1);
+      stashCards(p,ids); if(ids.length) addLog(`${nm(p)} cache 1 carte 🍂.`);
+    }
+  }
+  else if(tok==='bandit'){
+    const targets=opponents(p).filter(o=>o.hand.length);
+    if(!targets.length){ addLog(`${nm(p)} : personne à voler.`); }
+    else {
+      let t;
+      if(H){ const id=await pickPlayer(targets,'🥷 Masque de bandit : qui voler ?', o=>`${o.hand.length} carte(s) en main`); t=G.players[id]; }
+      else t=targets.slice().sort((a,b)=>b.hand.length-a.hand.length + (Math.random()-.5))[0];
+      addLog(`${nm(p)} enfile le masque 🥷 et vise ${nm(t)}…`);
+      render(); await sleep(D()*.3);
+      await stealAttempt(p,t,'hand');
+    }
+  }
+  else if(tok==='masq'){
+    if(!G.deck.length){ triggerEnd(); addLog('🎭 Plus de carte à révéler.'); }
+    else {
+      const c=G.deck.pop(); if(!G.deck.length) triggerEnd();
+      c.lock=G.turnNo; c.fresh=true; p.hand.push(c); sfx('reveal');
+      addLog(`${nm(p)} révèle 🎭 ${tname(c.type)} et le prend.`);
+      flash(`🎭 Carte révélée : ${tname(c.type)}`); render();
+      await sleep(D()*.5);
+      let n=0;
+      for(let i=1;i<G.players.length;i++){
+        const o=G.players[(G.cur+i)%G.players.length];
+        const m=hasType(o,c.type); if(!m) continue;
+        let yes;
+        if(o.type==='human'){
+          yes = (await openModal({forName:o.name, title:'🎭 Masque de bal', body:`<p>${nm(p)} a révélé <b>${tname(c.type)}</b>.</p><p>Cacher un de tes ${tname(c.type)} <b>face visible</b> dans ta réserve&nbsp;? (${esc(p.name)} piochera 1 carte)</p>`,
+            buttons:[{id:'no',label:'Non'},{id:'yes',label:'Oui, je le cache',cls:'primary'}]}))==='yes';
+        } else {
+          await sleep(D()*.3);
+          const cnt=o.hand.filter(x=>x.type===c.type).length;
+          const key=['doggo','kitteh','nanners','blammo'].includes(c.type);
+          yes = Math.random() < (key && cnt<2 ? .35 : .8);
+        }
+        if(yes){ stashCards(o,[m.id],true); n++; addLog(`${nm(o)} cache ${tname(c.type)} face visible.`); render(); }
+      }
+      if(n){ const g=draw(p,n); if(g) addLog(`${nm(p)} pioche ${g} carte${g>1?'s':''} grâce au masque.`); }
+    }
+  }
+  render();
+  await sleep(H?150:D()*.6);
+}
+
+/* =========================================================
+   INTELLIGENCE ARTIFICIELLE
+   ========================================================= */
+function typePoints(counts,t){
+  const res=counts.map(()=>0);
+  if(TYPES[t].each) return counts.map(c=>c*TYPES[t].each);
+  if(counts.length===1){ if(counts[0]>0) res[0]=TYPES[t].pts[0]; return res; }
+  const distinct=[...new Set(counts.filter(c=>c>0))].sort((a,b)=>b-a);
+  distinct.slice(0,3).forEach((cnt,g)=>{
+    const idx=counts.map((c,i)=>c===cnt?i:-1).filter(i=>i>=0);
+    const v=Math.max(0,TYPES[t].pts[g]-(idx.length>1?1:0));
+    idx.forEach(i=>res[i]=v);
+  });
+  return res;
+}
+function stashGain(p,t,extra=0){
+  const counts=G.players.map(o=>o.stash.filter(c=>c.type===t).length + (o===p?extra:0));
+  const pi=G.players.indexOf(p);
+  const before=typePoints(counts,t)[pi];
+  counts[pi]++;
+  return typePoints(counts,t)[pi]-before;
+}
+const KEEP={blammo:[2.4,1.2,.4], nanners:[2.6,1,.3], doggo:[2.2,.8], kitteh:[2,.7], shiny:[1.4,.4], feesh:[1,.3], pie:[1,.3], yumyum:[.7,.2]};
+function aiPickStash(p,n){
+  const hand=p.hand.slice(), chosen=[], extra={};
+  const late = G.deck.length<=Math.max(6,G.players.length*2);
+  for(let k=0;k<n;k++){
+    let best=null, bv=late?-9:.15;
+    for(const t of new Set(hand.map(c=>c.type))){
+      const inHand=hand.filter(c=>c.type===t).length;
+      const keep=(KEEP[t]||[])[inHand-1]||0;
+      const v = stashGain(p,t,extra[t]||0) + .35 - keep*(late?.2:1) + Math.random()*.2;
+      if(v>bv){ bv=v; best=t; }
+    }
+    if(!best) break;
+    const c=hand.find(x=>x.type===best); hand.splice(hand.indexOf(c),1); chosen.push(c.id); extra[best]=(extra[best]||0)+1;
+  }
+  return chosen;
+}
+function aiPickStashCard(att,tgt){
+  const ups=tgt.stash.filter(c=>c.faceUp);
+  if(ups.length){ ups.sort((a,b)=>(TYPES[b.type].pts?TYPES[b.type].pts[0]:1)-(TYPES[a.type].pts?TYPES[a.type].pts[0]:1)); if(Math.random()<.7) return ups[0].id; }
+  return pick(tgt.stash).id;
+}
+function aiPickRecycle(p){
+  const pref=['trash','tree','masq','bandit','trashtree'];
+  for(const t of pref){
+    if(!G.untaken.includes(t)) continue;
+    if(t==='bandit' && !opponents(p).some(o=>o.hand.length)) continue;
+    if(t==='tree' && p.hand.length<2) continue;
+    return t;
+  }
+  return G.untaken[0];
+}
+async function aiRollAction(p,first,max){
+  await sleep(D());
+  if(first && !G.collected.length){
+    const sh=usable(p,'shiny');
+    if(sh && opponents(p).some(o=>o.stash.length) && Math.random()<.7) return {kind:'card',id:sh.id};
+  }
+  const k=G.collected.length;
+  if(k===0) return {kind:'roll'};
+  const P=k/6;
+  const th={prudent:.3, equilibre:.45, temeraire:.62}[p.level]||.45;
+  const hasN=!!usable(p,'nanners'), hasB=!!usable(p,'blammo');
+  const feeshSave = usable(p,'feesh') && G.discard.some(c=>c.type==='blammo'||c.type==='nanners');
+  let eff=P;
+  if(hasN) eff = (k>=5 && p.level!=='temeraire') ? .9 : 0;
+  else if(hasB || feeshSave) eff=P*P*1.15;
+  eff += (Math.random()-.5)*.12;
+  return {kind: eff<th ? 'roll' : 'stop'};
+}
+async function aiResolve(p){
+  await sleep(D()*.6);
+  const fe=usable(p,'feesh');
+  if(fe && G.discard.some(c=>['doggo','kitteh','shiny','blammo'].includes(c.type)) && Math.random()<.6) await doFeesh(p,fe,false);
+  const sh=usable(p,'shiny');
+  if(sh && opponents(p).some(o=>o.stash.length) && Math.random()<.6) await doShiny(p,sh);
+  const prio={trash:0,masq:1,trashtree:2,bandit:3,recycle:4,tree:5};
+  const list=G.resolveList.slice().sort((a,b)=>prio[a.tok]-prio[b.tok]);
+  const pie=usable(p,'pie');
+  if(pie){
+    const target = list.find(r=>r.tok==='trash') || list.find(r=>r.tok==='tree' && p.hand.length>=4) || list.find(r=>r.tok==='masq');
+    if(target){ discardCard(p,pie); target.pie=true; sfx('play'); addLog(`${nm(p)} mange une ${tname('pie')} : ${TOK[target.tok].emoji} sera résolu deux fois !`); render(); await sleep(D()*.4); }
+  }
+  for(const r of list){ await resolveEntry(p,r); await sleep(D()*.3); }
+}
+
+/* =========================================================
+   FIN DE PARTIE
+   ========================================================= */
+function scoreAll(){
+  const res=G.players.map(p=>({p, by:{}, total:0, variety:0, cards:p.stash.length}));
+  for(const t of TYPE_ORDER){
+    const counts=G.players.map(p=>p.stash.filter(c=>c.type===t).length);
+    const pts=typePoints(counts,t);
+    res.forEach((r,i)=>{ r.by[t]={count:counts[i], pts:pts[i]}; r.total+=pts[i]; if(counts[i]) r.variety++; });
+  }
+  return res;
+}
+async function endGame(){
+  G.over=true; G.phase='over'; G.pending=null; render();
+  addLog('🏁 Fin de partie ! On défausse les mains et on révèle les réserves.','turn');
+  await sleep(700);
+  const res=scoreAll().sort((a,b)=>b.total-a.total || b.variety-a.variety || b.cards-a.cards);
+  const w=res[0];
+  sfx('win'); confetti();
+  let extra='';
+  if(G.players.length===1){
+    const best=load('tp_solo_best',0);
+    if(w.total>best){ store('tp_solo_best',w.total); extra=`<p>🏆 <b>Nouveau record solo !</b> (ancien : ${best} pts)</p>`; }
+    else extra=`<p>Record solo à battre : <b>${best} pts</b></p>`;
+  }
+  const head=`<tr><th>Raton</th>${TYPE_ORDER.map(t=>`<th title="${TYPES[t].name}">${TYPES[t].emoji}</th>`).join('')}<th>Total</th></tr>`;
+  const rows=res.map((r,i)=>`<tr class="${i===0?'win':''}"><td>${i===0?'👑 ':''}${nm(r.p)}</td>${TYPE_ORDER.map(t=>{ const b=r.by[t]; return `<td>${b.count?`${b.count}<br><span class="small">${b.pts} pt${b.pts>1?'s':''}</span>`:'<span class="small">–</span>'}</td>`; }).join('')}<td><b style="font-size:18px">${r.total}</b></td></tr>`).join('');
+  const tie = res[1] && res[1].total===w.total ? `<p class="small">Égalité de points départagée par la variété (${w.variety} types) puis le nombre de cartes cachées.</p>`:'';
+  const r = await openModal({cls:'wide', title:`🏆 ${esc(w.p.name)} gagne avec ${w.total} points !`,
+    body:`${extra}<div style="overflow:auto"><table class="sc">${head}${rows}</table></div>${tie}<p class="small">Chiffre = cartes cachées · dessous = points obtenus (majorités 1er / 2e / 3e, −1 en cas d’égalité ; Blammo! = 1 pt par carte).</p>`,
+    buttons:[{id:'menu',label:'🏠 Menu'},{id:'again',label:'🔁 Rejouer',cls:'primary'}]});
+  if(r==='again') startGame(); else backToMenu();
+}
+function confetti(){
+  const em=['🦝','🗑️','🍕','🍌','🐟','💎','🍫','🥤','✨'];
+  for(let i=0;i<40;i++){ const d=document.createElement('div'); d.className='confetti'; d.textContent=pick(em);
+    d.style.left=Math.random()*100+'vw'; d.style.animationDuration=(2.5+Math.random()*2.5)+'s'; d.style.animationDelay=Math.random()*1.2+'s';
+    document.body.appendChild(d); setTimeout(()=>d.remove(),6500); }
+}
+function backToMenu(){
+  GEN++; G=null;
+  document.querySelectorAll('.modal-back').forEach(m=>m.remove());
+  $('game').style.display='none'; $('setup').style.display='block';
+  renderSetup();
+}
+
+/* =========================================================
+   INTERACTION HUMAINE
+   ========================================================= */
+function humanChoice(cfg){ return new Promise(res=>{ G.pending={...cfg,res}; render(); }); }
+function choose(v){ const p=G&&G.pending; if(!p) return; G.pending=null; sfx('click'); p.res(v); }
+
+function openModal({title, body='', buttons=[], forName=null, cls='', build=null}){
+  return new Promise(res=>{
+    const back=document.createElement('div'); back.className='modal-back';
+    back.innerHTML=`<div class="modal ${cls}">${forName?`<div class="for">🔒 Pour ${esc(forName)} uniquement</div>`:''}<h3>${title}</h3><div class="mbody"></div><div class="mbtns"></div></div>`;
+    const mb=back.querySelector('.mbody'); mb.innerHTML=body;
+    const bt=back.querySelector('.mbtns');
+    const close=v=>{ back.remove(); res(v); };
+    const els={};
+    buttons.forEach(b=>{ const e=document.createElement('button'); e.className='btn '+(b.cls||''); e.innerHTML=b.label; e.disabled=!!b.disabled;
+      e.onclick=()=>{ sfx('click'); close(b.id); }; bt.appendChild(e); els[b.id]=e; });
+    if(build) build(mb,els,close);
+    $('modals').appendChild(back);
+  });
+}
+function cardHTML(c,o={}){
+  if(o.back) return `<div class="card back ${o.small?'sm':''} ${o.cls||''}" data-id="${c?c.id:''}">🦝</div>`;
+  const t=TYPES[c.type];
+  const pts=t.each?'1 pt / carte':`🥇${t.pts[0]} 🥈${t.pts[1]} 🥉${t.pts[2]}`;
+  return `<div class="card t-${c.type} ${o.small?'sm':''} ${o.cls||''}" data-id="${c.id}" title="${esc(t.name+' — '+t.desc)}">
+    <div class="pts">${o.small?(t.each?'1/carte':t.pts.join('·')):pts}</div><div class="emo">${t.emoji}</div><div class="nm">${t.name}</div>
+    ${o.small?'':`<div class="ds">${t.short}</div>`}${o.lock?'<div class="lock">🔒</div>':''}${o.badge?`<div class="badge">${o.badge}</div>`:''}</div>`;
+}
+const sortCards = arr => arr.slice().sort((a,b)=>TYPE_ORDER.indexOf(a.type)-TYPE_ORDER.indexOf(b.type));
+
+function pickCards(cards,{title,min=0,max=1,sort=false,forName=null}){
+  const list=sort?sortCards(cards):cards.slice();
+  const sel=new Set();
+  return openModal({title, forName, cls:'wide',
+    body:`<p class="small">Choisis ${min===max?max:`jusqu’à ${max}`} carte${max>1?'s':''}.</p><div class="grid">${list.map(c=>cardHTML(c,{cls:'pick'})).join('')}</div>`,
+    buttons:[{id:'ok',label:'Valider',cls:'primary'}],
+    build(mb,els){
+      const upd=()=>{ els.ok.disabled = sel.size<min || sel.size>max; els.ok.innerHTML = sel.size?`Valider (${sel.size})`:(min===0?'Aucune':'Valider'); };
+      mb.querySelectorAll('.card').forEach(el=>el.onclick=()=>{ const id=+el.dataset.id;
+        if(sel.has(id)) sel.delete(id); else { if(max===1) { sel.clear(); mb.querySelectorAll('.card').forEach(x=>x.classList.remove('sel')); } if(sel.size<max) sel.add(id); }
+        el.classList.toggle('sel',sel.has(id)); sfx('click'); upd(); });
+      upd();
+    }
+  }).then(()=>[...sel]);
+}
+function pickPlayer(list,title,info){
+  return openModal({title, body:'<div class="plist"></div>', buttons:[],
+    build(mb,els,close){
+      const box=mb.querySelector('.plist');
+      list.forEach(o=>{ const b=document.createElement('button'); b.className='btn pbtn';
+        b.innerHTML=`<span class="dot" style="background:${o.color}">🦝</span><span><b>${esc(o.name)}</b><br><span class="small">${info?info(o):''}</span></span>`;
+        b.onclick=()=>{ sfx('click'); close(o.id); }; box.appendChild(b); });
+    }});
+}
+function pickStashCard(att,tgt){
+  const list=tgt.stash.slice();
+  return openModal({title:`Quelle carte prendre dans la réserve de ${esc(tgt.name)} ?`, forName: humans().length>1?att.name:null, cls:'wide',
+    body:`<p class="small">Les cartes face visible sont connues ; les autres sont des surprises.</p><div class="grid">${list.map(c=>c.faceUp?cardHTML(c,{cls:'pick'}):cardHTML(c,{back:true,cls:'pick'})).join('')}</div>`,
+    buttons:[], build(mb,els,close){ mb.querySelectorAll('.card').forEach(el=>el.onclick=()=>{ sfx('click'); close(+el.dataset.id); }); }});
+}
+
+/* =========================================================
+   RENDU
+   ========================================================= */
+function render(){
+  if(!G) return;
+  $('deckN').textContent=G.deck.length;
+  $('discN').textContent=G.discard.length;
+  renderPlayers(); renderTable(); renderControls(); renderHand(); renderLog();
+}
+function renderPlayers(){
+  const box=$('players');
+  box.innerHTML=G.players.map(p=>{
+    const cur=isCur(p) && !G.over;
+    const own = p.id===G.viewerId;
+    const down=p.stash.filter(c=>!c.faceUp).length;
+    const ups={}; p.stash.filter(c=>c.faceUp).forEach(c=>ups[c.type]=(ups[c.type]||0)+1);
+    let stashView='';
+    if(G.over || (own && false)){ stashView=''; }
+    const upChips=Object.entries(ups).map(([t,n])=>`<span class="chip up" title="Face visible">${TYPES[t].emoji}×${n}</span>`).join('');
+    return `<div class="pl ${cur?'cur':''}" style="--pc:${p.color}">
+      ${cur?'<div class="turnarrow">🎲</div>':''}
+      <div class="hd"><div class="av">🦝</div><div><div class="name">${esc(p.name)}${own?' <span class="small">(toi)</span>':''}</div>
+      <div class="sub">${p.type==='human'?'🙂 Joueur':'🤖 Ordi · '+LEVELS[p.level]}</div></div></div>
+      <div class="stats"><span>✋ Main <b>${p.hand.length}</b></span><span>🌳 Réserve <b>${p.stash.length}</b>${down?` <span class="small">(${down} cachée${down>1?'s':''})</span>`:''}</span></div>
+      ${upChips?`<div class="chips">${upChips}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function renderTable(){
+  const p=G.players[G.cur];
+  const phaseTxt={roll:'Lancer de dé',bust:'Ratage imminent !',resolve:'Résolution des jetons',idle:'',over:'Partie terminée'}[G.phase]||'';
+  $('banner').innerHTML = G.over ? '🏁 Partie terminée' :
+    `<span>Tour de <b style="color:${p.color}">${esc(p.name)}</b></span>${G.bonus?'<span class="tag">⭐ Tour bonus</span>':''}${phaseTxt?`<span class="tag">${phaseTxt}</span>`:''}${G.ending?'<span class="tag" style="background:rgba(255,90,90,.2);color:#ffb0b0">Dernier tour</span>':''}`;
+  const pend=G.pending;
+  $('tokens').innerHTML=TOKENS.map(t=>{
+    let cls='', extra='';
+    const entry=G.resolveList && G.resolveList.find(r=>r.tok===t.id);
+    if(G.phase==='resolve' && entry){
+      cls = entry.done ? 'taken done' : (pend && pend.tokens ? 'taken res' : 'taken');
+      if(entry.pie) extra+='<span class="pie">🍕</span>';
+      if(entry.done) extra+='<span class="ck">✅</span>';
+    } else if(G.collected.includes(t.id)) cls='taken';
+    if(G.phase==='bust' && G.bustFace===t.id) cls+=' clash';
+    return `<div class="tok ${cls}" data-tok="${t.id}" title="${esc(t.name+' : '+t.desc)}"><div class="e">${t.emoji}</div><div class="l">${t.name}</div>${extra}</div>`;
+  }).join('');
+  $('tokens').querySelectorAll('.tok.res').forEach(el=>el.onclick=()=>choose({kind:'token',tok:el.dataset.tok}));
+  const die=$('die'); die.classList.toggle('rolling',G.rolling);
+  if(!G.rolling) die.textContent = G.dieFace ? TOK[G.dieFace].emoji : '🎲';
+  // Risque
+  const rk=$('risk');
+  const showRisk = S.showRisk && (G.phase==='roll' || G.phase==='bust') && !G.over;
+  rk.classList.toggle('hidden', !showRisk);
+  if(showRisk){
+    const k=G.collected.length, P=k/6;
+    const col = P<.34?'var(--green)':P<.6?'var(--amber)':'var(--red)';
+    let x=`${6-k} symbole${6-k>1?'s':''} sur 6 donnent un nouveau jeton`;
+    if(G.phase==='roll' && p.id===G.viewerId){
+      const b=p.hand.filter(c=>c.type==='blammo' && (c.lock!==G.turnNo||c.feeshed)).length;
+      const n=p.hand.filter(c=>c.type==='nanners' && (c.lock!==G.turnNo||c.feeshed)).length;
+      if(n) x+=`<br>🍌 Avec ton Nanners : <b>0 %</b> de perdre tes jetons`;
+      else if(b) x+=`<br>🥤 Avec ${b} Blammo! : risque réel <b>${pct(Math.pow(P,b+1))}</b>`;
+    }
+    if(G.bonus) x+=`<br>⭐ Bonus : ${3-k} jeton(s) restant(s)`;
+    rk.innerHTML=`<div class="t">Risque de ratage au prochain lancer</div><div class="v" style="color:${col}">${pct(P)}</div>
+      <div class="bar"><i style="width:${Math.max(3,P*100)}%;background:${col}"></i></div><div class="x">${x}</div>`;
+  }
+  $('flash').innerHTML=G.flash||'';
+}
+function renderControls(){
+  const c=$('controls'); const pend=G.pending; const p=G.players[G.cur];
+  if(G.over){ c.innerHTML='<div class="thinking">Décompte des points…</div>'; return; }
+  if(!pend){
+    c.innerHTML = p.type==='ai' ? `<div class="thinking">${esc(p.name)} réfléchit <span>🤔</span></div>` : `<div class="thinking">…</div>`;
+    return;
+  }
+  c.innerHTML=`<div class="prompt">${pend.prompt||''}</div><div class="btns">${(pend.buttons||[]).map(b=>`<button class="btn ${b.cls||''}" data-b="${b.id}">${b.label}</button>`).join('')}</div>
+    ${pend.cards && Object.keys(pend.cards).length?'<div class="small" style="margin-top:8px">💡 Les cartes en surbrillance dans ta main sont jouables.</div>':''}`;
+  c.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>choose({kind:'btn',id:b.dataset.b}));
+}
+function renderHand(){
+  const v=G.viewerId!=null ? G.players[G.viewerId] : null;
+  const hand=$('hand'), ms=$('mystash');
+  if(!v){ $('handTitle').textContent='Main cachée 🙈'; hand.innerHTML='<div class="small" style="padding:30px 10px">Les mains des joueurs sont cachées pendant le tour des autres.</div>'; ms.innerHTML=''; return; }
+  const H=humans().length;
+  $('handTitle').innerHTML = H===0 ? `👀 Main de ${esc(v.name)} (spectateur)` : `✋ Main de ${esc(v.name)}`;
+  const pend=G.pending;
+  const playable = pend && pend.cards ? pend.cards : {};
+  const curTurn = isCur(v);
+  hand.innerHTML = v.hand.length ? sortCards(v.hand).map(c=>cardHTML(c,{
+      cls:(playable[c.id]?'play ':'')+(c.fresh?'new':''), badge:playable[c.id]||'', lock: curTurn && c.lock===G.turnNo && !c.feeshed
+    })).join('') : '<div class="small" style="padding:30px 10px">Ta main est vide.</div>';
+  hand.querySelectorAll('.card.play').forEach(el=>el.onclick=()=>choose({kind:'card',id:+el.dataset.id}));
+  const by={}; v.stash.forEach(c=>by[c.type]=(by[c.type]||0)+1);
+  ms.innerHTML = v.stash.length ? '🌳 Ma réserve : '+TYPE_ORDER.filter(t=>by[t]).map(t=>`<span class="chip">${TYPES[t].emoji}×${by[t]}</span>`).join('') : '🌳 Réserve vide';
+}
+function renderLog(){
+  if(!G) return;
+  $('log').innerHTML=G.log.map(l=>`<div class="${l.cls}">${l.html}</div>`).join('');
+}
+
+/* ---------- Barre du haut ---------- */
+function updateToggles(){
+  $('tMusic').classList.toggle('off',!S.music); $('tSfx').classList.toggle('off',!S.sfx); $('tRisk').classList.toggle('off',!S.showRisk);
+}
+$('tMusic').onclick=()=>{ S.music=!S.music; if(S.music) AU.startMusic(); else AU.stopMusic(); updateToggles(); store('tp_settings',S); };
+$('tSfx').onclick=()=>{ S.sfx=!S.sfx; AU.init(); sfx('click'); updateToggles(); store('tp_settings',S); };
+$('tRisk').onclick=()=>{ S.showRisk=!S.showRisk; updateToggles(); render(); store('tp_settings',S); };
+$('rulesBtn').onclick=()=>showRules();
+$('discardPile').onclick=()=>{
+  if(!G) return;
+  openModal({title:`🃏 Défausse (${G.discard.length})`, cls:'wide', body: G.discard.length?`<div class="grid">${sortCards(G.discard).map(c=>cardHTML(c,{small:true})).join('')}</div>`:'<p>La défausse est vide.</p>', buttons:[{id:'ok',label:'Fermer'}]});
+};
+$('quitBtn').onclick=async()=>{
+  const r=await openModal({title:'Quitter la partie ?', body:'<p>La partie en cours sera perdue.</p>', buttons:[{id:'no',label:'Continuer'},{id:'yes',label:'Quitter',cls:'danger'}]});
+  if(r==='yes') backToMenu();
+};
+
+function showRules(){
+  const rows=TYPE_ORDER.map(t=>{ const x=TYPES[t]; return `<tr><td>${x.emoji} <b>${x.name}</b></td><td>${x.count}</td><td>${x.each?'1 pt / carte':x.pts.join(' / ')}</td><td style="text-align:left">${x.desc}</td></tr>`; }).join('');
+  openModal({cls:'wide', title:'📖 Règles de Trash Pandas', buttons:[{id:'ok',label:'Compris !',cls:'primary'}], body:`<div class="rules">
+    <p>Vous êtes des ratons laveurs qui fouillent les poubelles. Piochez des cartes, puis <b>cachez-les dans votre réserve</b> : seules les cartes cachées rapportent des points.</p>
+    <h4>Mise en place</h4><ul><li>54 cartes (108 à partir de 5 joueurs), 6 jetons et un dé à 6 symboles.</li><li>Le 1er joueur reçoit 3 cartes, le 2e 4 cartes, le 3e 5 cartes, etc. Le joueur avec le moins de cartes commence.</li></ul>
+    <h4>1. Tenter sa chance</h4><ul><li>Lance le dé et prends le jeton correspondant. Continue ou arrête-toi.</li>
+    <li><b>Ratage</b> : si le symbole est déjà pris ce tour-ci, tu perds tous tes jetons et pioches 1 carte de consolation. <b>Blammo!</b> (relancer) et <b>Nanners</b> (annuler et s’arrêter) peuvent te sauver.</li>
+    <li>Risque de ratage au lancer suivant = nombre de jetons déjà pris ÷ 6.</li>
+    <li><b>Les 6 jetons</b> : résous-les tout de suite, puis tour bonus limité à 3 jetons.</li>
+    <li>Quand tu t’arrêtes, un adversaire peut jouer <b>Yum Yum</b> pour t’obliger à relancer.</li></ul>
+    <h4>2. Résoudre les jetons (dans l’ordre de ton choix)</h4><ul>${TOKENS.map(t=>`<li>${t.emoji} <b>${t.name}</b> : ${t.desc}</li>`).join('')}</ul>
+    <p class="small">Les cartes gagnées pendant ton tour (🔒) ne peuvent pas être jouées ce tour-ci, mais peuvent être cachées. Exception : la carte repêchée avec Feesh.</p>
+    <h4>Les cartes</h4><div style="overflow:auto"><table class="sc"><tr><th>Carte</th><th>Nb</th><th>Points 1er / 2e / 3e</th><th style="text-align:left">Action (en la défaussant)</th></tr>${rows}</table></div>
+    <h4>Fin de partie</h4><ul><li>Quand la poubelle est vide, le joueur actif termine son tour.</li>
+    <li>Pour chaque type, le joueur ayant le plus de cartes cachées marque les points de 1re place, puis 2e et 3e. Il faut au moins 1 carte. En cas d’égalité, chaque joueur à égalité marque 1 point de moins et le suivant prend la place d’après.</li>
+    <li>Blammo! : 1 point par carte cachée. Égalité finale : la plus grande variété de types, puis le plus de cartes cachées.</li></ul>
+    <p class="small">Adaptation numérique non officielle. Les valeurs exactes de points du jeu original n’étant pas publiées, celles-ci sont proposées (le Feesh suit l’exemple des règles : 5 pts, 4 en cas d’égalité, 3 pour le suivant).</p>
+  </div>`});
+}
+
+renderSetup();
+</script>
+</body>
+</html>
+
