@@ -34,7 +34,15 @@
   .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .btn{flex:1;min-width:120px;border:none;border-radius:14px;padding:12px 10px;font:800 18px 'Baloo 2',sans-serif;cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.25)}
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
-  .b5{background:#3d2a5c;flex-basis:100%}.b1{background:#27ae60}.b2{background:#e67e22}.b3{background:#c0392b}.b4{background:#2f80ed}
+  .b5{background:#3d2a5c}.b6{background:#1f3b6e}
+  .clock{width:26px;height:26px;border-radius:50%;background:#fff8ec;position:relative;display:inline-block;vertical-align:middle;margin-right:6px;border:2px solid #b23a2e;box-sizing:border-box}
+  .clock i{position:absolute;left:50%;bottom:50%;width:2px;margin-left:-1px;background:#3a2a1a;transform-origin:50% 100%;border-radius:1px}
+  #hh{height:6px}#mm{height:9px;background:#b23a2e!important}
+  #clockPill{font-size:16px;display:flex;align-items:center}
+  #inv{font-size:14px}
+  .bar{height:8px;background:#4a3f36;border-radius:4px;overflow:hidden;margin:3px 0 4px}
+  #energyFill{height:100%;width:100%;background:linear-gradient(90deg,#e74c3c,#2ecc71)}
+  #energyWrap{font-size:13px;width:130px}.b1{background:#27ae60}.b2{background:#e67e22}.b3{background:#c0392b}.b4{background:#2f80ed}
   .small{font-size:13px;color:#7a6550}
   kbd{background:#eadbc4;border-radius:5px;padding:0 5px;font-family:inherit;font-weight:700}
 </style>
@@ -46,9 +54,14 @@
   <div id="left">
     <div class="pill" id="goal">🎯</div>
     <div class="pill" id="floor">Dehors</div>
-    <div class="pill" id="alertWrap"><span id="barLabel">Alerte</span><div id="alertBar"><div id="alertFill"></div></div></div>
+    <div class="pill" id="inv">🔑 ✗ · 🗝️ ✗</div>
+    <div class="pill" id="alertWrap">Alerte<div id="alertBar"><div id="alertFill"></div></div></div>
+    <div class="pill" id="energyWrap">Énergie<div class="bar"><div id="energyFill"></div></div></div>
   </div>
-  <div class="pill" id="timer">⏱ 0:00.0</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div class="pill" id="timer">⏱ 0:00.0</div>
+    <div class="pill" id="clockPill"><div class="clock"><i id="hh"></i><i id="mm"></i></div><span id="clockTxt">13:00</span></div>
+  </div>
   <div id="right"><button class="pill" id="pauseBtn" aria-label="Pause">❚❚</button><button class="pill" id="muteBtn" aria-label="Musique">🔊</button></div>
 </div>
 <div id="toast"></div>
@@ -58,7 +71,7 @@
 <div class="overlay" id="startScreen">
   <div class="card">
     <h1>Esquive les profs</h1>
-    <p>Tu es <b>en retard</b> ! Entre dans l'école par le portail et rejoins <b>ta place</b> (★ verte) le plus vite possible. <b>Ta classe change à chaque partie</b> : elle est indiquée en haut à gauche et marquée « TA CLASSE » sur le plan. Un chronomètre mesure ton temps.</p>
+    <p>Tu es <b>en retard</b> ! Le portail est fermé : trouve d'abord la <b>🔑 clé du portail</b> dans la rue. Dans l'école, va chercher la <b>🗝️ clé de ta classe</b> dans le <b>bureau du directeur</b>, puis rejoins <b>ta place</b> (★ verte) le plus vite possible. <b>Ta classe change à chaque partie</b> : elle est indiquée en haut à gauche et marquée « TA CLASSE » sur le plan. Un chronomètre mesure ton temps.</p>
     <p>Ne te fais pas repérer : chaque adulte voit dans un <b>cône de vision</b> devant lui. Si la jauge d'alerte se remplit, c'est fini !</p>
     <div class="legend">
       <div><span class="dot" style="background:#f39c12">S</span><span><b>Surveillants</b> : font des rondes à plusieurs endroits</span></div>
@@ -66,13 +79,14 @@
       <div><span class="dot" style="background:#c0392b">D</span><span><b>Directeur</b> : va partout, à tous les étages, mais il voit mal (cône étroit et court)</span></div>
       <div><span class="dot" style="background:#27ae60">★</span><span><b>Toi</b> : les tables, les arbres et les murs te cachent</span></div>
     </div>
-    <p class="small"><b>🧟 Mode zombie :</b> l'école est plongée dans le noir et envahie de zombies lents. S'ils te voient, ils te pourchassent ; chaque contact te fait perdre de l'énergie. Atteins ta classe pour rallumer la lumière !</p>
+    <p class="small"><b>🧟 Mode zombie :</b> l'école est plongée dans le noir et envahie de zombies lents. S'ils te voient, ils te pourchassent ; chaque contact te fait perdre de l'énergie. Atteins ta classe pour rallumer la lumière !<br><b>🌗 Jour / Nuit :</b> une horloge tourne. La nuit, il fait sombre et les surveillants se transforment en zombies ; au lever du jour, ils redeviennent humains.</p>
     <p class="small">Clavier : <kbd>↑↓←→</kbd>, <kbd>ZQSD</kbd> ou <kbd>WASD</kbd> · Pause : <kbd>Échap</kbd><br>Tactile : pose le doigt n'importe où et fais glisser pour te déplacer. Marche sur un escalier rouge pour changer d'étage.</p>
     <div class="btns">
       <button class="btn b1" data-diff="facile">Facile</button>
       <button class="btn b2" data-diff="normal">Normal</button>
       <button class="btn b3" data-diff="difficile">Difficile</button>
       <button class="btn b5" data-diff="zombie">🧟 Mode zombie</button>
+      <button class="btn b6" data-diff="cycle">🌗 Jour / Nuit</button>
     </div>
   </div>
 </div>
@@ -104,8 +118,8 @@
 'use strict';
 // ================== CARTE ==================
 const W = 40, H = 30, N = W * H;
-const MOVE_BLOCK = new Set(['#','Y','T','P','B','F','w','r',' ']);
-const VIS_BLOCK  = new Set(['#','Y','T','P','B']);
+const MOVE_BLOCK = new Set(['#','Y','T','P','B','F','w','r',' ','Q','K']);
+const VIS_BLOCK  = new Set(['#','Y','T','P','B','K']);
 
 const grid = c => Array.from({length:H}, () => Array(W).fill(c));
 function fill(g,x0,y0,x1,y1,c){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) g[y][x]=c; }
@@ -216,6 +230,7 @@ const DIFF = {
   normal:   {vis:1.0,  rate:1.0,  speed:1.0,  prof0:5, prof1:5, survs:3},
   difficile:{vis:1.12, rate:1.3,  speed:1.15, prof0:9, prof1:7, survs:4},
   zombie:   {vis:1.0,  rate:1.0,  speed:1.0,  zombies:18, zombie:true},
+  cycle:    {vis:1.0,  rate:1.0,  speed:1.0,  prof0:4, prof1:3, survs:4, cycle:true},
 };
 const TYPES = {
   surv:{speed:2.0, range:5,   fov:70, color:'#f39c12', letter:'S', mul:1,    name:'Un surveillant t\'a repéré !'},
@@ -230,10 +245,12 @@ const ROOMS=[
   {f:1,r:[3,3,9,6],d:[6,7]},{f:1,r:[11,3,17,6],d:[14,7]},{f:1,r:[19,3,24,6],d:[21,7]},
   {f:1,r:[32,3,36,6],d:[31,5]},{f:1,r:[32,8,36,11],d:[31,10]},{f:1,r:[32,13,36,17],d:[31,15]},{f:1,r:[32,19,36,22],d:[31,21]}];
 ROOMS.forEach((r,i)=>r.name='Salle '+(i+1));
+ROOMS[4].office=true; ROOMS[4].name='Bureau du directeur';
 let TARGET=null, SEAT=null;
 function setTarget(){
   if(SEAT) FLOORS[SEAT.f][SEAT.y|0][SEAT.x|0]='c';
-  let t; do{ t=ROOMS[Math.floor(Math.random()*ROOMS.length)]; }while(t===TARGET);
+  if(TARGET) FLOORS[TARGET.f][TARGET.d[1]][TARGET.d[0]]='D';
+  let t; do{ t=ROOMS[Math.floor(Math.random()*ROOMS.length)]; }while(t===TARGET || t.office);
   TARGET=t;
   const [x0,y0,x1,y1]=t.r; let best=null, bd=-1;
   for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
@@ -241,7 +258,20 @@ function setTarget(){
     if(d>bd){ bd=d; best=[x,y]; }
   }
   FLOORS[t.f][best[1]][best[0]]='G';
+  FLOORS[t.f][t.d[1]][t.d[0]]='K';      // porte fermée à clé
   SEAT={f:t.f,x:best[0]+.5,y:best[1]+.5};
+}
+// ---- Clés ----
+let ITEMS=[], inv={gate:false,cls:false}, gateOpen=false, doorOpen=false, lockMsgT=0;
+function setupKeys(){
+  fill(g0,31,25,34,25,'Q'); gateOpen=false; doorOpen=false; inv={gate:false,cls:false};
+  let gx; do{ gx=1+Math.floor(Math.random()*37); }while((gx>=27&&gx<=36) || Math.abs(gx-6)<4);
+  const gy=26+Math.floor(Math.random()*4);
+  const o=ROOMS.find(r=>r.office), [x0,y0,x1,y1]=o.r;
+  ITEMS=[
+    {kind:'gate', f:0, x:gx+.5, y:gy+.5, color:'#f1c40f', taken:false},
+    {kind:'cls',  f:o.f, x:Math.floor(rnd(x0,x1+1))+.5, y:Math.floor(rnd(y0,y1+1))+.5, color:'#7fd3ff', taken:false},
+  ];
 }
 const PATROLS=[
   {f:0, wps:[[26,24],[35,24]]},                         // portail
@@ -251,7 +281,7 @@ const PATROLS=[
 ];
 
 // ================== ÉTAT ==================
-let invulT=0, dark=0, won=false, hurtT=0, musicBase=0;
+let clockH=13, night=false, invulT=0, dark=0, won=false, hurtT=0, musicBase=0;
 let CFG, P, guards, elapsed=0, state='menu', diffKey='normal', toastT=0, bestKey='esquive-chrono-';
 const keys = {};
 const joy = {active:false,id:null,ox:0,oy:0,dx:0,dy:0};
@@ -271,9 +301,11 @@ function newGame(){
   CFG = DIFF[diffKey];
   P = {f:0, x:6.5, y:27.5, angle:-Math.PI/2, onStair:false, r:0.28, walk:0, energy:100};
   guards = []; won=false; hurtT=0; invulT=0;
-  dark = CFG.zombie ? 1 : 0; musicBase = CFG.zombie ? -5 : 0;
-  $('barLabel').textContent = CFG.zombie ? 'Énergie' : 'Alerte';
-  alertFill.style.background = CFG.zombie ? 'linear-gradient(90deg,#e74c3c,#2ecc71)' : '';
+  dark = CFG.zombie ? 1 : 0; musicBase = CFG.zombie ? -5 : 0; clockH=13; night=false;
+  $('alertWrap').classList.toggle('hidden',!!CFG.zombie);
+  $('energyWrap').classList.toggle('hidden',!(CFG.zombie||CFG.cycle));
+  $('clockPill').classList.toggle('hidden',!CFG.cycle);
+  setupKeys();
   if(CFG.zombie){ setTarget(); buildBG(); spawnZombies(); }
   else {
   // surveillants
@@ -287,7 +319,7 @@ function newGame(){
   // enseignants
   setTarget(); buildBG();
   const mix = a => a.sort(()=>Math.random()-.5);
-  const ground = mix(ROOMS.filter(r=>r.f===0 && r!==TARGET)).slice(0,CFG.prof0);
+  const ground = mix(ROOMS.filter(r=>r.f===0 && r!==TARGET && !r.office)).slice(0,CFG.prof0);
   const upper  = mix(ROOMS.filter(r=>r.f===1 && r!==TARGET)).slice(0,CFG.prof1);
   for(const room of ground.concat(upper)){
     const [x0,y0,x1,y1]=room.r;
@@ -298,7 +330,7 @@ function newGame(){
     }));
   }
   // directeur
-  guards.push(makeGuard('dir',0,14,10,{
+  guards.push(makeGuard('dir',0,5,15,{
     waitMin:1.2, waitMax:3,
     nextTarget(){ return INTERIOR[Math.floor(Math.random()*INTERIOR.length)]; }
   }));
@@ -311,7 +343,8 @@ function newGame(){
   show('hint'); setTimeout(()=>hide('hint'),5000);
   const fl = TARGET.f ? '1er étage' : 'rez-de-chaussée';
   $('goal').textContent = `🎯 ${TARGET.name} · ${TARGET.f?'1er':'RDC'}`;
-  showToast(CFG.zombie ? `🧟 Dans le noir… ta classe : ${TARGET.name} (${fl})` : `Ta classe : ${TARGET.name} (${fl})`);
+  showToast(`${CFG.zombie?'🧟 Dans le noir… ':''}Ta classe : ${TARGET.name} (${fl}) · Trouve la 🔑 dans la rue !`);
+  toastT=3;
   musicStop(); tension=0; setTimeout(musicStart,0);
 }
 
@@ -384,6 +417,38 @@ function updateZombie(g,dt){
   g.path=pth||[]; if(!g.path.length) g.wait=0.6;
 }
 
+// ================== JOUR / NUIT ==================
+function setNight(n){
+  night=n; musicBase = n ? -5 : 0;
+  for(const g of guards){ if(g.type!=='surv') continue;
+    g.path=[]; g.meter=0; g.lastSeen=null; g.susT=0; g.chasing=false; g.chaseT=0; g.repath=0; g.hitCD=0;
+    if(n){
+      g.human={speed:g.speed,range:g.range,fov:g.fov,color:g.color,letter:g.letter};
+      Object.assign(g,{zombie:true,speed:0.8*CFG.speed,chaseSpeed:2.0,range:4.2,fov:110*Math.PI/180,color:'#6aa84f',letter:'Z',wait:rnd(.3,1)});
+    } else if(g.human){
+      Object.assign(g,g.human,{zombie:false,wait:rnd(.5,1.2)});
+    }
+  }
+  showToast(n ? '🌙 La nuit tombe… les surveillants deviennent des zombies !' : '☀️ Le jour se lève, les surveillants redeviennent humains');
+  toastT=2.2;
+  if(n){ groan(); setTimeout(groan,300); } else { beep(784,.12); setTimeout(()=>beep(988,.18),140); }
+}
+function updateCycle(dt){
+  clockH=(clockH+dt*24/60)%24;              // une journée complète = 60 s
+  const n = clockH>=19 || clockH<7;
+  if(n!==night) setNight(n);
+  let dl;
+  if(clockH>=18 && clockH<19) dl=clockH-18;
+  else if(clockH>=19 || clockH<6) dl=1;
+  else if(clockH>=6 && clockH<7) dl=7-clockH;
+  else dl=0;
+  dark=dl*0.85;
+  const h=Math.floor(clockH), m=Math.floor((clockH-h)*60);
+  $('hh').style.transform=`rotate(${(h%12)*30+m*0.5}deg)`;
+  $('mm').style.transform=`rotate(${m*6}deg)`;
+  $('clockTxt').textContent=`${String(h).padStart(2,'0')}:${String(Math.floor(m/10)*10).padStart(2,'0')} ${n?'🌙':'☀️'}`;
+}
+
 // ================== MISE À JOUR ==================
 function blockedAt(f,x,y,r){
   for(const [cx,cy] of [[x-r,y-r],[x+r,y-r],[x-r,y+r],[x+r,y+r]]){
@@ -412,9 +477,25 @@ function updatePlayer(dt){
       showToast(P.f===1?'1er étage':'Rez-de-chaussée'); beep(P.f?660:440,.12);
     }
   } else P.onStair=false;
+  // clés
+  for(const it of ITEMS){
+    if(!it.taken && it.f===P.f && Math.hypot(P.x-it.x,P.y-it.y)<0.6){
+      it.taken=true; inv[it.kind]=true; beep(988,.1); setTimeout(()=>beep(1319,.15),100);
+      showToast(it.kind==='gate' ? '🔑 Clé du portail trouvée !' : '🗝️ Clé de ta classe trouvée !');
+    }
+  }
+  lockMsgT-=dt;
+  if(!gateOpen && P.f===0 && P.x>30.3 && P.x<35.7 && Math.abs(P.y-25.5)<1.3){
+    if(inv.gate){ gateOpen=true; fill(g0,31,25,34,25,'.'); buildBG(); showToast('🔓 Portail ouvert !'); beep(523,.1); setTimeout(()=>beep(784,.15),110); }
+    else if(lockMsgT<=0){ lockMsgT=3; showToast('🔒 Le portail est fermé… trouve la clé dans la rue !'); }
+  }
+  if(!doorOpen && P.f===TARGET.f && Math.hypot(P.x-TARGET.d[0]-.5,P.y-TARGET.d[1]-.5)<1.3){
+    if(inv.cls){ doorOpen=true; FLOORS[TARGET.f][TARGET.d[1]][TARGET.d[0]]='D'; buildBG(); showToast('🔓 Ta classe est ouverte !'); beep(523,.1); setTimeout(()=>beep(784,.15),110); }
+    else if(lockMsgT<=0){ lockMsgT=3; showToast('🔒 Fermée à clé ! La clé est dans le bureau du directeur.'); }
+  }
+  if(CFG.zombie || CFG.cycle) P.energy=Math.min(100,P.energy+2*dt);
   if(CFG.zombie){
-    P.energy=Math.min(100,P.energy+2*dt);
-    if(inRoom(TARGET,P.f,P.x|0,P.y|0)) win();
+    if(doorOpen && inRoom(TARGET,P.f,P.x|0,P.y|0)) win();
   } else if(P.f===SEAT.f && Math.hypot(P.x-SEAT.x,P.y-SEAT.y)<0.6) win();
 }
 
@@ -445,7 +526,7 @@ function detect(g,dt){
   }
 }
 function updateGuard(g,dt){
-  if(g.type==='zomb') return updateZombie(g,dt);
+  if(g.type==='zomb' || g.zombie) return updateZombie(g,dt);
   detect(g,dt);
   if(state!=='play') return;
   if(g.meter>0.25 && g.lastSeen){             // méfiant : s'arrête et regarde
@@ -511,7 +592,7 @@ function renderDark(sx,sy){
   dctx.fillStyle=gr; dctx.beginPath(); dctx.arc(sx*dpr,sy*dpr,R,0,7); dctx.fill();
 }
 
-const COL={'.':'#cfcac2',',':'#8b6d55','R':'#3b3b40','c':'#eadfc6','v':'#d8c4a3','s':'#dcbc7c','h':'#8e959c','D':'#eadfc6','S':'#8f2a20','G':'#eadfc6','T':'#cfcac2','F':'#cfcac2','P':'#dcbc7c','w':'#dcbc7c','B':'#cfcac2','#':'#b0553f','Y':'#e9c446','r':'#3d3d46'};
+const COL={'Q':'#cfcac2','K':'#6b3f1d','.':'#cfcac2',',':'#8b6d55','R':'#3b3b40','c':'#eadfc6','v':'#d8c4a3','s':'#dcbc7c','h':'#8e959c','D':'#eadfc6','S':'#8f2a20','G':'#eadfc6','T':'#cfcac2','F':'#cfcac2','P':'#dcbc7c','w':'#dcbc7c','B':'#cfcac2','#':'#b0553f','Y':'#e9c446','r':'#3d3d46'};
 
 function drawTile(c,f,x,y,s,X){
   const px=x*s, py=y*s;
@@ -528,6 +609,11 @@ function drawTile(c,f,x,y,s,X){
     case 'D': X.fillStyle='rgba(120,70,30,.45)'; X.fillRect(px,py,s,s); X.fillStyle='#6b3f1d';
               if(tile(f,x-1,y)==='#'||tile(f,x+1,y)==='#'){ X.fillRect(px,py,s*.12,s); X.fillRect(px+s*.88,py,s*.12,s); }
               else { X.fillRect(px,py,s,s*.12); X.fillRect(px,py+s*.88,s,s*.12); } break;
+    case 'Q': X.fillStyle='#2d5a3a'; for(let i=0;i<5;i++) X.fillRect(px+i*s/5+s*.06,py,s*.08,s);
+              X.fillRect(px,py+s*.15,s,s*.08); X.fillRect(px,py+s*.75,s,s*.08); break;
+    case 'K': X.fillStyle='#6b3f1d'; X.fillRect(px,py,s,s); X.fillStyle='#8d5a2b'; X.fillRect(px+s*.1,py+s*.1,s*.8,s*.8);
+              X.fillStyle='#f1c40f'; X.fillRect(px+s*.32,py+s*.45,s*.36,s*.3);
+              X.strokeStyle='#f1c40f'; X.lineWidth=s*.07; X.beginPath(); X.arc(px+s*.5,py+s*.45,s*.12,Math.PI,0); X.stroke(); break;
     case 'S': X.fillStyle='#c94a3a'; for(let i=0;i<5;i++) X.fillRect(px,py+i*s/5,s,s/10); break;
     case 'G': X.fillStyle='#2ecc71'; X.shadowColor='#2ecc71'; X.shadowBlur=s*.6; X.fillRect(px+s*.12,py+s*.15,s*.76,s*.45); X.shadowBlur=0;
               X.fillStyle='#fff'; X.font=`800 ${s*.45}px 'Baloo 2',sans-serif`; X.textAlign='center'; X.textBaseline='middle'; X.fillText('★',px+s/2,py+s*.4);
@@ -552,6 +638,7 @@ function label(X,txt,x,y,s,size,color){
 function roomLabels(X,f,s){
   for(const r of ROOMS){ if(r.f!==f) continue;
     const [x0,y0,x1,y1]=r.r, cx=(x0+x1+1)/2;
+    if(r.office){ label(X,'DIRECTION',cx,y0+.45,s,.36,'#ffd27a'); continue; }
     if(r===TARGET){
       X.fillStyle='rgba(46,204,113,.22)'; X.fillRect(x0*s,y0*s,(x1-x0+1)*s,(y1-y0+1)*s);
       label(X,'TA CLASSE',cx,(y0+y1+1)/2,s,.4,'#7dffb0');
@@ -607,6 +694,29 @@ function coneShape(g){
   }
   return pts;
 }
+function drawKey(x,y,color){
+  const px=x*ts, py=y*ts+Math.sin(performance.now()/250)*ts*.06;
+  ctx.save(); ctx.translate(px,py); ctx.rotate(-0.5);
+  ctx.shadowColor=color; ctx.shadowBlur=ts*.5;
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=ts*.08;
+  ctx.beginPath(); ctx.arc(-ts*.15,0,ts*.11,0,7); ctx.stroke();
+  ctx.fillRect(-ts*.05,-ts*.04,ts*.32,ts*.08); ctx.fillRect(ts*.15,0,ts*.06,ts*.12); ctx.fillRect(ts*.24,0,ts*.05,ts*.09);
+  ctx.restore();
+}
+function objective(){
+  if(!SEAT) return {x:P.x,y:P.y};
+  let t;
+  if(!inv.gate) t=ITEMS[0];
+  else if(!gateOpen) t={f:0,x:32.9,y:26.3};
+  else if(!inv.cls) t=ITEMS[1];
+  else if(!doorOpen) t={f:TARGET.f,x:TARGET.d[0]+.5,y:TARGET.d[1]+.5};
+  else t=SEAT;
+  const out = P.f===0 && P.y>25.2, tout = t.f===0 && t.y>25.2;
+  if(out && !tout) return {x:32.9,y:25.5};
+  if(!out && tout) return {x:32.9,y:24.5};
+  if(P.f!==t.f) { const a=[[28,13],[30,23.5],[3,8.5]].sort((p,q)=>Math.hypot(p[0]-P.x,p[1]-P.y)-Math.hypot(q[0]-P.x,q[1]-P.y))[0]; return {x:a[0],y:a[1]}; }
+  return t;
+}
 function drawChar(x,y,color,letter,angle,bob){
   const r=ts*.33, px=x*ts, py=y*ts+bob;
   ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(px+2,py+r*.55,r*.95,r*.5,0,0,7); ctx.fill();
@@ -633,7 +743,7 @@ function draw(){
     if(g.cured) continue;
     const pts=coneShape(g);
     const alert=g.meter;
-    ctx.fillStyle = g.type==='zomb' ? (g.chasing?'rgba(255,40,40,.28)':'rgba(140,255,120,.16)')
+    ctx.fillStyle = (g.type==='zomb'||g.zombie) ? (g.chasing?'rgba(255,40,40,.28)':'rgba(140,255,120,.16)')
       : g.type==='dir' ? `rgba(231,76,60,${.22+alert*.3})` : g.type==='prof' ? `rgba(47,128,237,${.2+alert*.3})` : `rgba(255,196,0,${.22+alert*.3})`;
     ctx.beginPath(); ctx.moveTo(pts[0][0]*ts,pts[0][1]*ts);
     for(const p of pts) ctx.lineTo(p[0]*ts,p[1]*ts);
@@ -642,12 +752,12 @@ function draw(){
   // personnages
   for(const g of here){
     const moving=g.path.length>0 && g.susT<=0;
-    if(g.type==='zomb' && !g.cured){        // bras tendus
+    if((g.type==='zomb'||g.zombie) && !g.cured){        // bras tendus
       ctx.save(); ctx.translate(g.x*ts,g.y*ts); ctx.rotate(g.angle); ctx.fillStyle='#4e7d3a';
       ctx.fillRect(ts*.1,-ts*.3,ts*.38,ts*.1); ctx.fillRect(ts*.1,ts*.2,ts*.38,ts*.1); ctx.restore();
     }
     drawChar(g.x,g.y,g.color,g.letter,g.angle,moving?Math.sin(performance.now()/(g.type==='zomb'?160:90))*1.2:0);
-    if(g.type==='zomb') continue;
+    if(g.type==='zomb'||g.zombie) continue;
     if(g.meter>0.02){
       ctx.strokeStyle=g.meter>.6?'#ff3b2f':'#ffd23f'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(g.x*ts,g.y*ts,ts*.45,-Math.PI/2,-Math.PI/2+g.meter*Math.PI*2); ctx.stroke();
@@ -668,19 +778,17 @@ function draw(){
     ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=dark; ctx.drawImage(darkCv,0,0); ctx.restore();
     // yeux rouges qui brillent dans le noir
     ctx.save(); ctx.globalAlpha=dark;
-    for(const g of here){ if(g.cured) continue;
+    for(const g of here){ if(g.cured || !(g.type==='zomb'||g.zombie)) continue;
       const ex=Math.cos(g.angle), ey=Math.sin(g.angle), px=g.x*ts+ex*ts*.18, py=g.y*ts+ey*ts*.18, o=ts*.1;
       ctx.fillStyle=g.chasing?'#ff2a2a':'#ff7a5a'; ctx.shadowColor='#ff0000'; ctx.shadowBlur=ts*.3;
       ctx.beginPath(); ctx.arc(px-ey*o,py+ex*o,ts*.05,0,7); ctx.arc(px+ey*o,py-ex*o,ts*.05,0,7); ctx.fill();
     }
     ctx.restore();
   }
+  // clés (elles brillent, même dans le noir)
+  for(const it of ITEMS){ if(!it.taken && it.f===P.f) drawKey(it.x,it.y,it.color); }
   // flèche d'objectif
-  let ox,oy;
-  if(!SEAT){ ox=P.x; oy=P.y; }
-  else if(P.f===0 && P.y>25.2){ ox=32.9; oy=24.5; }
-  else if(P.f===SEAT.f){ ox=SEAT.x; oy=SEAT.y; }
-  else { const a=[[28,13],[30,23.5],[3,8.5]].sort((p,q)=>Math.hypot(p[0]-P.x,p[1]-P.y)-Math.hypot(q[0]-P.x,q[1]-P.y))[0]; ox=a[0]; oy=a[1]; }
+  const ob=objective(); const ox=ob.x, oy=ob.y;
   if(state==='play' && Math.hypot(ox-P.x,oy-P.y)>1.4){
     const a=Math.atan2(oy-P.y,ox-P.x), ax=(P.x+Math.cos(a)*.95)*ts, ay=(P.y+Math.sin(a)*.95)*ts;
     ctx.save(); ctx.translate(ax,ay); ctx.rotate(a); ctx.fillStyle='rgba(125,255,176,.9)';
@@ -708,7 +816,9 @@ function updateHUD(){
   floorEl.textContent = P.f===1 ? '🏫 1er étage' : (P.y>25.2 ? '🚶 Dehors' : '🏫 Rez-de-chaussée');
   const m=Math.max(0,...guards.map(g=>g.meter));
   tension += (Math.min(1,m*1.4)-tension)*0.08;
-  alertFill.style.width=(CFG.zombie?P.energy:Math.min(100,m*100))+'%';
+  alertFill.style.width=Math.min(100,m*100)+'%';
+  $('energyFill').style.width=P.energy+'%';
+  $('inv').textContent=`🔑 ${inv.gate?'✓':'✗'} · 🗝️ ${inv.cls?'✓':'✗'}`;
 }
 
 // ================== SON ==================
@@ -760,7 +870,7 @@ function schedule(){
   if(!music.playing) return;
   while(music.next<actx.currentTime+0.12){
     playStep(music.step,music.next);
-    music.next+=60/((CFG&&CFG.zombie?100:128)+tension*70)/4;
+    music.next+=60/((CFG&&(CFG.zombie||night)?100:128)+tension*70)/4;
     music.step=(music.step+1)%64;
   }
 }
@@ -804,6 +914,7 @@ function loop(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
   if(state==='play'){
     elapsed+=dt;
+    if(CFG.cycle) updateCycle(dt);
     updatePlayer(dt);
     for(const g of guards) updateGuard(g,dt);
     updateHUD();
@@ -857,4 +968,3 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
