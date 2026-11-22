@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feuille de score Mölkky</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grass:#2f6b3a; --grass-dark:#1f4a28; --grass-light:#3f8a4b;
+    --wood:#f1dfb8; --wood-dark:#d6b77d; --wood-edge:#b8925a;
+    --ink:#1d2b1f; --cream:#fbf6ea; --accent:#e4572e; --gold:#f2b632;
+    --muted:#8b9a8d; --card:#fffdf7;
+    --r:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:"Nunito",system-ui,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.08), transparent 40%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 3px, transparent 3px 9px),
+      linear-gradient(180deg,var(--grass-light),var(--grass) 40%,var(--grass-dark));
+    background-attachment:fixed;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  h1,h2,h3,.display{font-family:"Baloo 2",system-ui,sans-serif;margin:0}
+  button{font:inherit;cursor:pointer;border:0}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .screen{display:none}
+  .screen.active{display:block}
+
+  /* ---------- Header ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--cream)}
+  .brand h1{font-size:1.7rem;line-height:1;letter-spacing:.5px}
+  .brand small{display:block;opacity:.75;font-weight:700;font-size:.8rem}
+  .icon-btn{
+    width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.14);
+    color:var(--cream);font-size:1.2rem;display:grid;place-items:center;
+    backdrop-filter:blur(4px);
+  }
+  .icon-btn:active{transform:scale(.94)}
+  .icons{display:flex;gap:8px}
+
+  /* ---------- Cards ---------- */
+  .panel{background:var(--card);border-radius:var(--r);padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .panel + .panel{margin-top:14px}
+  .label{font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--grass);margin-bottom:10px}
+
+  /* ---------- Setup ---------- */
+  .setup{max-width:520px;margin:0 auto}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:18px}
+  .stepper button{
+    width:54px;height:54px;border-radius:50%;background:var(--wood);
+    font-size:1.8rem;font-weight:800;color:var(--ink);
+    box-shadow:inset 0 -4px 0 var(--wood-dark);
+  }
+  .stepper button:disabled{opacity:.35}
+  .stepper .count{font-family:"Baloo 2";font-size:3.2rem;font-weight:800;min-width:70px;text-align:center;line-height:1}
+  .count-sub{text-align:center;color:var(--muted);font-weight:700;margin-top:2px}
+  .names{display:grid;gap:8px}
+  .name-row{display:flex;align-items:center;gap:10px}
+  .badge{
+    width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;
+    font-weight:800;color:#fff;font-size:.95rem;
+  }
+  .name-row input{
+    flex:1;font:inherit;font-weight:700;padding:12px 14px;border-radius:12px;
+    border:2px solid #e6dfcc;background:#fff;color:var(--ink);min-width:0;
+  }
+  .name-row input:focus{outline:none;border-color:var(--grass-light)}
+  select{
+    width:100%;font:inherit;font-weight:700;padding:12px 14px;border-radius:12px;
+    border:2px solid #e6dfcc;background:#fff;color:var(--ink);appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--grass) 50%),linear-gradient(135deg,var(--grass) 50%,transparent 50%);
+    background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:15px 20px;border-radius:16px;font-weight:800;font-size:1.05rem;
+    transition:transform .08s;
+  }
+  .btn:active{transform:translateY(2px)}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 5px 0 #a83a1b}
+  .btn-primary:active{box-shadow:0 3px 0 #a83a1b}
+  .btn-ghost{background:#efe8d6;color:var(--ink);box-shadow:0 4px 0 #d4c9ad}
+  .btn-ghost:active{box-shadow:0 2px 0 #d4c9ad}
+  .btn-block{width:100%}
+  .btn:disabled{opacity:.4;pointer-events:none}
+  .rules{font-size:.88rem;color:#4b5a4d;line-height:1.5;margin:0;padding-left:18px}
+  .rules li{margin:3px 0}
+
+  /* ---------- Game layout ---------- */
+  .game{display:grid;gap:14px}
+  @media (min-width:860px){
+    .game{grid-template-columns:340px 1fr;align-items:start}
+    .board{position:sticky;top:16px}
+  }
+
+  /* Scoreboard */
+  .board{padding:12px}
+  .players{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media (min-width:860px){.players{grid-template-columns:1fr}}
+  .player{
+    position:relative;border-radius:14px;padding:9px 10px 10px;background:#f6f1e3;
+    border:2px solid transparent;transition:all .25s;overflow:hidden;
+  }
+  .player .top{display:flex;align-items:center;gap:7px}
+  .player .badge{width:24px;height:24px;font-size:.75rem}
+  .player .pname{font-weight:800;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+  .player .pscore{font-family:"Baloo 2";font-weight:800;font-size:1.6rem;line-height:1}
+  .player .meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;font-size:.72rem;font-weight:800;color:var(--muted)}
+  .misses{display:flex;gap:4px}
+  .misses i{width:10px;height:10px;border-radius:50%;background:#ddd5bf;display:block}
+  .misses i.on{background:var(--accent)}
+  .bar{height:6px;border-radius:6px;background:#e5dcc4;margin-top:6px;overflow:hidden}
+  .bar span{display:block;height:100%;border-radius:6px;background:var(--grass-light);transition:width .4s}
+  .player.current{background:#fff6d8;border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,182,50,.3)}
+  .player.current::after{
+    content:"À TOI";position:absolute;top:0;right:0;background:var(--gold);color:var(--ink);
+    font-size:.6rem;font-weight:800;padding:2px 7px;border-bottom-left-radius:8px;letter-spacing:.5px;
+  }
+  .player.current .pscore{display:none}
+  .player.current .top::after{content:attr(data-score);font-family:"Baloo 2";font-weight:800;font-size:1.6rem;line-height:1;margin-right:34px}
+  .player.out{filter:grayscale(1);opacity:.45}
+  .player.out .pname{text-decoration:line-through}
+  .player.winner{background:#fff1c2;border-color:var(--gold)}
+  .player.bump{animation:bump .5s}
+  @keyframes bump{30%{transform:scale(1.05)}}
+
+  /* Turn panel */
+  .turn-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .turn-head .who{display:flex;align-items:center;gap:10px;min-width:0}
+  .turn-head .who .badge{width:40px;height:40px;font-size:1.1rem}
+  .turn-head h2{font-size:1.5rem;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .turn-head .sub{font-size:.85rem;font-weight:700;color:var(--muted)}
+  .round{font-weight:800;font-size:.8rem;color:var(--muted);white-space:nowrap}
+
+  /* Pins */
+  .field{
+    margin:12px 0 8px;padding:20px 8px 18px;border-radius:16px;
+    background:
+      radial-gradient(ellipse at center, rgba(255,255,255,.12), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.04) 0 3px, transparent 3px 9px),
+      var(--grass);
+  }
+  .pins{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .pin-row{display:flex;gap:8px;justify-content:center}
+  .pin{
+    --s:clamp(54px,17vw,74px);
+    width:var(--s);height:var(--s);border-radius:50%;
+    font-family:"Baloo 2";font-weight:800;font-size:calc(var(--s)*.42);color:var(--ink);
+    background:
+      radial-gradient(circle at 50% 50%, transparent 0 28%, rgba(184,146,90,.25) 29% 31%, transparent 32% 52%, rgba(184,146,90,.2) 53% 55%, transparent 56%),
+      radial-gradient(circle at 35% 30%, #fff8e6, var(--wood) 60%, var(--wood-dark));
+    box-shadow:0 5px 0 var(--wood-edge), 0 8px 12px rgba(0,0,0,.25);
+    transition:transform .15s, box-shadow .15s, background .15s;
+    position:relative;
+  }
+  .pin:active{transform:scale(.94)}
+  .pin.down{
+    background:radial-gradient(circle at 35% 30%, #ff8a63, var(--accent) 65%, #b8401f);
+    color:#fff;transform:translateY(4px) rotate(-8deg);
+    box-shadow:0 1px 0 #8f3115, 0 2px 4px rgba(0,0,0,.3);
+  }
+  .pin.down::after{
+    content:"✕";position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+    background:#fff;color:var(--accent);font-size:.8rem;display:grid;place-items:center;font-family:Nunito;
+    box-shadow:0 2px 4px rgba(0,0,0,.25);
+  }
+
+  .preview{
+    text-align:center;font-weight:800;min-height:3.4em;display:flex;flex-direction:column;justify-content:center;
+  }
+  .preview .pts{font-family:"Baloo 2";font-size:2.2rem;line-height:1;color:var(--grass)}
+  .preview .pts.zero{color:var(--muted)}
+  .preview .how{font-size:.85rem;color:var(--muted)}
+  .preview .warn{color:var(--accent)}
+  .actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:8px}
+  .actions .row2{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn-small{padding:11px 12px;font-size:.92rem}
+
+  /* Log */
+  .log{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;font-size:.88rem}
+  .log li{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-bottom:1px dashed #e6dfcc}
+  .log li:last-child{border-bottom:0}
+  .log .l-name{font-weight:800}
+  .log .l-res{font-weight:800;white-space:nowrap}
+  .log .empty{color:var(--muted);justify-content:center}
+
+  /* Toast */
+  .toast{
+    position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translate(-50%,-140%);
+    background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:800;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.2,1.4,.4,1);z-index:50;
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{transform:translate(-50%,0)}
+  .toast.good{background:var(--grass-dark)}
+  .toast.bad{background:var(--accent)}
+  .toast.warn{background:#b7791f}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(15,30,18,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:40;backdrop-filter:blur(3px)}
+  .modal.show{display:flex}
+  .modal .panel{max-width:420px;width:100%;text-align:center;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes pop{from{transform:scale(.8);opacity:0}}
+  .modal h3{font-size:1.5rem;margin-bottom:6px}
+  .modal p{margin:0 0 16px;color:#4b5a4d}
+  .modal .btns{display:grid;gap:10px}
+  .trophy{font-size:4rem;line-height:1;margin-bottom:4px;animation:sway 1.5s ease-in-out infinite}
+  @keyframes sway{50%{transform:rotate(8deg) scale(1.08)}}
+  .ranking{list-style:none;padding:0;margin:0 0 16px;text-align:left}
+  .ranking li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px}
+  .ranking li:nth-child(odd){background:#f6f1e3}
+  .ranking .rk{font-weight:800;width:22px;color:var(--muted)}
+  .ranking .rn{flex:1;font-weight:800}
+  .ranking .rs{font-family:"Baloo 2";font-weight:800;font-size:1.2rem}
+  .ranking .out{opacity:.5;text-decoration:line-through}
+  .draw-name{font-family:"Baloo 2";font-size:2.4rem;font-weight:800;min-height:1.3em;margin:6px 0 14px}
+
+  canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+        <rect x="8" y="10" width="9" height="26" rx="2" fill="#f1dfb8" stroke="#b8925a" stroke-width="2" transform="rotate(-10 12 23)"/>
+        <rect x="22" y="6" width="9" height="28" rx="2" fill="#f1dfb8" stroke="#b8925a" stroke-width="2"/>
+        <text x="26.5" y="17" text-anchor="middle" font-size="8" font-weight="800" fill="#1d2b1f" font-family="Baloo 2">12</text>
+      </svg>
+      <div><h1>Mölkky</h1><small>Feuille de score</small></div>
+    </div>
+    <div class="icons">
+      <button class="icon-btn" id="soundBtn" title="Son">🔊</button>
+      <button class="icon-btn" id="menuBtn" title="Nouvelle partie" style="display:none">⟲</button>
+    </div>
+  </div>
+
+  <!-- ================= SETUP ================= -->
+  <section class="screen active" id="setup">
+    <div class="setup">
+      <div class="panel">
+        <div class="label">Nombre de joueurs</div>
+        <div class="stepper">
+          <button id="minus" aria-label="Moins">−</button>
+          <div class="count" id="count">2</div>
+          <button id="plus" aria-label="Plus">+</button>
+        </div>
+        <div class="count-sub" id="countSub">joueurs</div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Noms</div>
+        <div class="names" id="names"></div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Qui commence ?</div>
+        <select id="starter"></select>
+      </div>
+
+      <div class="panel">
+        <button class="btn btn-primary btn-block" id="startBtn">Lancer la partie 🎯</button>
+      </div>
+
+      <div class="panel">
+        <div class="label">Rappel des règles</div>
+        <ul class="rules">
+          <li>1 quille tombée = sa valeur. Plusieurs = 1 point par quille.</li>
+          <li>Une quille compte seulement si elle est complètement couchée.</li>
+          <li>Il faut atteindre <b>exactement 50</b>. Au-delà, retour à 25.</li>
+          <li>3 lancers ratés d'affilée = éliminé.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section class="screen" id="game">
+    <div class="game">
+      <div class="panel board">
+        <div class="label" style="margin:4px 4px 10px">Scores</div>
+        <div class="players" id="players"></div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="turn-head">
+            <div class="who">
+              <div class="badge" id="turnBadge">1</div>
+              <div style="min-width:0">
+                <h2 id="turnName">Joueur</h2>
+                <div class="sub" id="turnSub">0 pt · il reste 50</div>
+              </div>
+            </div>
+            <div class="round" id="round">Tour 1</div>
+          </div>
+
+          <div class="field">
+            <div class="pins" id="pins"></div>
+          </div>
+
+          <div class="preview" id="preview"></div>
+
+          <div class="actions">
+            <button class="btn btn-ghost" id="clearBtn">Effacer</button>
+            <button class="btn btn-primary" id="validateBtn">Valider</button>
+            <div class="row2">
+              <button class="btn btn-ghost btn-small" id="noneBtn">Aucune quille (0)</button>
+              <button class="btn btn-ghost btn-small" id="undoBtn">↶ Annuler le lancer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="label">Derniers lancers</div>
+          <ul class="log" id="log"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="drawModal">
+  <div class="panel">
+    <div style="font-size:2.6rem">🎲</div>
+    <h3>Tirage au sort</h3>
+    <div class="draw-name" id="drawName">…</div>
+    <div class="btns"><button class="btn btn-primary" id="drawOk" style="visibility:hidden">C'est parti !</button></div>
+  </div>
+</div>
+
+<div class="modal" id="confirmModal">
+  <div class="panel">
+    <h3>Quitter la partie ?</h3>
+    <p>La partie en cours sera perdue.</p>
+    <div class="btns">
+      <button class="btn btn-primary" id="confirmYes">Oui, nouvelle partie</button>
+      <button class="btn btn-ghost" id="confirmNo">Continuer à jouer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="winModal">
+  <div class="panel">
+    <div class="trophy" id="winIcon">🏆</div>
+    <h3 id="winTitle">Victoire !</h3>
+    <p id="winText"></p>
+    <ol class="ranking" id="ranking"></ol>
+    <div class="btns">
+      <button class="btn btn-primary" id="rematchBtn">Revanche (mêmes joueurs)</button>
+      <button class="btn btn-ghost" id="newBtn">Nouvelle partie</button>
+      <button class="btn btn-ghost" id="undoWinBtn">↶ Annuler le dernier lancer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const COLORS = ["#e4572e","#2e86de","#f2b632","#8e44ad","#16a085","#e84393","#34495e","#d35400"];
+  const LAYOUT = [[7,9,8],[5,11,12,6],[3,10,4],[1,2]];
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+
+  /* ---------------- Sound ---------------- */
+  let ctx = null;
+  let soundOn = store.get("molkky_sound") !== false;
+  function ac(){
+    if(!soundOn) return null;
+    try{
+      if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if(ctx.state === "suspended") ctx.resume();
+    }catch(e){ return null; }
+    return ctx;
+  }
+  function tone(freq, start, dur, type="triangle", vol=.25, slideTo=null){
+    const c = ac(); if(!c) return;
+    const t = c.currentTime + start;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function knock(start=0, vol=.35){ // wooden "toc"
+    const c = ac(); if(!c) return;
+    const t = c.currentTime + start;
+    const len = 0.08, buf = c.createBuffer(1, c.sampleRate*len, c.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 4);
+    const s = c.createBufferSource(); s.buffer = buf;
+    const f = c.createBiquadFilter(); f.type="bandpass"; f.frequency.value = 900 + Math.random()*500; f.Q.value = 4;
+    const g = c.createGain(); g.gain.value = vol;
+    s.connect(f).connect(g).connect(c.destination); s.start(t);
+  }
+  const sfx = {
+    tap(){ knock(0,.3); },
+    validate(n){ knock(0,.4); if(n>1) knock(.07,.3); if(n>2) knock(.13,.25);
+      tone(523,.05,.14,"triangle",.22); tone(784,.15,.22,"triangle",.22); },
+    miss(){ tone(330,0,.25,"sawtooth",.08,220); tone(220,.18,.35,"sawtooth",.07,150); },
+    over(){ tone(660,0,.5,"square",.07,180); tone(330,.1,.5,"triangle",.15,120); },
+    elim(){ [392,330,262,196].forEach((f,i)=>tone(f,i*.16,.26,"square",.07)); },
+    start(){ [392,523,659].forEach((f,i)=>tone(f,i*.09,.16,"triangle",.2)); },
+    win(){
+      const seq = [[523,0],[659,.12],[784,.24],[1047,.36],[784,.56],[1047,.68]];
+      seq.forEach(([f,t])=>{ tone(f,t,.3,"triangle",.25); tone(f/2,t,.3,"sine",.12); });
+      [1047,1319,1568].forEach(f=>tone(f,.9,1.1,"triangle",.14));
+      for(let i=0;i<8;i++) knock(.9 + i*.05, .15);
+    },
+    draw(){ knock(0,.25); }
+  };
+  function renderSoundBtn(){ $("soundBtn").textContent = soundOn ? "🔊" : "🔇"; }
+  $("soundBtn").onclick = () => { soundOn = !soundOn; store.set("molkky_sound", soundOn); renderSoundBtn(); if(soundOn) sfx.tap(); };
+  renderSoundBtn();
+
+  /* ---------------- Setup ---------------- */
+  let count = 2;
+  let names = store.get("molkky_names") || [];
+  function renderSetup(){
+    $("count").textContent = count;
+    $("countSub").textContent = count > 1 ? "joueurs" : "joueur";
+    $("minus").disabled = count <= 1;
+    $("plus").disabled = count >= 8;
+    const box = $("names");
+    // keep typed values
+    box.querySelectorAll("input").forEach((inp,i)=> names[i] = inp.value);
+    box.innerHTML = "";
+    for(let i=0;i<count;i++){
+      const row = document.createElement("div"); row.className = "name-row";
+      const b = document.createElement("div"); b.className = "badge"; b.style.background = COLORS[i]; b.textContent = i+1;
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.maxLength = 18; inp.placeholder = "Joueur " + (i+1);
+      inp.value = names[i] || "";
+      inp.addEventListener("input", renderStarter);
+      row.append(b, inp); box.append(row);
+    }
+    renderStarter();
+  }
+  function currentNames(){
+    return [...$("names").querySelectorAll("input")].map((inp,i)=> inp.value.trim() || ("Joueur " + (i+1)));
+  }
+  function renderStarter(){
+    const sel = $("starter"), prev = sel.value;
+    const list = currentNames();
+    sel.innerHTML = "";
+    const r = new Option("🎲 Au hasard", "random"); sel.add(r);
+    list.forEach((n,i)=> sel.add(new Option(n, String(i))));
+    sel.value = [...sel.options].some(o=>o.value===prev) ? prev : "random";
+  }
+  $("minus").onclick = () => { if(count>1){ count--; sfx.tap(); renderSetup(); } };
+  $("plus").onclick  = () => { if(count<8){ count++; sfx.tap(); renderSetup(); } };
+
+  /* ---------------- Game state ---------------- */
+  let S = null;          // current state
+  let undoStack = [];
+  let selected = new Set();
+
+  function newGame(playerNames, starter){
+    S = {
+      players: playerNames.map((n,i)=>({ name:n, color:COLORS[i], score:0, misses:0, out:false, throws:0 })),
+      current: starter, round: 1, starter, log: [], over:false, winner:null
+    };
+    undoStack = [];
+    selected.clear();
+    save();
+  }
+  function save(){ store.set("molkky_game", { S, undoStack: undoStack.slice(-60) }); }
+
+  $("startBtn").onclick = () => {
+    const list = currentNames();
+    names = [...$("names").querySelectorAll("input")].map(i=>i.value.trim());
+    store.set("molkky_names", names);
+    const v = $("starter").value;
+    if(v === "random"){
+      const idx = Math.floor(Math.random()*list.length);
+      runDraw(list, idx, () => { newGame(list, idx); showGame(); sfx.start(); });
+    } else {
+      newGame(list, +v); showGame(); sfx.start();
+    }
+  };
+
+  function runDraw(list, finalIdx, done){
+    const m = $("drawModal"), nameEl = $("drawName"), ok = $("drawOk");
+    ok.style.visibility = "hidden"; m.classList.add("show");
+    if(list.length === 1){ nameEl.textContent = list[0]; nameEl.style.color = COLORS[0]; ok.style.visibility="visible"; }
+    else {
+      const n = list.length; let i = 0, k = Math.floor(Math.random()*n);
+      const base = 14 + Math.floor(Math.random()*n);
+      const steps = base + (((finalIdx - (k + base)) % n) + n) % n;
+      const tick = () => {
+        k = (k+1) % list.length; i++;
+        nameEl.textContent = list[k]; nameEl.style.color = COLORS[k];
+        sfx.draw();
+        if(i < steps) setTimeout(tick, 60 + i*i*0.9);
+        else { nameEl.textContent = list[finalIdx]; nameEl.style.color = COLORS[finalIdx]; sfx.start(); ok.style.visibility = "visible"; }
+      };
+      tick();
+    }
+    ok.onclick = () => { m.classList.remove("show"); done(); };
+  }
+
+  function showGame(){
+    $("setup").classList.remove("active");
+    $("game").classList.add("active");
+    $("menuBtn").style.display = "";
+    renderGame();
+    window.scrollTo({top:0});
+  }
+  function showSetup(){
+    $("game").classList.remove("active");
+    $("setup").classList.add("active");
+    $("menuBtn").style.display = "none";
+    if(S) count = S.players.length;
+    renderSetup();
+  }
+
+  /* ---------------- Rendering ---------------- */
+  function buildPins(){
+    const box = $("pins"); box.innerHTML = "";
+    LAYOUT.forEach(row => {
+      const r = document.createElement("div"); r.className = "pin-row";
+      row.forEach(n => {
+        const b = document.createElement("button");
+        b.className = "pin"; b.textContent = n; b.dataset.n = n;
+        b.setAttribute("aria-label","Quille " + n);
+        b.onclick = () => {
+          if(S.over) return;
+          selected.has(n) ? selected.delete(n) : selected.add(n);
+          sfx.tap(); renderPins(); renderPreview();
+        };
+        r.append(b);
+      });
+      box.append(r);
+    });
+  }
+  function renderPins(){
+    $("pins").querySelectorAll(".pin").forEach(b => b.classList.toggle("down", selected.has(+b.dataset.n)));
+  }
+  function pointsFor(set){
+    if(set.size === 0) return 0;
+    if(set.size === 1) return [...set][0];
+    return set.size;
+  }
+  function renderPreview(){
+    const p = S.players[S.current];
+    const pts = pointsFor(selected);
+    const el = $("preview");
+    if(selected.size === 0){
+      el.innerHTML = `<div class="how">Touchez les quilles tombées</div><div class="how">ou « Aucune quille » si raté</div>`;
+      $("validateBtn").textContent = "Valider";
+      $("validateBtn").disabled = true;
+    } else {
+      const total = p.score + pts;
+      const how = selected.size === 1 ? `Quille ${[...selected][0]} seule → sa valeur` : `${selected.size} quilles → 1 pt chacune`;
+      let res = `→ ${total}`;
+      let cls = "";
+      if(total === 50) { res = "→ 50 🏆 Victoire !"; }
+      else if(total > 50) { res = `→ ${total} > 50 : retour à 25`; cls = "warn"; }
+      el.innerHTML = `<div class="pts">+${pts}</div><div class="how">${how}</div><div class="how ${cls}">${p.score} ${res}</div>`;
+      $("validateBtn").textContent = `Valider +${pts}`;
+      $("validateBtn").disabled = false;
+    }
+  }
+  function renderBoard(bumpIdx){
+    const box = $("players"); box.innerHTML = "";
+    S.players.forEach((p,i) => {
+      const d = document.createElement("div");
+      d.className = "player" + (i===S.current && !S.over ? " current":"") + (p.out ? " out":"") + (S.winner===i ? " winner":"") + (i===bumpIdx ? " bump":"");
+      const top = document.createElement("div"); top.className = "top"; top.dataset.score = p.score;
+      const b = document.createElement("div"); b.className = "badge"; b.style.background = p.color; b.textContent = i+1;
+      const n = document.createElement("div"); n.className = "pname"; n.textContent = (S.winner===i ? "🏆 " : "") + p.name;
+      const s = document.createElement("div"); s.className = "pscore"; s.textContent = p.score;
+      top.append(b,n,s);
+      const meta = document.createElement("div"); meta.className = "meta";
+      const m = document.createElement("div"); m.className = "misses"; m.title = "Lancers ratés d'affilée";
+      for(let k=0;k<3;k++){ const dot = document.createElement("i"); if(k < p.misses) dot.className = "on"; m.append(dot); }
+      const rest = document.createElement("span");
+      rest.textContent = p.out ? "Éliminé" : (p.score === 50 ? "Gagné !" : `reste ${50 - p.score}`);
+      meta.append(m, rest);
+      const bar = document.createElement("div"); bar.className = "bar";
+      const fill = document.createElement("span"); fill.style.width = (p.score/50*100) + "%"; fill.style.background = p.color;
+      bar.append(fill);
+      d.append(top, meta, bar);
+      box.append(d);
+    });
+  }
+  function renderTurn(){
+    const p = S.players[S.current];
+    $("turnBadge").textContent = S.current + 1;
+    $("turnBadge").style.background = p.color;
+    $("turnName").textContent = p.name;
+    const missTxt = p.misses ? ` · ${p.misses}/3 raté${p.misses>1?"s":""}` : "";
+    $("turnSub").textContent = `${p.score} pt${p.score>1?"s":""} · il reste ${50 - p.score}${missTxt}`;
+    $("round").textContent = "Tour " + S.round;
+    $("undoBtn").disabled = undoStack.length === 0;
+  }
+  function renderLog(){
+    const ul = $("log"); ul.innerHTML = "";
+    if(!S.log.length){ const li = document.createElement("li"); li.className = "empty"; li.textContent = "Aucun lancer pour l'instant"; ul.append(li); return; }
+    S.log.slice().reverse().slice(0,30).forEach(e => {
+      const li = document.createElement("li");
+      const a = document.createElement("span");
+      const nm = document.createElement("span"); nm.className = "l-name"; nm.textContent = e.name; nm.style.color = e.color;
+      a.append(nm, document.createTextNode(" — " + e.detail));
+      const r = document.createElement("span"); r.className = "l-res"; r.textContent = e.result;
+      li.append(a, r); ul.append(li);
+    });
+  }
+  function renderGame(bumpIdx){
+    if(!$("pins").children.length) buildPins();
+    renderPins(); renderBoard(bumpIdx); renderTurn(); renderPreview(); renderLog();
+  }
+
+  /* ---------------- Toast ---------------- */
+  let toastT;
+  function toast(msg, kind=""){
+    const t = $("toast"); t.textContent = msg; t.className = "toast show " + kind;
+    clearTimeout(toastT); toastT = setTimeout(()=> t.className = "toast " + kind, 2200);
+  }
+
+  /* ---------------- Throw logic ---------------- */
+  function nextActive(from){
+    const n = S.players.length;
+    for(let k=1;k<=n;k++){
+      const idx = (from + k) % n;
+      if(!S.players[idx].out) return idx;
+    }
+    return -1;
+  }
+  function doThrow(pins){
+    if(S.over) return;
+    undoStack.push(JSON.stringify(S));
+    const idx = S.current, p = S.players[idx];
+    const set = new Set(pins);
+    const pts = pointsFor(set);
+    const before = p.score;
+    p.throws++;
+    let detail, result, kind = "good", sound = "validate";
+    if(set.size === 0) detail = "aucune quille";
+    else if(set.size === 1) detail = `quille ${pins[0]}`;
+    else detail = `${set.size} quilles (${[...set].sort((a,b)=>a-b).join(", ")})`;
+
+    if(pts === 0){
+      p.misses++;
+      if(p.misses >= 3){ p.out = true; result = "Éliminé"; kind="bad"; sound="elim"; toast(`❌ ${p.name} est éliminé(e) !`, "bad"); }
+      else { result = `0 (${p.misses}/3)`; kind="warn"; sound="miss"; toast(`Raté ! ${p.name} : ${p.misses}/3`, "warn"); }
+    } else {
+      p.misses = 0;
+      const total = before + pts;
+      if(total > 50){ p.score = 25; result = `${total} → 25`; kind="warn"; sound="over"; toast(`💥 ${total} ! Dépassement, ${p.name} retombe à 25`, "warn"); }
+      else { p.score = total; result = `+${pts} = ${total}`; if(total !== 50) toast(`+${pts} pour ${p.name} → ${total}`, "good"); }
+    }
+    S.log.push({ name:p.name, color:p.color, detail, result });
+
+    // win checks
+    const active = S.players.map((q,i)=>i).filter(i=>!S.players[i].out);
+    if(p.score === 50){ S.over = true; S.winner = idx; }
+    else if(S.players.length > 1 && active.length === 1){ S.over = true; S.winner = active[0]; }
+    else if(active.length === 0){ S.over = true; S.winner = null; }
+
+    if(!S.over){
+      const nxt = nextActive(idx);
+      const n = S.players.length, off = i => (i - S.starter + n) % n;
+      if(off(nxt) <= off(idx)) S.round++;
+      S.current = nxt;
+    }
+    selected.clear();
+    save();
+    renderGame(idx);
+
+    if(S.over){ sound === "elim" ? (sfx.elim(), setTimeout(endGame, 900)) : endGame(); }
+    else sfx[sound](set.size);
+  }
+
+  function endGame(){
+    const m = $("winModal");
+    if(S.winner === null){
+      $("winIcon").textContent = "🪵";
+      $("winTitle").textContent = "Tout le monde est éliminé";
+      $("winText").textContent = "Personne ne gagne cette fois-ci.";
+      sfx.elim();
+    } else {
+      const w = S.players[S.winner];
+      $("winIcon").textContent = "🏆";
+      $("winTitle").textContent = `${w.name} gagne !`;
+      $("winText").textContent = w.score === 50 ? `50 points pile en ${w.throws} lancer${w.throws>1?"s":""}.` : "Dernier joueur encore en lice.";
+      sfx.win(); confetti(w.color);
+    }
+    const order = S.players.map((p,i)=>({...p,i})).sort((a,b)=>{
+      if(a.i===S.winner) return -1; if(b.i===S.winner) return 1;
+      if(a.out !== b.out) return a.out ? 1 : -1;
+      return b.score - a.score;
+    });
+    const ol = $("ranking"); ol.innerHTML = "";
+    order.forEach((p,k)=>{
+      const li = document.createElement("li");
+      const rk = document.createElement("span"); rk.className="rk"; rk.textContent = k+1;
+      const b = document.createElement("span"); b.className="badge"; b.style.cssText = `background:${p.color};width:24px;height:24px;font-size:.75rem`; b.textContent = p.i+1;
+      const rn = document.createElement("span"); rn.className = "rn" + (p.out ? " out":""); rn.textContent = p.name;
+      const rs = document.createElement("span"); rs.className="rs"; rs.textContent = p.score;
+      li.append(rk,b,rn,rs); ol.append(li);
+    });
+    m.classList.add("show");
+  }
+
+  function undo(){
+    if(!undoStack.length) return;
+    S = JSON.parse(undoStack.pop());
+    selected.clear(); save(); renderGame(); sfx.tap();
+    toast("Dernier lancer annulé");
+  }
+
+  $("validateBtn").onclick = () => { if(selected.size) doThrow([...selected]); };
+  $("noneBtn").onclick = () => doThrow([]);
+  $("clearBtn").onclick = () => { selected.clear(); renderPins(); renderPreview(); sfx.tap(); };
+  $("undoBtn").onclick = undo;
+  $("undoWinBtn").onclick = () => { $("winModal").classList.remove("show"); stopConfetti(); undo(); };
+
+  $("menuBtn").onclick = () => $("confirmModal").classList.add("show");
+  $("confirmNo").onclick = () => $("confirmModal").classList.remove("show");
+  $("confirmYes").onclick = () => { $("confirmModal").classList.remove("show"); store.del("molkky_game"); showSetup(); };
+
+  $("newBtn").onclick = () => { $("winModal").classList.remove("show"); stopConfetti(); store.del("molkky_game"); showSetup(); };
+  $("rematchBtn").onclick = () => {
+    $("winModal").classList.remove("show"); stopConfetti();
+    const list = S.players.map(p=>p.name);
+    // le joueur qui suit le précédent premier joueur commence
+    const st = (S.starter + 1) % list.length;
+    newGame(list, st); renderGame(); sfx.start();
+    toast(`Revanche ! ${list[st]} commence`, "good");
+  };
+
+  /* ---------------- Confetti ---------------- */
+  const cv = $("confetti"), cx = cv.getContext("2d");
+  let parts = [], raf = null;
+  function confetti(main){
+    cv.width = innerWidth; cv.height = innerHeight;
+    const cols = [main, "#f2b632", "#fff", "#e4572e", "#3f8a4b", "#2e86de"];
+    parts = Array.from({length:160}, () => ({
+      x: Math.random()*cv.width, y: -20 - Math.random()*cv.height*.5,
+      vx: (Math.random()-.5)*3, vy: 2 + Math.random()*3, r: Math.random()*Math.PI,
+      vr: (Math.random()-.5)*.2, w: 6+Math.random()*6, h: 8+Math.random()*8, c: cols[Math.floor(Math.random()*cols.length)]
+    }));
+    cancelAnimationFrame(raf);
+    const step = () => {
+      cx.clearRect(0,0,cv.width,cv.height);
+      let alive = false;
+      parts.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += .03; p.r += p.vr;
+        if(p.y < cv.height + 20) alive = true;
+        cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx.restore();
+      });
+      if(alive) raf = requestAnimationFrame(step); else cx.clearRect(0,0,cv.width,cv.height);
+    };
+    step();
+  }
+  function stopConfetti(){ cancelAnimationFrame(raf); cx.clearRect(0,0,cv.width,cv.height); }
+
+  /* ---------------- Init ---------------- */
+  count = Math.max(2, Math.min(8, names.filter(Boolean).length || 2));
+  renderSetup();
+  const saved = store.get("molkky_game");
+  if(saved && saved.S && !saved.S.over){
+    S = saved.S; undoStack = saved.undoStack || [];
+    showGame();
+    toast("Partie en cours reprise");
+  }
+})();
+</script>
+</body>
+</html>
