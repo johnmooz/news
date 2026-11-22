@@ -1,1 +1,672 @@
-donnant
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Donnant Donnant</title>
+<style>
+:root{--bg:#0e1a31;--ink:#eaf1ff;--mut:#9fb0d3;--gold:#f5c542;--ok:#4ef08a}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);min-height:100vh;
+background:radial-gradient(1100px 650px at 15% -10%,#25467f 0%,transparent 60%),radial-gradient(900px 600px at 110% 5%,#3b2463 0%,transparent 55%),var(--bg)}
+button{font-family:inherit}
+header{display:flex;align-items:center;gap:12px;padding:8px 16px;background:rgba(5,10,25,.6);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:30;backdrop-filter:blur(6px);flex-wrap:wrap}
+.logo{font-weight:900;letter-spacing:1.5px;line-height:.95;font-size:17px;font-style:italic}
+.logo span{display:block}.logo .a{color:#d6ecff;text-shadow:0 0 6px #3f9bff}.logo .b{color:#fff;text-shadow:0 0 6px #3f9bff}
+#info{flex:1;font-size:15px;min-width:200px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 4px -1px 2px}
+.last{color:#ffb4b4;font-weight:800}
+.hbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:var(--ink);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:14px}
+.hbtn:hover{background:rgba(255,255,255,.16)}.hbtn.off{opacity:.42;text-decoration:line-through}
+main{padding:14px;display:grid;gap:14px;max-width:1520px;margin:0 auto}
+#top{display:grid;grid-template-columns:auto minmax(320px,1fr);gap:14px;align-items:start}
+@media(max-width:1150px){#top{grid-template-columns:1fr}}
+.panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px}
+h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mut)}
+/* market */
+#market{display:flex;gap:12px;align-items:stretch}
+.decks{display:flex;flex-direction:column;justify-content:space-around;gap:10px}
+.deck{width:64px;height:64px;border-radius:10px;border:3px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;box-shadow:0 4px 0 #bbb,0 6px 10px rgba(0,0,0,.4)}
+.deck.ds{background:#222;color:var(--gold);font-size:22px}.deck.db{background:#888;color:#fff;font-size:24px}
+.deck b{font-size:12px;color:#fff}
+.mgrid{display:grid;grid-template-columns:repeat(4,auto);gap:8px 10px;--cf:14.5px}
+.strip{height:54px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;color:#fff;font-size:12px;font-weight:800}
+.strip .cst{display:flex;align-items:center;gap:1px}
+.strip .cst i{width:14px;height:14px;background:#f4f4f4;border-radius:3px;border:1px solid #777;display:inline-block}
+.strip .cst em{font-style:normal;color:#111;font-weight:900;font-size:11px;margin:0 1px}
+.strip.s0{background:#2b2b2e}.strip.s1{background:#505055}.strip.s2{background:#7a7a80}.strip.s3{background:#a4a4aa}
+.strip .arr{position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:#e33;font-size:16px;z-index:2}
+.strip.buy{outline:3px solid var(--ok);cursor:pointer}
+.slotm{width:8.4em;height:8.4em;border-radius:.8em;border:2px dashed rgba(255,255,255,.18);font-size:var(--cf)}
+/* cards */
+.card{--cf:13.5px;font-size:var(--cf);width:8.4em;height:8.4em;background:#fff;border-radius:.8em;padding:.25em;position:relative;box-shadow:0 .25em .6em rgba(0,0,0,.35);flex:none;transition:transform .15s,box-shadow .15s}
+.mgrid .card{font-size:14.5px}
+.card .in{height:100%;border-radius:.6em;padding:.2em;display:flex;flex-direction:column;background:linear-gradient(160deg,var(--c1),var(--c2));border:.16em solid var(--c3)}
+.kB{--c1:#86c8ff;--c2:#2c86e8;--c3:#1b5fb8}.kV{--c1:#a3e374;--c2:#38b23f;--c3:#1f8a2b}.kO{--c1:#ffa860;--c2:#f2621b;--c3:#c9470b}
+.kJ{--c1:#ffe36e;--c2:#f6b913;--c3:#d39a06}.kR{--c1:#ff86c3;--c2:#e5288a;--c3:#b81a6d}
+.kM .in{border:.25em solid transparent;background:linear-gradient(160deg,#f2f2f2,#b9b9bf) padding-box,conic-gradient(#2c86e8,#38b23f,#f6b913,#f2621b,#e5288a,#2c86e8) border-box}
+.top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.26em}
+.row{display:flex;align-items:center}
+.box{width:1.12em;height:1.12em;border:.12em solid #111;border-radius:.28em;background:#fff;display:flex;align-items:center;justify-content:center;color:#111;flex:none;position:relative}
+.box b{font-size:.74em;font-weight:900;line-height:1}
+.box.f{box-shadow:inset 0 0 0 .1em rgba(255,255,255,.9);color:#fff;text-shadow:0 1px 1px #000,0 0 2px #000}
+.box.f::after{content:"";position:absolute;inset:-.12em;border-radius:.28em;background:repeating-linear-gradient(45deg,transparent 0 .18em,rgba(0,0,0,.18) .18em .26em)}
+.lnk{width:.55em;text-align:center;font-weight:900;font-size:.76em;color:#111;flex:none}
+.box.clk{cursor:pointer;outline:.17em solid var(--ok);outline-offset:.05em;animation:blink .8s infinite}
+@keyframes blink{50%{outline-color:#fff}}
+.bot{height:2.25em;margin-top:.15em;border-radius:.4em;display:flex;align-items:center;justify-content:space-between;padding:0 .3em;font-weight:800;gap:.2em}
+.bot>*{font-size:.78em}
+.bot.sb{background:#1d1d22;color:#fff}.bot.bb{background:#8f8f98;color:#fff}
+.sq{display:inline-block;width:.85em;height:.85em;border-radius:.15em;border:.08em solid #fff;vertical-align:-.1em}
+.laur{display:inline-flex;align-items:center;justify-content:center;min-width:1.9em;height:1.9em;border-radius:50%;border:.14em solid var(--gold);color:var(--gold);font-weight:900;background:#000}
+.bdg{display:inline-flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;border-radius:50%;background:#555;border:.1em dashed #ddd;color:#fff}
+.bb.on .bdg{background:var(--gold);color:#222;border-style:solid}
+.chg{letter-spacing:.05em}
+.card.done{box-shadow:0 0 0 .2em var(--gold),0 0 1em rgba(245,197,66,.55)}
+.chk{position:absolute;top:-.45em;right:-.45em;background:var(--gold);color:#222;border-radius:50%;width:1.45em;height:1.45em;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.85em;z-index:3}
+.pts{position:absolute;top:-.5em;left:-.4em;background:#111;color:var(--gold);border:.1em solid var(--gold);border-radius:1em;padding:0 .4em;font-weight:900;font-size:.78em;z-index:3}
+.card.can{cursor:pointer;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 .22em var(--ok),0 0 .9em rgba(78,240,138,.6)}50%{box-shadow:0 0 0 .1em var(--ok)}}
+.card.can:hover{transform:translateY(-3px)}
+.card.pick{cursor:pointer}.card.pick:hover{transform:translateY(-3px)}
+.card.picked{transform:translateY(-6px);box-shadow:0 0 0 .25em var(--gold),0 .6em 1em rgba(0,0,0,.4)}
+.prob{position:absolute;bottom:-.75em;left:50%;transform:translateX(-50%);font-size:.74em;padding:.08em .5em;border-radius:1em;font-weight:900;background:#111;border:.12em solid;white-space:nowrap;z-index:4}
+.p-hi{color:#6ff59d;border-color:#6ff59d}.p-mid{color:#ffd85e;border-color:#ffd85e}.p-lo{color:#ff7b7b;border-color:#ff7b7b}
+.strip .prob{bottom:-11px;font-size:11px}
+/* dice */
+#tray{display:flex;gap:14px;justify-content:center;align-items:flex-end;min-height:84px;padding:14px 6px 6px;flex-wrap:wrap}
+.die{width:54px;height:54px;border-radius:13px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;gap:3px;position:relative;cursor:pointer;transition:transform .2s,opacity .2s;
+box-shadow:inset -4px -5px 0 rgba(0,0,0,.2),inset 3px 3px 0 rgba(255,255,255,.35),0 6px 10px rgba(0,0,0,.45)}
+.die span{border-radius:50%}.die span.on{background:#fff;box-shadow:inset 0 1px 1px rgba(0,0,0,.3)}
+.die.cO span.on,.die.cJ span.on{background:#161616}
+.die.cB{background:#2b7de9}.die.cV{background:#35b04a}.die.cO{background:#f26b1d}.die.cJ{background:#f6c21c}.die.cR{background:#e6338c}
+.die.kept{transform:translateY(-12px);outline:3px solid var(--gold);outline-offset:3px}
+.die.locked::after{content:"🔒";position:absolute;top:-14px;right:-12px;font-size:15px}
+.die.rej{outline:3px dashed #ffa3a3;outline-offset:3px}
+.die.sel{outline:3px solid var(--ok)!important;transform:translateY(-8px) scale(1.08)}
+.die.used{opacity:.3}
+.die.idle{opacity:.45}
+.die.rolling{animation:roll .55s ease}
+@keyframes roll{0%{transform:rotate(0)}30%{transform:rotate(200deg) translateY(-20px)}65%{transform:rotate(330deg) translateY(4px)}100%{transform:rotate(360deg)}}
+.rinfo{text-align:center;color:var(--mut);font-size:13px;margin-top:4px}
+/* actions */
+#actions{margin-top:10px;min-height:90px}
+.msg{font-size:15px;margin-bottom:8px;line-height:1.35}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{background:linear-gradient(#3d8bff,#2364d2);border:none;color:#fff;font-weight:800;border-radius:11px;padding:9px 14px;cursor:pointer;font-size:14px;box-shadow:0 3px 0 #163f87}
+.btn:hover{filter:brightness(1.1)}.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #163f87}
+.btn.g{background:linear-gradient(#3ccf72,#239c50);box-shadow:0 3px 0 #17673a}
+.btn.y{background:linear-gradient(#ffcf4d,#e0a514);color:#2a1c00;box-shadow:0 3px 0 #9a7008}
+.btn.r{background:linear-gradient(#ff7b7b,#d94646);box-shadow:0 3px 0 #8e2626}
+.btn.gr{background:#4a5675;box-shadow:0 3px 0 #2c344a}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.big{font-size:18px;padding:12px 22px}
+.pw{margin-top:10px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.15)}
+.draftrow{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 14px;--cf:14.5px}
+.draftrow .card{font-size:14.5px}
+.spin{display:inline-block;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.cbtn{width:30px;height:30px;border-radius:8px;border:2px solid #fff;cursor:pointer}
+/* players */
+#players{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:14px}
+@media(max-width:460px){#players{grid-template-columns:1fr}}
+.pl{transition:box-shadow .2s}
+.pl.act{box-shadow:0 0 0 2px var(--pc),0 0 22px -4px var(--pc)}
+.pl.pas{box-shadow:0 0 0 2px #fff,0 0 22px -4px #fff}
+.phead{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.pname{font-weight:900;font-size:17px}
+.tag{font-size:12px;padding:2px 8px;border-radius:9px;background:rgba(255,255,255,.1);color:var(--mut)}
+.score{margin-left:auto;font-weight:900;font-size:20px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(3,auto);gap:9px;justify-content:center}
+.slot{width:8.4em;height:8.4em;font-size:13.5px;border-radius:.8em;border:2px dashed rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:13.5px;color:var(--ok)}
+.slot.ok{border-color:var(--ok);cursor:pointer;background:rgba(78,240,138,.08);font-size:30px;font-weight:900;animation:blink2 1s infinite}
+@keyframes blink2{50%{background:rgba(78,240,138,.2)}}
+.slot.ok{width:calc(8.4 * 13.5px);height:calc(8.4 * 13.5px)}
+#log{max-height:170px;overflow:auto;font-size:13px;color:#cdd8f0}
+#log div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(5,9,20,.82);backdrop-filter:blur(5px);z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px}
+.hidden{display:none!important}
+.sheet{background:linear-gradient(170deg,#1a2c55,#121d3a);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:22px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.title{font-weight:900;font-style:italic;text-align:center;line-height:.9;font-size:clamp(38px,8vw,64px);letter-spacing:2px;margin:6px 0 4px}
+.title span{display:block}.title .a{color:#dff0ff;text-shadow:0 0 18px #3f9bff,0 4px 0 #2a64c8}.title .b{color:#fff;text-shadow:0 0 18px #3f9bff,0 4px 0 #0c1a3a}
+.sub{text-align:center;color:var(--mut);margin-bottom:18px}
+.nbtn{width:48px;height:48px;border-radius:12px;font-size:22px;font-weight:900;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+.nbtn.on{background:var(--gold);color:#222;border-color:var(--gold)}
+.prow{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.prow input{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:#fff;font-size:16px}
+.seg{display:flex;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.2)}
+.seg button{background:transparent;border:none;color:#cfd8ee;padding:9px 12px;cursor:pointer;font-size:14px}
+.seg button.on{background:#3d8bff;color:#fff;font-weight:800}
+.opt{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:15px}
+.opt input{width:18px;height:18px}
+select{background:#0d1730;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px}
+.sec{margin:16px 0 6px;font-weight:800;color:var(--gold);text-transform:uppercase;font-size:13px;letter-spacing:1px}
+.rules h4{color:var(--gold);margin:14px 0 4px}.rules p,.rules li{line-height:1.45;color:#dbe4f7}
+.rk{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);margin:6px 0}
+.rk .n{font-size:26px;width:36px;text-align:center}
+.rk .s{margin-left:auto;font-weight:900;font-size:24px;color:var(--gold)}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111c;border:1px solid #fff3;padding:10px 16px;border-radius:12px;z-index:60;transition:opacity .3s;pointer-events:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="a">DONNANT</span><span class="b">DONNANT</span></div>
+  <div id="info"></div>
+  <button class="hbtn" data-act="h-sfx" id="bSfx" title="Effets sonores">🔊 Sons</button>
+  <button class="hbtn" data-act="h-mus" id="bMus" title="Musique d'ambiance">🎵 Musique</button>
+  <button class="hbtn" data-act="h-risk" id="bRisk" title="Afficher les pourcentages de chance / risque">% Risque</button>
+  <button class="hbtn" data-act="h-rules">📖 Règles</button>
+  <button class="hbtn" data-act="h-menu">⟲ Menu</button>
+</header>
+<main id="app">
+  <div id="top">
+    <div class="panel"><h3>Marché</h3><div id="market"></div></div>
+    <div class="panel"><h3>Dés</h3><div id="tray"></div><div class="rinfo" id="rinfo"></div><div id="actions"></div>
+      <h3 style="margin-top:12px">Journal</h3><div id="log"></div></div>
+  </div>
+  <div id="players"></div>
+</main>
+<div id="setup" class="overlay"></div>
+<div id="modal" class="overlay hidden"></div>
+<div id="toast" style="opacity:0"></div>
+<script>
+'use strict';
+/* ================= constantes ================= */
+const COLORS=['B','V','O','J','R'];
+const CN={B:'bleu',V:'vert',O:'orange',J:'jaune',R:'rose',W:'blanc',M:'arc-en-ciel'};
+const CH={B:'#2b7de9',V:'#35b04a',O:'#f26b1d',J:'#f6c21c',R:'#e6338c',W:'#ffffff',M:'conic-gradient(#2b7de9,#35b04a,#f6c21c,#f26b1d,#e6338c,#2b7de9)'};
+const COST=[4,4,3,3];
+const NAMES=['Léa','Hugo','Chloé','Louis','Manon','Jules','Camille','Arthur','Inès','Gabriel','Zoé','Nathan','Jade','Raphaël','Lou','Adam','Emma','Noé','Alice','Victor','Margaux','Théo','Rose','Simon','Elsa','Basile'];
+const BOTN=['Robodé','Calcul-8','Hasardine','Pip','Dédé-Bot','Yamsy','Bip-Bop','Algo','Cubix','Lancelot'];
+const PCOL=['#ff5d8f','#4cc9f0','#ffd23f','#7ae582'];
+const PIPS={1:[4],2:[2,6],3:[2,4,6],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const POWN={plusminus:'±1',color:'🎨',reroll:'🔄',extra:'➕🎲',rainbow:'🌈'};
+const POWD={plusminus:'+1 / −1 : modifiez la valeur d’un dé (joueur actif)',color:'Couleur : changez la couleur d’un dé (joueur actif)',reroll:'Relance : obtenez un lancer supplémentaire (joueur actif)',extra:'2e dé : en tant que passif, utilisez un dé rejeté supplémentaire',rainbow:'Arc-en-ciel : cette carte compte comme toutes les couleurs pour le score'};
+const POWV={plusminus:5,color:4,reroll:4.5,extra:4,rainbow:3};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const S=Object.assign({risk:true,sfx:true,music:true,speed:'normale'},(()=>{try{return JSON.parse(localStorage.getItem('dd-set')||'{}')}catch(e){return{}}})());
+const saveS=()=>{try{localStorage.setItem('dd-set',JSON.stringify(S))}catch(e){}};
+
+/* ================= audio ================= */
+const A={ctx:null,timer:null};
+function initAudio(){
+  if(A.ctx){if(A.ctx.state==='suspended')A.ctx.resume().catch(()=>{});return;}
+  try{A.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
+  const c=A.ctx;
+  A.master=c.createGain();A.master.gain.value=.8;A.master.connect(c.destination);
+  A.sfx=c.createGain();A.sfx.gain.value=.9;A.sfx.connect(A.master);
+  A.mus=c.createGain();A.mus.gain.value=0;A.mus.connect(A.master);
+  A.rev=c.createConvolver();A.rev.buffer=impulse(c,3.8,2.4);
+  const rg=c.createGain();rg.gain.value=.7;A.rev.connect(rg);rg.connect(A.mus);
+  const dry=c.createGain();dry.gain.value=.5;dry.connect(A.mus);
+  A.musIn=c.createGain();A.musIn.connect(A.rev);A.musIn.connect(dry);
+  A.delay=c.createDelay(2);A.delay.delayTime.value=.48;const fb=c.createGain();fb.gain.value=.38;
+  A.delay.connect(fb);fb.connect(A.delay);A.delay.connect(A.musIn);
+  const nb=c.createBuffer(1,c.sampleRate*.5,c.sampleRate);const d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;A.noise=nb;
+  updateMusic();
+}
+function impulse(c,dur,dec){const len=c.sampleRate*dur|0,b=c.createBuffer(2,len,c.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,dec);}return b;}
+const mf=m=>440*Math.pow(2,(m-69)/12);
+const CHORDS=[[48,55,59,64,67],[45,52,55,60,64],[41,48,52,57,60],[43,50,55,59,62]];
+const PENTA=[72,74,76,79,81,84,86,88,91];
+function updateMusic(){
+  if(!A.ctx)return;const t=A.ctx.currentTime;
+  A.mus.gain.cancelScheduledValues(t);A.mus.gain.setValueAtTime(A.mus.gain.value,t);
+  if(S.music){A.mus.gain.linearRampToValueAtTime(.9,t+2.5);
+    if(!A.timer){A.next=t+.15;A.ci=0;A.nb=t+2;A.timer=setInterval(schedMusic,250);}}
+  else{A.mus.gain.linearRampToValueAtTime(0,t+1.2);if(A.timer){clearInterval(A.timer);A.timer=null;}}
+}
+function schedMusic(){const t=A.ctx.currentTime;
+  while(A.next<t+1){playChord(CHORDS[A.ci%4],A.next,9);A.ci++;A.next+=9;}
+  while(A.nb<t+1){const ch=CHORDS[(A.ci+3)%4];const pool=PENTA.filter(n=>ch.some(x=>(x-n)%12===0)||Math.random()<.5);bell(mf(pool[rnd(pool.length)]||76),A.nb);A.nb+=1.4+Math.random()*2.8;}
+}
+function playChord(ns,t,dur){const c=A.ctx;ns.forEach((n,k)=>{[-5,5].forEach(det=>{const o=c.createOscillator();o.type=k===0?'sine':'triangle';o.frequency.value=mf(n);o.detune.value=det;
+  const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=k===0?500:800;const g=c.createGain();const v=k===0?.05:.022;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+3);g.gain.setValueAtTime(v,t+dur-1);g.gain.linearRampToValueAtTime(0,t+dur+2.5);
+  o.connect(f);f.connect(g);g.connect(A.musIn);o.start(t);o.stop(t+dur+2.6);});});}
+function bell(fr,t){const c=A.ctx;const o=c.createOscillator();o.type='sine';o.frequency.value=fr;const o2=c.createOscillator();o2.type='sine';o2.frequency.value=fr*2.01;
+  const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.035,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+3);
+  const g2=c.createGain();g2.gain.value=.25;o2.connect(g2);g2.connect(g);o.connect(g);g.connect(A.musIn);g.connect(A.delay);o.start(t);o2.start(t);o.stop(t+3.1);o2.stop(t+3.1);}
+function tone(f,t,dur,type='sine',vol=.15,f2){const c=A.ctx;const o=c.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(A.sfx);o.start(t);o.stop(t+dur+.05);}
+function burst(t,dur,freq,vol){const c=A.ctx;const s=c.createBufferSource();s.buffer=A.noise;const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=1.4;
+  const g=c.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f);f.connect(g);g.connect(A.sfx);s.start(t,Math.random()*.4);s.stop(t+dur+.02);}
+function sfx(n){if(!S.sfx||!A.ctx)return;const t=A.ctx.currentTime+.01;
+  switch(n){
+  case 'roll':for(let i=0;i<9;i++)burst(t+i*.055+Math.random()*.03,.05,1200+Math.random()*3000,.35);tone(110,t+.5,.12,'sine',.25,60);break;
+  case 'click':tone(720,t,.06,'triangle',.1);break;
+  case 'keep':tone(520,t,.08,'triangle',.12,780);break;
+  case 'unkeep':tone(700,t,.08,'triangle',.1,460);break;
+  case 'place':tone(660,t,.1,'triangle',.14);tone(990,t+.07,.14,'triangle',.11);break;
+  case 'complete':[523,659,784,1047].forEach((f,i)=>tone(f,t+i*.09,.35,'triangle',.13));break;
+  case 'buy':tone(988,t,.09,'square',.06);tone(1319,t+.08,.3,'square',.06);break;
+  case 'err':tone(170,t,.2,'sawtooth',.07);break;
+  case 'turn':tone(440,t,.25,'sine',.09);tone(660,t+.12,.3,'sine',.07);break;
+  case 'power':tone(400,t,.25,'sine',.1,1200);break;
+  case 'win':[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,t+i*.13,.5,'triangle',.13));break;
+  }}
+
+/* ================= cartes ================= */
+function parseRow(str){const toks=str.trim().split(/\s+/);const boxes=[],links=[];let pend=' ';
+  for(const t of toks){if(t==='='||t==='<'){pend=t;continue;}if(boxes.length)links.push(pend);pend=' ';boxes.push({c:t[0],n:t.length>1?+t.slice(1):null,f:null});}
+  return {boxes,links};}
+let UID=0;
+function mkCard(type,color,rows,extra){return Object.assign({id:++UID,type,color,rows:rows.map(parseRow)},extra);}
+const SP=[['R = J = W = W'],['B = V = W = W'],['J < R < W','V < B < W'],['W2 W2 W2','B6 W6 W6 W6'],['W1 W2 W3','W1 W2 W3'],['W2 W2 W2 W2','W5 W5 W5 W5'],
+ ['R = W','W = O = W'],['W < O < W < W'],['W1 W2 V3 W4 W5'],['W = W = W','W = W'],['W6 W6 W6','W1 W1'],['O = W','W < J < W'],['W < W < W < W < W'],['W4 W4 W4','W < W'],['V = W = W','B = W']];
+const BP=[['W < O < W < W'],['W < V < J < B'],['V < W < W < W'],['W1 W2 V3 W4 W5'],['O = W = J'],['V = W = W'],['B4 W4 W4 W4'],['W3 W3 W3'],['R < W < W'],['W = W = W = W'],['W1 W2 W3 W4'],['J = W','W < W']];
+const SS=[{t:'perColor',p:4},{t:'adjColor',p:7},{t:'flat'},{t:'perDone',p:2},{t:'nbDone',p:3},{t:'adjColor',p:9},{t:'perColor',p:3},{t:'cross5',p:24},{t:'flat'},{t:'perColor',p:5}];
+function flatPts(c){let n=0,f=0,l=0;c.rows.forEach(r=>{r.boxes.forEach(b=>{n++;if(b.n!=null)f++;if(b.c!=='W')f+=.5;});r.links.forEach(k=>{if(k!==' ')l++;});});return Math.round(n*1.6+f+l*.8);}
+function genDecks(){const sc=[],bn=[];
+  for(let i=0;i<30;i++){const s=Object.assign({},SS[(i*3+Math.floor(i/10))%SS.length]);if(s.t==='perColor'||s.t==='adjColor')s.c=COLORS[(i+3)%5];
+    const c=mkCard('score',COLORS[(i*2+Math.floor(i/5))%5],SP[i%SP.length],{sc:s});if(s.t==='flat')s.p=flatPts(c);sc.push(c);}
+  const POW=['plusminus','color','reroll','extra'];
+  for(let i=0;i<22;i++)bn.push(mkCard('bonus',COLORS[(i*3+1)%5],BP[i%BP.length],{pw:POW[i%4],ch:3}));
+  bn.push(mkCard('bonus','M',['W < W < B < W < W'],{pw:'rainbow',ch:0}));
+  bn.push(mkCard('bonus','M',['W = W','R < W < W'],{pw:'rainbow',ch:0}));
+  return {sc,bn};}
+const done=c=>c.rows.every(r=>r.boxes.every(b=>b.f));
+const empties=c=>{const a=[];c.rows.forEach((r,ri)=>r.boxes.forEach((b,bi)=>{if(!b.f)a.push([ri,bi]);}));return a;};
+const fits=(b,d)=>!b.f&&(b.c==='W'||b.c===d.c)&&(b.n==null||b.n===d.v);
+function rowOK(row,ov){let prev=null;
+  for(let i=0;i<row.boxes.length;i++){const b=row.boxes[i];let dom;const o=ov&&ov[i]!=null?ov[i]:(b.f?b.f.v:null);
+    if(o!=null){if(b.n!=null&&b.n!==o)return false;dom=[o];}else if(b.n!=null)dom=[b.n];else dom=[1,2,3,4,5,6];
+    if(i>0){const L=row.links[i-1];if(L==='=')dom=dom.filter(v=>prev.has(v));else if(L==='<'){const mn=Math.min(...prev);dom=dom.filter(v=>v>mn);}}
+    if(!dom.length)return false;prev=new Set(dom);}
+  return true;}
+function canPlace(c,ri,bi,d){const b=c.rows[ri].boxes[bi];return fits(b,d)&&rowOK(c.rows[ri],{[bi]:d.v});}
+function solve(card,dice,mode){
+  const em=empties(card);if(mode==='complete'&&em.length>dice.length)return null;
+  const ov=card.rows.map(()=>({}));const used=new Array(dice.length).fill(false);let best=[],cur=[];const cap=Math.min(em.length,dice.length);
+  function rec(k){
+    if(mode==='max'){if(cur.length>best.length)best=cur.slice();if(best.length===cap)return true;if(cur.length+Math.min(em.length-k,dice.length-cur.length)<=best.length)return false;}
+    if(k===em.length)return mode==='complete';
+    const [ri,bi]=em[k];const b=card.rows[ri].boxes[bi];const tried=new Set();
+    for(let d=0;d<dice.length;d++){if(used[d])continue;const die=dice[d];const key=die.c+die.v;if(tried.has(key))continue;
+      if(!(b.c==='W'||b.c===die.c))continue;if(b.n!=null&&b.n!==die.v)continue;tried.add(key);
+      ov[ri][bi]=die.v;
+      if(rowOK(card.rows[ri],ov[ri])){used[d]=true;cur.push({ri,bi,d});if(rec(k+1))return true;cur.pop();used[d]=false;}
+      delete ov[ri][bi];}
+    if(mode==='max')return rec(k+1);
+    return false;}
+  const r=rec(0);
+  if(mode==='complete')return r?cur.slice():null;
+  return best;}
+function buyIdx(ds,n){const g={};ds.forEach((d,i)=>(g[d.v]=g[d.v]||[]).push(i));let best=null;for(const v in g)if(g[v].length>=n&&(!best||g[v].length>best.length))best=g[v];return best?best.slice(0,n):null;}
+
+/* ================= score ================= */
+const NB4=i=>{const r=Math.floor(i/3),c=i%3,o=[];if(r>0)o.push(i-3);if(r<2)o.push(i+3);if(c>0)o.push(i-1);if(c<2)o.push(i+1);return o;};
+const NB8=i=>{const r=Math.floor(i/3),c=i%3,o=[];for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){if(!a&&!b)continue;const rr=r+a,cc=c+b;if(rr>=0&&rr<3&&cc>=0&&cc<3)o.push(rr*3+cc);}return o;};
+const isCol=(x,c)=>x&&(x.color===c||x.color==='M');
+function cardPts(grid,i,assume){const c=grid[i];if(!c||c.type!=='score')return 0;if(!assume&&!done(c))return 0;const s=c.sc;const dn=k=>grid[k]&&(assume||done(grid[k]));
+  switch(s.t){
+  case 'perColor':return s.p*grid.filter(x=>isCol(x,s.c)).length;
+  case 'adjColor':return s.p*NB4(i).filter(k=>isCol(grid[k],s.c)).length;
+  case 'cross5':{const nb=NB4(i);if(nb.length<4)return 0;const cs=[c,...nb.map(k=>grid[k])];if(cs.some(x=>!x))return 0;const set=new Set();let m=0;cs.forEach(x=>{if(x.color==='M')m++;else set.add(x.color);});return set.size+m>=5?s.p:0;}
+  case 'perDone':return s.p*grid.filter((x,k)=>x&&dn(k)).length;
+  case 'nbDone':return s.p*NB8(i).filter(k=>dn(k)).length;
+  case 'flat':return s.p;}
+  return 0;}
+const scoreOf=p=>p.grid.reduce((s,c,i)=>s+cardPts(p.grid,i,false),0);
+const potential=g=>g.reduce((s,c,i)=>s+cardPts(g,i,true),0);
+const nCards=p=>p.grid.filter(Boolean).length;
+function validCells(g){const any=g.some(Boolean);return [...Array(9).keys()].filter(i=>!g[i]&&(!any||NB8(i).some(k=>g[k])));}
+function scoreLabel(s){const sq=c=>`<i class="sq" style="background:${CH[c]}"></i>`;
+  switch(s.t){case 'perColor':return `${sq(s.c)} ×`;case 'adjColor':return `✚${sq(s.c)} ×`;case 'cross5':return `✚ 5 coul.`;case 'perDone':return `✔ ×`;case 'nbDone':return `⊞✔ ×`;case 'flat':return `★`;}}
+function scoreDesc(s){switch(s.t){case 'perColor':return `${s.p} pts par carte ${CN[s.c]} dans votre grille`;case 'adjColor':return `${s.p} pts par carte ${CN[s.c]} adjacente (par un côté)`;
+  case 'cross5':return `${s.p} pts si cette carte et ses 4 voisines (côtés) ont les 5 couleurs différentes`;case 'perDone':return `${s.p} pts par carte terminée dans votre grille`;
+  case 'nbDone':return `${s.p} pts par carte terminée voisine (côté ou angle)`;case 'flat':return `${s.p} pts`;}}
+function cardTitle(c){const pat='Cases : couleur = dé de cette couleur, blanc = n’importe quel dé, chiffre = valeur exacte ; « = » valeurs identiques, « < » valeur plus petite à gauche.';
+  return c.type==='score'?`Carte SCORE (${CN[c.color]}) — ${scoreDesc(c.sc)}. ${pat}`:`Carte BONUS (${CN[c.color]}) — ${POWD[c.pw]}${c.ch?` · ${c.ch} utilisation(s)`:''}. ${pat}`;}
+
+/* ================= état / flux ================= */
+let G=null,GID=0,lastCfg=null,resolver=null;
+const ask=()=>new Promise(r=>resolver=r);
+function answer(x){if(resolver){const r=resolver;resolver=null;r(x);}}
+class Abort extends Error{}
+const chk=id=>{if(id!==GID)throw new Abort();};
+const SPD=()=>({lente:1.7,normale:1,rapide:.4}[S.speed]||1);
+async function sleep(ms,id){await new Promise(r=>setTimeout(r,ms));chk(id);}
+const curP=()=>G.players[G.cur];
+function log(m){G.log.unshift(m);if(G.log.length>80)G.log.pop();}
+const nm=p=>`<b style="color:${p.col}">${esc(p.name)}</b>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity=0,1800);}
+function hasPower(p,pw){return p.grid.find(c=>c&&c.type==='bonus'&&c.pw===pw&&done(c)&&c.ch>0);}
+
+function startGame(cfg){
+  lastCfg=JSON.parse(JSON.stringify(cfg));GID++;const id=GID;UID=0;
+  const d=genDecks();
+  G={id,players:cfg.players.map((x,i)=>({name:x.name,ai:x.ai,grid:Array(9).fill(null),col:PCOL[i]})),solo:cfg.players.length===1,cur:0,turn:0,round:1,endTriggered:false,log:[],draft:null,
+    dice:COLORS.map(c=>({c,v:1+rnd(6),kept:false,locked:false})),phase:'idle',sd:shuffle(d.sc),bd:shuffle(d.bn),rollsDone:0,maxRolls:3,acts:[],probs:{}};
+  G.market={score:[0,1,2,3].map(()=>G.sd.pop()),bonus:[0,1,2,3].map(()=>G.bd.pop())};
+  log(G.solo?'Mode solo : 15 tours pour faire le meilleur score !':'Nouvelle partie !');
+  $('#setup').classList.add('hidden');$('#modal').classList.add('hidden');
+  render();loop(id).catch(e=>{if(!(e instanceof Abort))console.error(e);});
+}
+async function loop(id){
+  for(let i=0;i<G.players.length;i++){G.cur=i;await draft(i,id);}
+  G.cur=0;G.turn=1;
+  while(true){
+    await playTurn(id);
+    if(G.solo){if(G.turn>=15)break;G.turn++;continue;}
+    if(!G.endTriggered){const w=G.players.find(p=>nCards(p)>=9);if(w){G.endTriggered=true;log(`🏁 ${nm(w)} a 9 cartes ! On termine le tour de table.`);}}
+    const stuck=!G.sd.length&&!G.bd.length&&G.market.score.every(x=>!x)&&G.market.bonus.every(x=>!x);
+    if(G.cur===G.players.length-1){if(G.endTriggered||G.round>=30||stuck)break;G.round++;}
+    G.cur=(G.cur+1)%G.players.length;
+  }
+  endGame();
+}
+async function draft(i,id){
+  const p=G.players[i];const cards=[G.sd.pop(),G.sd.pop(),G.bd.pop(),G.bd.pop()].filter(Boolean);
+  G.phase='draft';G.draft={cards,sel:new Set()};render();
+  let keep;
+  if(p.ai){await sleep(700*SPD(),id);keep=aiDraft(cards);}
+  else{await ask();chk(id);keep=cards.filter(c=>G.draft.sel.has(c.id));}
+  cards.filter(c=>!keep.includes(c)).forEach(c=>(c.type==='score'?G.sd:G.bd).unshift(c));
+  G.draft=null;
+  for(const c of keep)await placeCard(p,c,id);
+  log(`${nm(p)} a choisi sa grille de départ.`);
+}
+async function placeCard(p,c,id){
+  G.phase='place';G.placing={p,card:c};render();let cell;
+  if(p.ai){await sleep(450*SPD(),id);cell=aiCell(p,c);}else{cell=await ask();chk(id);}
+  p.grid[cell]=c;G.placing=null;G.phase='idle';sfx('place');render();
+}
+async function playTurn(id){
+  const p=curP();G.phase='preroll';G.dice.forEach(d=>{d.kept=false;d.locked=false;});G.rollsDone=0;G.maxRolls=3;G.pmode=null;G.aiMore=0;
+  log(`— Au tour de ${nm(p)}${G.solo?` (tour ${G.turn}/15)`:''}`);sfx('turn');render();
+  if(p.ai)await sleep(700*SPD(),id);else{await ask();chk(id);}
+  await roll([0,1,2,3,4],id);
+  while(true){
+    while(G.rollsDone<G.maxRolls){
+      G.phase='keep';render();let a;
+      if(p.ai){await sleep(750*SPD(),id);a=aiKeep(p);if(a.keep){G.dice.forEach((d,i)=>d.kept=d.locked||a.keep.has(i));render();await sleep(500*SPD(),id);}}
+      else{a=await ask();chk(id);}
+      if(a.k==='stop')break;
+      const rej=G.dice.map((d,i)=>i).filter(i=>!G.dice[i].kept);
+      if(!rej.length)break;
+      await passive(rej,id);
+      G.dice.forEach(d=>{if(d.kept)d.locked=true;});
+      await roll(rej,id);
+    }
+    G.phase='resolve';G.dice.forEach(d=>d.kept=true);render();let a;
+    if(p.ai){await sleep(800*SPD(),id);a=aiResolve(p);}else{a=await ask();chk(id);}
+    if(a.k==='more'){G.dice.forEach(d=>d.kept=d.locked);continue;}
+    if(a.k==='complete')doComplete(p,a);
+    else if(a.k==='buy')await doBuy(p,a,id);
+    else log(`${nm(p)} ne fait rien ce tour-ci.`);
+    break;
+  }
+  G.pmode=null;render();await sleep(500*SPD(),id);
+}
+async function roll(idx,id){
+  idx.forEach(i=>G.dice[i].v=1+rnd(6));G.rollsDone++;G.rolling=new Set(idx);render();sfx('roll');
+  for(let k=0;k<6;k++){await sleep(80,id);idx.forEach(i=>{const el=document.querySelector(`#tray .die[data-die="${i}"]`);if(el)el.innerHTML=pipsHTML(1+rnd(6));});}
+  G.rolling=null;render();
+}
+async function passive(rej,id){
+  G.rejected=rej;const n=G.players.length;const ps=G.solo?[G.cur]:[...Array(n-1).keys()].map(k=>(G.cur+k+1)%n);
+  for(const pi of ps){const p=G.players[pi];
+    G.phase='passive';G.pp=pi;G.psel=null;G.pdone=0;G.pallow=1;G.pused=new Set();G.poffer=false;render();
+    if(p.ai){await sleep(550*SPD(),id);aiPassive(p,rej);render();await sleep(450*SPD(),id);}
+    else{await ask();chk(id);}
+  }
+  G.rejected=null;G.pp=null;G.psel=null;G.phase='keep';
+}
+function fillBox(p,cell,ri,bi,die){const c=p.grid[cell];c.rows[ri].boxes[bi].f={v:die.v,c:die.c};
+  if(done(c)){sfx('complete');log(`✨ ${nm(p)} termine une carte ${c.type==='score'?'score':'bonus'} grâce à un dé rejeté !`);}else sfx('place');}
+function doComplete(p,a){const c=p.grid[a.cell];const before=scoreOf(p);
+  a.assign.forEach(x=>{const d=G.dice[x.d];c.rows[x.ri].boxes[x.bi].f={v:d.v,c:d.c};});
+  sfx('complete');const gain=scoreOf(p)-before;
+  log(`✅ ${nm(p)} termine une carte ${c.type==='score'?`score (+${gain} pts)`:`bonus : ${POWD[c.pw].split(':')[0]} débloqué`}.`);}
+async function doBuy(p,a,id){const row=G.market[a.row];const card=row[a.col];
+  for(let k=a.col;k>0;k--)row[k]=row[k-1];row[0]=(a.row==='score'?G.sd:G.bd).pop()||null;
+  sfx('buy');log(`🛒 ${nm(p)} achète une carte ${a.row==='score'?'score':'bonus'} (colonne ${a.col+1}, ${COST[a.col]} dés identiques).`);
+  await placeCard(p,card,id);}
+function computeActions(p){const acts=[];const ds=G.dice;
+  p.grid.forEach((c,i)=>{if(c&&!done(c)){const a=solve(c,ds,'complete');if(a)acts.push({k:'complete',cell:i,assign:a});}});
+  if(nCards(p)<9)for(let col=0;col<4;col++){const idx=buyIdx(ds,COST[col]);if(!idx)continue;['score','bonus'].forEach(row=>{if(G.market[row][col])acts.push({k:'buy',row,col,idx});});}
+  return acts;}
+function endGame(){G.phase='over';render();sfx('win');
+  const res=G.players.map(p=>({p,s:scoreOf(p),d:p.grid.filter(c=>c&&done(c)).length})).sort((a,b)=>b.s-a.s||b.d-a.d);
+  const medal=['🥇','🥈','🥉','4'];
+  let h=`<div class="sheet"><div class="title" style="font-size:44px"><span class="a">FIN DE</span><span class="b">PARTIE</span></div>`;
+  if(G.solo){const s=res[0].s;const r=s<40?'Apprenti lanceur':s<70?'Bon joueur':s<100?'Expert du partage':'Maître du dé';h+=`<p class="sub">Score solo : <b style="color:var(--gold);font-size:26px">${s} pts</b> — ${r}</p>`;}
+  res.forEach((r,i)=>{h+=`<div class="rk"><div class="n">${medal[i]}</div><div><div class="pname" style="color:${r.p.col}">${esc(r.p.name)} ${r.p.ai?'🤖':''}</div><div class="tag">${nCards(r.p)} cartes · ${r.d} terminées</div></div><div class="s">${r.s}</div></div>`;});
+  h+=`<div class="btns" style="justify-content:center;margin-top:16px"><button class="btn g big" data-act="again">🔁 Rejouer</button><button class="btn gr big" data-act="tomenu">Menu</button><button class="btn gr big" data-act="closemodal">Voir les grilles</button></div></div>`;
+  showModal(h);}
+
+/* ================= IA ================= */
+function ease(c){let n=0;c.rows.forEach(r=>r.boxes.forEach(b=>{n+=1+(b.n!=null?.6:0)+(b.c!=='W'?.3:0);}));return (c.type==='score'?3:2.5)-n*.35+(c.type==='score'&&c.sc.t==='flat'?c.sc.p*.08:0);}
+function aiDraft(cards){const s=cards.slice().sort((a,b)=>ease(b)-ease(a));let pick=s.slice(0,3);if(!pick.some(c=>c.type==='score')){const sc=s.find(c=>c.type==='score');if(sc)pick[2]=sc;}return pick;}
+const cBias=i=>i===4?2:(i%2?1:0);
+function aiCell(p,c){let best=null,bv=-1e9;for(const i of validCells(p.grid)){const g=p.grid.slice();g[i]=c;const v=potential(g)+cBias(i)*.3+Math.random()*.1;if(v>bv){bv=v;best=i;}}return best;}
+function completeValue(p,i){const c=p.grid[i];if(c.type==='bonus')return POWV[c.pw]+2;const before=scoreOf(p);const set=[];
+  c.rows.forEach(r=>r.boxes.forEach(b=>{if(!b.f){b.f={v:0,c:'W'};set.push(b);}}));const after=scoreOf(p);set.forEach(b=>b.f=null);return after-before+2;}
+function buyValue(p,c){if(nCards(p)>=9)return 0;const base=potential(p.grid);let bd=0;for(const i of validCells(p.grid)){const g=p.grid.slice();g[i]=c;bd=Math.max(bd,potential(g)-base);}
+  return Math.max(.5,.42*bd+(c.type==='bonus'?POWV[c.pw]:3)-empties(c).length*.25);}
+function actValue(p,a){return a.k==='complete'?completeValue(p,a.cell)*1.2:buyValue(p,G.market[a.row][a.col]);}
+function aiTargets(p,withVal=true){const t=[];
+  p.grid.forEach((c,i)=>{if(c&&!done(c)&&empties(c).length<=5)t.push({kind:'card',card:c,cell:i,val:withVal?completeValue(p,i):0});});
+  if(nCards(p)<9)for(let col=0;col<4;col++){const cs=['score','bonus'].map(r=>G.market[r][col]).filter(Boolean);if(!cs.length)continue;t.push({kind:'buy',n:COST[col],col,val:withVal?Math.max(...cs.map(c=>buyValue(p,c))):0});}
+  return t;}
+function tCheck(t,ds){return t.kind==='card'?!!solve(t.card,ds,'complete'):!!buyIdx(ds,t.n);}
+function tBest(t,ds,lk){if(t.kind==='card')return solve(t.card,ds,'max').map(a=>a.d);
+  const cnt={};ds.forEach((d,i)=>{cnt[d.v]=(cnt[d.v]||0)+1+(lk&&lk.has(i)?.01:0);});let bv=null,bc=-1;for(const v in cnt)if(cnt[v]>bc){bc=cnt[v];bv=+v;}
+  return ds.map((d,i)=>i).filter(i=>ds[i].v===bv);}
+function simProb(t,dice,mask,rolls,N){const locked=new Set();mask.forEach((m,i)=>{if(m)locked.add(i);});let ok=0;
+  for(let s=0;s<N;s++){let ds=dice.map((d,i)=>({c:d.c,v:mask[i]?d.v:1+rnd(6)}));let lk=locked;
+    for(let r=1;;r++){if(tCheck(t,ds)){ok++;break;}if(r>=rolls)break;const keep=new Set(tBest(t,ds,lk));lk.forEach(i=>keep.add(i));ds=ds.map((d,i)=>keep.has(i)?d:{c:d.c,v:1+rnd(6)});lk=keep;}}
+  return ok/N;}
+function aiKeep(p){const ds=G.dice;const left=G.maxRolls-G.rollsDone;const locked=new Set();ds.forEach((d,i)=>{if(d.locked)locked.add(i);});
+  const acts=computeActions(p);const now=acts.length?Math.max(...acts.map(a=>actValue(p,a))):0;let best=null;
+  for(const t of aiTargets(p)){if(tCheck(t,ds))continue;const keep=new Set(tBest(t,ds,locked));locked.forEach(i=>keep.add(i));if(keep.size>=5)continue;
+    const pr=simProb(t,ds,ds.map((d,i)=>keep.has(i)),left,110);const ev=pr*t.val;if(!best||ev>best.ev)best={ev,keep};}
+  if(now>0&&(!best||now>=best.ev*.8))return {k:'stop'};
+  if(!best||best.ev<.05)return now>0?{k:'stop'}:{k:'reroll',keep:locked};
+  return {k:'reroll',keep:best.keep};}
+function bestPassive(p,rej,used){let best=null;
+  p.grid.forEach((c,cell)=>{if(!c||done(c))return;const em=empties(c).length;const val=c.type==='score'?Math.max(3,completeValue(p,cell)):POWV[c.pw]+2;
+    rej.forEach(di=>{if(used.has(di))return;const d=G.dice[di];c.rows.forEach((r,ri)=>r.boxes.forEach((b,bi)=>{if(!canPlace(c,ri,bi,d))return;
+      const s=val/(em)+(em===1?6:0)+(b.c!=='W'?1.2:0)+(b.n!=null?1:0)+Math.random()*.2;if(!best||s>best.s)best={s,cell,ri,bi,di};}));});});
+  return best;}
+function aiPassive(p,rej){const used=new Set();let allow=1;
+  for(let k=0;k<allow;k++){const mv=bestPassive(p,rej,used);if(!mv)break;used.add(mv.di);fillBox(p,mv.cell,mv.ri,mv.bi,G.dice[mv.di]);
+    if(k===0){const ex=hasPower(p,'extra');if(ex){const m2=bestPassive(p,rej,used);if(m2&&m2.s>2.5){ex.ch--;allow=2;sfx('power');log(`${nm(p)} utilise son bonus « 2e dé ».`);}}}}
+  log(used.size?`${nm(p)} profite de ${used.size>1?'deux dés rejetés':'un dé rejeté'}.`:`${nm(p)} ne peut rien faire des dés rejetés.`);}
+function tryPowers(p){const cards=['plusminus','color'].map(w=>hasPower(p,w)).filter(Boolean);let best=null;
+  for(const c of cards)G.dice.forEach((d,i)=>{const mods=c.pw==='plusminus'?[{v:d.v+1},{v:d.v-1}].filter(m=>m.v>=1&&m.v<=6):COLORS.filter(x=>x!==d.c).map(x=>({c:x}));
+    for(const m of mods){const o={v:d.v,c:d.c};Object.assign(d,m);const acts=computeActions(p);const v=acts.length?Math.max(...acts.map(a=>actValue(p,a))):0;Object.assign(d,o);if(v>0&&(!best||v>best.v))best={v,c,i,m};}});
+  if(!best)return false;Object.assign(G.dice[best.i],best.m);best.c.ch--;sfx('power');log(`${nm(p)} utilise un bonus ${POWN[best.c.pw]} sur un dé.`);return true;}
+function aiResolve(p){let acts=computeActions(p);
+  if(!acts.length&&tryPowers(p))acts=computeActions(p);
+  if(!acts.length){const rr=hasPower(p,'reroll');if(rr&&G.aiMore<1){rr.ch--;G.aiMore++;G.maxRolls++;sfx('power');log(`${nm(p)} utilise son bonus de relance.`);return {k:'more'};}return {k:'pass'};}
+  let best=acts[0],bv=-1;acts.forEach(a=>{const v=actValue(p,a);if(v>bv){bv=v;best=a;}});return best;}
+
+/* ================= probabilités ================= */
+function computeProbs(){G.probs={};if(!S.risk||G.phase==='over'||curP().ai||!['preroll','keep'].includes(G.phase))return;
+  const p=curP();const pre=G.phase==='preroll';const left=pre?3:G.maxRolls-G.rollsDone;if(left<=0)return;
+  const mask=G.dice.map(d=>!pre&&d.kept);
+  const sig=JSON.stringify([pre,G.dice.map(d=>[d.c,d.v,d.kept]),left,p.grid.map(c=>c?c.id+':'+empties(c).length:0),G.market.score.map(c=>c&&c.id),G.market.bonus.map(c=>c&&c.id)]);
+  if(sig===G.probSig){G.probs=G.probCache;return;}
+  for(const t of aiTargets(p,false)){const p1=simProb(t,G.dice,mask,1,260);const pa=left>1?simProb(t,G.dice,mask,left,260):p1;G.probs[t.kind==='card'?'c'+t.card.id:'m'+t.col]={p1,pa,left,pre};}
+  G.probSig=sig;G.probCache=G.probs;}
+function probBadge(k){const r=G.probs[k];if(!r)return '';const pc=Math.round(r.pa*100),p1=Math.round(r.p1*100);const cls=pc>=60?'p-hi':pc>=30?'p-mid':'p-lo';
+  const tip=r.pre?`Chance de réussir sur vos 3 lancers : ${pc}% (risque d’échec ${100-pc}%) · dès le 1er lancer : ${p1}%`:`Chance avec les ${r.left} relance(s) restante(s) : ${pc}% (risque d’échec ${100-pc}%) · à la prochaine relance : ${p1}%`;
+  return `<div class="prob ${cls}" title="${tip}">🎯 ${pc}%${r.left>1&&!r.pre?` <span style="opacity:.7">(${p1}%)</span>`:''}</div>`;}
+
+/* ================= rendu ================= */
+const pipsHTML=v=>{let s='';for(let k=0;k<9;k++)s+=`<span class="${PIPS[v].includes(k)?'on':''}"></span>`;return s;};
+function cardHTML(c,o={}){const dn=done(c);
+  const rows=c.rows.map((r,ri)=>'<div class="row">'+r.boxes.map((b,bi)=>{let cls='box',st='',txt='';
+    if(b.f){cls+=' f';st=`background:${CH[b.f.c]};`;txt=b.f.v;}else{if(b.c!=='W')st=`background:${CH[b.c]};`;txt=b.n??'';}
+    const clk=o.box&&o.box(ri,bi);if(clk)cls+=' clk';
+    return (bi?`<span class="lnk">${r.links[bi-1]===' '?'':r.links[bi-1]}</span>`:'')+`<div class="${cls}" style="${st}" ${clk?`data-box="${o.pi}:${o.cell}:${ri}:${bi}"`:''}><b>${txt}</b></div>`;}).join('')+'</div>').join('');
+  let bot;
+  if(c.type==='score')bot=`<div class="bot sb"><span>${scoreLabel(c.sc)}</span><span class="laur">${c.sc.p}</span></div>`;
+  else{const dots=c.pw==='rainbow'?'∞':'●'.repeat(c.ch)+'○'.repeat(3-c.ch);bot=`<div class="bot bb ${dn?'on':''}"><span>${POWN[c.pw]} <span class="chg">${dots}</span></span><span class="bdg">B</span></div>`;}
+  const pts=o.grid&&c.type==='score'&&dn?`<div class="pts">+${cardPts(o.grid,o.cell,false)}</div>`:'';
+  return `<div class="card k${c.color} ${c.type} ${dn?'done':''} ${o.cls||''}" ${o.attrs||''} title="${esc(cardTitle(c))}"><div class="in"><div class="top">${rows}</div>${bot}</div>${dn?'<div class="chk">✔</div>':''}${pts}${o.badge||''}</div>`;}
+function render(){renderHeader();if(!G){return;}
+  const hp=!curP().ai;G.acts=(G.phase==='resolve'&&hp)?computeActions(curP()):[];computeProbs();
+  renderMarket();renderTray();renderActions();renderPlayers();$('#log').innerHTML=G.log.map(m=>`<div>${m}</div>`).join('');}
+function renderHeader(){$('#bSfx').classList.toggle('off',!S.sfx);$('#bMus').classList.toggle('off',!S.music);$('#bRisk').classList.toggle('off',!S.risk);
+  if(!G){$('#info').innerHTML='';return;}const p=curP();
+  $('#info').innerHTML=G.phase==='draft'||(G.phase==='place'&&!G.turn)?`Mise en place · <span class="dot" style="background:${p.col}"></span><b>${esc(p.name)}</b>`:
+   G.phase==='over'?'<b>Partie terminée</b>':`${G.solo?`Tour <b>${G.turn}</b>/15`:`Manche <b>${G.round}</b>`} · <span class="dot" style="background:${p.col}"></span><b>${esc(p.name)}</b> ${p.ai?'🤖':''} ${G.endTriggered?'· <span class="last">Dernier tour de table !</span>':''}`;}
+function renderMarket(){const buy={};G.acts.forEach((a,i)=>{if(a.k==='buy')buy[a.row+a.col]=i;});
+  let h=`<div class="decks"><div class="deck ds" title="Pioche score">🏅<b>${G.sd.length}</b></div><div class="deck db" title="Pioche bonus">B<b>${G.bd.length}</b></div></div><div class="mgrid">`;
+  const rowH=row=>[0,1,2,3].map(col=>{const c=G.market[row][col];if(!c)return '<div class="slotm"></div>';const b=buy[row+col];
+    return cardHTML(c,{cls:b!=null?'can':'',attrs:b!=null?`data-doact="${b}"`:''});}).join('');
+  h+=rowH('score');
+  h+=[0,1,2,3].map(col=>{const can=buy['score'+col]!=null||buy['bonus'+col]!=null;const icons=Array(COST[col]).fill('<i></i>').join('<em>=</em>');
+    return `<div class="strip s${col} ${can?'buy':''}" title="Coût : ${COST[col]} dés de même valeur (n’importe quelles couleurs)"><div class="cst">${icons}</div><div style="margin-top:3px">${COST[col]} identiques</div>${col<3?'<span class="arr">➤</span>':''}${probBadge('m'+col)}</div>`;}).join('');
+  h+=rowH('bonus')+'</div>';$('#market').innerHTML=h;}
+function renderTray(){const p=curP();const ph=G.phase;
+  const hpas=ph==='passive'&&G.pp!=null&&!G.players[G.pp].ai;
+  $('#tray').innerHTML=G.dice.map((d,i)=>{const cl=[];
+    if(ph==='draft'||ph==='preroll'||(ph==='place'&&!G.turn))cl.push('idle');
+    if(G.rolling&&G.rolling.has(i))cl.push('rolling');
+    if(ph==='keep'||ph==='passive'){if(d.kept)cl.push('kept');if(d.locked)cl.push('locked');}
+    if(ph==='passive'&&G.rejected&&G.rejected.includes(i)){cl.push('rej');if(G.pused&&G.pused.has(i))cl.push('used');if(G.psel===i)cl.push('sel');}
+    if(G.pmode&&G.pmode.die===i)cl.push('sel');
+    return `<div class="die c${d.c} ${cl.join(' ')}" data-die="${i}" title="Dé ${CN[d.c]} : ${d.v}">${pipsHTML(d.v)}</div>`;}).join('');
+  $('#rinfo').innerHTML=['keep','passive','resolve'].includes(ph)?`Lancer ${Math.min(G.rollsDone,G.maxRolls)}/${G.maxRolls}${ph==='keep'&&!p.ai?' · cliquez sur les dés à garder (🔒 = déjà gardés)':''}${hpas?' · dés en pointillés = rejetés':''}`:'';}
+function powersHTML(p){const ph=G.phase;const list=p.grid.filter(c=>c&&c.type==='bonus'&&done(c)&&c.ch>0&&['plusminus','color','reroll'].includes(c.pw));if(!list.length)return '';
+  let h='<div class="pw"><div class="msg" style="font-size:13px;color:var(--mut)">Vos bonus :</div><div class="btns">';
+  list.forEach(c=>{if(c.pw==='reroll'&&ph!=='resolve')return;h+=`<button class="btn y" data-act="pw" data-card="${c.id}">${POWN[c.pw]} ${c.pw==='reroll'?'Lancer en plus':c.pw==='plusminus'?'Modifier un dé':'Changer une couleur'} (${c.ch})</button>`;});
+  h+='</div>';
+  if(G.pmode){const m=G.pmode;h+='<div class="msg" style="margin-top:8px">';
+    if(m.die==null)h+='👉 Cliquez sur le dé à modifier.';
+    else{const d=G.dice[m.die];if(m.pw==='plusminus')h+=`Dé ${CN[d.c]} (${d.v}) : <button class="btn g" data-act="pm" data-d="1" ${d.v>=6?'disabled':''}>+1</button> <button class="btn g" data-act="pm" data-d="-1" ${d.v<=1?'disabled':''}>−1</button>`;
+      else h+=`Nouvelle couleur : `+COLORS.filter(x=>x!==d.c).map(x=>`<button class="cbtn" style="background:${CH[x]}" data-act="pcol" data-c="${x}" title="${CN[x]}"></button>`).join(' ');}
+    h+=` <button class="btn gr" data-act="pcancel">Annuler</button></div>`;}
+  return h+'</div>';}
+function renderActions(){const p=curP();let h='';const ph=G.phase;
+  const thinking=who=>`<div class="msg"><span class="spin">🎲</span> ${nm(who)} 🤖 réfléchit…</div>`;
+  if(ph==='draft'){if(p.ai)h=thinking(p);else{h=`<div class="msg">${nm(p)}, choisissez <b>3 cartes</b> parmi ces 4 pour votre grille de départ (${G.draft.sel.size}/3).</div><div class="draftrow">`+
+      G.draft.cards.map(c=>cardHTML(c,{cls:'pick '+(G.draft.sel.has(c.id)?'picked':''),attrs:`data-draft="${c.id}"`})).join('')+`</div><button class="btn g" data-act="draftOk" ${G.draft.sel.size===3?'':'disabled'}>Valider</button>`;}}
+  else if(ph==='place'&&G.placing){const pl=G.placing.p;if(pl.ai)h=thinking(pl);else h=`<div class="msg">${nm(pl)}, placez cette carte dans une case <b style="color:var(--ok)">+</b> de votre grille (adjacente par un côté ou un angle).</div><div class="draftrow">${cardHTML(G.placing.card)}</div>`;}
+  else if(ph==='preroll'){h=p.ai?thinking(p):`<div class="msg">${nm(p)}, c’est votre tour !</div><button class="btn g big" data-act="roll">🎲 Lancer les dés</button>`;}
+  else if(ph==='keep'){if(p.ai)h=thinking(p);else{const nk=G.dice.filter(d=>!d.kept).length;const left=G.maxRolls-G.rollsDone;
+      h=`<div class="msg">Gardez les dés utiles puis relancez les autres. Relances restantes : <b>${left}</b>.<br><span style="color:var(--mut);font-size:13px">Les dés relancés sont offerts aux autres joueurs${G.solo?' (en solo : à vous-même)':''} avant d’être relancés.</span></div>
+      <div class="btns"><button class="btn" data-act="reroll" ${nk?'':'disabled'}>↺ Relancer ${nk} dé(s)</button><button class="btn g" data-act="stop">✔ Terminer les lancers</button></div>`+powersHTML(p);}}
+  else if(ph==='passive'){const pp=G.players[G.pp];if(pp.ai)h=thinking(pp);else{
+      if(G.poffer&&G.pdone<G.pallow&&G.pallow===1)h=`<div class="msg">${nm(pp)}, voulez-vous utiliser votre bonus <b>2e dé</b> ?</div><div class="btns"><button class="btn y" data-act="pextra">➕🎲 Oui, un 2e dé</button><button class="btn gr" data-act="ppass">Non, terminer</button></div>`;
+      else h=`<div class="msg">${G.solo?'':`<span class="tag">Passif</span> `}${nm(pp)}, ${G.solo?'profitez':'profitez'} d’un dé rejeté par ${G.solo?'vous':nm(p)} : cliquez sur un dé en pointillés, puis sur une case qui s’allume sur vos cartes.${G.pdone?` <b>(${G.pdone}/${G.pallow})</b>`:''}</div><div class="btns"><button class="btn gr" data-act="ppass">${G.pdone?'Terminer':'Passer'}</button></div>`;}}
+  else if(ph==='resolve'){if(p.ai)h=thinking(p);else{
+      h=`<div class="msg">${nm(p)}, choisissez une action avec vos dés :</div><div class="btns">`;
+      if(!G.acts.length)h+='<span class="tag" style="padding:8px">Aucune carte ne peut être terminée ni achetée.</span>';
+      G.acts.forEach((a,i)=>{if(a.k==='complete'){const c=p.grid[a.cell];h+=`<button class="btn g" data-doact="${i}">✅ Terminer la carte ${c.type} ${CN[c.color]}</button>`;}
+        else{const c=G.market[a.row][a.col];h+=`<button class="btn" data-doact="${i}">🛒 Acheter ${a.row==='score'?'score':'bonus'} ${CN[c.color]} (col. ${a.col+1})</button>`;}});
+      h+=`<button class="btn r" data-act="pass">Passer</button></div>`+powersHTML(p);}}
+  else if(ph==='over')h=`<div class="msg">Partie terminée !</div><button class="btn g" data-act="again">🔁 Rejouer</button> <button class="btn gr" data-act="tomenu">Menu</button>`;
+  $('#actions').innerHTML=h;}
+function renderPlayers(){
+  $('#players').innerHTML=G.players.map((p,pi)=>{const act=pi===G.cur&&G.phase!=='over';const pas=G.phase==='passive'&&G.pp===pi&&!G.solo;
+    const placing=G.phase==='place'&&G.placing&&G.placing.p===p&&!p.ai;const vc=placing?validCells(p.grid):[];
+    const hpas=G.phase==='passive'&&G.pp===pi&&!p.ai&&G.psel!=null&&G.pdone<G.pallow;
+    const comp={};if(act)G.acts.forEach((a,i)=>{if(a.k==='complete')comp[a.cell]=i;});
+    const pw=p.grid.filter(c=>c&&c.type==='bonus'&&done(c)).map(c=>`<span class="tag" title="${esc(POWD[c.pw])}">${POWN[c.pw]}${c.pw!=='rainbow'?' '+c.ch:''}</span>`).join('');
+    const cells=p.grid.map((c,i)=>{if(!c)return vc.includes(i)?`<div class="slot ok" data-place="${i}">+</div>`:'<div class="slot"></div>';
+      const o={pi,cell:i,grid:p.grid};
+      if(hpas){const d=G.dice[G.psel];o.box=(ri,bi)=>canPlace(c,ri,bi,d);}
+      if(comp[i]!=null){o.cls='can';o.attrs=`data-doact="${comp[i]}"`;}
+      if(act&&!done(c))o.badge=probBadge('c'+c.id);
+      return cardHTML(c,o);}).join('');
+    return `<div class="panel pl ${act?'act':''} ${pas?'pas':''}" style="--pc:${p.col}"><div class="phead"><span class="dot" style="background:${p.col};width:14px;height:14px"></span><span class="pname">${esc(p.name)}</span>
+      <span class="tag">${p.ai?'🤖 Ordinateur':'👤 Humain'}</span><span class="tag">${nCards(p)}/9 cartes</span>${pw}${act?'<span class="tag" style="background:'+p.col+';color:#111;font-weight:800">Actif</span>':''}${pas?'<span class="tag" style="background:#fff;color:#111;font-weight:800">Passif</span>':''}
+      <span class="score">${scoreOf(p)} pts</span></div><div class="grid">${cells}</div></div>`;}).join('');}
+function showModal(h){const m=$('#modal');m.innerHTML=h;m.classList.remove('hidden');}
+
+/* ================= événements ================= */
+document.addEventListener('click',e=>{
+  initAudio();
+  const t=e.target.closest('[data-act],[data-die],[data-box],[data-place],[data-doact],[data-draft],[data-s]');if(!t)return;
+  if(t.dataset.s!=null)return setupClick(t);
+  const act=t.dataset.act;
+  if(act==='h-sfx'){S.sfx=!S.sfx;saveS();renderHeader();sfx('click');return;}
+  if(act==='h-mus'){S.music=!S.music;saveS();updateMusic();renderHeader();return;}
+  if(act==='h-risk'){S.risk=!S.risk;saveS();if(G)render();else renderHeader();return;}
+  if(act==='h-rules'){showRules();return;}
+  if(act==='h-menu'){if(!G||G.phase==='over')return openSetup();showModal(`<div class="sheet" style="max-width:420px;text-align:center"><p class="msg">Quitter la partie en cours et revenir au menu ?</p><div class="btns" style="justify-content:center"><button class="btn r" data-act="tomenu">Oui, menu</button><button class="btn gr" data-act="closemodal">Continuer</button></div></div>`);return;}
+  if(act==='closemodal'){$('#modal').classList.add('hidden');return;}
+  if(act==='tomenu'){GID++;resolver=null;$('#modal').classList.add('hidden');openSetup();return;}
+  if(act==='again'){startGame(lastCfg);return;}
+  if(!G||G.phase==='over')return;
+  const p=curP();const humanAct=!p.ai;
+  if(t.dataset.draft!=null&&G.phase==='draft'&&humanAct){const id=+t.dataset.draft;const s=G.draft.sel;if(s.has(id))s.delete(id);else if(s.size<3)s.add(id);else return sfx('err');sfx('click');return render();}
+  if(act==='draftOk'&&G.phase==='draft'&&G.draft.sel.size===3){sfx('click');return answer('ok');}
+  if(t.dataset.place!=null&&G.phase==='place'&&!G.placing.p.ai)return answer(+t.dataset.place);
+  if(act==='roll'&&G.phase==='preroll'&&humanAct)return answer('roll');
+  if(t.dataset.die!=null){const i=+t.dataset.die;const d=G.dice[i];
+    if(G.pmode&&humanAct&&['keep','resolve'].includes(G.phase)){G.pmode.die=i;sfx('click');return render();}
+    if(G.phase==='keep'&&humanAct&&!G.rolling){if(d.locked){toast('Ce dé est déjà gardé (verrouillé).');return sfx('err');}d.kept=!d.kept;sfx(d.kept?'keep':'unkeep');return render();}
+    if(G.phase==='passive'&&!G.players[G.pp].ai&&G.rejected.includes(i)){if(G.pused.has(i)||G.pdone>=G.pallow)return sfx('err');G.psel=G.psel===i?null:i;sfx('click');return render();}
+    return;}
+  if(act==='reroll'&&G.phase==='keep'&&humanAct){if(!G.dice.some(d=>!d.kept))return;G.pmode=null;return answer({k:'reroll'});}
+  if(act==='stop'&&G.phase==='keep'&&humanAct){G.pmode=null;return answer({k:'stop'});}
+  if(t.dataset.box!=null&&G.phase==='passive'){const [pi,cell,ri,bi]=t.dataset.box.split(':').map(Number);const pp=G.players[pi];if(pi!==G.pp||G.psel==null)return;
+    fillBox(pp,cell,ri,bi,G.dice[G.psel]);G.pused.add(G.psel);G.psel=null;G.pdone++;
+    if(G.pdone<G.pallow)return render();
+    if(G.pdone===1&&G.pallow===1&&hasPower(pp,'extra')&&!G.poffer){G.poffer=true;return render();}
+    render();return answer('done');}
+  if(act==='ppass'&&G.phase==='passive'){sfx('click');return answer('done');}
+  if(act==='pextra'&&G.phase==='passive'){const c=hasPower(G.players[G.pp],'extra');if(c){c.ch--;G.pallow=2;sfx('power');log(`${nm(G.players[G.pp])} utilise son bonus « 2e dé ».`);}return render();}
+  if(t.dataset.doact!=null&&G.phase==='resolve'&&humanAct){const a=G.acts[+t.dataset.doact];if(a){G.pmode=null;answer(a);}return;}
+  if(act==='pass'&&G.phase==='resolve'&&humanAct){G.pmode=null;return answer({k:'pass'});}
+  if(act==='pw'&&humanAct){const c=p.grid.find(x=>x&&x.id===+t.dataset.card);if(!c||c.ch<=0)return;
+    if(c.pw==='reroll'){if(G.phase!=='resolve')return;c.ch--;G.maxRolls++;sfx('power');log(`${nm(p)} utilise son bonus de relance.`);return answer({k:'more'});}
+    G.pmode={pw:c.pw,card:c,die:null};sfx('click');return render();}
+  if(act==='pm'&&G.pmode&&G.pmode.die!=null){const d=G.dice[G.pmode.die];const nv=d.v+ +t.dataset.d;if(nv<1||nv>6)return;d.v=nv;G.pmode.card.ch--;sfx('power');log(`${nm(p)} modifie un dé (${t.dataset.d>0?'+1':'−1'}).`);G.pmode=null;return render();}
+  if(act==='pcol'&&G.pmode&&G.pmode.die!=null){const d=G.dice[G.pmode.die];d.c=t.dataset.c;G.pmode.card.ch--;sfx('power');log(`${nm(p)} change la couleur d’un dé en ${CN[d.c]}.`);G.pmode=null;return render();}
+  if(act==='pcancel'){G.pmode=null;return render();}
+});
+
+/* ================= menu ================= */
+const SC={n:2,players:[{name:'',ai:false},{name:'',ai:true},{name:'',ai:true},{name:'',ai:true}]};
+function randName(i){const pl=SC.players[i];const pool=(pl.ai?BOTN:NAMES).filter(x=>!SC.players.some((q,j)=>j!==i&&q.name===x));return pool[rnd(pool.length)];}
+SC.players.forEach((p,i)=>p.name=randName(i));
+function openSetup(){G=null;render();renderSetup();$('#setup').classList.remove('hidden');
+  ['#market','#tray','#actions','#players','#log','#rinfo'].forEach(s=>$(s).innerHTML='');}
+function renderSetup(){let h=`<div class="sheet"><div class="title"><span class="a">DONNANT</span><span class="b">DONNANT</span></div><div class="sub">Le jeu de dés où vos rejets font le bonheur des autres 🎲</div>
+  <div class="sec">Nombre de joueurs</div><div class="btns">${[1,2,3,4].map(n=>`<button class="nbtn ${SC.n===n?'on':''}" data-s="n" data-v="${n}">${n}</button>`).join('')}</div>
+  ${SC.n===1?'<p class="sub" style="text-align:left;margin:8px 0 0">Mode solo : 15 tours. À chaque relance, vous profitez vous-même d’un dé rejeté.</p>':''}
+  <div class="sec">Joueurs <button class="btn gr" style="padding:4px 10px;font-size:12px;margin-left:8px" data-s="allrand">🎲 Tous les noms au hasard</button></div>`;
+  for(let i=0;i<SC.n;i++){const p=SC.players[i];h+=`<div class="prow"><span class="dot" style="background:${PCOL[i]};width:16px;height:16px"></span><input data-name="${i}" maxlength="16" value="${esc(p.name)}" placeholder="Nom du joueur ${i+1}">
+    <button class="hbtn" data-s="rand" data-v="${i}" title="Nom au hasard">🎲</button><div class="seg"><button class="${!p.ai?'on':''}" data-s="type" data-v="${i}" data-t="h">👤 Joueur</button><button class="${p.ai?'on':''}" data-s="type" data-v="${i}" data-t="ai">🤖 Ordinateur</button></div></div>`;}
+  h+=`<div class="sec">Options</div>
+  <label class="opt"><input type="checkbox" data-opt="risk" ${S.risk?'checked':''}> Afficher les pourcentages de chance / risque</label>
+  <label class="opt"><input type="checkbox" data-opt="sfx" ${S.sfx?'checked':''}> Bruitages</label>
+  <label class="opt"><input type="checkbox" data-opt="music" ${S.music?'checked':''}> Musique d’ambiance relaxante</label>
+  <label class="opt">Vitesse de l’ordinateur <select data-opt="speed">${['lente','normale','rapide'].map(v=>`<option ${S.speed===v?'selected':''}>${v}</option>`).join('')}</select></label>
+  <div class="btns" style="justify-content:center;margin-top:18px"><button class="btn gr big" data-s="rules">📖 Règles</button><button class="btn g big" data-s="start">▶ Commencer</button></div></div>`;
+  $('#setup').innerHTML=h;}
+function setupClick(t){const s=t.dataset.s,v=+t.dataset.v;sfx('click');
+  if(s==='n')SC.n=v;else if(s==='rand')SC.players[v].name=randName(v);
+  else if(s==='allrand'){SC.players.forEach(p=>p.name='');SC.players.forEach((p,i)=>p.name=randName(i));}
+  else if(s==='type'){const p=SC.players[v];const was=p.ai;p.ai=t.dataset.t==='ai';if(was!==p.ai&&(NAMES.includes(p.name)||BOTN.includes(p.name)))p.name=randName(v);}
+  else if(s==='rules')return showRules();
+  else if(s==='start'){initAudio();updateMusic();const players=SC.players.slice(0,SC.n).map((p,i)=>({name:(p.name||'').trim()||randName(i),ai:p.ai}));return startGame({players});}
+  renderSetup();}
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.name!=null)SC.players[+t.dataset.name].name=t.value;});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.opt){const k=t.dataset.opt;S[k]=t.type==='checkbox'?t.checked:t.value;saveS();if(k==='music')updateMusic();renderHeader();}});
+function showRules(){showModal(`<div class="sheet rules"><div class="title" style="font-size:40px"><span class="a">RÈGLES</span></div>
+<h4>Mise en place</h4><p>Le marché comporte une rivière de 4 cartes <b>score</b> (couronne) et une de 4 cartes <b>bonus</b> (B). Chaque joueur pioche 2 cartes de chaque type, en garde 3 et les place. Vos cartes doivent toujours se toucher (côté ou angle) dans une grille de 3×3 au maximum.</p>
+<h4>Tour du joueur actif</h4><ul><li>Lancez les 5 dés colorés. Gardez ceux qui vous intéressent (ils sont ensuite verrouillés 🔒) et relancez les autres, jusqu’à 2 fois.</li>
+<li><b>Donnant donnant :</b> avant chaque relance, chaque joueur passif peut utiliser <b>un</b> des dés rejetés (sa couleur et sa valeur) pour cocher une case sur une de ses cartes, même sans la terminer.</li>
+<li>Ensuite, avec vos dés, faites <b>une</b> action : <b>terminer</b> une de vos cartes (toutes ses cases restantes, en une fois) <b>ou acheter</b> une carte du marché.</li></ul>
+<h4>Remplir les cases</h4><p>Case colorée = dé de cette couleur ; case blanche = n’importe quel dé. Chiffre imprimé = valeur exacte ; case vide = la valeur du dé y est inscrite. « = » : valeurs identiques ; « &lt; » : la valeur de gauche est plus petite.</p>
+<h4>Acheter</h4><p>Colonnes 1 et 2 : <b>4 dés de même valeur</b>. Colonnes 3 et 4 : <b>3 dés de même valeur</b>. Vous prenez la carte score <i>ou</i> bonus de la colonne ; les cartes à sa gauche glissent vers la droite (moins chères) et une nouvelle carte arrive en colonne 1.</p>
+<h4>Score (cartes terminées uniquement)</h4><ul><li>■ × n : n pts par carte de cette couleur dans votre grille</li><li>✚■ × n : n pts par carte de cette couleur adjacente (côté)</li><li>✚ 5 coul. : si cette carte et ses 4 voisines ont 5 couleurs différentes</li><li>✔ × n : n pts par carte terminée de votre grille ; ⊞✔ × n : par carte terminée voisine (côté ou angle)</li><li>★ : points fixes</li></ul>
+<h4>Bonus (une fois la carte terminée, 3 utilisations)</h4><ul>${Object.keys(POWD).map(k=>`<li>${POWN[k]} ${POWD[k]}</li>`).join('')}</ul>
+<h4>Fin de partie</h4><p>Dès qu’un joueur a 9 cartes, on termine le tour de table. Le plus grand total gagne (égalité : le plus de cartes terminées). Solo : 15 tours.</p>
+<h4>Pourcentages</h4><p>Avec l’option activée, 🎯 indique la chance de terminer chaque carte ou de payer chaque colonne avec les relances restantes (entre parenthèses : dès la prochaine relance), en conservant les dés gardés. Le risque d’échec est le complément (survolez le badge).</p>
+<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn g" data-act="closemodal">Compris !</button></div></div>`);}
+openSetup();
+</script>
+</body>
+</html>
