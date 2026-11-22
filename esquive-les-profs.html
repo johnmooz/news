@@ -34,7 +34,7 @@
   .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .btn{flex:1;min-width:120px;border:none;border-radius:14px;padding:12px 10px;font:800 18px 'Baloo 2',sans-serif;cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.25)}
   .btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
-  .b1{background:#27ae60}.b2{background:#e67e22}.b3{background:#c0392b}.b4{background:#2f80ed}
+  .b5{background:#3d2a5c;flex-basis:100%}.b1{background:#27ae60}.b2{background:#e67e22}.b3{background:#c0392b}.b4{background:#2f80ed}
   .small{font-size:13px;color:#7a6550}
   kbd{background:#eadbc4;border-radius:5px;padding:0 5px;font-family:inherit;font-weight:700}
 </style>
@@ -46,12 +46,13 @@
   <div id="left">
     <div class="pill" id="goal">🎯</div>
     <div class="pill" id="floor">Dehors</div>
-    <div class="pill" id="alertWrap">Alerte<div id="alertBar"><div id="alertFill"></div></div></div>
+    <div class="pill" id="alertWrap"><span id="barLabel">Alerte</span><div id="alertBar"><div id="alertFill"></div></div></div>
   </div>
   <div class="pill" id="timer">⏱ 0:00.0</div>
   <div id="right"><button class="pill" id="pauseBtn" aria-label="Pause">❚❚</button><button class="pill" id="muteBtn" aria-label="Musique">🔊</button></div>
 </div>
 <div id="toast"></div>
+<div id="hurt" style="position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle,transparent 40%,rgba(200,0,0,.7));opacity:0;transition:opacity .25s"></div>
 <div id="hint" class="pill hidden"></div>
 
 <div class="overlay" id="startScreen">
@@ -65,11 +66,13 @@
       <div><span class="dot" style="background:#c0392b">D</span><span><b>Directeur</b> : va partout, à tous les étages, mais il voit mal (cône étroit et court)</span></div>
       <div><span class="dot" style="background:#27ae60">★</span><span><b>Toi</b> : les tables, les arbres et les murs te cachent</span></div>
     </div>
+    <p class="small"><b>🧟 Mode zombie :</b> l'école est plongée dans le noir et envahie de zombies lents. S'ils te voient, ils te pourchassent ; chaque contact te fait perdre de l'énergie. Atteins ta classe pour rallumer la lumière !</p>
     <p class="small">Clavier : <kbd>↑↓←→</kbd>, <kbd>ZQSD</kbd> ou <kbd>WASD</kbd> · Pause : <kbd>Échap</kbd><br>Tactile : pose le doigt n'importe où et fais glisser pour te déplacer. Marche sur un escalier rouge pour changer d'étage.</p>
     <div class="btns">
       <button class="btn b1" data-diff="facile">Facile</button>
       <button class="btn b2" data-diff="normal">Normal</button>
       <button class="btn b3" data-diff="difficile">Difficile</button>
+      <button class="btn b5" data-diff="zombie">🧟 Mode zombie</button>
     </div>
   </div>
 </div>
@@ -212,10 +215,12 @@ const DIFF = {
   facile:   {vis:0.85, rate:0.75, speed:0.85, prof0:3, prof1:3, survs:2},
   normal:   {vis:1.0,  rate:1.0,  speed:1.0,  prof0:5, prof1:5, survs:3},
   difficile:{vis:1.12, rate:1.3,  speed:1.15, prof0:9, prof1:7, survs:4},
+  zombie:   {vis:1.0,  rate:1.0,  speed:1.0,  zombies:18, zombie:true},
 };
 const TYPES = {
   surv:{speed:2.0, range:5,   fov:70, color:'#f39c12', letter:'S', mul:1,    name:'Un surveillant t\'a repéré !'},
   prof:{speed:1.0, range:4.5, fov:85, color:'#2f80ed', letter:'E', mul:1,    name:'Un enseignant t\'a vu passer !'},
+  zomb:{speed:0.8, range:4.2, fov:110, color:'#6aa84f', letter:'Z', mul:1, name:''},
   dir: {speed:2.4, range:3.2, fov:40, color:'#c0392b', letter:'D', mul:1.35, name:'Le directeur t\'a attrapé !'},
 };
 const ROOMS=[
@@ -246,6 +251,7 @@ const PATROLS=[
 ];
 
 // ================== ÉTAT ==================
+let invulT=0, dark=0, won=false, hurtT=0, musicBase=0;
 let CFG, P, guards, elapsed=0, state='menu', diffKey='normal', toastT=0, bestKey='esquive-chrono-';
 const keys = {};
 const joy = {active:false,id:null,ox:0,oy:0,dx:0,dy:0};
@@ -263,8 +269,13 @@ function makeGuard(type,f,x,y,extra){
 
 function newGame(){
   CFG = DIFF[diffKey];
-  P = {f:0, x:6.5, y:27.5, angle:-Math.PI/2, onStair:false, r:0.28, walk:0};
-  guards = [];
+  P = {f:0, x:6.5, y:27.5, angle:-Math.PI/2, onStair:false, r:0.28, walk:0, energy:100};
+  guards = []; won=false; hurtT=0; invulT=0;
+  dark = CFG.zombie ? 1 : 0; musicBase = CFG.zombie ? -5 : 0;
+  $('barLabel').textContent = CFG.zombie ? 'Énergie' : 'Alerte';
+  alertFill.style.background = CFG.zombie ? 'linear-gradient(90deg,#e74c3c,#2ecc71)' : '';
+  if(CFG.zombie){ setTarget(); buildBG(); spawnZombies(); }
+  else {
   // surveillants
   for(let i=0;i<CFG.survs;i++){
     const pt=PATROLS[i]; let idx=0;
@@ -291,6 +302,7 @@ function newGame(){
     waitMin:1.2, waitMax:3,
     nextTarget(){ return INTERIOR[Math.floor(Math.random()*INTERIOR.length)]; }
   }));
+  }
   elapsed = 0;
   state='play';
   show('hud'); hide('startScreen'); hide('endScreen'); hide('pauseScreen');
@@ -299,8 +311,77 @@ function newGame(){
   show('hint'); setTimeout(()=>hide('hint'),5000);
   const fl = TARGET.f ? '1er étage' : 'rez-de-chaussée';
   $('goal').textContent = `🎯 ${TARGET.name} · ${TARGET.f?'1er':'RDC'}`;
-  showToast(`Ta classe : ${TARGET.name} (${fl})`);
+  showToast(CFG.zombie ? `🧟 Dans le noir… ta classe : ${TARGET.name} (${fl})` : `Ta classe : ${TARGET.name} (${fl})`);
   musicStop(); tension=0; setTimeout(musicStart,0);
+}
+
+// ================== ZOMBIES ==================
+const inRoom=(room,f,x,y)=>room.f===f && x>=room.r[0] && x<=room.r[2] && y>=room.r[1] && y<=room.r[3];
+function spawnZombies(){
+  const cands=INTERIOR.filter(t=>!inRoom(TARGET,t.f,t.x,t.y) && Math.hypot(t.x-32,t.y-24)>7);
+  for(let i=0;i<CFG.zombies;i++){
+    const t=cands[Math.floor(Math.random()*cands.length)];
+    guards.push(makeGuard('zomb',t.f,t.x,t.y,{chaseSpeed:2.0, chasing:false, chaseT:0, repath:0, hitCD:0, waitMin:1, waitMax:3.5}));
+  }
+}
+function groan(){
+  try{ if(!actx) return; const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+    o.type='sawtooth'; o.frequency.setValueAtTime(rnd(85,110),t); o.frequency.linearRampToValueAtTime(55,t+0.6);
+    g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.08,t+0.1); g.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.75); }catch(e){}
+}
+function followPath(g,speed,dt){
+  const n=g.path[0];
+  if(n.f!==g.floor){ g.floor=n.f; g.path.shift(); return; }
+  const tx=n.x+.5, ty=n.y+.5, dx=tx-g.x, dy=ty-g.y, d=Math.hypot(dx,dy), step=speed*dt;
+  if(d>0.01) turnTo(g,Math.atan2(dy,dx),dt*7);
+  if(d<=step){ g.x=tx; g.y=ty; g.path.shift(); } else { g.x+=dx/d*step; g.y+=dy/d*step; }
+}
+function hurt(g,dx,dy,d){
+  P.energy=Math.max(0,P.energy-15); g.hitCD=1.2; invulT=0.8; hurtT=0.35; beep(140,.18,'sawtooth');
+  const k=0.55, nx=P.x+dx/(d||1)*k, ny=P.y+dy/(d||1)*k;
+  if(!blockedAt(P.f,nx,P.y,P.r)) P.x=nx;
+  if(!blockedAt(P.f,P.x,ny,P.r)) P.y=ny;
+  if(P.energy<=0 && state==='play'){
+    state='end'; musicStop(); beep(110,.6,'sawtooth');
+    endScreen('🧟 Dévoré !','Tu n\'as plus d\'énergie… les zombies t\'ont eu.','');
+  }
+}
+function updateZombie(g,dt){
+  if(state!=='play') return;
+  g.hitCD=Math.max(0,g.hitCD-dt);
+  const same=g.floor===P.f, dx=P.x-g.x, dy=P.y-g.y, d=Math.hypot(dx,dy);
+  let sees=false;
+  if(same && d<g.range && los(g.floor,g.x,g.y,P.x,P.y)){
+    if(Math.abs(norm(Math.atan2(dy,dx)-g.angle))<g.fov/2 || d<1.6) sees=true;
+  }
+  if(sees){ if(!g.chasing){ g.chasing=true; g.repath=0; groan(); } g.chaseT=3.5; }
+  else if(g.chasing){ g.chaseT-=dt; if(g.chaseT<=0){ g.chasing=false; g.path=[]; g.wait=rnd(1,2); } }
+  g.meter = g.chasing ? 0.6 : 0;
+  if(same && d<0.65 && g.hitCD<=0 && invulT<=0) hurt(g,dx,dy,d);
+  if(g.chasing){
+    const close = same && sees && d<1.3;
+    if(close){
+      const sp=g.chaseSpeed*dt;
+      if(d>0.35){ const nx=g.x+dx/d*sp, ny=g.y+dy/d*sp;
+        if(!blockedAt(g.floor,nx,g.y,0.22)) g.x=nx; if(!blockedAt(g.floor,g.x,ny,0.22)) g.y=ny; }
+      turnTo(g,Math.atan2(dy,dx),dt*8); return;
+    }
+    g.repath-=dt;
+    if(g.repath<=0){ g.repath=0.4; const pth=findPath(g.floor,g.x|0,g.y|0,P.f,P.x|0,P.y|0); g.path=pth||[]; }
+    if(g.path.length) followPath(g,g.chaseSpeed,dt);
+    return;
+  }
+  if(g.path.length){ followPath(g,g.speed,dt); if(!g.path.length) g.wait=rnd(g.waitMin,g.waitMax); return; }
+  if(g.wait>0){
+    g.wait-=dt; g.lookT-=dt;
+    if(g.lookT<=0){ g.lookT=rnd(0.8,1.8); g.lookA=norm(g.angle+rnd(-1.8,1.8)); }
+    turnTo(g,g.lookA,dt*2); return;
+  }
+  let t=null;
+  for(let k=0;k<20 && !t;k++){ const c=INTERIOR[Math.floor(Math.random()*INTERIOR.length)]; if(c.f===g.floor && Math.hypot(c.x-g.x,c.y-g.y)<8) t=c; }
+  const pth = t && findPath(g.floor,g.x|0,g.y|0,t.f,t.x,t.y);
+  g.path=pth||[]; if(!g.path.length) g.wait=0.6;
 }
 
 // ================== MISE À JOUR ==================
@@ -331,7 +412,10 @@ function updatePlayer(dt){
       showToast(P.f===1?'1er étage':'Rez-de-chaussée'); beep(P.f?660:440,.12);
     }
   } else P.onStair=false;
-  if(P.f===SEAT.f && Math.hypot(P.x-SEAT.x,P.y-SEAT.y)<0.6) win();
+  if(CFG.zombie){
+    P.energy=Math.min(100,P.energy+2*dt);
+    if(inRoom(TARGET,P.f,P.x|0,P.y|0)) win();
+  } else if(P.f===SEAT.f && Math.hypot(P.x-SEAT.x,P.y-SEAT.y)<0.6) win();
 }
 
 function turnTo(g,target,maxStep){
@@ -361,6 +445,7 @@ function detect(g,dt){
   }
 }
 function updateGuard(g,dt){
+  if(g.type==='zomb') return updateZombie(g,dt);
   detect(g,dt);
   if(state!=='play') return;
   if(g.meter>0.25 && g.lastSeen){             // méfiant : s'arrête et regarde
@@ -389,10 +474,13 @@ function updateGuard(g,dt){
 
 function win(){
   if(state!=='play') return;
-  state='end'; musicStop(); beep(523,.12); setTimeout(()=>beep(659,.12),130); setTimeout(()=>beep(784,.25),260);
+  state='end'; won=true; musicStop(); beep(523,.12);
+  if(CFG.zombie) guards.forEach(g=>{ g.cured=true; g.chasing=false; g.meter=0; g.color='#2f80ed'; g.letter='E'; }); setTimeout(()=>beep(659,.12),130); setTimeout(()=>beep(784,.25),260);
   const t=Math.round(elapsed*10)/10;
   let best=0; try{ best=+localStorage.getItem(bestKey+diffKey)||0; if(!best||t<best) localStorage.setItem(bestKey+diffKey,t); }catch(e){}
-  endScreen('🎉 Bien joué !', `Tu es assis à ta place (${TARGET.name}) en <b>${fmt(t)}</b>. Personne n'a rien vu !`,
+  endScreen(CFG.zombie ? '💡 La lumière revient !' : '🎉 Bien joué !',
+    CFG.zombie ? `Tu as atteint ta classe (${TARGET.name}) en <b>${fmt(t)}</b> avec ${Math.round(P.energy)} % d'énergie. Les zombies redeviennent… de simples profs !`
+               : `Tu es assis à ta place (${TARGET.name}) en <b>${fmt(t)}</b>. Personne n'a rien vu !`,
     (!best||t<best) ? 'Nouveau record pour ce niveau !' : `Record (${diffKey}) : ${fmt(best)}`);
 }
 function lose(g){
@@ -405,12 +493,23 @@ function endScreen(t,txt,best){
   document.getElementById('endTitle').innerHTML=t;
   document.getElementById('endText').innerHTML=txt;
   document.getElementById('endBest').textContent=best;
-  setTimeout(()=>show('endScreen'),600);
+  setTimeout(()=>show('endScreen'),CFG&&CFG.zombie&&won?1600:600);
 }
 
 // ================== RENDU ==================
 const cv=document.getElementById('c'), ctx=cv.getContext('2d');
 let vw, vh, dpr, ts, bg=[null,null];
+const darkCv=document.createElement('canvas'), dctx=darkCv.getContext('2d');
+function renderDark(sx,sy){
+  dctx.globalCompositeOperation='source-over';
+  dctx.clearRect(0,0,darkCv.width,darkCv.height);
+  dctx.fillStyle='rgba(3,5,14,.96)'; dctx.fillRect(0,0,darkCv.width,darkCv.height);
+  dctx.globalCompositeOperation='destination-out';
+  const R=ts*dpr*(3.2+Math.sin(performance.now()/70)*0.04+(Math.random()<0.03?-0.4:0));
+  const gr=dctx.createRadialGradient(sx*dpr,sy*dpr,R*0.3,sx*dpr,sy*dpr,R);
+  gr.addColorStop(0,'rgba(0,0,0,1)'); gr.addColorStop(1,'rgba(0,0,0,0)');
+  dctx.fillStyle=gr; dctx.beginPath(); dctx.arc(sx*dpr,sy*dpr,R,0,7); dctx.fill();
+}
 
 const COL={'.':'#cfcac2',',':'#8b6d55','R':'#3b3b40','c':'#eadfc6','v':'#d8c4a3','s':'#dcbc7c','h':'#8e959c','D':'#eadfc6','S':'#8f2a20','G':'#eadfc6','T':'#cfcac2','F':'#cfcac2','P':'#dcbc7c','w':'#dcbc7c','B':'#cfcac2','#':'#b0553f','Y':'#e9c446','r':'#3d3d46'};
 
@@ -492,7 +591,7 @@ function buildBG(){
 }
 function resize(){
   dpr=Math.min(window.devicePixelRatio||1,2); vw=innerWidth; vh=innerHeight;
-  cv.width=vw*dpr; cv.height=vh*dpr;
+  cv.width=vw*dpr; cv.height=vh*dpr; darkCv.width=cv.width; darkCv.height=cv.height;
   ts=Math.max(30,Math.min(60,Math.min(vw,vh)/12));
   buildBG();
 }
@@ -531,28 +630,24 @@ function draw(){
   const here = guards.filter(g=>g.floor===P.f);
   // cônes de vision
   for(const g of here){
+    if(g.cured) continue;
     const pts=coneShape(g);
     const alert=g.meter;
-    ctx.fillStyle = g.type==='dir' ? `rgba(231,76,60,${.22+alert*.3})` : g.type==='prof' ? `rgba(47,128,237,${.2+alert*.3})` : `rgba(255,196,0,${.22+alert*.3})`;
+    ctx.fillStyle = g.type==='zomb' ? (g.chasing?'rgba(255,40,40,.28)':'rgba(140,255,120,.16)')
+      : g.type==='dir' ? `rgba(231,76,60,${.22+alert*.3})` : g.type==='prof' ? `rgba(47,128,237,${.2+alert*.3})` : `rgba(255,196,0,${.22+alert*.3})`;
     ctx.beginPath(); ctx.moveTo(pts[0][0]*ts,pts[0][1]*ts);
     for(const p of pts) ctx.lineTo(p[0]*ts,p[1]*ts);
     ctx.closePath(); ctx.fill();
   }
-  // flèche d'objectif
-  let ox,oy;
-  if(!SEAT){ ox=P.x; oy=P.y; }
-  else if(P.f===0 && P.y>25.2){ ox=32.9; oy=24.5; }
-  else if(P.f===SEAT.f){ ox=SEAT.x; oy=SEAT.y; }
-  else { const a=[[28,13],[30,23.5],[3,8.5]].sort((p,q)=>Math.hypot(p[0]-P.x,p[1]-P.y)-Math.hypot(q[0]-P.x,q[1]-P.y))[0]; ox=a[0]; oy=a[1]; }
-  if(state==='play' && Math.hypot(ox-P.x,oy-P.y)>1.4){
-    const a=Math.atan2(oy-P.y,ox-P.x), ax=(P.x+Math.cos(a)*.95)*ts, ay=(P.y+Math.sin(a)*.95)*ts;
-    ctx.save(); ctx.translate(ax,ay); ctx.rotate(a); ctx.fillStyle='rgba(125,255,176,.85)';
-    ctx.beginPath(); ctx.moveTo(ts*.2,0); ctx.lineTo(-ts*.1,-ts*.13); ctx.lineTo(-ts*.1,ts*.13); ctx.closePath(); ctx.fill(); ctx.restore();
-  }
   // personnages
   for(const g of here){
     const moving=g.path.length>0 && g.susT<=0;
-    drawChar(g.x,g.y,g.color,g.letter,g.angle,moving?Math.sin(performance.now()/90)*1.2:0);
+    if(g.type==='zomb' && !g.cured){        // bras tendus
+      ctx.save(); ctx.translate(g.x*ts,g.y*ts); ctx.rotate(g.angle); ctx.fillStyle='#4e7d3a';
+      ctx.fillRect(ts*.1,-ts*.3,ts*.38,ts*.1); ctx.fillRect(ts*.1,ts*.2,ts*.38,ts*.1); ctx.restore();
+    }
+    drawChar(g.x,g.y,g.color,g.letter,g.angle,moving?Math.sin(performance.now()/(g.type==='zomb'?160:90))*1.2:0);
+    if(g.type==='zomb') continue;
     if(g.meter>0.02){
       ctx.strokeStyle=g.meter>.6?'#ff3b2f':'#ffd23f'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(g.x*ts,g.y*ts,ts*.45,-Math.PI/2,-Math.PI/2+g.meter*Math.PI*2); ctx.stroke();
@@ -567,6 +662,30 @@ function draw(){
   const r=ts*.33, bx=P.x*ts-Math.cos(P.angle)*r*.75, by=P.y*ts-Math.sin(P.angle)*r*.75;
   ctx.save(); ctx.translate(bx,by); ctx.rotate(P.angle); ctx.fillStyle='#1f5fa8'; ctx.fillRect(-r*.3,-r*.55,r*.55,r*1.1); ctx.restore();
   drawChar(P.x,P.y,'#27ae60','★',P.angle,Math.sin(P.walk)*1.5);
+  // obscurité (mode zombie)
+  if(dark>0){
+    renderDark(P.x*ts-Math.round(cx), P.y*ts-Math.round(cy));
+    ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=dark; ctx.drawImage(darkCv,0,0); ctx.restore();
+    // yeux rouges qui brillent dans le noir
+    ctx.save(); ctx.globalAlpha=dark;
+    for(const g of here){ if(g.cured) continue;
+      const ex=Math.cos(g.angle), ey=Math.sin(g.angle), px=g.x*ts+ex*ts*.18, py=g.y*ts+ey*ts*.18, o=ts*.1;
+      ctx.fillStyle=g.chasing?'#ff2a2a':'#ff7a5a'; ctx.shadowColor='#ff0000'; ctx.shadowBlur=ts*.3;
+      ctx.beginPath(); ctx.arc(px-ey*o,py+ex*o,ts*.05,0,7); ctx.arc(px+ey*o,py-ex*o,ts*.05,0,7); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // flèche d'objectif
+  let ox,oy;
+  if(!SEAT){ ox=P.x; oy=P.y; }
+  else if(P.f===0 && P.y>25.2){ ox=32.9; oy=24.5; }
+  else if(P.f===SEAT.f){ ox=SEAT.x; oy=SEAT.y; }
+  else { const a=[[28,13],[30,23.5],[3,8.5]].sort((p,q)=>Math.hypot(p[0]-P.x,p[1]-P.y)-Math.hypot(q[0]-P.x,q[1]-P.y))[0]; ox=a[0]; oy=a[1]; }
+  if(state==='play' && Math.hypot(ox-P.x,oy-P.y)>1.4){
+    const a=Math.atan2(oy-P.y,ox-P.x), ax=(P.x+Math.cos(a)*.95)*ts, ay=(P.y+Math.sin(a)*.95)*ts;
+    ctx.save(); ctx.translate(ax,ay); ctx.rotate(a); ctx.fillStyle='rgba(125,255,176,.9)';
+    ctx.beginPath(); ctx.moveTo(ts*.2,0); ctx.lineTo(-ts*.1,-ts*.13); ctx.lineTo(-ts*.1,ts*.13); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
   ctx.restore();
 
   // joystick
@@ -580,7 +699,7 @@ function draw(){
 
 // ================== HUD ==================
 const $=id=>document.getElementById(id);
-const hint=$('hint'), timerEl=$('timer'), floorEl=$('floor'), alertFill=$('alertFill'), toastEl=$('toast');
+const hurtEl=$('hurt'), hint=$('hint'), timerEl=$('timer'), floorEl=$('floor'), alertFill=$('alertFill'), toastEl=$('toast');
 function show(id){ $(id).classList.remove('hidden'); }
 function hide(id){ $(id).classList.add('hidden'); }
 function showToast(t){ toastEl.textContent=t; toastEl.style.opacity=1; toastT=1.4; }
@@ -589,7 +708,7 @@ function updateHUD(){
   floorEl.textContent = P.f===1 ? '🏫 1er étage' : (P.y>25.2 ? '🚶 Dehors' : '🏫 Rez-de-chaussée');
   const m=Math.max(0,...guards.map(g=>g.meter));
   tension += (Math.min(1,m*1.4)-tension)*0.08;
-  alertFill.style.width=Math.min(100,m*100)+'%';
+  alertFill.style.width=(CFG.zombie?P.energy:Math.min(100,m*100))+'%';
 }
 
 // ================== SON ==================
@@ -630,18 +749,18 @@ function mKick(t){
 }
 function playStep(st,t){
   const i=st%16, sh=SHIFT[(st/16)|0];
-  mNote(mtof(BASS[i]+sh),t,0.13,'sawtooth',0.16,500+tension*1500);
+  mNote(mtof(musicBase+BASS[i]+sh),t,0.13,'sawtooth',0.16,500+tension*1500);
   mHat(t,i%4===2?0.09:0.035);
   if(i%8===0 || (tension>0.35 && i%4===0)) mKick(t);
-  if(i===0) { mNote(mtof(69+sh),t,0.6,'triangle',0.05,3000); mNote(mtof(70+sh),t,0.6,'triangle',0.04,3000); }
-  if(i===8 && st>=32) mNote(mtof(75+sh),t,0.35,'square',0.025,2000);
+  if(i===0) { mNote(mtof(musicBase+69+sh),t,0.6,'triangle',0.05,3000); mNote(mtof(musicBase+70+sh),t,0.6,'triangle',0.04,3000); }
+  if(i===8 && st>=32) mNote(mtof(musicBase+75+sh),t,0.35,'square',0.025,2000);
   if(tension>0.5 && i%2===0) mNote(i%4===0?988:1047,t,0.09,'square',0.03+tension*0.03,4000);
 }
 function schedule(){
   if(!music.playing) return;
   while(music.next<actx.currentTime+0.12){
     playStep(music.step,music.next);
-    music.next+=60/(128+tension*70)/4;
+    music.next+=60/((CFG&&CFG.zombie?100:128)+tension*70)/4;
     music.step=(music.step+1)%64;
   }
 }
@@ -689,6 +808,10 @@ function loop(now){
     for(const g of guards) updateGuard(g,dt);
     updateHUD();
   }
+  if(won && dark>0) dark=Math.max(0,dark-dt*0.8);
+  if(hurtT>0){ hurtT-=dt; }
+  if(invulT>0 && state==='play') invulT-=dt;
+  hurtEl.style.opacity = hurtT>0 ? 1 : 0;
   if(toastT>0){ toastT-=dt; if(toastT<=0) toastEl.style.opacity=0; }
   draw();
 }
@@ -734,3 +857,4 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
+
