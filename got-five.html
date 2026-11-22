@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Got Five</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:#5fbf45;--p:#e48ccf;--b:#4fb3e6;--r:#e8513f;--y:#f4b02e;
+  --bg:#5a1d5c;--bg2:#7a2a7a;--panel:#fbf3e4;--ink:#3a1240;--muted:#8a6b8e;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(circle at 30% 0%,#8e3690 0%,var(--bg) 60%,#3c0f3f 100%) fixed;min-height:100%}
+button{font-family:inherit;cursor:pointer;border:none}
+.wrap{max-width:720px;margin:0 auto;padding:12px 10px 120px}
+h1.logo{font-size:44px;margin:14px 0 4px;text-align:center;color:#fff;letter-spacing:1px;
+  text-shadow:0 4px 0 #2b0a2e}
+h1.logo span{display:inline-block;padding:0 4px;border-radius:8px;margin:0 1px}
+.sub{text-align:center;color:#f3d7f0;margin:0 0 16px;font-size:15px}
+.card{background:var(--panel);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.card h2{margin:0 0 10px;font-size:18px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;background:#ecdcea;border-radius:12px;padding:3px}
+.seg button{background:none;padding:8px 14px;border-radius:9px;font-size:16px;color:var(--ink);font-weight:600}
+.seg button.on{background:var(--bg2);color:#fff}
+.pl{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border-radius:14px;background:#fff;margin-bottom:8px;border:2px solid #ecdcea}
+.pl input{font:inherit;font-size:17px;padding:8px 10px;border-radius:10px;border:2px solid #e2cde0;width:100%;min-width:0}
+.btn{background:var(--bg2);color:#fff;padding:10px 16px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 3px 0 #3b0f3d}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #3b0f3d}
+.btn.light{background:#ecdcea;color:var(--ink);box-shadow:0 3px 0 #cdb3ca}
+.btn.big{font-size:20px;padding:14px 22px;width:100%}
+.btn.gf{background:linear-gradient(180deg,#ffcf3f,#f39a12);color:#5a1d5c;font-size:22px;font-weight:700;box-shadow:0 4px 0 #a85d00}
+.btn:disabled{opacity:.45}
+.icon{width:42px;height:42px;padding:0;font-size:20px}
+.small{font-size:13px;color:var(--muted)}
+label.chk{display:flex;gap:8px;align-items:center;font-size:15px;margin-top:8px}
+label.chk input{width:20px;height:20px}
+
+/* tiles */
+.tile{width:46px;height:56px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:21px;position:relative;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 2px 0 rgba(0,0,0,.25);flex:none;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.tile .dots{display:flex;gap:3px;margin-top:2px}
+.tile .dots i{width:5px;height:5px;background:#fff;border-radius:50%;display:block;box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.c0{background:var(--g)}.c1{background:var(--p)}.c2{background:var(--b)}.c3{background:var(--r)}.c4{background:var(--y)}
+.tile.back{background:repeating-linear-gradient(45deg,#6d2470 0 6px,#7c2c7f 6px 12px);color:#f6c8f2;font-size:22px}
+.tile.sel{outline:4px solid #ffd23f;outline-offset:2px;transform:translateY(-4px)}
+.tile.pick{cursor:pointer}
+.tile.pick:hover{transform:translateY(-2px)}
+.tile.target{outline:3px dashed #ffd23f;outline-offset:2px;cursor:pointer;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:translateY(-3px)}}
+.tile .note{position:absolute;bottom:-18px;font-size:12px;color:#fff;text-shadow:none;font-weight:600}
+.tile.sm{width:30px;height:36px;font-size:14px;border-radius:6px}
+.tile.sm .dots i{width:3px;height:3px}
+
+/* game */
+.top{display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:8px;gap:8px}
+.top .turn{font-size:17px;font-weight:600}
+.top .deck{font-size:14px;background:rgba(0,0,0,.25);padding:5px 10px;border-radius:10px;white-space:nowrap}
+.racks{display:grid;gap:8px;margin-bottom:10px}
+.rack{background:rgba(255,255,255,.1);border-radius:14px;padding:8px 10px;color:#fff;border:2px solid transparent}
+.rack.active{border-color:#ffd23f;background:rgba(255,210,63,.12)}
+.rack.out{opacity:.5}
+.rack .nm{display:flex;justify-content:space-between;font-weight:600;font-size:15px;margin-bottom:6px}
+.rack .nm .tag{font-size:12px;background:rgba(0,0,0,.3);padding:2px 8px;border-radius:8px;font-weight:500}
+.rack .tiles{display:flex;gap:6px}
+.rack .shelf{height:8px;background:#e8d6b0;border-radius:4px;margin-top:4px;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.center{background:rgba(0,0,0,.22);border-radius:16px;padding:10px;margin-bottom:10px;color:#fff}
+.center .lbl{font-size:13px;color:#f3d7f0;margin-bottom:6px;display:flex;justify-content:space-between}
+.pool{display:flex;gap:7px;flex-wrap:wrap;min-height:58px}
+.disc{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.me{background:var(--panel);border-radius:18px;padding:12px;margin-bottom:10px}
+.me .tiles{display:flex;gap:8px;justify-content:center;padding-bottom:20px}
+.me .hd{display:flex;justify-content:space-between;font-weight:600;margin-bottom:8px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.actions .btn{font-size:15px;padding:12px 8px}
+.msg{background:#fff;border-radius:12px;padding:10px 12px;font-size:15px;margin-top:8px;border-left:5px solid var(--bg2)}
+.msg.ok{border-color:var(--g)} .msg.no{border-color:var(--r)}
+
+/* sheet */
+.sheet{background:#fdf6e8;border-radius:18px;padding:10px;margin-bottom:10px}
+.sheet .hd{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.cell{aspect-ratio:1/1.12;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-weight:700;font-size:clamp(11px,3.2vw,17px);color:#fff;position:relative;cursor:pointer;user-select:none;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+.cell .dots{display:flex;gap:2px;margin-top:1px}
+.cell .dots i{width:3px;height:3px;background:#fff;border-radius:50%;display:block}
+.cell.x::after,.cell.k::after{content:"";position:absolute;inset:8% 8%;
+  background:linear-gradient(to top right,transparent calc(50% - 1.5px),#2b0a2e calc(50% - 1.5px),#2b0a2e calc(50% + 1.5px),transparent calc(50% + 1.5px))}
+.cell.k{opacity:.35}
+.cell.k::after{background:linear-gradient(to top right,transparent calc(50% - 1px),#fff calc(50% - 1px),#fff calc(50% + 1px),transparent calc(50% + 1px))}
+.cell.o::before{content:"";position:absolute;inset:4%;border:3px solid #2b0a2e;border-radius:50%}
+.cell.imp{filter:saturate(.25) brightness(.9)}
+.legend{font-size:12px;color:var(--muted);margin-top:6px}
+.log{background:rgba(0,0,0,.22);border-radius:16px;padding:10px;color:#fbe9f8;font-size:14px;max-height:220px;overflow:auto}
+.log div{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.log b{color:#fff}
+.log .mine{color:#ffe27a}
+.gfbar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(30,5,32,.9) 35%)}
+.gfbar .in{max-width:720px;margin:0 auto}
+
+/* modals */
+.ov{position:fixed;inset:0;background:rgba(25,4,28,.75);display:flex;align-items:center;justify-content:center;z-index:50;padding:14px}
+.ov.solid{background:radial-gradient(circle,#7a2a7a,#2b0a2e)}
+.modal{background:var(--panel);border-radius:20px;padding:16px;max-width:460px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 10px 0 rgba(0,0,0,.3)}
+.modal h3{margin:0 0 10px;font-size:22px}
+.slots{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.slot{width:54px;height:62px;border-radius:10px;border:3px dashed #c9a9c6;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;cursor:pointer;background:#fff}
+.slot.cur{border-color:var(--bg2);border-style:solid}
+.slot.filled{border:none;color:#fff}
+.picker{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:8px}
+.big-emoji{font-size:56px;text-align:center}
+.rules p{margin:6px 0;font-size:15px;line-height:1.4}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<script>
+// ---------- constants ----------
+const COLORS=['Vert','Rose','Bleu','Rouge','Jaune'];
+const colorOf=n=>(n-1)%5;
+const DOTPAT=[1,3,2,2,1,3,3,2,1,1,2,3];
+const dots=n=>{const c=colorOf(n),i=Math.floor((n-1)/5);return DOTPAT[(i+5*c)%12];};
+const NAMES=['Léa','Hugo','Chloé','Lucas','Emma','Nathan','Manon','Louis','Jade','Gabriel','Inès','Arthur','Zoé','Jules','Camille','Raphaël','Alice','Tom','Lina','Noé','Margot','Sacha','Rose','Paul'];
+const AINAMES=['Électro','Robot','Circuit','Pixel','Bip-Bop','Turbo','Néon','Volt','Byte','Gizmo','Androïde','Cyborg','Nano','Quartz','Laser','Mécano','Watt','Proto','Boulon','Chip','Sonar','Radar','Joule','R2-Zéro'];
+
+// ---------- sound ----------
+const Snd={ctx:null,master:null,mus:null,fx:null,musicOn:true,sfxOn:true,timer:null,step:0,next:0,
+  load(){try{const s=JSON.parse(localStorage.getItem('gf_snd')||'{}');if(s.m!=null)this.musicOn=s.m;if(s.f!=null)this.sfxOn=s.f;}catch(e){}},
+  save(){try{localStorage.setItem('gf_snd',JSON.stringify({m:this.musicOn,f:this.sfxOn}))}catch(e){}},
+  init(){
+    if(this.ctx){if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});return;}
+    try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;this.ctx=new C();}catch(e){return;}
+    const c=this.ctx;this.master=c.createGain();this.master.gain.value=.8;this.master.connect(c.destination);
+    this.mus=c.createGain();this.mus.gain.value=.16;this.mus.connect(this.master);
+    this.fx=c.createGain();this.fx.gain.value=.5;this.fx.connect(this.master);
+    document.addEventListener('visibilitychange',()=>{if(!this.ctx)return;document.hidden?this.ctx.suspend():this.ctx.resume()});
+  },
+  f(m){return 440*Math.pow(2,(m-69)/12)},
+  tone(freq,t,d,type,vol,dest,slide){
+    const c=this.ctx;if(!c)return;const o=c.createOscillator(),g=c.createGain();
+    o.type=type||'square';o.frequency.setValueAtTime(freq,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||.2,t+.008);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g);g.connect(dest||this.fx);o.start(t);o.stop(t+d+.02);
+  },
+  noise(t,d,vol,dest,freq){
+    const c=this.ctx;if(!c)return;const len=Math.max(1,Math.floor(c.sampleRate*d));const b=c.createBuffer(1,len,c.sampleRate);const a=b.getChannelData(0);
+    for(let i=0;i<len;i++)a[i]=Math.random()*2-1;const s=c.createBufferSource();s.buffer=b;
+    const fl=c.createBiquadFilter();fl.type='highpass';fl.frequency.value=freq||6000;const g=c.createGain();
+    g.gain.setValueAtTime(vol||.1,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    s.connect(fl);fl.connect(g);g.connect(dest||this.fx);s.start(t);
+  },
+  play(name){
+    if(!this.sfxOn||!this.ctx)return;const t=this.ctx.currentTime+.01,T=(f,dt,d,ty,v,sl)=>this.tone(f,t+dt,d,ty,v,null,sl);
+    switch(name){
+      case 'reveal':this.noise(t,.18,.12,null,2500);T(500,0,.12,'triangle',.25,1100);T(1300,.08,.15,'sine',.18);break;
+      case 'click':T(900,0,.05,'square',.08);break;
+      case 'tick':T(1500,0,.04,'triangle',.12);break;
+      case 'place':T(this.f(72),0,.1,'triangle',.25);T(this.f(76),.09,.1,'triangle',.25);T(this.f(79),.18,.18,'triangle',.25);break;
+      case 'yes':T(this.f(76),0,.12,'square',.14);T(this.f(84),.11,.3,'square',.14);break;
+      case 'no':T(220,0,.18,'sawtooth',.12,160);T(150,.17,.3,'sawtooth',.12,110);break;
+      case 'turn':T(this.f(79),0,.15,'sine',.25);T(this.f(84),.12,.3,'sine',.25);break;
+      case 'call':[72,76,79,84].forEach((m,i)=>T(this.f(m),i*.07,.12,'square',.15));this.noise(t+.28,.3,.1,null,3000);break;
+      case 'win':[72,76,79,84,79,84,88].forEach((m,i)=>T(this.f(m),i*.11,i===6?.6:.14,'square',.16));[60,64,67].forEach(m=>T(this.f(m),.77,.6,'triangle',.18));break;
+      case 'elim':[67,63,60,55].forEach((m,i)=>T(this.f(m),i*.16,.2,'sawtooth',.12));T(80,.64,.5,'square',.15,40);break;
+      case 'draw':[64,62,60].forEach((m,i)=>T(this.f(m),i*.18,.25,'triangle',.2));break;
+    }
+  },
+  startMusic(){
+    if(!this.musicOn||!this.ctx||this.timer)return;
+    this.step=0;this.next=this.ctx.currentTime+.1;
+    this.timer=setInterval(()=>this.sched(),30);
+  },
+  stopMusic(){clearInterval(this.timer);this.timer=null;},
+  sched(){
+    const c=this.ctx,dur=60/112/2;
+    const chords=[[60,64,67],[57,60,64],[53,57,60],[55,59,62]];
+    const arp=[0,1,2,1,0,2,1,2];
+    const mel=[76,null,79,null,77,76,null,74, 72,null,76,null,74,null,72,null, 69,null,72,null,74,72,null,69, 71,null,74,null,79,null,null,null];
+    while(this.next<c.currentTime+.12){
+      const s=this.step%64,ch=chords[Math.floor(s/8)%4],i=s%8,t=this.next;
+      this.tone(this.f(ch[arp[i]]+12),t,dur*.9,'triangle',.22,this.mus);
+      if(i%4===0)this.tone(this.f(ch[0]-24),t,dur*3.5,'square',.18,this.mus);
+      if(i%2===1)this.noise(t,.04,.08,this.mus,8000);
+      if(s>=32){const m=mel[s-32];if(m)this.tone(this.f(m),t,dur*1.6,'square',.1,this.mus);}
+      this.next+=dur;this.step++;
+    }
+  }
+};
+Snd.load();
+function toggleMusic(){Snd.init();Snd.musicOn=!Snd.musicOn;Snd.save();Snd.musicOn&&G&&!G.over?Snd.startMusic():Snd.stopMusic();}
+function toggleSfx(){Snd.init();Snd.sfxOn=!Snd.sfxOn;Snd.save();Snd.play('click');}
+const LEVELS={easy:'Facile',med:'Moyen',hard:'Expert'};
+const $=s=>document.querySelector(s);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+
+// ---------- setup state ----------
+let setup={n:3,players:[],aid:false,speed:1};
+function randName(exclude,ai){const src=ai?AINAMES:NAMES;const pool=src.filter(x=>!exclude.includes(x));return rnd(pool.length?pool:src);}
+function initSetup(){
+  setup.players=[];
+  for(let i=0;i<4;i++){
+    const used=setup.players.map(p=>p.name);
+    setup.players.push({name:randName(used,i>0),ai:i>0,level:'med'});
+  }
+}
+function setType(i,ai){
+  const p=setup.players[i];if(p.ai===ai)return;p.ai=ai;
+  const used=setup.players.filter((_,j)=>j!==i).map(q=>q.name);
+  if(!p.name.trim()||(ai?NAMES:AINAMES).includes(p.name))p.name=randName(used,ai);
+  renderSetup();
+}
+initSetup();
+
+function tileHTML(n,cls='',extra=''){
+  if(n==null) return `<div class="tile back ${cls}" ${extra}>?</div>`;
+  const d=dots(n);
+  return `<div class="tile c${colorOf(n)} ${cls}" ${extra}>${n}<div class="dots">${'<i></i>'.repeat(d)}</div></div>`;
+}
+
+function renderSetup(){
+  const ps=setup.players.slice(0,setup.n);
+  $('#app').innerHTML=`<div class="wrap">
+  <h1 class="logo"><span style="background:var(--g)">G</span><span style="background:var(--p)">O</span><span style="background:var(--b)">T</span> <span style="background:var(--r)">5</span><span style="background:var(--y)">!</span></h1>
+  <p class="sub">Devine tes 5 tuiles… que tout le monde voit sauf toi !</p>
+  <div class="card"><h2>Nombre de joueurs</h2>
+    <div class="seg">${[2,3,4].map(k=>`<button class="${setup.n===k?'on':''}" onclick="setup.n=${k};renderSetup()">${k} joueurs</button>`).join('')}</div>
+  </div>
+  <div class="card"><h2>Joueurs</h2>
+    ${ps.map((p,i)=>`<div class="pl">
+      <input value="${p.name.replace(/"/g,'&quot;')}" maxlength="14" oninput="setup.players[${i}].name=this.value" aria-label="Prénom joueur ${i+1}">
+      <button class="btn light icon" title="Prénom au hasard" onclick="rollName(${i})">🎲</button>
+      <div class="row" style="grid-column:1/-1">
+        <div class="seg">
+          <button class="${!p.ai?'on':''}" onclick="setType(${i},false)">👤 Humain</button>
+          <button class="${p.ai?'on':''}" onclick="setType(${i},true)">🤖 IA</button>
+        </div>
+        ${p.ai?`<div class="seg">${Object.entries(LEVELS).map(([k,v])=>`<button class="${p.level===k?'on':''}" onclick="setup.players[${i}].level='${k}';renderSetup()">${v}</button>`).join('')}</div>`:''}
+      </div></div>`).join('')}
+    <button class="btn light" onclick="allRandom()">🎲 Tous les prénoms au hasard</button>
+  </div>
+  <div class="card"><h2>Options</h2>
+    <div class="row"><span>Vitesse de l'IA</span>
+      <div class="seg">${[[1.6,'Lente'],[1,'Normale'],[0.45,'Rapide']].map(([v,l])=>`<button class="${setup.speed===v?'on':''}" onclick="setup.speed=${v};renderSetup()">${l}</button>`).join('')}</div></div>
+    <label class="chk"><input type="checkbox" ${Snd.musicOn?'checked':''} onchange="Snd.musicOn=this.checked;Snd.save()"> 🎵 Musique</label>
+    <label class="chk"><input type="checkbox" ${Snd.sfxOn?'checked':''} onchange="Snd.sfxOn=this.checked;Snd.save();Snd.init();Snd.play('click')"> 🔊 Bruitages</label>
+    <label class="chk"><input type="checkbox" ${setup.aid?'checked':''} onchange="setup.aid=this.checked"> Aide à la déduction (grise les numéros devenus impossibles)</label>
+    <p class="small">Avec plusieurs humains, on se passe le téléphone : un écran de transition cache les tuiles entre chaque joueur.</p>
+  </div>
+  <button class="btn big gf" onclick="startGame()">Jouer !</button>
+  <div style="height:10px"></div>
+  <button class="btn big light" onclick="showRules()">📖 Règles</button>
+  </div>`;
+}
+function rollName(i){const used=setup.players.filter((_,j)=>j!==i).map(p=>p.name);setup.players[i].name=randName(used,setup.players[i].ai);renderSetup();}
+function allRandom(){const used=[];setup.players.forEach(p=>{p.name=randName(used,p.ai);used.push(p.name)});renderSetup();}
+
+function showRules(){
+  modal(`<div class="modal rules"><h3>📖 Règles de Got Five</h3>
+  <p><b>But :</b> trouver tes 5 numéros secrets. Tu as une tuile de chaque couleur, rangées de la plus petite à la plus grande. Tu vois les tuiles des autres, jamais les tiennes.</p>
+  <p><b>Couleurs :</b> vert = 1, 6, 11… · rose = 2, 7, 12… · bleu = 3, 8… · rouge = 4, 9… · jaune = 5, 10…</p>
+  <p><b>À ton tour :</b> une nouvelle tuile est révélée au centre. Puis tu prends une tuile visible et tu choisis :</p>
+  <p>🅰️ <b>Classer :</b> on te dit à quelle position elle s'insérerait dans ta ligne (combien de tes tuiles sont plus petites).</p>
+  <p>🅱️ <b>Comparer les points :</b> tu la places devant une de tes tuiles et on te dit si elles ont le même nombre de petits points.</p>
+  <p><b>GOT FIVE ! :</b> à tout moment, annonce tes 5 numéros. Juste = victoire. Une seule erreur = éliminé. Le dernier en lice gagne.</p>
+  <p><b>Fiche :</b> touche une case pour la barrer, retouche pour l'entourer, encore pour effacer. Les numéros visibles sont barrés automatiquement. Touche une de tes tuiles cachées pour y noter un numéro.</p>
+  <button class="btn big" onclick="closeModal()">Compris</button></div>`);
+}
+
+// ---------- game state ----------
+let G=null;
+function startGame(){
+  Snd.init();Snd.stopMusic();Snd.startMusic();Snd.play('place');
+  const ps=setup.players.slice(0,setup.n).map((p,i)=>({...p,name:(p.name||'').trim()||('Joueur '+(i+1))}));
+  const bag=shuffle(Array.from({length:60},(_,i)=>i+1));
+  const byColor=[[],[],[],[],[]];bag.forEach(n=>byColor[colorOf(n)].push(n));
+  const players=ps.map((p,i)=>({
+    id:i,name:p.name,ai:p.ai,level:p.level,
+    rack:[0,1,2,3,4].map(c=>byColor[c].pop()).sort((a,b)=>a-b),
+    alive:true,cand:null,n:0,marks:new Array(61).fill(0),notes:[null,null,null,null,null],clues:[]
+  }));
+  const rest=shuffle(byColor.flat());
+  G={token:Math.random(),players,deck:rest,pool:[],discard:[],cur:Math.floor(Math.random()*players.length),
+     log:[],phase:'wait',sel:null,mode:null,over:false,winner:null,paused:false,aid:setup.aid,speed:setup.speed,
+     humans:players.filter(p=>!p.ai).length,viewer:null,lastMsg:null};
+  for(let i=0;i<5;i++) G.pool.push(G.deck.pop());
+  const firstHuman=players.find(p=>!p.ai);
+  G.viewer=firstHuman?firstHuman.id:null;
+  players.forEach(buildCand);
+  addLog(`La partie commence ! <b>${players[G.cur].name}</b> joue en premier.`);
+  render();
+  runTurn();
+}
+
+function knownFor(p){
+  const s=new Set([...G.pool,...G.discard]);
+  G.players.forEach(q=>{if(q!==p)q.rack.forEach(n=>s.add(n))});
+  return s;
+}
+function buildCand(p){
+  const K=knownFor(p);
+  const L=[0,1,2,3,4].map(c=>{const a=[];for(let n=c+1;n<=60;n+=5)if(!K.has(n))a.push(n);return a});
+  const tot=L.reduce((a,l)=>a*l.length,1);
+  const arr=new Uint8Array(tot*5);let k=0;const t=[0,0,0,0,0];
+  for(const a of L[0])for(const b of L[1])for(const c of L[2])for(const d of L[3])for(const e of L[4]){
+    t[0]=a;t[1]=b;t[2]=c;t[3]=d;t[4]=e;t.sort((x,y)=>x-y);arr.set(t,k);k+=5;
+  }
+  p.cand=arr;p.n=tot;
+}
+function filt(p,fn){
+  const a=p.cand,out=new Uint8Array(a.length);let k=0;
+  for(let i=0;i<p.n*5;i+=5){if(fn(a,i)){out.set(a.subarray(i,i+5),k);k+=5}}
+  p.cand=out.slice(0,k);p.n=k/5;
+}
+function refreshKnown(){
+  G.players.forEach(p=>{const K=knownFor(p);filt(p,(a,i)=>!(K.has(a[i])||K.has(a[i+1])||K.has(a[i+2])||K.has(a[i+3])||K.has(a[i+4])))});
+}
+function possibleSet(p){
+  const s=new Set();for(let i=0;i<p.n*5;i++)s.add(p.cand[i]);return s;
+}
+
+// ---------- timing ----------
+class Abort extends Error{}
+async function sleep(ms){
+  const tok=G.token;
+  await new Promise(r=>setTimeout(r,ms*G.speed));
+  while(G&&G.paused&&G.token===tok) await new Promise(r=>setTimeout(r,120));
+  if(!G||G.token!==tok||G.over) throw new Abort();
+}
+function addLog(html,forId=null){G.log.unshift({html,forId});if(G.log.length>80)G.log.pop();}
+
+// ---------- turn loop ----------
+async function runTurn(){
+  try{
+    if(G.over) return;
+    let guard=0;
+    while(!G.players[G.cur].alive && guard++<5) G.cur=(G.cur+1)%G.players.length;
+    const p=G.players[G.cur];
+    G.phase='wait';G.sel=null;G.mode=null;G.lastMsg=null;
+    if(!p.ai && G.humans>1 && G.viewer!==p.id){
+      await passDevice(p);
+    }
+    if(!p.ai) G.viewer=p.id;
+    render();
+    await sleep(500);
+    if(G.deck.length){
+      const t=G.deck.pop();G.pool.push(t);
+      addLog(`🔄 ${p.name} révèle la tuile <b>${t}</b>.`);
+      refreshKnown();render();Snd.play('reveal');
+      await sleep(600);
+      await checkCalls();
+      if(!p.alive){return nextTurn();}
+    }
+    if(!G.pool.length){endGame(null);return;}
+    if(p.ai){
+      G.phase='thinking';render();
+      await sleep(900);
+      const [t,opt,pos]=aiChoose(p);
+      await doAction(p,t,opt,pos);
+    }else{
+      G.phase='choose';render();Snd.play('turn');
+    }
+  }catch(e){if(!(e instanceof Abort))console.error(e);}
+}
+function nextTurn(){
+  if(G.over)return;
+  G.cur=(G.cur+1)%G.players.length;
+  runTurn();
+}
+function passDevice(p){
+  return new Promise(res=>{
+    G.paused=true;Snd.play('turn');
+    modal(`<div class="modal" style="text-align:center"><div class="big-emoji">📱</div>
+      <h3>Passe l'appareil à ${p.name}</h3><p class="small">Les autres, ne regardez pas l'écran !</p>
+      <button class="btn big" id="ready">Je suis ${p.name}, c'est parti</button></div>`,true);
+    $('#ready').onclick=()=>{G.viewer=p.id;G.paused=false;closeModal();render();res();};
+  });
+}
+
+async function doAction(p,t,opt,pos){
+  const r=p.rack;
+  let html,cls;
+  if(opt==='A'){
+    const k=r.filter(x=>x<t).length;
+    filt(p,(a,i)=>{let c=0;for(let j=0;j<5;j++)if(a[i+j]<t)c++;return c===k});
+    const where=k===0?'tout à gauche (avant ta 1ʳᵉ tuile)':k===5?'tout à droite (après ta 5ᵉ tuile)':`entre ta ${k}ᵉ et ta ${k+1}ᵉ tuile`;
+    html=`🅰️ ${p.name} classe le <b>${t}</b> → il se place ${where}.`;cls='';
+    p.clues.push({t,opt,k});
+  }else{
+    const same=dots(r[pos])===dots(t);const dt=dots(t);
+    filt(p,(a,i)=>(dots(a[i+pos])===dt)===same);
+    html=`🅱️ ${p.name} compare le <b>${t}</b> (${dt} point${dt>1?'s':''}) à sa tuile n°${pos+1} → <b>${same?'OUI, même nombre':'NON, différent'}</b>.`;cls=same?'ok':'no';
+    p.clues.push({t,opt,pos,same});
+  }
+  G.pool.splice(G.pool.indexOf(t),1);G.discard.push(t);
+  refreshKnown();
+  addLog(html,p.id);
+  if(p.id===G.viewer)G.lastMsg={html,cls};
+  Snd.play(opt==='A'?'place':(cls==='ok'?'yes':'no'));
+  G.phase='wait';G.sel=null;G.mode=null;
+  render();
+  await sleep(p.ai?1100:400);
+  await checkCalls();
+  await sleep(300);
+  nextTurn();
+}
+
+// ---------- AI ----------
+function aiChoose(p){
+  const opts=[];
+  for(const t of G.pool){
+    // option A
+    const ca=new Array(6).fill(0);
+    for(let i=0;i<p.n*5;i+=5){let c=0;for(let j=0;j<5;j++)if(p.cand[i+j]<t)c++;ca[c]++}
+    opts.push({t,opt:'A',pos:0,s:ca.reduce((s,x)=>s+x*x,0)});
+    const dt=dots(t);
+    for(let pos=0;pos<5;pos++){
+      let y=0;for(let i=0;i<p.n*5;i+=5)if(dots(p.cand[i+pos])===dt)y++;
+      const no=p.n-y;opts.push({t,opt:'B',pos,s:y*y+no*no});
+    }
+  }
+  opts.sort((a,b)=>a.s-b.s||Math.random()-.5);
+  let o;
+  if(p.level==='hard') o=opts[0];
+  else if(p.level==='med') o=Math.random()<.65?opts[0]:rnd(opts.slice(0,Math.min(6,opts.length)));
+  else o=Math.random()<.35?opts[0]:rnd(opts);
+  return [o.t,o.opt,o.pos];
+}
+async function checkCalls(){
+  for(const p of G.players){
+    if(G.over)return;
+    if(!p.ai||!p.alive)continue;
+    let guess=null;
+    if(p.n===1) guess=Array.from(p.cand.slice(0,5));
+    else if(p.level==='easy'&&p.n<=3&&Math.random()<.3){const i=Math.floor(Math.random()*p.n);guess=Array.from(p.cand.slice(i*5,i*5+5));}
+    else if(p.level==='med'&&p.n===2&&G.deck.length<4&&Math.random()<.5){guess=Array.from(p.cand.slice(0,5));}
+    if(guess){
+      addLog(`📣 <b>${p.name} : « GOT FIVE ! »</b>`);render();Snd.play('call');
+      await sleep(900);
+      resolveCall(p,guess);
+      render();
+      await sleep(900);
+    }
+  }
+}
+function resolveCall(p,guess){
+  const ok=guess.every((x,i)=>x===p.rack[i]);
+  addLog(`${p.name} annonce ${guess.join(' · ')} → ${ok?'✅ <b>EXACT !</b>':'❌ raté, éliminé !'}`);
+  if(ok){endGame(p);return true;}
+  p.alive=false;Snd.play('elim');
+  const alive=G.players.filter(q=>q.alive);
+  if(alive.length===1){endGame(alive[0],true);}
+  else showToast(`${p.name} s'est trompé et est éliminé !`, p.rack);
+  return false;
+}
+function endGame(w,byElim){
+  G.over=true;G.winner=w;G.paused=false;render();
+  Snd.stopMusic();setTimeout(()=>Snd.play(w?'win':'draw'),byElim?900:100);
+  const reveal=G.players.map(p=>`<div style="margin:6px 0"><b>${p.name}</b>${p===w?' 🏆':''}${!p.alive?' (éliminé)':''}<div class="row" style="margin-top:4px">${p.rack.map(n=>tileHTML(n,'sm')).join('')}</div></div>`).join('');
+  modal(`<div class="modal"><div class="big-emoji">${w?'🏆':'🤝'}</div>
+    <h3 style="text-align:center">${w?`${w.name} gagne${byElim?' (dernier en lice)':' !'}`:'Plus aucune tuile : personne ne gagne'}</h3>
+    ${reveal}
+    <div class="actions" style="margin-top:12px"><button class="btn" onclick="closeModal();startGame()">🔁 Rejouer</button><button class="btn light" onclick="closeModal();G.token=0;renderSetup()">⚙️ Nouvelle partie</button></div></div>`);
+}
+
+// ---------- human interaction ----------
+function viewerP(){return G.viewer==null?null:G.players[G.viewer];}
+function canAct(){const p=G.players[G.cur];return !G.over&&G.phase==='choose'&&!p.ai&&p.id===G.viewer;}
+function selTile(t){if(!canAct())return;Snd.play('click');G.sel=G.sel===t?null:t;G.mode=null;render();}
+function chooseA(){if(!canAct()||G.sel==null)return;G.phase='wait';doAction(G.players[G.cur],G.sel,'A',0).catch(e=>{if(!(e instanceof Abort))console.error(e)});}
+function chooseB(){if(!canAct()||G.sel==null)return;G.mode='B';render();}
+function myTile(i){
+  if(canAct()&&G.mode==='B'&&G.sel!=null){G.phase='wait';doAction(G.players[G.cur],G.sel,'B',i).catch(e=>{if(!(e instanceof Abort))console.error(e)});return;}
+  const v=viewerP();if(!v||!v.alive||G.over)return;
+  openPicker(`Note pour ta tuile n°${i+1}`,v.notes[i],n=>{v.notes[i]=n;render();});
+}
+function cell(n){
+  const v=viewerP();if(!v)return;
+  v.marks[n]=(v.marks[n]+1)%3;Snd.play('tick');render();
+}
+
+function openPicker(title,cur,cb){
+  const v=viewerP();const K=v?knownFor(v):new Set();
+  window._pk=cb;
+  modal(`<div class="modal"><h3>${title}</h3>
+   <div class="picker">${[0,1,2,3,4].map(c=>Array.from({length:12},(_,i)=>{const n=c+1+5*i;return `<div class="cell c${colorOf(n)} ${K.has(n)?'k':''} ${n===cur?'o':''}" onclick="closeModal();_pk(${n})">${n}</div>`}).join('')).join('')}</div>
+   <div class="actions" style="margin-top:12px"><button class="btn light" onclick="closeModal();_pk(null)">Effacer</button><button class="btn light" onclick="closeModal()">Annuler</button></div></div>`);
+}
+
+function openGotFive(){
+  const v=viewerP();if(!v||!v.alive||G.over)return;
+  G.paused=true;
+  let picks=[...v.notes];
+  if(picks.some(x=>x==null)){
+    const circ=[];for(let n=1;n<=60;n++)if(v.marks[n]===2)circ.push(n);
+    if(circ.length===5)picks=circ.sort((a,b)=>a-b);
+  }
+  window._gf={picks,cur:picks.findIndex(x=>x==null)};if(window._gf.cur<0)window._gf.cur=0;
+  drawGF();
+}
+function drawGF(){
+  const v=viewerP();const K=knownFor(v);const s=_gf;
+  const sorted=s.picks.every(x=>x!=null)&&s.picks.every((x,i)=>i===0||x>s.picks[i-1]);
+  modal(`<div class="modal"><h3>📣 GOT FIVE !</h3>
+  <p class="small">Annonce tes 5 numéros, du plus petit au plus grand. Une erreur et tu es éliminé·e.</p>
+  <div class="slots">${s.picks.map((n,i)=>`<div class="slot ${i===s.cur?'cur':''} ${n!=null?'filled c'+colorOf(n):''}" onclick="_gf.cur=${i};drawGF()">${n??''}</div>`).join('')}</div>
+  <div class="picker">${[0,1,2,3,4].map(c=>Array.from({length:12},(_,i)=>{const n=c+1+5*i;return `<div class="cell c${colorOf(n)} ${K.has(n)?'k':''} ${v.marks[n]===1?'x':''} ${v.marks[n]===2?'o':''}" onclick="gfPick(${n})">${n}</div>`}).join('')).join('')}</div>
+  ${!sorted&&s.picks.every(x=>x!=null)?'<p class="small" style="color:#c0392b">Les numéros doivent être dans l\'ordre croissant.</p>':''}
+  <div class="actions" style="margin-top:12px"><button class="btn light" onclick="closeModal();G.paused=false">Annuler</button>
+  <button class="btn gf" style="font-size:17px" ${sorted?'':'disabled'} onclick="confirmGF()">Annoncer !</button></div></div>`);
+}
+function gfPick(n){const s=_gf;s.picks[s.cur]=n;const nx=s.picks.findIndex(x=>x==null);s.cur=nx<0?s.cur:nx;drawGF();}
+function confirmGF(){
+  const v=viewerP();closeModal();
+  addLog(`📣 <b>${v.name} : « GOT FIVE ! »</b>`);Snd.play('call');
+  const wasCur=G.players[G.cur]===v&&G.phase==='choose';
+  const ok=resolveCall(v,_gf.picks);
+  G.paused=false;
+  render();
+  if(!ok&&!G.over&&wasCur){G.phase='wait';setTimeout(nextTurn,800);}
+}
+function showToast(text,rack){
+  modal(`<div class="modal" style="text-align:center"><div class="big-emoji">💥</div><h3>${text}</h3>
+  <div class="row" style="justify-content:center">${rack.map(n=>tileHTML(n,'sm')).join('')}</div>
+  <div style="height:10px"></div><button class="btn big" onclick="closeModal()">OK</button></div>`);
+}
+
+function modal(html,solid){$('#modal').innerHTML=`<div class="ov ${solid?'solid':''}">${html}</div>`;}
+function closeModal(){$('#modal').innerHTML='';}
+function quitGame(){
+  G.paused=true;Snd.init();
+  modal(`<div class="modal"><h3>Menu</h3>
+    <label class="chk"><input type="checkbox" ${Snd.musicOn?'checked':''} onchange="toggleMusic()"> 🎵 Musique</label>
+    <label class="chk"><input type="checkbox" ${Snd.sfxOn?'checked':''} onchange="toggleSfx()"> 🔊 Bruitages</label>
+    <div class="actions" style="margin-top:14px"><button class="btn light" onclick="closeModal();G.paused=false">▶︎ Continuer</button><button class="btn" onclick="closeModal();G.token=0;G.over=true;Snd.stopMusic();renderSetup()">Quitter la partie</button></div></div>`);
+}
+
+// ---------- render ----------
+function render(){
+  if(!G)return;
+  const cur=G.players[G.cur];const v=viewerP();
+  const spectator=v==null;
+  const others=G.players.filter(p=>p!==v);
+  const act=canAct();
+  let status;
+  if(G.over) status=G.winner?`🏆 ${G.winner.name} a gagné !`:'Partie terminée';
+  else if(act) status=G.mode==='B'?'Choisis une de tes tuiles à comparer':(G.sel==null?'À toi ! Choisis une tuile au centre':'Classer ou comparer ?');
+  else status=`Tour de ${cur.name}${cur.ai?' 🤖':''}${G.phase==='thinking'?' — réfléchit…':''}`;
+
+  const rackHTML=p=>{
+    const show=spectator||p!==v||!p.alive||G.over;
+    return `<div class="rack ${p===cur&&!G.over?'active':''} ${!p.alive?'out':''}">
+      <div class="nm"><span>${p.ai?'🤖':'👤'} ${p.name}${!p.alive?' — éliminé':''}</span><span class="tag">${p.ai?LEVELS[p.level]:'Humain'}</span></div>
+      <div class="tiles">${p.rack.map(n=>tileHTML(show?n:null,'sm')).join('')}</div><div class="shelf"></div></div>`;
+  };
+
+  let meHTML='';
+  if(v){
+    const showOwn=!v.alive||G.over;
+    meHTML=`<div class="me">
+      <div class="hd"><span>${v===cur&&!G.over?'⭐ ':''}Mes tuiles — ${v.name}</span><span class="small">${v.alive?'touche pour noter':'éliminé·e'}</span></div>
+      <div class="tiles">${v.rack.map((n,i)=>{
+        if(showOwn) return tileHTML(n);
+        const note=v.notes[i];
+        const tgt=act&&G.mode==='B';
+        return `<div class="tile back ${tgt?'target':'pick'}" onclick="myTile(${i})">${note??(i+1)}${note?`<span class="note">n°${i+1}</span>`:''}</div>`;
+      }).join('')}</div>
+      ${act&&G.sel!=null&&G.mode!=='B'?`<div class="actions"><button class="btn" onclick="chooseA()">🅰️ Classer le ${G.sel}</button><button class="btn" onclick="chooseB()">🅱️ Comparer les points</button></div>`:''}
+      ${act&&G.mode==='B'?`<div class="actions"><button class="btn light" style="grid-column:1/-1" onclick="G.mode=null;render()">↩︎ Annuler</button></div>`:''}
+      ${G.lastMsg?`<div class="msg ${G.lastMsg.cls}">${G.lastMsg.html}</div>`:''}
+    </div>`;
+  }
+
+  let sheetHTML='';
+  if(v){
+    const K=knownFor(v);const P=G.aid?possibleSet(v):null;
+    sheetHTML=`<div class="sheet"><div class="hd"><span>📝 Fiche de déduction</span>${G.aid?`<span class="small">${v.n.toLocaleString('fr-FR')} combinaison${v.n>1?'s':''} possible${v.n>1?'s':''}</span>`:''}</div>
+    <div class="grid">${[0,1,2,3,4].map(c=>Array.from({length:12},(_,i)=>{const n=c+1+5*i;
+      const cls=[`c${c}`,K.has(n)?'k':(v.marks[n]===1?'x':''),v.marks[n]===2?'o':'',P&&!K.has(n)&&!P.has(n)?'imp':''].join(' ');
+      return `<div class="cell ${cls}" onclick="cell(${n})">${n}<div class="dots">${'<i></i>'.repeat(dots(n))}</div></div>`}).join('')).join('')}</div>
+    <div class="legend">Touche : barrer → entourer → effacer. Les numéros visibles sont barrés en clair automatiquement.${G.aid?' Les cases ternes sont impossibles.':''}</div></div>`;
+  }
+
+  const myLog=v?G.log.filter(l=>l.forId===v.id):[];
+  $('#app').innerHTML=`<div class="wrap">
+    <div class="top"><button class="btn light icon" onclick="quitGame()" aria-label="Menu">☰</button><div class="turn">${status}</div><div class="deck">🂠 ${G.deck.length}</div><button class="btn light icon" onclick="toggleMusic();render()" aria-label="Musique">${Snd.musicOn?'🎵':'🔇'}</button><button class="btn light icon" onclick="showRules()" aria-label="Règles">?</button></div>
+    <div class="racks">${others.map(rackHTML).join('')}</div>
+    <div class="center"><div class="lbl"><span>Tuiles visibles${act&&G.sel==null?' — touche-en une':''}</span></div>
+      <div class="pool">${G.pool.map(t=>tileHTML(t,(act?'pick ':'')+(G.sel===t?'sel':''),`onclick="selTile(${t})"`)).join('')||'<span class="small">Aucune</span>'}</div>
+      ${G.discard.length?`<div class="lbl" style="margin-top:8px"><span>Déjà utilisées</span></div><div class="disc">${G.discard.map(t=>tileHTML(t,'sm')).join('')}</div>`:''}
+    </div>
+    ${meHTML}
+    ${sheetHTML}
+    ${myLog.length?`<div class="log" style="margin-bottom:10px"><b>🔎 Mes indices</b>${myLog.map(l=>`<div class="mine">${l.html}</div>`).join('')}</div>`:''}
+    <div class="log"><b>📜 Journal</b>${G.log.map(l=>`<div>${l.html}</div>`).join('')}</div>
+  </div>
+  ${v&&v.alive&&!G.over?`<div class="gfbar"><div class="in"><button class="btn big gf" onclick="openGotFive()">📣 GOT FIVE !</button></div></div>`:''}`;
+}
+
+renderSetup();
+</script>
+</body>
+</html>
