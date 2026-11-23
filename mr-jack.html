@@ -1,107 +1,961 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site en construction</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 50px 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            letter-spacing: -0.5px;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #cbd5e1;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-
-        .progress-fill {
-            width: 75%;
-            height: 100%;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            border-radius: 999px;
-        }
-
-        .contact-btn {
-            display: inline-block;
-            padding: 12px 28px;
-            background-color: #38bdf8;
-            color: #0f172a;
-            text-decoration: none;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: background-color 0.2s, transform 0.2s;
-        }
-
-        .contact-btn:hover {
-            background-color: #7dd3fc;
-            transform: translateY(-2px);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mr. Jack — Whitechapel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14110e;--panel:#211b16;--panel2:#2b231c;--ink:#efe3cc;--muted:#a8977c;--gold:#d9a648;--red:#b8352e;--blue:#3d6fb5;--line:#4a3b2c}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:radial-gradient(ellipse at top,#2a211a,#0d0b09 70%);color:var(--ink);font-family:'Crimson Pro',Georgia,serif;font-size:17px}
+h1,h2,h3,.fell{font-family:'IM Fell English SC',Georgia,serif;font-weight:400;letter-spacing:.5px}
+button{font-family:inherit;font-size:15px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:7px 12px;border-radius:6px;transition:.15s}
+button:hover:not(:disabled){border-color:var(--gold);color:#fff}
+button:disabled{opacity:.4;cursor:default}
+button.pri{background:linear-gradient(#c99232,#9c6c1c);border-color:#e0b25a;color:#1b130a;font-weight:600}
+button.sel{border-color:var(--gold);background:#3b2e1f;color:#ffe2a8}
+input,select{font-family:inherit;font-size:15px;background:#130f0c;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.hidden{display:none!important}
+/* setup */
+#setup{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+.title{text-align:center;margin:10px 0 4px;font-size:54px;color:var(--gold);text-shadow:0 0 18px rgba(217,166,72,.35)}
+.subtitle{text-align:center;color:var(--muted);margin-bottom:22px;font-style:italic}
+.card{background:linear-gradient(180deg,var(--panel),#1a1511);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.card h3{margin:0 0 10px;color:var(--gold)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pslot{display:grid;grid-template-columns:28px 1fr auto auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px dashed #3a2f24}
+.pslot:first-of-type{border-top:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:6px 10px;background:transparent}
+.seg button.on{background:#3b2e1f;color:#ffe2a8}
+.note{color:var(--muted);font-size:14px}
+.opt{display:flex;align-items:center;gap:8px;margin:6px 16px 6px 0}
+/* game */
+#game{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;padding:10px 14px;max-width:1400px;margin:0 auto}
+@media(max-width:980px){#game{grid-template-columns:1fr}}
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar .logo{font-family:'IM Fell English SC';font-size:28px;color:var(--gold);margin-right:6px}
+.turns{display:flex;gap:5px}
+.tdot{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:14px;position:relative;background:#181310}
+.tdot.cur{border-color:var(--gold);box-shadow:0 0 10px rgba(217,166,72,.6);color:#ffe2a8}
+.tdot.past{opacity:.45}
+.tdot .lmp{position:absolute;top:-7px;right:-5px;font-size:11px}
+.icons{margin-left:auto;display:flex;gap:6px}
+.icons button{padding:5px 9px}
+#boardWrap{background:#0f0c0a;border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden;box-shadow:inset 0 0 80px rgba(0,0,0,.8)}
+#board{width:100%;height:auto;display:block}
+.cell{stroke:#0b0907;stroke-width:1.2}
+.hl{fill:rgba(217,166,72,.28);stroke:#f3c66b;stroke-width:2;cursor:pointer;animation:pulse 1.4s infinite}
+.hl.acc{fill:rgba(184,53,46,.35);stroke:#ff6b5e}
+.hl.exit{fill:rgba(80,200,120,.35);stroke:#7dffa8}
+@keyframes pulse{50%{opacity:.55}}
+.tok{transition:transform .55s cubic-bezier(.4,.1,.2,1);cursor:pointer}
+.tok .ring{fill:none;stroke:#ffd77a;stroke-width:3;opacity:0;transition:opacity .4s}
+.tok.vis .ring{opacity:.9}
+.tok.inno .face{filter:grayscale(1) brightness(.6)}
+.tok.active .face circle.base{stroke:#fff;stroke-width:3}
+.tok.pick circle.base{stroke:#7dffa8;stroke-width:3}
+.pct{font-size:10px;font-weight:600;fill:#fff}
+.side{display:flex;flex-direction:column;gap:12px}
+.box{background:linear-gradient(180deg,var(--panel),#19140f);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.box h3{margin:0 0 8px;color:var(--gold);font-size:19px}
+.who{font-size:18px}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:13px;margin-left:4px}
+.b-inv{background:#20345a;color:#bcd3ff}
+.b-jack{background:#5a1f1c;color:#ffc4bd}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ccard{border:1px solid var(--line);border-radius:8px;padding:6px 4px;text-align:center;background:#1a1410;cursor:pointer;transition:.15s;position:relative;min-height:84px}
+.ccard .av{width:38px;height:38px;border-radius:50%;margin:0 auto 4px;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;border:2px solid rgba(255,255,255,.3)}
+.ccard .nm{font-size:12px;line-height:1.1}
+.ccard.used{opacity:.25;cursor:default}
+.ccard.can:hover{border-color:var(--gold);transform:translateY(-2px)}
+.ccard.sel{border-color:var(--gold);box-shadow:0 0 12px rgba(217,166,72,.5)}
+.ccard.off{cursor:default}
+#prompt{min-height:24px;color:#ffe2a8;margin:8px 0}
+#choices{display:flex;gap:6px;flex-wrap:wrap}
+.power{font-size:14px;color:var(--muted);margin-top:6px}
+#log{max-height:200px;overflow:auto;font-size:14px;line-height:1.35}
+#log div{padding:2px 0;border-bottom:1px solid #2a221b}
+.risk table{width:100%;border-collapse:collapse;font-size:14px}
+.risk td{padding:2px 4px}
+.bar{height:6px;background:#3a2e22;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#d9a648,#b8352e)}
+.secret{background:#2a1512;border-color:#6a2a24}
+.holdbtn{width:100%;user-select:none;-webkit-user-select:none}
+.overlay{position:fixed;inset:0;background:rgba(5,4,3,.82);display:grid;place-items:center;z-index:50;backdrop-filter:blur(3px)}
+.modal{background:linear-gradient(180deg,#2a2119,#17120e);border:1px solid var(--gold);border-radius:14px;padding:22px 26px;max-width:560px;width:92%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:88vh;overflow:auto}
+.modal h2{color:var(--gold);margin:0 0 10px;font-size:30px}
+.modal.rules{text-align:left;max-width:720px}
+.modal.rules h3{color:var(--gold);margin:14px 0 4px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding:6px 10px}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.slider{display:flex;align-items:center;gap:8px;margin:6px 0}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🚧</div>
-        <h1>Page en construction</h1>
-        <p>Nous travaillons actuellement sur la création de ce site pour vous offrir la meilleure expérience possible. Revenez très bientôt !</p>
-        
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
 
-        <a href="index.html" class="contact-btn">Revenir sur la page d'accueil</a>
+<!-- ============ SETUP ============ -->
+<div id="setup">
+  <h1 class="title">Mr. Jack</h1>
+  <div class="subtitle">Whitechapel, 1888 — un jeu de déduction dans le brouillard londonien</div>
+
+  <div class="card">
+    <h3>Nombre de joueurs</h3>
+    <div class="row" id="nbBtns"></div>
+    <p class="note">Mr. Jack oppose deux camps : <b>l'Enquêteur</b> et <b>Jack</b>. À 3 ou 4 joueurs, les joueurs d'un même camp jouent à tour de rôle. Si un camp n'a aucun joueur, l'ordinateur le prend en charge.</p>
+  </div>
+
+  <div class="card">
+    <h3>Les joueurs</h3>
+    <div id="slots"></div>
+    <div class="row" style="margin-top:8px"><button id="randAll">🎲 Tous les noms au hasard</button><button id="randSides">🔀 Camps au hasard</button></div>
+  </div>
+
+  <div class="card">
+    <h3>Options</h3>
+    <div class="row">
+      <label class="opt"><input type="checkbox" id="optRisk" checked> Afficher les pourcentages de risque</label>
+      <label class="opt"><input type="checkbox" id="optMusic" checked> Musique d'ambiance</label>
+      <label class="opt"><input type="checkbox" id="optSfx" checked> Bruitages</label>
+      <label class="opt"><input type="checkbox" id="optRain"> Pluie</label>
     </div>
+    <div class="row">
+      <label class="opt">Niveau de l'ordinateur
+        <select id="optLevel"><option value="0">Débutant</option><option value="1" selected>Normal</option><option value="2">Rusé</option></select></label>
+      <label class="opt">Vitesse de l'ordinateur
+        <select id="optSpeed"><option value="1400">Lente</option><option value="850" selected>Normale</option><option value="400">Rapide</option></select></label>
+    </div>
+  </div>
+
+  <div class="row" style="justify-content:center;gap:12px">
+    <button id="rulesBtn">📜 Règles</button>
+    <button class="pri" id="startBtn" style="font-size:19px;padding:10px 26px">Commencer l'enquête</button>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div id="game" class="hidden">
+  <div class="topbar">
+    <span class="logo">Mr. Jack</span>
+    <div class="turns" id="turns"></div>
+    <span id="escapeInfo" class="note"></span>
+    <div class="icons">
+      <button id="bRisk" title="Pourcentages de risque">%</button>
+      <button id="bMusic" title="Musique">🎵</button>
+      <button id="bSfx" title="Bruitages">🔊</button>
+      <button id="bRain" title="Pluie">🌧</button>
+      <button id="bRules" title="Règles">📜</button>
+      <button id="bQuit" title="Quitter">✖</button>
+    </div>
+  </div>
+  <div>
+    <div id="boardWrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="legend">
+      <span><i class="sw" style="background:#6b5d4d"></i>Rue</span>
+      <span><i class="sw" style="background:#2a2f38"></i>Bâtiment</span>
+      <span>💡 Bec de gaz</span><span>⚫ Égout ouvert</span><span>⊕ Égout fermé</span>
+      <span>🚪 Sortie</span><span>🚧 Barrage</span>
+      <span><i class="sw" style="border:2px solid #ffd77a"></i>Personnage visible</span>
+    </div>
+  </div>
+  <div class="side">
+    <div class="box">
+      <div class="who" id="who"></div>
+      <div id="prompt"></div>
+      <div class="cards" id="cards"></div>
+      <div id="power" class="power"></div>
+      <div id="choices" style="margin-top:8px"></div>
+    </div>
+    <div class="box secret hidden" id="jackBox">
+      <h3>🔪 Dossier secret de Jack</h3>
+      <div id="jackInner"></div>
+    </div>
+    <div class="box risk" id="riskBox">
+      <h3>Pourcentages de risque</h3>
+      <div id="riskInner"></div>
+    </div>
+    <div class="box">
+      <h3>Journal</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+</div>
+
+<div id="ov" class="overlay hidden"><div class="modal" id="ovm"></div></div>
+
+<script>
+/* =====================================================================
+   DONNÉES DU PLATEAU
+   ===================================================================== */
+const COLS=13, ROWS=9, HS=34, SQ3=Math.sqrt(3);
+const MAP=[
+"E..##.L.##..E",
+".#..L.#.L..#.",
+".#O...#...O#.",
+"...##...##..L",
+"L.##..O..##..",
+"O....###.....",
+".#O.L...L.O#.",
+".##..#L#..##.",
+"E...O....O..E"];
+const DIRS=[[[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[0,1]],[[1,1],[1,0],[0,-1],[-1,0],[-1,1],[0,1]]];
+const K=(c,r)=>c+','+r;
+const inB=(c,r)=>c>=0&&r>=0&&c<COLS&&r<ROWS;
+const T=(c,r)=>inB(c,r)?MAP[r][c]:null;
+const isStreet=(c,r)=>{const t=T(c,r);return t==='.'||t==='O';};
+const nb=(c,r)=>DIRS[c&1].map(([dc,dr])=>[c+dc,r+dr]).filter(([x,y])=>inB(x,y));
+const stepDir=(c,r,d)=>{const [dc,dr]=DIRS[c&1][d];return [c+dc,r+dr];};
+const px=(c,r)=>[HS+HS*1.5*c, HS*SQ3/2+HS*SQ3*(r+0.5*(c&1))+4];
+const IDS=['holmes','watson','smith','lestrade','stealthy','goodley','gull','bert'];
+const CH={
+ holmes:{n:'Sherlock Holmes',s:'SH',col:'#a8322b',mv:3,ic:'🔍',p:"Après son déplacement, pioche une carte Alibi : pour l'Enquêteur, ce personnage est innocenté ; pour Jack, la carte reste secrète."},
+ watson:{n:'John H. Watson',s:'JW',col:'#c98c1b',mv:3,ic:'🏮',p:"Après son déplacement, oriente sa lanterne : elle éclaire en ligne droite les personnages devant lui (pas Watson lui-même)."},
+ smith:{n:'John Smith',s:'JS',col:'#7a5230',mv:3,ic:'🕯',p:"Avant ou après son déplacement, déplace un bec de gaz allumé vers un emplacement éteint."},
+ lestrade:{n:'Inspecteur Lestrade',s:'IL',col:'#2c5aa0',mv:3,ic:'🚧',p:"Avant ou après son déplacement, déplace un barrage de police vers une autre sortie."},
+ stealthy:{n:'Miss Stealthy',s:'MS',col:'#2e8b57',mv:4,ic:'🌿',p:"Se déplace de 1 à 4 cases et peut traverser bâtiments et becs de gaz (mais finit dans une rue)."},
+ goodley:{n:'Sergent Goodley',s:'SG',col:'#3a3a3a',mv:3,ic:'📯',p:"Avant ou après son déplacement, siffle : 3 points de déplacement répartis entre d'autres personnages pour les rapprocher de lui."},
+ gull:{n:'Sir William Gull',s:'WG',col:'#6c3483',mv:3,ic:'🎩',p:"Se déplace normalement OU échange sa place avec n'importe quel autre personnage."},
+ bert:{n:'Jeremy Bert',s:'JB',col:'#b5651d',mv:3,ic:'🔧',p:"Avant ou après son déplacement, ferme une plaque d'égout ouverte et en ouvre une fermée."}
+};
+const ORDER={1:['inv','jack','jack','inv'],0:['jack','inv','inv','jack']};
+const SIDE_N={inv:'Enquêteur',jack:'Jack'};
+const NAMES=['Abberline','Mary Kelly','Arthur','Eliza','Lord Pemberton','Ada','Gregson','Irène','Mycroft','Lady Agatha','Barnaby','Constance','Thaddeus','Violet','Bartholomew','Florence','Ignatius','Winifred','Montgomery','Rosalind','Archibald','Henrietta','Cornelius','Beatrix'];
+
+function newBoard(){
+ return {
+  chars:{holmes:{c:5,r:3,sus:1},watson:{c:8,r:4,sus:1},smith:{c:3,r:5,sus:1},lestrade:{c:9,r:5,sus:1},
+         stealthy:{c:5,r:6,sus:1},goodley:{c:7,r:6,sus:1},gull:{c:3,r:8,sus:1},bert:{c:10,r:1,sus:1}},
+  lamps:[{c:4,r:1,lit:1,num:1},{c:8,r:6,lit:1,num:2},{c:8,r:1,lit:1,num:3},{c:4,r:6,lit:1,num:4},
+         {c:6,r:0,lit:1,num:0},{c:6,r:7,lit:1,num:0},{c:12,r:3,lit:0,num:0},{c:0,r:4,lit:0,num:0}],
+  holes:[{c:2,r:2,open:1},{c:10,r:2,open:0},{c:6,r:4,open:1},{c:0,r:5,open:1},{c:2,r:6,open:0},{c:10,r:6,open:1},{c:4,r:8,open:1},{c:9,r:8,open:1}],
+  exits:[{c:0,r:0,blk:0},{c:12,r:0,blk:1},{c:0,r:8,blk:1},{c:12,r:8,blk:0}],
+  wdir:4
+ };
+}
+function cloneB(b){return {chars:Object.fromEntries(IDS.map(i=>[i,{...b.chars[i]}])),lamps:b.lamps.map(l=>({...l})),holes:b.holes.map(h=>({...h})),exits:b.exits.map(e=>({...e})),wdir:b.wdir};}
+
+/* =====================================================================
+   RÈGLES : déplacement, visibilité
+   ===================================================================== */
+function occMap(b){const o={};IDS.forEach(i=>o[K(b.chars[i].c,b.chars[i].r)]=i);return o;}
+function openHoleAt(b,c,r){return b.holes.some(h=>h.open&&h.c===c&&h.r===r);}
+function graphNb(b,c,r,through){
+ let res=nb(c,r).filter(([x,y])=>through?T(x,y)!=='E':isStreet(x,y));
+ if(openHoleAt(b,c,r)) b.holes.forEach(h=>{if(h.open&&!(h.c===c&&h.r===r))res.push([h.c,h.r]);});
+ return res;
+}
+function bfs(b,c0,r0,max,through){
+ const d={[K(c0,r0)]:0};const q=[[c0,r0]];
+ while(q.length){const [c,r]=q.shift();const dc=d[K(c,r)];if(dc>=max)continue;
+  for(const [x,y] of graphNb(b,c,r,through)){const k=K(x,y);if(d[k]===undefined){d[k]=dc+1;q.push([x,y]);}}}
+ return d;
+}
+// options de déplacement : {to:[c,r]} / {acc:id} / {esc:i}
+function moveOpts(b,id,side,canEsc){
+ const ch=b.chars[id],max=CH[id].mv,through=id==='stealthy';
+ const d=bfs(b,ch.c,ch.r,max,through),occ=occMap(b),out=[];
+ for(const k in d){const v=d[k];if(v<1)continue;const [c,r]=k.split(',').map(Number);if(!isStreet(c,r))continue;
+  const o=occ[k];
+  if(!o) out.push({t:'move',id,to:[c,r]});
+  else if(side==='inv'&&o!==id) out.push({t:'accuse',id,target:o,to:[c,r]});}
+ if(side==='jack'&&id===G.jack&&canEsc){
+  b.exits.forEach((e,i)=>{if(e.blk)return;
+   const ok=nb(e.c,e.r).some(([x,y])=>{const v=d[K(x,y)];return v!==undefined&&v<=max-1&&(isStreet(x,y));});
+   if(ok) out.push({t:'escape',id,exit:i,to:[e.c,e.r]});});
+ }
+ return out;
+}
+function visibility(b){
+ const lit=new Set(),beam=[];
+ b.lamps.forEach(l=>{if(l.lit)nb(l.c,l.r).forEach(([c,r])=>lit.add(K(c,r)));});
+ const w=b.chars.watson;let c=w.c,r=w.r;
+ for(let i=0;i<20;i++){[c,r]=stepDir(c,r,b.wdir);if(!inB(c,r)||!isStreet(c,r))break;beam.push([c,r]);}
+ const bs=new Set(beam.map(([c,r])=>K(c,r)));
+ const occ=occMap(b),vis={};
+ IDS.forEach(id=>{const ch=b.chars[id],k=K(ch.c,ch.r);
+  vis[id]=lit.has(k)||(id!=='watson'&&bs.has(k))||nb(ch.c,ch.r).some(([x,y])=>occ[K(x,y)]);});
+ return {vis,beam,lit};
+}
+function goodleyDist(b){const g=b.chars.goodley;return bfs(b,g.c,g.r,99,false);}
+function whistleSteps(b,id){
+ const gd=goodleyDist(b),ch=b.chars[id],cur=gd[K(ch.c,ch.r)];if(cur===undefined)return[];
+ const occ=occMap(b);
+ return nb(ch.c,ch.r).filter(([x,y])=>isStreet(x,y)&&!occ[K(x,y)]&&gd[K(x,y)]!==undefined&&gd[K(x,y)]<cur);
+}
+function exitDistMap(b){
+ const d={},q=[];
+ b.exits.forEach(e=>{if(e.blk)return;nb(e.c,e.r).forEach(([x,y])=>{if(isStreet(x,y)&&d[K(x,y)]===undefined){d[K(x,y)]=0;q.push([x,y]);}});});
+ while(q.length){const [c,r]=q.shift();for(const [x,y] of graphNb(b,c,r,false)){const k=K(x,y);if(d[k]===undefined){d[k]=d[K(c,r)]+1;q.push([x,y]);}}}
+ return d;
+}
+
+/* application d'une étape sur un plateau */
+function applyStep(b,s,sim){
+ switch(s.t){
+  case 'move': b.chars[s.id].c=s.to[0];b.chars[s.id].r=s.to[1];break;
+  case 'lamp': {const f=b.lamps[s.from],t=b.lamps[s.to];t.lit=1;t.num=f.num;f.lit=0;f.num=0;break;}
+  case 'cordon': b.exits[s.from].blk=0;b.exits[s.to].blk=1;break;
+  case 'hole': b.holes[s.close].open=0;b.holes[s.open].open=1;break;
+  case 'dir': b.wdir=s.d;break;
+  case 'swap': {const a=b.chars[s.a],c=b.chars[s.b];[a.c,a.r,c.c,c.r]=[c.c,c.r,a.c,a.r];break;}
+  case 'wstep': b.chars[s.id].c=s.to[0];b.chars[s.id].r=s.to[1];break;
+  case 'whistle': s.moves.forEach(m=>{b.chars[m.id].c=m.to[0];b.chars[m.id].r=m.to[1];});break;
+ }
+}
+
+/* =====================================================================
+   ÉTAT DE PARTIE
+   ===================================================================== */
+let G=null, CFG=null;
+function later(fn,ms){const g=G;setTimeout(()=>{if(G===g&&g&&!g.over)fn();},ms);}
+function laterAny(fn,ms){const g=G;setTimeout(()=>{if(G===g)fn();},ms);}
+const UI={card:null,tasks:[],task:null,tmp:null,wleft:0,hl:{},started:false,busy:false};
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function startGame(){
+ const b=newBoard();
+ const deck=shuffle(IDS);
+ G={b,turn:1,jack:deck[0],alibi:deck.slice(1),jackAlibis:[],canEsc:true,used:[],turnCards:[],rest:[],idx:0,over:false,
+    sideCount:{inv:0,jack:0},log:[]};
+ G.players=CFG.players;
+ deal();
+ buildBoard();
+ document.getElementById('setup').classList.add('hidden');
+ document.getElementById('game').classList.remove('hidden');
+ log(`🌫 La nuit tombe sur Whitechapel. Jack se cache parmi les 8 personnages.`);
+ lastSide=null;renderAll();
+ later(nextAction,600);
+}
+function deal(){
+ if(G.turn%2===1){const d=shuffle(IDS);G.turnCards=d.slice(0,4);G.rest=d.slice(4);}
+ else G.turnCards=G.rest;
+ G.used=[];G.idx=0;SFX.card();
+}
+function curSide(){return ORDER[G.turn%2][Math.min(G.idx,3)];}
+function sidePlayers(s){return G.players.filter(p=>p.side===s);}
+function curPlayer(){const ps=sidePlayers(curSide());return ps[G.sideCount[curSide()]%ps.length];}
+const humansOn=s=>sidePlayers(s).some(p=>p.type==='human');
+const mixedHumans=()=>humansOn('inv')&&humansOn('jack');
+function log(m){G.log.unshift(m);const el=document.getElementById('log');el.innerHTML=G.log.slice(0,80).map(x=>`<div>${x}</div>`).join('');}
+const cname=id=>`<b style="color:${lighten(CH[id].col)}">${CH[id].n}</b>`;
+function lighten(h){const n=parseInt(h.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;r=Math.min(255,r+70);g=Math.min(255,g+70);b=Math.min(255,b+70);return `rgb(${r},${g},${b})`;}
+
+let lastSide=null;
+function nextAction(){
+ if(G.over)return;
+ if(G.idx>=4){witness();return;}
+ const side=curSide(),p=curPlayer();
+ resetUI();renderAll();
+ const go=()=>{
+  if(p.type==='ai'){UI.busy=true;renderAll();later(()=>aiPlay(side),CFG.speed);}
+  else {UI.busy=false;renderAll();}
+ };
+ if(p.type==='human'&&mixedHumans()&&lastSide!==side){
+  lastSide=side;
+  modal(`<h2>${p.name}</h2><p>C'est au tour du camp <span class="badge ${side==='inv'?'b-inv':'b-jack'}">${SIDE_N[side]}</span>.</p>
+   <p class="note">${side==='jack'?"Les enquêteurs détournent le regard…":"Jack, cachez vos secrets !"}</p><button class="pri" onclick="closeModal()">Je suis prêt</button>`,go);
+ } else {lastSide=side;go();}
+}
+function endAction(){
+ G.used.push(UI.card||G._aiCard);G._aiCard=null;
+ G.sideCount[curSide()]++;G.idx++;
+ resetUI();renderAll();
+ later(nextAction,450);
+}
+
+/* =====================================================================
+   APPEL À TÉMOIN
+   ===================================================================== */
+function witness(){
+ const {vis}=visibility(G.b);const jv=vis[G.jack];
+ const cleared=IDS.filter(id=>G.b.chars[id].sus&&vis[id]!==jv);
+ SFX.bell();
+ later(()=>{
+  cleared.forEach(id=>G.b.chars[id].sus=0);
+  if(cleared.length)SFX.innocent();
+  G.canEsc=!jv;
+  log(`🔔 <b>Appel à témoin (tour ${G.turn})</b> : Jack est <b>${jv?'VISIBLE':'dans l\'OMBRE'}</b>. ${cleared.length?cleared.map(cname).join(', ')+' innocenté'+(cleared.length>1?'s':'')+'.':'Aucun nouvel innocent.'}`);
+  let off='';
+  if(G.turn<=4){const l=G.b.lamps.find(l=>l.lit&&l.num===G.turn);if(l){l.lit=0;l.num=0;off=`<p>💡 Le bec de gaz n°${G.turn} s'éteint.</p>`;SFX.lampOff();log(`💡 Le bec de gaz n°${G.turn} s'éteint.`);}}
+  renderAll();
+  const allAI=!humansOn('inv')&&!humansOn('jack');
+  const html=`<h2>Appel à témoin</h2><p style="font-size:20px">Mr. Jack est ${jv?'<b style="color:#ffd77a">VISIBLE</b> ☀':'<b style="color:#9ab">dans l\'OMBRE</b> 🌑'}</p>
+   <p>${cleared.length?'Innocentés : '+cleared.map(cname).join(', '):'Aucun nouveau personnage innocenté.'}</p>${off}
+   <p class="note">Suspects restants : ${IDS.filter(i=>G.b.chars[i].sus).length}${jv?'':' — Jack pourra tenter de s\'évader au prochain tour.'}</p>
+   ${allAI?'':`<button class="pri" onclick="closeModal()">${G.turn>=8?'Voir la fin':'Tour suivant'}</button>`}`;
+  const cont=()=>{
+   if(G.turn>=8){finish('jack',"Le 8e tour s'achève : Jack s'est fondu dans la nuit sans être arrêté.");return;}
+   G.turn++;deal();renderAll();nextAction();
+  };
+  modal(html,cont);
+  if(allAI)laterAny(()=>closeModal(),2200);
+ },900);
+}
+function finish(winner,why){
+ G.over=true;UI.busy=false;
+ renderAll();
+ const wp=G.players.filter(p=>p.side===winner).map(p=>p.name).join(' & ');
+ winner==='jack'?SFX.lose():SFX.win();
+ laterAny(()=>{
+ modal(`<h2>${winner==='inv'?'🕵 Victoire de l\'Enquêteur':'🔪 Victoire de Jack'}</h2>
+  <p>${why}</p><p>Mr. Jack était <b style="font-size:20px">${cname(G.jack)}</b></p>
+  <p>Bravo <b>${wp}</b> !</p>
+  <div class="row" style="justify-content:center;margin-top:12px"><button class="pri" onclick="closeModal();startGame()">Rejouer</button><button onclick="closeModal();quit()">Nouvelle configuration</button></div>`,null);},700);
+}
+
+/* =====================================================================
+   EXÉCUTION DES ÉTAPES (avec sons / journal)
+   ===================================================================== */
+function doStep(s,side,quiet){
+ const b=G.b;
+ switch(s.t){
+  case 'move': applyStep(b,s);SFX.step();break;
+  case 'lamp': applyStep(b,s);SFX.lampOn();log(`💡 ${cname('smith')} déplace un bec de gaz.`);break;
+  case 'cordon': applyStep(b,s);SFX.cordon();log(`🚧 ${cname('lestrade')} déplace un barrage de police.`);break;
+  case 'hole': applyStep(b,s);SFX.manhole();log(`🔧 ${cname('bert')} déplace une plaque d'égout.`);break;
+  case 'dir': applyStep(b,s);SFX.lantern();break;
+  case 'swap': applyStep(b,s);SFX.swap();log(`🎩 ${cname(s.a)} échange sa place avec ${cname(s.b)}.`);break;
+  case 'wstep': applyStep(b,s);SFX.step();break;
+  case 'whistle': applyStep(b,s);break;
+  case 'sherlock': {
+    if(!G.alibi.length){log(`🔍 Plus de carte Alibi à piocher.`);break;}
+    const a=G.alibi.shift();SFX.card();
+    if(side==='inv'){
+      const was=b.chars[a].sus;b.chars[a].sus=0;SFX.innocent();
+      log(`🔍 Holmes pioche l'alibi de ${cname(a)} : ${was?'innocenté !':'déjà innocent.'}`);
+    } else {G.jackAlibis.push(a);log(`🔍 Jack fait piocher une carte Alibi à Holmes et la garde secrète.`);}
+    break;}
+  case 'accuse': {
+    applyStep(b,{t:'move',id:s.id,to:s.to});SFX.accuse();
+    const ok=s.target===G.jack;
+    log(`⚖ ${cname(s.id)} accuse ${cname(s.target)}… ${ok?'C\'est bien Jack !':'Erreur !'}`);
+    laterAny(()=>finish(ok?'inv':'jack',ok?`${CH[s.target].n} a été arrêté : c'était bien Jack !`:`${CH[s.target].n} était innocent ! Profitant de la confusion, Jack s'enfuit.`),700);
+    G.over=true;break;}
+  case 'escape': {
+    const e=b.exits[s.exit];b.chars[s.id].c=e.c;b.chars[s.id].r=e.r;SFX.step();
+    log(`🚪 ${cname(s.id)} s'évade par une sortie !`);
+    G.over=true;laterAny(()=>finish('jack',`Jack (${CH[s.id].n}) s'est évadé de Whitechapel !`),700);break;}
+ }
+ renderAll();
+}
+
+/* =====================================================================
+   IA
+   ===================================================================== */
+function powerOpts(b,id){
+ const o=[];
+ if(id==='smith'){b.lamps.forEach((f,i)=>{if(!f.lit)return;b.lamps.forEach((t,j)=>{if(!t.lit)o.push({t:'lamp',from:i,to:j});});});}
+ if(id==='lestrade'){b.exits.forEach((f,i)=>{if(!f.blk)return;b.exits.forEach((t,j)=>{if(!t.blk)o.push({t:'cordon',from:i,to:j});});});}
+ if(id==='bert'){b.holes.forEach((f,i)=>{if(!f.open)return;b.holes.forEach((t,j)=>{if(!t.open)o.push({t:'hole',close:i,open:j});});});}
+ if(id==='goodley'){
+  o.push({t:'whistle',moves:[]});
+  IDS.forEach(x=>{if(x==='goodley')return;let bb=cloneB(b);const ms=[];
+   for(let k=0;k<3;k++){const st=whistleSteps(bb,x);if(!st.length)break;
+    const gd=goodleyDist(bb);st.sort((p,q)=>gd[K(p[0],p[1])]-gd[K(q[0],q[1])]);
+    const to=st[0];ms.push({id:x,to});applyStep(bb,{t:'move',id:x,to});o.push({t:'whistle',moves:ms.slice()});}});
+ }
+ if(!o.length)o.push(null);
+ return o;
+}
+function genCandidates(b,id,side){
+ const C=[],esc=G.canEsc;
+ const mv=bb=>moveOpts(bb,id,side,esc);
+ if(['smith','lestrade','bert','goodley'].includes(id)){
+  for(const p of powerOpts(b,id)){const b2=cloneB(b);if(p)applyStep(b2,p);for(const m of mv(b2))C.push(p?[p,m]:[m]);}
+  for(const m of mv(b)){if(m.t!=='move'){C.push([m]);continue;}const b2=cloneB(b);applyStep(b2,m);for(const p of powerOpts(b2,id))C.push(p?[m,p]:[m]);}
+ } else if(id==='watson'){
+  for(const m of mv(b)){if(m.t!=='move'){C.push([m]);continue;}for(let d=0;d<6;d++)C.push([m,{t:'dir',d}]);}
+ } else if(id==='gull'){
+  for(const m of mv(b))C.push([m]);
+  IDS.forEach(x=>{if(x!=='gull')C.push([{t:'swap',a:'gull',b:x}]);});
+ } else if(id==='holmes'){
+  for(const m of mv(b))C.push(m.t==='move'?[m,{t:'sherlock'}]:[m]);
+ } else for(const m of mv(b))C.push([m]);
+ return C;
+}
+function evalBoard(b,side){
+ const {vis}=visibility(b);const sus=IDS.filter(i=>b.chars[i].sus);
+ let V=0,I=0;sus.forEach(i=>vis[i]?V++:I++);
+ const ed=exitDistMap(b);
+ if(side==='inv'){
+  const n=V+I;let s=n?-(V*V+I*I)/n:0;
+  sus.forEach(i=>{if(!vis[i]){const d=ed[K(b.chars[i].c,b.chars[i].r)];if(d!==undefined&&d<=3)s-=0.3*(4-d)/3;}});
+  return s;
+ } else {
+  const jv=vis[G.jack];let s=jv?V:I;
+  if(!jv){s+=1.2;const ch=b.chars[G.jack];const d=ed[K(ch.c,ch.r)];if(d!==undefined&&d<=4)s+=(5-d)*0.25;}
+  return s;
+ }
+}
+function scoreCand(c,side){
+ const last=c[c.length-1];
+ const nSus=IDS.filter(i=>G.b.chars[i].sus).length;
+ for(const s of c){
+  if(s.t==='escape')return 9999;
+  if(s.t==='accuse'){
+   if(!G.b.chars[s.target].sus)return -9999;
+   if(nSus===1)return 9000;
+   const lastInv=G.turn===8&&G.idx===2;
+   return lastInv?500+100/nSus:-5000;
+  }
+ }
+ const b=cloneB(G.b);c.forEach(s=>applyStep(b,s,true));
+ let sc=evalBoard(b,side);
+ if(c.some(s=>s.t==='sherlock')&&G.alibi.length){
+  if(side==='inv'){const susA=G.alibi.filter(a=>G.b.chars[a].sus).length;sc+=0.9*susA/G.alibi.length;} else sc+=0.3;}
+ return sc;
+}
+function aiPlay(side){
+ if(G.over)return;
+ const noise=[1.6,0.35,0.05][CFG.level];
+ let best=null,bs=-Infinity;
+ const avail=G.turnCards.filter(c=>!G.used.includes(c));
+ for(const id of avail){
+  for(const c of genCandidates(G.b,id,side)){
+   const s=scoreCand(c,side)+Math.random()*noise;
+   if(s>bs){bs=s;best={id,c};}
+  }
+ }
+ G._aiCard=best.id;UI.card=best.id;
+ SFX.card();
+ log(`<span class="badge ${side==='inv'?'b-inv':'b-jack'}">${curPlayer().name}</span> joue ${cname(best.id)}.`);
+ renderAll();
+ let i=0;const steps=best.c;
+ const run=()=>{
+  if(G.over)return;
+  if(i>=steps.length){endAction();return;}
+  const s=steps[i++];
+  if(s.t==='whistle'){
+   if(s.moves.length){SFX.whistle();log(`📯 ${cname('goodley')} siffle !`);}
+   let j=0;const wm=()=>{if(j>=s.moves.length){later(run,CFG.speed*0.5);return;}
+     const m=s.moves[j++];doStep({t:'wstep',id:m.id,to:m.to},side);later(wm,350);};
+   wm();return;
+  }
+  doStep(s,side);
+  later(run,CFG.speed*0.7);
+ };
+ later(run,CFG.speed*0.6);
+}
+
+/* =====================================================================
+   INTERFACE HUMAINE
+   ===================================================================== */
+function resetUI(){UI.card=null;UI.tasks=[];UI.task=null;UI.tmp=null;UI.wleft=0;UI.hl={};UI.firstDone=false;}
+function isHumanTurn(){return G&&!G.over&&!UI.busy&&curPlayer().type==='human';}
+function pickCard(id){
+ if(!isHumanTurn()||G.used.includes(id)||UI.firstDone)return;
+ SFX.click();resetUI();UI.card=id;
+ if(id==='holmes')setTasks(['move','sherlock']);
+ else if(id==='watson')setTasks(['move','dir']);
+ else if(id==='stealthy')setTasks(['move']);
+ else {UI.task='choose';prepTask();}
+ renderAll();
+}
+function setTasks(t){UI.tasks=t.slice();nextTask();}
+function nextTask(){
+ UI.tmp=null;
+ if(G.over)return;
+ if(!UI.tasks.length){endAction();return;}
+ UI.task=UI.tasks.shift();
+ if(UI.task==='sherlock'){doStep({t:'sherlock'},curSide());UI.firstDone=true;later(nextTask,500);return;}
+ if(UI.task==='whistle')UI.wleft=3;
+ prepTask();renderAll();
+}
+function prepTask(){
+ const b=G.b,hl={};UI.hl=hl;
+ const t=UI.task;
+ if(t==='move'){moveOpts(b,UI.card,curSide(),G.canEsc).forEach(m=>{hl[K(m.to[0],m.to[1])]={m,cls:m.t==='accuse'?'acc':m.t==='escape'?'exit':''};});}
+ else if(t==='lamp'){
+  if(UI.tmp===null)b.lamps.forEach((l,i)=>{if(l.lit)hl[K(l.c,l.r)]={i};});
+  else b.lamps.forEach((l,i)=>{if(!l.lit)hl[K(l.c,l.r)]={i};});}
+ else if(t==='cordon'){
+  if(UI.tmp===null)b.exits.forEach((e,i)=>{if(e.blk)hl[K(e.c,e.r)]={i};});
+  else b.exits.forEach((e,i)=>{if(!e.blk)hl[K(e.c,e.r)]={i};});}
+ else if(t==='hole'){
+  if(UI.tmp===null)b.holes.forEach((h,i)=>{if(h.open)hl[K(h.c,h.r)]={i};});
+  else b.holes.forEach((h,i)=>{if(!h.open)hl[K(h.c,h.r)]={i};});}
+ else if(t==='swap'){IDS.forEach(x=>{if(x!=='gull'){const c=b.chars[x];hl[K(c.c,c.r)]={id:x};}});}
+ else if(t==='whistle'){
+  if(UI.tmp===null)IDS.forEach(x=>{if(x!=='goodley'&&whistleSteps(b,x).length){const c=b.chars[x];hl[K(c.c,c.r)]={id:x};}});
+  else {IDS.forEach(x=>{if(x!=='goodley'&&x!==UI.tmp&&whistleSteps(b,x).length){const c=b.chars[x];hl[K(c.c,c.r)]={id:x};}});whistleSteps(b,UI.tmp).forEach(([c,r])=>hl[K(c,r)]={to:[c,r]});}}
+ else if(t==='dir'){const w=b.chars.watson;for(let d=0;d<6;d++){const [c,r]=stepDir(w.c,w.r,d);hl['dir'+d]={d,c,r};}}
+}
+function choose(order){
+ SFX.click();const id=UI.card;
+ const pw={smith:'lamp',lestrade:'cordon',bert:'hole',goodley:'whistle'}[id];
+ if(id==='gull'){setTasks(order==='swap'?['swap']:['move']);return;}
+ setTasks(order==='power'?[pw,'move']:['move',pw]);
+}
+function boardClick(k){
+ if(!isHumanTurn()||!UI.task)return;
+ const h=UI.hl[k];if(!h)return;
+ const side=curSide(),t=UI.task;
+ if(t==='move'){
+  const m=h.m;
+  if(m.t==='accuse'){
+   const n=IDS.filter(i=>G.b.chars[i].sus).length;
+   const pct=G.b.chars[m.target].sus?Math.round(100/n):0;
+   modal(`<h2>Accusation</h2><p>${cname(m.id)} va accuser ${cname(m.target)}.</p>
+     ${CFG.risk?`<p>Chance de succès : <b>${pct}%</b>${pct===0?' (ce personnage est innocent !)':''}</p>`:''}
+     <p class="note">Si vous vous trompez, Jack gagne immédiatement.</p>
+     <div class="row" style="justify-content:center"><button class="pri" id="accYes">Accuser !</button><button onclick="closeModal()">Annuler</button></div>`,null);
+   document.getElementById('accYes').onclick=()=>{closeModal(true);UI.firstDone=true;doStep(m,side);};
+   return;
+  }
+  UI.firstDone=true;doStep(m,side);if(!G.over)nextTask();return;
+ }
+ if(t==='lamp'||t==='cordon'||t==='hole'){
+  if(UI.tmp===null){UI.tmp=h.i;SFX.click();prepTask();renderAll();return;}
+  const s=t==='lamp'?{t:'lamp',from:UI.tmp,to:h.i}:t==='cordon'?{t:'cordon',from:UI.tmp,to:h.i}:{t:'hole',close:UI.tmp,open:h.i};
+  UI.firstDone=true;doStep(s,side);nextTask();return;
+ }
+ if(t==='swap'){UI.firstDone=true;doStep({t:'swap',a:'gull',b:h.id},side);nextTask();return;}
+ if(t==='whistle'){
+  if(h.id){UI.tmp=h.id;SFX.click();prepTask();renderAll();return;}
+  if(UI.wleft===3){SFX.whistle();log(`📯 ${cname('goodley')} siffle !`);}
+  UI.firstDone=true;doStep({t:'wstep',id:UI.tmp,to:h.to},side);UI.wleft--;
+  if(UI.wleft<=0){nextTask();return;}
+  if(!whistleSteps(G.b,UI.tmp).length)UI.tmp=null;
+  prepTask();renderAll();return;
+ }
+ if(t==='dir'){UI.firstDone=true;doStep({t:'dir',d:h.d},side);nextTask();return;}
+}
+function endWhistle(){SFX.click();nextTask();}
+function cancelSel(){if(UI.firstDone)return;SFX.click();resetUI();renderAll();}
+
+/* =====================================================================
+   RENDU
+   ===================================================================== */
+const svg=document.getElementById('board');
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const a in attrs)e.setAttribute(a,attrs[a]);if(parent)parent.appendChild(e);return e;}
+function hexPts(cx,cy,s){let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*60*i;p.push((cx+s*Math.cos(a)).toFixed(1)+','+(cy+s*Math.sin(a)).toFixed(1));}return p.join(' ');}
+let L={};
+function buildBoard(){
+ svg.innerHTML='';
+ const W=HS*1.5*(COLS-1)+HS*2,H=HS*SQ3*(ROWS+0.5)+8;
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ const defs=el('defs',{},svg);
+ defs.innerHTML=`
+ <radialGradient id="glow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset=".6" stop-color="#ffb347" stop-opacity=".18"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+ <pattern id="cob" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#5e5244"/><circle cx="3" cy="3" r="2.6" fill="#6d604f"/><circle cx="8" cy="8" r="2.4" fill="#685b4b"/><circle cx="8" cy="2" r="1.5" fill="#625545"/></pattern>
+ <pattern id="roof" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="8" height="8" fill="#262b33"/><rect width="8" height="3" fill="#2e343e"/></pattern>
+ <pattern id="stripe" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f2f2f2"/><rect width="4" height="8" fill="#c0392b"/></pattern>
+ <filter id="fog"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .8  0 0 0 0 .8  0 0 0 0 .85  0 0 0 .55 -.15"/></filter>
+ <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".7"/></filter>`;
+ L.cells=el('g',{},svg);
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  const t=T(c,r),[x,y]=px(c,r);
+  let fill='url(#cob)';
+  if(t==='#')fill='url(#roof)';else if(t==='L')fill='#3d362e';else if(t==='E')fill='#1e3324';
+  el('polygon',{points:hexPts(x,y,HS-1),fill,class:'cell','data-k':K(c,r)},L.cells);
+  if(t==='#'){el('rect',{x:x-9,y:y-7,width:6,height:6,fill:'#c9a24a',opacity:Math.random()<.45?.55:.08},L.cells);el('rect',{x:x+3,y:y-7,width:6,height:6,fill:'#c9a24a',opacity:Math.random()<.45?.55:.08},L.cells);el('rect',{x:x-3,y:y+3,width:6,height:6,fill:'#c9a24a',opacity:Math.random()<.3?.5:.06},L.cells);}
+ }
+ L.glow=el('g',{style:'pointer-events:none'},svg);
+ L.beam=el('g',{style:'pointer-events:none'},svg);
+ L.dyn=el('g',{},svg);
+ L.hl=el('g',{},svg);
+ L.toks=el('g',{},svg);
+ L.fog=el('rect',{x:0,y:0,width:W,height:H,filter:'url(#fog)',style:'pointer-events:none;mix-blend-mode:screen',opacity:.35},svg);
+ L.ui=el('g',{},svg);
+ L.tok={};
+ IDS.forEach(id=>{
+  const g=el('g',{class:'tok'},L.toks);
+  el('circle',{class:'ring',r:25},g);
+  const f=el('g',{class:'face',filter:'url(#sh)'},g);
+  el('circle',{class:'base',r:20,fill:CH[id].col,stroke:'#f3e6cc','stroke-width':1.5},f);
+  const tx=el('text',{y:2,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#fff','font-family':'Georgia'},f);tx.textContent=CH[id].s;
+  const ic=el('text',{y:15,'text-anchor':'middle','font-size':9},f);ic.textContent=CH[id].ic;
+  const pg=el('g',{transform:'translate(16,-17)'},g);
+  el('rect',{x:-13,y:-8,width:26,height:14,rx:7,fill:'#000',opacity:.75},pg);
+  const pt=el('text',{class:'pct','text-anchor':'middle',y:3},pg);
+  const inn=el('text',{x:0,y:-23,'text-anchor':'middle','font-size':13},g);
+  L.tok[id]={g,pt,pg,inn};
+  g.addEventListener('click',()=>{const ch=G.b.chars[id];boardClick(K(ch.c,ch.r));});
+ });
+ svg.onclick=e=>{const t=e.target.closest('[data-k]');if(t&&!e.target.closest('.tok'))boardClick(t.getAttribute('data-k'));};
+}
+function renderBoard(){
+ const b=G.b,{vis,beam}=visibility(b);
+ L.glow.innerHTML='';L.dyn.innerHTML='';L.beam.innerHTML='';L.hl.innerHTML='';L.ui.innerHTML='';
+ b.lamps.forEach(l=>{const [x,y]=px(l.c,l.r);
+  if(l.lit)el('circle',{cx:x,cy:y,r:HS*2.3,fill:'url(#glow)'},L.glow);
+  const g=el('g',{'data-k':K(l.c,l.r),style:'cursor:pointer'},L.dyn);
+  el('polygon',{points:hexPts(x,y,HS-1),fill:'transparent'},g);
+  el('rect',{x:x-1.5,y:y-6,width:3,height:22,fill:'#1a1a1a'},g);
+  el('path',{d:`M${x-8} ${y-8} L${x+8} ${y-8} L${x+5} ${y-20} L${x-5} ${y-20} Z`,fill:l.lit?'#ffd36b':'#4a4a4a',stroke:'#111'},g);
+  if(l.num&&l.lit){const t=el('text',{x:x,y:y+12,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#fff',stroke:'#000','stroke-width':.6},g);t.textContent=l.num;}
+ });
+ b.holes.forEach(h=>{const [x,y]=px(h.c,h.r);
+  const g=el('g',{'data-k':K(h.c,h.r)},L.dyn);
+  if(h.open){el('ellipse',{cx:x,cy:y+9,rx:12,ry:7,fill:'#0a0a0a',stroke:'#3a3a3a','stroke-width':2},g);}
+  else{el('ellipse',{cx:x,cy:y+9,rx:12,ry:7,fill:'#7c7c7c',stroke:'#2a2a2a','stroke-width':2},g);el('path',{d:`M${x-8} ${y+9}h16M${x} ${y+4}v10`,stroke:'#3a3a3a','stroke-width':2},g);}
+ });
+ b.exits.forEach(e=>{const [x,y]=px(e.c,e.r);
+  const g=el('g',{'data-k':K(e.c,e.r),style:'cursor:pointer'},L.dyn);
+  el('polygon',{points:hexPts(x,y,HS-1),fill:'transparent'},g);
+  const t=el('text',{x,y:y+8,'text-anchor':'middle','font-size':22},g);t.textContent='🚪';
+  if(e.blk){el('rect',{x:x-20,y:y-6,width:40,height:10,rx:2,fill:'url(#stripe)',stroke:'#111',transform:`rotate(-20 ${x} ${y})`},g);}
+ });
+ // faisceau Watson
+ const w=b.chars.watson,[wx,wy]=px(w.c,w.r);
+ if(beam.length){const [ex,ey]=px(beam[beam.length-1][0],beam[beam.length-1][1]);
+  el('line',{x1:wx,y1:wy,x2:ex,y2:ey,stroke:'#ffe08a','stroke-width':26,'stroke-linecap':'round',opacity:.22},L.beam);
+  el('line',{x1:wx,y1:wy,x2:ex,y2:ey,stroke:'#fff3c4','stroke-width':6,'stroke-linecap':'round',opacity:.25},L.beam);}
+ else {const [ex,ey]=px(...stepDir(w.c,w.r,b.wdir));el('line',{x1:wx,y1:wy,x2:(wx+ex)/2,y2:(wy+ey)/2,stroke:'#ffe08a','stroke-width':16,opacity:.25,'stroke-linecap':'round'},L.beam);}
+ // surbrillance
+ for(const k in UI.hl){const h=UI.hl[k];
+  if(k.startsWith('dir')){
+   if(!inB(h.c,h.r))continue;
+   const [x,y]=px(h.c,h.r),ang=Math.atan2(y-wy,x-wx)*180/Math.PI;
+   const g=el('g',{style:'cursor:pointer'},L.ui);
+   el('circle',{cx:(wx+x)/2+(x-wx)*0.25,cy:(wy+y)/2+(y-wy)*0.25,r:12,fill:'#ffd36b',stroke:'#000'},g);
+   el('path',{d:'M-5 -6 L7 0 L-5 6 Z',fill:'#000',transform:`translate(${(wx+x)/2+(x-wx)*0.25},${(wy+y)/2+(y-wy)*0.25}) rotate(${ang})`},g);
+   g.addEventListener('click',ev=>{ev.stopPropagation();boardClick(k);});
+   continue;}
+  const [c,r]=k.split(',').map(Number),[x,y]=px(c,r);
+  el('polygon',{points:hexPts(x,y,HS-3),class:'hl '+(h.cls||''),'data-k':k},L.hl);
+ }
+ // jetons
+ const nSus=IDS.filter(i=>b.chars[i].sus).length;
+ IDS.forEach(id=>{const ch=b.chars[id],[x,y]=px(ch.c,ch.r),t=L.tok[id];
+  t.g.style.transform=`translate(${x}px,${y}px)`;
+  t.g.classList.toggle('vis',!!vis[id]);
+  t.g.classList.toggle('inno',!ch.sus);
+  t.g.classList.toggle('active',UI.card===id);
+  const pick=UI.hl[K(ch.c,ch.r)]&&(UI.task==='swap'||UI.task==='whistle'||(UI.task==='move'&&UI.hl[K(ch.c,ch.r)].m));
+  t.g.classList.toggle('pick',!!pick);
+  t.pg.style.display=CFG.risk&&ch.sus?'':'none';
+  t.pt.textContent=Math.round(100/nSus)+'%';
+  t.inn.textContent=ch.sus?'':'✔';
+  if(G.over&&id===G.jack)t.inn.textContent='🔪';
+ });
+}
+function renderPanel(){
+ // tours
+ document.getElementById('turns').innerHTML=Array.from({length:8},(_,i)=>{const n=i+1;
+  return `<div class="tdot ${n===G.turn?'cur':n<G.turn?'past':''}">${n}${n<=4?`<span class="lmp">${G.b.lamps.some(l=>l.num===n&&l.lit)?'💡':''}</span>`:''}</div>`;}).join('');
+ document.getElementById('escapeInfo').innerHTML=`Jack ${G.canEsc?'<b style="color:#7dffa8">peut</b>':'<b>ne peut pas</b>'} s'évader ce tour`;
+ const side=curSide(),p=curPlayer();
+ document.getElementById('who').innerHTML=G.over?'<b>Partie terminée</b>':`Tour ${G.turn} · action ${G.idx+1}/4 — <b>${p.name}</b> <span class="badge ${side==='inv'?'b-inv':'b-jack'}">${SIDE_N[side]}</span> ${p.type==='ai'?'🤖':''}`;
+ // cartes
+ const human=isHumanTurn();
+ document.getElementById('cards').innerHTML=G.turnCards.map(id=>{const used=G.used.includes(id);
+  return `<div class="ccard ${used?'used':''} ${UI.card===id?'sel':''} ${human&&!used&&!UI.firstDone?'can':'off'}" onclick="pickCard('${id}')" title="${CH[id].p.replace(/"/g,'&quot;')}">
+   <div class="av" style="background:${CH[id].col}">${CH[id].s}</div><div class="nm">${CH[id].n}</div><div style="font-size:11px;color:var(--muted)">${CH[id].mv} cases</div></div>`;}).join('');
+ // prompt + choix
+ let pr='',ch='';
+ if(G.over)pr='';
+ else if(!human)pr=p.type==='ai'?'🤖 L\'ordinateur réfléchit…':'';
+ else if(!UI.card)pr='Choisissez un personnage à jouer.';
+ else{
+  const t=UI.task;
+  const msgs={move:`Déplacez ${CH[UI.card].n} (1 à ${CH[UI.card].mv} cases).${side==='inv'?' Arrivez sur un autre personnage pour l\'accuser.':''}${side==='jack'&&UI.card===G.jack&&G.canEsc?' Les sorties vertes permettent de s\'évader !':''}`,
+   lamp:UI.tmp===null?'Choisissez un bec de gaz allumé.':'Choisissez un emplacement éteint.',
+   cordon:UI.tmp===null?'Choisissez le barrage à déplacer.':'Choisissez une sortie libre.',
+   hole:UI.tmp===null?'Choisissez une plaque d\'égout ouverte à fermer.':'Choisissez une plaque fermée à ouvrir.',
+   swap:'Choisissez le personnage avec qui échanger.',
+   whistle:`Sifflet : ${UI.wleft} point(s). ${UI.tmp===null?'Choisissez un personnage à rapprocher.':'Choisissez la case (plus proche de Goodley).'}`,
+   dir:'Orientez la lanterne de Watson (flèches jaunes).',
+   choose:'Choisissez l\'ordre :'};
+  pr=msgs[t]||'';
+  if(t==='choose'){
+   if(UI.card==='gull')ch=`<button onclick="choose('move')">🚶 Se déplacer</button><button onclick="choose('swap')">🔄 Échanger sa place</button>`;
+   else ch=`<button onclick="choose('power')">✨ Pouvoir puis déplacement</button><button onclick="choose('move')">🚶 Déplacement puis pouvoir</button>`;
+  }
+  if(t==='whistle')ch+=`<button onclick="endWhistle()">Terminer le sifflet</button>`;
+  if(!UI.firstDone)ch+=`<button onclick="cancelSel()">↩ Changer de personnage</button>`;
+ }
+ document.getElementById('prompt').innerHTML=pr;
+ document.getElementById('choices').innerHTML=ch;
+ document.getElementById('power').innerHTML=UI.card?`<b>${CH[UI.card].ic} ${CH[UI.card].n}</b> — ${CH[UI.card].p}`:'';
+ // Jack
+ const jb=document.getElementById('jackBox'),ji=document.getElementById('jackInner');
+ const jackHuman=humansOn('jack');
+ if(jackHuman&&!G.over){
+  jb.classList.remove('hidden');
+  const content=`Vous êtes <b>${CH[G.jack].n}</b> ${CH[G.jack].ic}<br><span class="note">${(()=>{const v=visibility(G.b).vis[G.jack];return v?'Actuellement visible ☀':'Actuellement dans l\'ombre 🌑';})()}</span>${G.jackAlibis.length?'<br>Alibis gardés secrets : '+G.jackAlibis.map(a=>CH[a].n).join(', '):''}`;
+  if(mixedHumans()){
+   ji.innerHTML=`<button class="holdbtn" id="holdJ">👁 Maintenir pour voir l'identité de Jack</button><div id="jsec" class="hidden" style="margin-top:8px">${content}</div>`;
+   const hb=document.getElementById('holdJ'),js=document.getElementById('jsec');
+   const on=e=>{e.preventDefault();js.classList.remove('hidden');},off=()=>js.classList.add('hidden');
+   hb.onmousedown=on;hb.ontouchstart=on;hb.onmouseup=off;hb.onmouseleave=off;hb.ontouchend=off;
+  } else ji.innerHTML=content;
+ } else jb.classList.add('hidden');
+ // risque
+ const rb=document.getElementById('riskBox');
+ rb.classList.toggle('hidden',!CFG.risk);
+ if(CFG.risk){
+  const {vis}=visibility(G.b),sus=IDS.filter(i=>G.b.chars[i].sus),n=sus.length;
+  const V=sus.filter(i=>vis[i]).length,I=n-V;
+  let h=`<table>${IDS.map(id=>{const s=G.b.chars[id].sus,pc=s?100/n:0;return `<tr><td>${CH[id].ic}</td><td>${CH[id].n}</td><td style="width:70px"><div class="bar"><i style="width:${pc}%"></i></div></td><td style="text-align:right;width:42px">${s?Math.round(pc)+'%':'✔'}</td></tr>`;}).join('')}</table>`;
+  h+=`<p class="note" style="margin:8px 0 0">Si l'appel à témoin avait lieu maintenant :<br>☀ ${V} suspect(s) visible(s) — ${n?Math.round(100*V/n):0}% que Jack soit visible<br>🌑 ${I} suspect(s) dans l'ombre — ${n?Math.round(100*I/n):0}%<br>➜ au moins <b>${Math.min(V,I)}</b> personnage(s) innocenté(s).</p>`;
+  document.getElementById('riskInner').innerHTML=h;
+ }
+ document.getElementById('bRisk').classList.toggle('sel',CFG.risk);
+ document.getElementById('bMusic').classList.toggle('sel',CFG.music);
+ document.getElementById('bSfx').classList.toggle('sel',CFG.sfx);
+ document.getElementById('bRain').classList.toggle('sel',CFG.rain);
+}
+function renderAll(){if(!G)return;if(UI.task)prepTask();renderBoard();renderPanel();}
+
+/* =====================================================================
+   MODALES
+   ===================================================================== */
+let modalCb=null;
+function closeModalSilent(){document.getElementById('ov').classList.add('hidden');modalCb=null;}
+function modal(html,cb){document.getElementById('ovm').innerHTML=html;document.getElementById('ovm').className='modal';document.getElementById('ov').classList.remove('hidden');modalCb=cb;}
+function closeModal(skip){document.getElementById('ov').classList.add('hidden');const cb=modalCb;modalCb=null;SFX.click();if(cb&&!skip)cb();}
+const RULES=`<h2>Règles de Mr. Jack</h2>
+<p>Deux camps s'affrontent pendant 8 tours maximum dans Whitechapel. <b>Jack</b> se cache sous l'identité secrète de l'un des 8 personnages ; <b>l'Enquêteur</b> doit le démasquer et l'arrêter.</p>
+<h3>Déroulement d'un tour</h3>
+<p>4 personnages sont joués. Tours impairs : l'Enquêteur en joue 1, Jack 2, puis l'Enquêteur le dernier (nouveau tirage de 4 cartes). Tours pairs : les 4 cartes restantes, Jack 1, l'Enquêteur 2, Jack le dernier. N'importe quel camp peut jouer n'importe quel personnage.</p>
+<p>Un personnage activé se déplace (en traversant les autres personnages, mais pas les bâtiments ni les becs de gaz) et utilise son pouvoir. Passer d'une plaque d'égout <b>ouverte</b> à une autre coûte 1 case.</p>
+<h3>Appel à témoin</h3>
+<p>Un personnage est <b>visible</b> s'il est à côté d'un bec de gaz allumé, à côté d'un autre personnage, ou dans le faisceau de la lanterne de Watson. Si Jack est visible, tous les suspects invisibles sont innocentés ; sinon, tous les suspects visibles le sont. À la fin des tours 1 à 4, le bec de gaz du numéro du tour s'éteint.</p>
+<h3>Fin de partie</h3>
+<p>• <b>Arrestation</b> : l'Enquêteur déplace un personnage sur la case d'un autre pour l'accuser. Bonne pioche : victoire de l'Enquêteur ; erreur : victoire de Jack.<br>
+• <b>Évasion</b> : si Jack était dans l'ombre au dernier appel à témoin (ou au tour 1), le joueur Jack peut le faire sortir par une sortie sans barrage.<br>
+• <b>Fin du 8e tour</b> : Jack gagne s'il n'a pas été arrêté.</p>
+<h3>Les personnages</h3>
+${IDS.map(id=>`<p><b>${CH[id].ic} ${CH[id].n}</b> (${CH[id].mv} cases) — ${CH[id].p}</p>`).join('')}
+<h3>Pourcentages de risque</h3><p>Chaque suspect restant a la même probabilité d'être Jack (100 % ÷ nombre de suspects). Le panneau indique aussi combien de personnages seraient innocentés si l'appel à témoin avait lieu tout de suite.</p>
+<div style="text-align:center"><button class="pri" onclick="closeModal()">Compris</button></div>`;
+function showRules(){modal(RULES,null);document.getElementById('ovm').className='modal rules';}
+
+/* =====================================================================
+   AUDIO (Web Audio, tout est synthétisé)
+   ===================================================================== */
+const AU={ctx:null};
+function auInit(){
+ if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume();return;}
+ try{
+ const C=new (window.AudioContext||window.webkitAudioContext)();AU.ctx=C;
+ AU.master=C.createGain();AU.master.gain.value=.85;AU.master.connect(C.destination);
+ AU.mus=C.createGain();AU.mus.gain.value=0;AU.mus.connect(AU.master);
+ AU.fx=C.createGain();AU.fx.gain.value=.7;AU.fx.connect(AU.master);
+ AU.rainG=C.createGain();AU.rainG.gain.value=0;AU.rainG.connect(AU.master);
+ AU.rev=C.createConvolver();const len=C.sampleRate*3.2,ib=C.createBuffer(2,len,C.sampleRate);
+ for(let ch=0;ch<2;ch++){const d=ib.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);}
+ AU.rev.buffer=ib;AU.revG=C.createGain();AU.revG.gain.value=.55;AU.rev.connect(AU.revG);AU.revG.connect(AU.master);
+ const nl=C.sampleRate*2;AU.noise=C.createBuffer(1,nl,C.sampleRate);const nd=AU.noise.getChannelData(0);for(let i=0;i<nl;i++)nd[i]=Math.random()*2-1;
+ // pluie
+ const rs=C.createBufferSource();rs.buffer=AU.noise;rs.loop=true;const bp=C.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1400;bp.Q.value=.4;
+ const hp=C.createBiquadFilter();hp.type='highpass';hp.frequency.value=500;rs.connect(bp);bp.connect(hp);hp.connect(AU.rainG);rs.start();
+ AU.next=C.currentTime+.2;AU.chord=0;
+ setInterval(musicTick,400);
+ }catch(e){AU.ctx=null;}
+ applyAudio();
+}
+function applyAudio(){
+ if(!AU.ctx)return;const t=AU.ctx.currentTime;
+ AU.mus.gain.cancelScheduledValues(t);AU.mus.gain.setTargetAtTime(CFG.music?.32:0,t,.8);
+ AU.fx.gain.setTargetAtTime(CFG.sfx?.7:0,t,.05);
+ AU.rainG.gain.setTargetAtTime(CFG.rain?.06:0,t,.8);
+}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const PROG=[[57,60,64,67],[53,57,60,64],[48,55,59,64],[55,59,62,64],[50,57,60,65],[53,57,60,64],[52,55,59,64],[57,60,64,69]];
+const PENTA=[69,72,74,76,79,81,84];
+function musicTick(){
+ const C=AU.ctx;if(!C||!CFG.music)return;
+ while(AU.next<C.currentTime+1.2){
+  const t=AU.next,ch=PROG[AU.chord%PROG.length],dur=8;
+  ch.forEach(n=>pad(mtof(n),t,dur));
+  pad(mtof(ch[0]-12),t,dur,.05,'sine');
+  const k=3+(Math.random()*4|0);
+  for(let i=0;i<k;i++){const n=PENTA[Math.random()*PENTA.length|0];pluck(mtof(n),t+0.5+Math.random()*(dur-1.5));}
+  AU.next+=dur;AU.chord++;
+ }
+}
+function pad(f,t,dur,vol=.035,type='triangle'){
+ const C=AU.ctx,g=C.createGain(),lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+2.8);g.gain.setValueAtTime(vol,t+dur-1);g.gain.linearRampToValueAtTime(0,t+dur+2.5);
+ [-5,5].forEach(dt=>{const o=C.createOscillator();o.type=type;o.frequency.value=f;o.detune.value=dt;o.connect(lp);o.start(t);o.stop(t+dur+2.6);});
+ lp.connect(g);g.connect(AU.mus);const s=C.createGain();s.gain.value=.6;g.connect(s);s.connect(AU.rev);
+}
+function pluck(f,t){
+ const C=AU.ctx,o=C.createOscillator(),o2=C.createOscillator(),g=C.createGain();o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f*2;
+ const g2=C.createGain();g2.gain.value=.15;o2.connect(g2);g2.connect(g);o.connect(g);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+.01);g.gain.exponentialRampToValueAtTime(.0005,t+2.4);
+ g.connect(AU.mus);const s=C.createGain();s.gain.value=.9;g.connect(s);s.connect(AU.rev);
+ o.start(t);o2.start(t);o.stop(t+2.5);o2.stop(t+2.5);
+}
+function tone(f,dur,{type='sine',vol=.2,t0=0,attack=.005,rev=.2,slide=null}={}){
+ const C=AU.ctx;if(!C||!CFG.sfx)return;const t=C.currentTime+t0,o=C.createOscillator(),g=C.createGain();
+ o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+attack);g.gain.exponentialRampToValueAtTime(.0005,t+dur);
+ o.connect(g);g.connect(AU.fx);if(rev){const s=AU.ctx.createGain();s.gain.value=rev;g.connect(s);s.connect(AU.rev);}
+ o.start(t);o.stop(t+dur+.05);return o;
+}
+function noise(dur,{f=1000,q=1,type='bandpass',vol=.2,t0=0,f2=null,rev=.1}={}){
+ const C=AU.ctx;if(!C||!CFG.sfx)return;const t=C.currentTime+t0,s=C.createBufferSource(),fl=C.createBiquadFilter(),g=C.createGain();
+ s.buffer=AU.noise;fl.type=type;fl.frequency.setValueAtTime(f,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+dur);fl.Q.value=q;
+ g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0005,t+dur);
+ s.connect(fl);fl.connect(g);g.connect(AU.fx);if(rev){const r=C.createGain();r.gain.value=rev;g.connect(r);r.connect(AU.rev);}
+ s.start(t);s.stop(t+dur+.05);
+}
+const SFX={
+ click(){tone(1400,.05,{vol:.06,rev:0});},
+ step(){for(let i=0;i<3;i++){noise(.09,{f:500,q:2,type:'lowpass',vol:.35,t0:i*.17});tone(90,.08,{vol:.12,t0:i*.17,rev:0});}},
+ card(){noise(.18,{f:1800,f2:6000,q:.8,vol:.15});},
+ lampOn(){tone(880,1.2,{vol:.1,rev:.6});tone(1320,1.4,{vol:.06,t0:.06,rev:.6});noise(.3,{f:3000,q:.5,vol:.05});},
+ lampOff(){noise(.6,{f:2500,f2:300,q:.7,vol:.12});tone(660,.8,{vol:.07,slide:330,rev:.5});},
+ manhole(){tone(110,.5,{type:'square',vol:.06,rev:.4});tone(243,.6,{vol:.12,rev:.5});tone(377,.4,{vol:.06,rev:.4});noise(.2,{f:400,type:'lowpass',vol:.3});},
+ cordon(){tone(320,.12,{type:'triangle',vol:.25,rev:.2});tone(280,.12,{type:'triangle',vol:.25,t0:.16,rev:.2});},
+ whistle(){[0,.45].forEach(t0=>{const o=tone(2600,.38,{vol:.08,t0,attack:.02,rev:.3});if(o){const C=AU.ctx,l=C.createOscillator(),lg=C.createGain();l.frequency.value=32;lg.gain.value=90;l.connect(lg);lg.connect(o.frequency);l.start(C.currentTime+t0);l.stop(C.currentTime+t0+.4);}});},
+ lantern(){noise(.4,{f:800,f2:2500,q:.6,vol:.08});tone(520,.6,{vol:.05,rev:.5});},
+ swap(){noise(.35,{f:400,f2:3000,q:1,vol:.12});noise(.35,{f:3000,f2:400,q:1,vol:.1,t0:.2});},
+ bell(){[0,.9].forEach(t0=>{[392,784*1.003,1176,1568*.998].forEach((f,i)=>tone(f,2.4,{vol:.14/(i+1),t0,rev:.7}));});},
+ innocent(){[523,659,784].forEach((f,i)=>tone(f,.5,{vol:.09,t0:i*.09,rev:.5}));},
+ accuse(){tone(65,1.2,{type:'sawtooth',vol:.12,rev:.6});noise(.6,{f:200,type:'lowpass',vol:.4,rev:.5});tone(98,1.2,{vol:.12,rev:.5});},
+ win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.9,{type:'triangle',vol:.12,t0:i*.13,rev:.6}));},
+ lose(){[440,415,392,330,262].forEach((f,i)=>tone(f,1,{type:'triangle',vol:.12,t0:i*.22,rev:.6}));}
+};
+
+/* =====================================================================
+   CONFIGURATION
+   ===================================================================== */
+let nbP=1;const slots=[];
+function randName(){const used=slots.map(s=>s.name);const pool=NAMES.filter(n=>!used.includes(n));return pool[Math.random()*pool.length|0]||'Joueur';}
+for(let i=0;i<4;i++)slots.push({name:'',type:i===0?'human':'ai',side:i%2?'jack':'inv'});
+slots.forEach(s=>s.name=randName());
+function renderSetup(){
+ document.getElementById('nbBtns').innerHTML=[1,2,3,4].map(n=>`<button class="${n===nbP?'sel':''}" onclick="setNb(${n})">${n} joueur${n>1?'s':''}</button>`).join('');
+ let h='';
+ for(let i=0;i<nbP;i++){const s=slots[i];
+  h+=`<div class="pslot"><span class="fell" style="color:var(--gold)">${i+1}</span>
+   <div class="row" style="flex-wrap:nowrap"><input value="${s.name.replace(/"/g,'&quot;')}" oninput="slots[${i}].name=this.value" style="flex:1;min-width:0"><button title="Nom au hasard" onclick="slots[${i}].name=randName();renderSetup()">🎲</button></div>
+   <div class="seg"><button class="${s.type==='human'?'on':''}" onclick="slots[${i}].type='human';renderSetup()">👤 Joueur</button><button class="${s.type==='ai'?'on':''}" onclick="slots[${i}].type='ai';renderSetup()">🤖 Ordi</button></div>
+   <div class="seg"><button class="${s.side==='inv'?'on':''}" onclick="slots[${i}].side='inv';renderSetup()">🕵 Enquêteur</button><button class="${s.side==='jack'?'on':''}" onclick="slots[${i}].side='jack';renderSetup()">🔪 Jack</button></div><span></span></div>`;}
+ const act=slots.slice(0,nbP);const miss=['inv','jack'].filter(s=>!act.some(p=>p.side===s));
+ if(miss.length)h+=`<p class="note">➜ ${miss.map(s=>'Le camp '+SIDE_N[s]).join(' et ')} sera joué par l'ordinateur.</p>`;
+ document.getElementById('slots').innerHTML=h;
+}
+function setNb(n){nbP=n;if(n>=2&&slots.slice(0,n).every(s=>s.side===slots[0].side))slots[1].side=slots[0].side==='inv'?'jack':'inv';SFX.click();renderSetup();}
+document.getElementById('randAll').onclick=()=>{slots.forEach(s=>s.name='');slots.forEach(s=>s.name=randName());renderSetup();};
+document.getElementById('randSides').onclick=()=>{const sides=shuffle(slots.slice(0,nbP).map((_,i)=>i%2?'jack':'inv'));slots.slice(0,nbP).forEach((s,i)=>s.side=sides[i]);renderSetup();};
+document.getElementById('rulesBtn').onclick=showRules;
+CFG={risk:true,music:true,sfx:true,rain:false,level:1,speed:850,players:[]};
+document.getElementById('startBtn').onclick=()=>{
+ CFG.risk=optRisk.checked;CFG.music=optMusic.checked;CFG.sfx=optSfx.checked;CFG.rain=optRain.checked;
+ CFG.level=+optLevel.value;CFG.speed=+optSpeed.value;
+ const ps=slots.slice(0,nbP).map((s,i)=>({name:s.name.trim()||('Joueur '+(i+1)),type:s.type,side:s.side}));
+ ['inv','jack'].forEach(sd=>{if(!ps.some(p=>p.side===sd))ps.push({name:sd==='inv'?'Inspecteur Automate':'L\'Ombre (ordi)',type:'ai',side:sd});});
+ CFG.players=ps;auInit();lastSide=null;startGame();
+};
+const tg=(k)=>()=>{CFG[k]=!CFG[k];auInit();applyAudio();SFX.click();renderAll();};
+document.getElementById('bRisk').onclick=tg('risk');
+document.getElementById('bMusic').onclick=tg('music');
+document.getElementById('bSfx').onclick=tg('sfx');
+document.getElementById('bRain').onclick=tg('rain');
+document.getElementById('bRules').onclick=showRules;
+document.getElementById('bQuit').onclick=()=>{modal(`<h2>Quitter la partie ?</h2><div class="row" style="justify-content:center"><button class="pri" onclick="closeModal(true);quit()">Quitter</button><button onclick="closeModal(true)">Continuer</button></div>`,null);};
+function quit(){if(G)G.over=true;G=null;closeModalSilent();document.getElementById('game').classList.add('hidden');document.getElementById('setup').classList.remove('hidden');renderSetup();}
+renderSetup();
+</script>
 </body>
 </html>
