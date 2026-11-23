@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic système et réseau</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --text:#1b1f24; --muted:#667085; --line:#e4e7ec;
+    --ok:#12805c; --ok-bg:#e6f6ef; --warn:#a15c00; --warn-bg:#fff4e0;
+    --err:#c0262d; --err-bg:#fdecec; --info:#3554b8; --info-bg:#eaf0ff;
+    --blk:#5f6673; --blk-bg:#eef0f3; --accent:#1b1f24;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1115; --card:#171a20; --text:#e8eaee; --muted:#9aa3b2; --line:#272c35;
+      --ok:#4fd1a1; --ok-bg:#12302a; --warn:#f5b450; --warn-bg:#33270f;
+      --err:#ff7a7f; --err-bg:#3a1a1c; --info:#8fa8ff; --info-bg:#1c2442;
+      --blk:#aab1bd; --blk-bg:#242830; --accent:#e8eaee;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 16px 48px}
+  header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+  h1{font-size:24px;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--muted);margin:0;font-size:14px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--text);
+    padding:8px 14px;border-radius:8px;cursor:pointer}
+  button.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+  button:disabled{opacity:.55;cursor:default}
+  .summary{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tile .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .tile .v{font-size:26px;font-weight:650;margin-top:2px}
+  .tile.main .v{font-size:19px}
+  .banner{display:none;background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:14px}
+  .banner b{color:inherit}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(470px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .card h2{font-size:15px;margin:0;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .card h2 .st{font-size:12px;font-weight:500}
+  .row{display:grid;grid-template-columns:150px 1fr auto;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);align-items:start}
+  .row:last-child{border-bottom:0}
+  .lab{color:var(--muted);font-size:13.5px}
+  .val{word-break:break-word;font-variant-numeric:tabular-nums}
+  .hint{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+  .pill{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .ok{color:var(--ok);background:var(--ok-bg)} .warn{color:var(--warn);background:var(--warn-bg)}
+  .err{color:var(--err);background:var(--err-bg)} .info{color:var(--info);background:var(--info-bg)}
+  .blocked{color:var(--blk);background:var(--blk-bg)}
+  .bar{height:6px;border-radius:99px;background:var(--line);margin-top:6px;max-width:220px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .loading{padding:14px 16px;color:var(--muted);font-size:14px}
+  .note{color:var(--muted);font-size:12.5px;margin-top:20px}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);
+    padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.show{opacity:1}
+  #fallback{display:none;width:100%;height:160px;margin-top:10px;font:12px monospace;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px}
+  @media (max-width:640px){
+    .summary{grid-template-columns:1fr 1fr 1fr}.tile.main{grid-column:1/-1}
+    .grid{grid-template-columns:1fr}.row{grid-template-columns:1fr auto}.row .lab{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Diagnostic système et réseau</h1>
+      <p class="sub" id="stamp">Analyse en cours…</p>
+    </div>
+    <div class="actions">
+      <button id="btnSpeed">Test de débit</button>
+      <button id="btnCopy">Copier le rapport</button>
+      <button id="btnRun" class="primary">Relancer</button>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="tile main"><div class="k">État général</div><div class="v" id="sGlobal">—</div></div>
+    <div class="tile"><div class="k">OK</div><div class="v" id="sOk" style="color:var(--ok)">0</div></div>
+    <div class="tile"><div class="k">Attention</div><div class="v" id="sWarn" style="color:var(--warn)">0</div></div>
+    <div class="tile"><div class="k">Erreurs</div><div class="v" id="sErr" style="color:var(--err)">0</div></div>
+  </div>
+
+  <div class="banner" id="banner">
+    <b>Les tests Internet n'ont pas pu joindre l'extérieur.</b>
+    Si vous voyez cette page dans Claude, c'est normal : les requêtes externes y sont bloquées.
+    Téléchargez le fichier <i>diagnostic.html</i> et ouvrez-le directement dans votre navigateur pour les tests IP, DNS, latence et débit.
+    Sinon, votre connexion Internet a probablement un problème.
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <textarea id="fallback" readonly></textarea>
+
+  <p class="note">
+    Un navigateur ne peut pas lire directement les pilotes Windows/macOS (Wi-Fi, chipset, imprimante…).
+    Cette page détecte les symptômes visibles depuis le navigateur : pilote graphique absent ou en rendu logiciel,
+    périphériques audio/vidéo non détectés, connectivité, DNS, IP, latence, horloge système.
+  </p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LABEL = {ok:'OK', warn:'Attention', err:'Erreur', info:'Info', blocked:'Bloqué'};
+const inFrame = (()=>{ try { return window.self !== window.top; } catch { return true; } })();
+let externalFails = 0, externalOk = 0, traceData = null;
+const results = {};
+
+function withTimeout(p, ms){
+  return Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('délai dépassé')), ms))]);
+}
+async function timedFetch(url, opts={}, ms=6000){
+  const t0 = performance.now();
+  const r = await withTimeout(fetch(url, {cache:'no-store', ...opts}), ms);
+  return {r, ms: performance.now()-t0};
+}
+function bust(u){ return u + (u.includes('?')?'&':'?') + '_=' + Date.now() + Math.random().toString(36).slice(2,6); }
+function fmtBytes(b){ if(b==null) return '—'; const u=['o','Ko','Mo','Go','To']; let i=0; while(b>=1024&&i<u.length-1){b/=1024;i++} return b.toFixed(i?1:0)+' '+u[i]; }
+function row(label, value, status='info', hint=''){ return {label, value:String(value ?? '—'), status, hint}; }
+function netFail(label, e, hint){
+  externalFails++;
+  const st = navigator.onLine ? 'blocked' : 'err';
+  return row(label, navigator.onLine ? 'Inaccessible' : 'Hors ligne', st,
+    hint || (e && e.message ? e.message : ''));
+}
+
+/* ---------- Sections ---------- */
+const sections = [
+{ id:'sys', title:'Système et navigateur', run: async () => {
+  const out = [];
+  const ua = navigator.userAgent;
+  let os = 'Inconnu', browser = 'Inconnu', arch = '';
+  const uad = navigator.userAgentData;
+  if (uad && uad.getHighEntropyValues) {
+    try {
+      const h = await uad.getHighEntropyValues(['platformVersion','architecture','bitness','fullVersionList','model']);
+      os = h.platform || uad.platform;
+      if (os === 'Windows' && h.platformVersion) {
+        const maj = parseInt(h.platformVersion.split('.')[0],10);
+        os = maj >= 13 ? 'Windows 11' : (maj > 0 ? 'Windows 10' : 'Windows 7/8');
+      } else if (h.platformVersion) os += ' ' + h.platformVersion;
+      arch = [h.architecture, h.bitness && h.bitness+' bits'].filter(Boolean).join(' · ');
+      const b = (h.fullVersionList||[]).find(x=>!/Not.?A.?Brand|Chromium/i.test(x.brand)) || (h.fullVersionList||[])[0];
+      if (b) browser = b.brand + ' ' + b.version;
+    } catch {}
+  }
+  if (browser === 'Inconnu') {
+    const m = ua.match(/(Edg|OPR|Firefox|Chrome|Version)\/([\d.]+)/);
+    if (m) browser = ({Edg:'Edge',OPR:'Opera',Version:'Safari'}[m[1]]||m[1]) + ' ' + m[2];
+  }
+  if (os === 'Inconnu') {
+    os = /Windows NT 10/.test(ua)?'Windows 10/11':/Mac OS X/.test(ua)?'macOS':/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS / iPadOS':/Linux/.test(ua)?'Linux':'Inconnu';
+  }
+  out.push(row('Système', os + (arch?' ('+arch+')':''), 'info'));
+  out.push(row('Navigateur', browser, 'info'));
+  const cores = navigator.hardwareConcurrency;
+  out.push(row('Processeur', cores ? cores+' cœurs logiques' : 'Non communiqué', cores && cores < 2 ? 'warn' : 'info'));
+  const mem = navigator.deviceMemory;
+  out.push(row('Mémoire (approx.)', mem ? '≥ '+mem+' Go' : 'Non communiquée', mem && mem < 4 ? 'warn' : 'info',
+    mem && mem < 4 ? 'Peu de mémoire : risque de lenteurs' : ''));
+  out.push(row('Langue / fuseau', navigator.language + ' · ' + Intl.DateTimeFormat().resolvedOptions().timeZone, 'info'));
+  out.push(row('Cookies', navigator.cookieEnabled ? 'Activés' : 'Désactivés', navigator.cookieEnabled ? 'ok' : 'warn',
+    navigator.cookieEnabled ? '' : 'Beaucoup de sites ne fonctionneront pas correctement'));
+  out.push(row('Contexte sécurisé', window.isSecureContext ? 'Oui' : 'Non', window.isSecureContext ? 'ok' : 'warn'));
+  return out;
+}},
+
+{ id:'gpu', title:'Carte graphique et pilote', run: async () => {
+  const out = [];
+  const c = document.createElement('canvas');
+  const gl = c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl');
+  if (!gl) {
+    out.push(row('WebGL', 'Indisponible', 'err', 'Pilote graphique absent/obsolète ou accélération matérielle désactivée dans le navigateur'));
+  } else {
+    const isGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    const vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+    const renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    const soft = /swiftshader|llvmpipe|softpipe|basic render|software|mesa offscreen/i.test(renderer);
+    out.push(row('Fabricant', vendor, 'info'));
+    out.push(row('Carte / pilote', renderer, soft ? 'err' : 'ok',
+      soft ? 'Rendu logiciel : le pilote graphique est absent, défectueux ou l\'accélération matérielle est désactivée' : ''));
+    out.push(row('WebGL', isGL2 ? 'WebGL 2 pris en charge' : 'WebGL 1 seulement', isGL2 ? 'ok' : 'warn',
+      isGL2 ? '' : 'Pilote ou navigateur ancien'));
+    const strict = document.createElement('canvas').getContext('webgl', {failIfMajorPerformanceCaveat:true});
+    if (!strict) out.push(row('Performances', 'Dégradées', 'warn', 'Le navigateur signale un rendu graphique lent (pilote en liste noire ou mode logiciel)'));
+    out.push(row('Texture max.', gl.getParameter(gl.MAX_TEXTURE_SIZE) + ' px', 'info'));
+  }
+  if (navigator.gpu) {
+    try {
+      const ad = await withTimeout(navigator.gpu.requestAdapter(), 4000);
+      if (!ad) out.push(row('WebGPU', 'Aucun adaptateur', 'warn', 'Pilote non compatible ou désactivé'));
+      else {
+        let info = ad.info;
+        if (!info && ad.requestAdapterInfo) { try { info = await ad.requestAdapterInfo(); } catch {} }
+        const desc = info ? [info.vendor, info.architecture, info.description].filter(Boolean).join(' · ') : '';
+        const fb = ad.isFallbackAdapter || (info && info.isFallbackAdapter);
+        out.push(row('WebGPU', (desc || 'Disponible') + (fb ? ' (adaptateur de secours)' : ''), fb ? 'warn' : 'ok'));
+      }
+    } catch(e) { out.push(row('WebGPU', 'Erreur', 'warn', e.message)); }
+  } else out.push(row('WebGPU', 'Non pris en charge par ce navigateur', 'info'));
+  return out;
+}},
+
+{ id:'screen', title:'Écran', run: async () => {
+  const out = [];
+  const dpr = window.devicePixelRatio || 1;
+  out.push(row('Résolution', `${screen.width}×${screen.height} (≈ ${Math.round(screen.width*dpr)}×${Math.round(screen.height*dpr)} px réels)`, 'info'));
+  out.push(row('Échelle', Math.round(dpr*100)+' %', 'info'));
+  out.push(row('Profondeur couleur', screen.colorDepth+' bits', screen.colorDepth < 24 ? 'warn' : 'ok'));
+  const hz = await new Promise(res => {
+    let n=0, t0=null;
+    function f(t){ if(t0===null) t0=t; if(++n<40) requestAnimationFrame(f); else res(1000*(n-1)/(t-t0)); }
+    requestAnimationFrame(f); setTimeout(()=>res(null), 3000);
+  });
+  if (hz) out.push(row('Fréquence mesurée', Math.round(hz)+' Hz', hz < 50 ? 'warn' : 'ok',
+    hz < 50 ? 'Affichage saccadé : onglet en arrière-plan, économie d\'énergie ou pilote graphique' : ''));
+  return out;
+}},
+
+{ id:'media', title:'Audio et périphériques', run: async () => {
+  const out = [];
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) out.push(row('Audio', 'API audio absente', 'warn'));
+    else {
+      const ac = new AC();
+      out.push(row('Moteur audio', `${ac.sampleRate} Hz` + (ac.baseLatency ? ` · latence ${(ac.baseLatency*1000).toFixed(1)} ms` : ''), 'ok'));
+      ac.close && ac.close();
+    }
+  } catch(e) { out.push(row('Moteur audio', 'Erreur', 'err', e.message)); }
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    try {
+      const d = await withTimeout(navigator.mediaDevices.enumerateDevices(), 3000);
+      const cnt = k => d.filter(x=>x.kind===k).length;
+      const mic = cnt('audioinput'), cam = cnt('videoinput'), spk = cnt('audiooutput');
+      out.push(row('Microphones', mic, mic ? 'ok' : 'warn', mic ? '' : 'Aucun détecté (non branché, pilote manquant ou accès bloqué)'));
+      out.push(row('Caméras', cam, cam ? 'ok' : 'info', cam ? '' : 'Aucune détectée'));
+      out.push(row('Sorties audio', spk || 'Non communiqué', spk ? 'ok' : 'info', spk ? '' : 'Certains navigateurs ne listent pas les haut-parleurs'));
+    } catch(e) { out.push(row('Périphériques', 'Liste inaccessible', 'blocked', e.message)); }
+  } else out.push(row('Périphériques', 'Liste inaccessible', 'blocked', 'API indisponible dans ce contexte'));
+  return out;
+}},
+
+{ id:'bat', title:'Batterie', run: async () => {
+  if (!navigator.getBattery) {
+    return [row('Batterie', 'Non prise en charge par ce navigateur', 'info',
+      'Seuls Chrome, Edge et Opera donnent l\'état de la batterie (Firefox et Safari l\'ont retiré pour la vie privée)'), healthRow()];
+  }
+  try {
+    if (!batt) batt = await withTimeout(navigator.getBattery(), 3000);
+  } catch(e) {
+    return [row('Batterie', 'Accès bloqué', 'blocked', 'Le contexte de la page interdit la lecture de la batterie'), healthRow()];
+  }
+  if (!battListen) {
+    battListen = true;
+    const onChange = () => { recordBatt(); refreshBattery(); };
+    ['levelchange','chargingchange'].forEach(ev => batt.addEventListener(ev, onChange));
+    ['chargingtimechange','dischargingtimechange'].forEach(ev => batt.addEventListener(ev, refreshBattery));
+    setInterval(refreshBattery, 30000);
+    recordBatt();
+  }
+  return batteryRows();
+}},
+
+{ id:'net', title:'Connexion', run: async () => {
+  const out = [];
+  out.push(row('Statut', navigator.onLine ? 'En ligne' : 'Hors ligne', navigator.onLine ? 'ok' : 'err',
+    navigator.onLine ? '' : 'Aucune connexion réseau détectée'));
+  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (c) {
+    if (c.type) out.push(row('Type', ({wifi:'Wi-Fi',ethernet:'Ethernet',cellular:'Mobile',none:'Aucune'}[c.type]||c.type), 'info'));
+    if (c.effectiveType) out.push(row('Qualité estimée', c.effectiveType.toUpperCase(), /4g/.test(c.effectiveType) ? 'ok' : 'warn'));
+    if (c.downlink) out.push(row('Débit estimé', c.downlink+' Mb/s', c.downlink < 2 ? 'warn' : 'info', 'Estimation du navigateur'));
+    if (c.rtt != null) out.push(row('Latence estimée', c.rtt+' ms', c.rtt > 200 ? 'warn' : 'info'));
+    if (c.saveData) out.push(row('Économie de données', 'Activée', 'info'));
+  } else out.push(row('Détails', 'Non fournis par ce navigateur', 'info'));
+
+  try {
+    const {r, ms} = await timedFetch(bust('https://www.cloudflare.com/cdn-cgi/trace'));
+    const txt = await r.text(); externalOk++;
+    traceData = Object.fromEntries(txt.trim().split('\n').map(l=>l.split('=')));
+    out.push(row('Accès Internet', 'Fonctionnel ('+Math.round(ms)+' ms)', 'ok'));
+    out.push(row('Protocole', `${traceData.http || '?'} · ${traceData.tls || '?'}`, 'info'));
+    if (traceData.warp && traceData.warp !== 'off') out.push(row('VPN Cloudflare WARP', traceData.warp, 'info'));
+  } catch(e) { out.push(netFail('Accès Internet', e)); }
+  return out;
+}},
+
+{ id:'ip', title:'Adresses IP', run: async () => {
+  const out = [];
+  let ip4 = traceData && traceData.ip;
+  if (!ip4) {
+    try { const {r} = await timedFetch('https://api.ipify.org?format=json'); ip4 = (await r.json()).ip; externalOk++; }
+    catch(e) { out.push(netFail('IP publique', e)); }
+  }
+  if (ip4) out.push(row('IP publique', ip4, 'ok'));
+  try {
+    const {r} = await timedFetch('https://api6.ipify.org?format=json', {}, 5000);
+    const j = await r.json(); externalOk++;
+    out.push(row('IPv6', j.ip, 'ok'));
+  } catch(e) {
+    out.push(row('IPv6', ip4 || externalOk ? 'Non disponible' : 'Non testé', 'info',
+      ip4 || externalOk ? 'Votre réseau ou votre box n\'attribue pas d\'IPv6 (courant, sans gravité)' : ''));
+  }
+  try {
+    const {r} = await timedFetch('https://ipwho.is/', {}, 6000);
+    const j = await r.json(); externalOk++;
+    if (j.success !== false) {
+      out.push(row('Fournisseur', (j.connection && (j.connection.isp || j.connection.org)) || '—', 'info',
+        j.connection && j.connection.asn ? 'AS'+j.connection.asn : ''));
+      out.push(row('Localisation IP', [j.city, j.region, j.country].filter(Boolean).join(', '), 'info',
+        'Approximative, basée sur l\'adresse IP'));
+    }
+  } catch(e) { if (ip4) out.push(row('Fournisseur', 'Indisponible', 'info', 'Service de géolocalisation injoignable')); }
+
+  // IP locale via WebRTC
+  try {
+    if (!window.RTCPeerConnection) throw new Error('WebRTC indisponible');
+    const local = await withTimeout(new Promise((res, rej) => {
+      const pc = new RTCPeerConnection({iceServers:[]}); const found = new Set();
+      pc.createDataChannel('x');
+      pc.onicecandidate = ev => {
+        if (!ev.candidate) { pc.close(); res([...found]); return; }
+        const m = ev.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9-]+\.local)/i);
+        if (m) found.add(m[1]);
+      };
+      pc.createOffer().then(o=>pc.setLocalDescription(o)).catch(rej);
+    }), 3000);
+    const masked = local.length && local.every(a=>a.endsWith('.local'));
+    out.push(row('IP locale', local.length ? (masked ? 'Masquée par le navigateur' : local.join(', ')) : 'Non détectée',
+      local.length ? 'info' : 'info', masked ? 'Protection de la vie privée (normal). Utilisez ipconfig / ifconfig pour la voir.' : ''));
+  } catch(e) { out.push(row('IP locale', 'Non accessible', 'blocked', 'WebRTC bloqué dans ce contexte')); }
+  return out;
+}},
+
+{ id:'dns', title:'DNS et latence', run: async () => {
+  const out = [];
+  const dnsTests = [
+    ['DNS Cloudflare', 'https://cloudflare-dns.com/dns-query?name=example.com&type=A', {headers:{accept:'application/dns-json'}}],
+    ['DNS Google', 'https://dns.google/resolve?name=example.com&type=A', {}],
+  ];
+  for (const [label, url, opts] of dnsTests) {
+    try {
+      const {r, ms} = await timedFetch(bust(url), opts);
+      const j = await r.json(); externalOk++;
+      const ok = j.Status === 0 && j.Answer && j.Answer.length;
+      out.push(row(label, ok ? `Résolution OK · ${Math.round(ms)} ms` : 'Réponse vide', ok ? (ms > 400 ? 'warn' : 'ok') : 'warn'));
+    } catch(e) { out.push(netFail(label, e)); }
+  }
+  const targets = [
+    ['Ping Cloudflare', 'https://1.1.1.1/cdn-cgi/trace'],
+    ['Ping Google', 'https://www.google.com/generate_204'],
+    ['Ping Wikipédia', 'https://www.wikipedia.org/static/favicon/wikipedia.ico'],
+  ];
+  for (const [label, url] of targets) {
+    const times = [];
+    let lastErr = null;
+    for (let i=0;i<4;i++) {
+      try { const {ms} = await timedFetch(bust(url), {mode:'no-cors'}, 4000); times.push(ms); }
+      catch(e) { lastErr = e; }
+    }
+    if (times.length <= 1) { out.push(netFail(label, lastErr)); continue; }
+    externalOk++;
+    const t = times.slice(1).sort((a,b)=>a-b);            // 1er essai = connexion TLS, ignoré
+    const med = t[Math.floor(t.length/2)];
+    const jitter = t[t.length-1]-t[0];
+    const loss = 4 - times.length;
+    const st = loss || med > 250 ? 'warn' : 'ok';
+    out.push(row(label, `${Math.round(med)} ms · gigue ${Math.round(jitter)} ms` + (loss ? ` · ${loss}/4 échecs` : ''), st,
+      med > 250 ? 'Latence élevée' : (loss ? 'Pertes de requêtes' : '')));
+  }
+  return out;
+}},
+
+{ id:'clock', title:'Horloge et stockage', run: async () => {
+  const out = [];
+  if (traceData && traceData.ts) {
+    const drift = Date.now()/1000 - parseFloat(traceData.ts);
+    const abs = Math.abs(drift);
+    out.push(row('Horloge système', abs < 5 ? 'À l\'heure' : `Décalage de ${Math.round(drift)} s`,
+      abs < 30 ? 'ok' : abs < 300 ? 'warn' : 'err',
+      abs >= 30 ? 'Une horloge décalée provoque des erreurs de certificat HTTPS. Synchronisez l\'heure du système.' : ''));
+  } else out.push(row('Horloge système', new Date().toLocaleString('fr-FR'), 'info', 'Comparaison avec un serveur impossible'));
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const e = await navigator.storage.estimate();
+      out.push(row('Stockage navigateur', `${fmtBytes(e.usage)} utilisés sur ${fmtBytes(e.quota)}`,
+        e.quota && e.quota < 200*1024*1024 ? 'warn' : 'ok',
+        e.quota && e.quota < 200*1024*1024 ? 'Quota faible : disque presque plein ou navigation privée' : ''));
+    } catch { out.push(row('Stockage navigateur', 'Inaccessible', 'blocked')); }
+  }
+  let ls = false; try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); ls = true; } catch {}
+  out.push(row('Stockage local', ls ? 'Disponible' : 'Indisponible', ls ? 'ok' : 'info', ls ? '' : 'Navigation privée ou contexte restreint'));
+  return out;
+}},
+];
+
+/* ---------- Batterie ---------- */
+let batt = null, battListen = false, battHist = [];
+function fmtDur(s){
+  if (!isFinite(s) || s <= 0) return null;
+  const h = Math.floor(s/3600), m = Math.round((s%3600)/60);
+  return h ? `${h} h ${String(m).padStart(2,'0')}` : `${m} min`;
+}
+function ago(ms){ const m = Math.round(ms/60000); return m < 1 ? 'à l\'instant' : `il y a ${m} min`; }
+function recordBatt(){ battHist.push({t: Date.now(), level: batt.level, charging: batt.charging}); if (battHist.length > 500) battHist.shift(); }
+function healthRow(){
+  return row('Santé / usure', 'Non accessible depuis un navigateur', 'info',
+    'Capacité réelle et nombre de cycles : sous Windows, lancez « powercfg /batteryreport » ; sous macOS, Informations système › Alimentation');
+}
+function measuredRate(){
+  // ne garder que la série en cours (même état de charge)
+  const cur = batt.charging; let i = battHist.length - 1;
+  while (i > 0 && battHist[i-1].charging === cur) i--;
+  const serie = battHist.slice(i);
+  if (serie.length < 2) return null;
+  const a = serie[0], b = serie[serie.length-1];
+  const dh = (b.t - a.t) / 3.6e6, dl = (b.level - a.level) * 100;
+  if (dh <= 0 || Math.abs(dl) < 1) return null;
+  return {rate: dl/dh, since: a.t};
+}
+function batteryRows(){
+  const b = batt, out = [];
+  const lvl = Math.round(b.level*100);
+  if (b.charging && b.level === 1 && b.chargingTime === 0 && b.dischargingTime === Infinity && battHist.length < 2) {
+    out.push(row('Batterie', 'Aucune détectée, ou batterie pleine et branchée', 'info',
+      'Sur un PC fixe, le navigateur affiche toujours 100 % branché'));
+    out.push(healthRow());
+    return out;
+  }
+  const color = lvl < 10 ? 'var(--err)' : lvl < 20 ? 'var(--warn)' : 'var(--ok)';
+  const lvlRow = row('Niveau', lvl+' %', lvl < 10 && !b.charging ? 'err' : lvl < 20 && !b.charging ? 'warn' : 'ok',
+    lvl < 20 && !b.charging ? 'Branchez le chargeur' : '');
+  lvlRow.html = `${lvl} %<div class="bar"><i style="width:${lvl}%;background:${color}"></i></div>`;
+  out.push(lvlRow);
+  out.push(row('État', b.charging ? (b.level === 1 ? 'Branchée, chargée' : 'En charge') : 'Sur batterie', b.charging ? 'ok' : 'info'));
+
+  if (b.charging && b.level < 1) {
+    const d = fmtDur(b.chargingTime);
+    out.push(row('Charge complète dans', d || 'Calcul en cours…', 'info', d ? 'Vers ' + new Date(Date.now()+b.chargingTime*1000).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : 'Le système a besoin de quelques minutes pour estimer'));
+  }
+  if (!b.charging) {
+    const d = fmtDur(b.dischargingTime);
+    out.push(row('Autonomie restante', d || 'Calcul en cours…', d && b.dischargingTime < 1800 ? 'warn' : 'info',
+      d ? 'Estimation du système' : 'Le système a besoin de quelques minutes pour estimer'));
+  }
+  const m = measuredRate();
+  if (m) {
+    const r = Math.abs(m.rate);
+    let proj = '';
+    if (m.rate < 0) proj = ' · vide dans ≈ ' + (fmtDur(lvl / r * 3600) || '—');
+    else if (lvl < 100) proj = ' · pleine dans ≈ ' + (fmtDur((100 - lvl) / r * 3600) || '—');
+    const high = m.rate < 0 && r > 25;
+    out.push(row(m.rate < 0 ? 'Décharge mesurée' : 'Charge mesurée', `${r.toFixed(1)} % / h${proj}`, high ? 'warn' : 'ok',
+      high ? 'Consommation élevée : vérifiez la luminosité et les applications gourmandes' : 'Mesuré depuis l\'ouverture de la page'));
+  } else {
+    out.push(row(b.charging ? 'Charge mesurée' : 'Décharge mesurée', 'Mesure en cours…', 'info',
+      'Laissez la page ouverte : le calcul démarre dès que le niveau bouge de 1 %'));
+  }
+  const last = battHist[battHist.length-1];
+  if (battHist.length > 1) out.push(row('Dernière variation', ago(Date.now() - last.t), 'info',
+    `${battHist.length - 1} changement(s) observé(s) depuis l'ouverture`));
+  out.push(healthRow());
+  return out;
+}
+function refreshBattery(){
+  if (!batt || !document.getElementById('card-bat')) return;
+  results.bat = batteryRows();
+  renderCard(sections.find(s=>s.id==='bat'), results.bat);
+  updateSummary();
+}
+
+/* ---------- Rendu ---------- */
+function worst(rows){
+  const order = ['err','warn','blocked','ok','info'];
+  for (const s of order) if (rows.some(r=>r.status===s)) return s;
+  return 'info';
+}
+function renderCard(sec, rows){
+  const el = document.getElementById('card-'+sec.id);
+  const w = rows ? worst(rows) : null;
+  el.innerHTML = `<h2>${sec.title}${w ? `<span class="pill st ${w}">${LABEL[w]}</span>` : ''}</h2>` +
+    (rows ? rows.map(r => `<div class="row"><div class="lab">${r.label}</div>
+      <div class="val">${r.html || esc(r.value)}${r.hint ? `<span class="hint">${esc(r.hint)}</span>` : ''}</div>
+      <span class="pill ${r.status}">${LABEL[r.status]}</span></div>`).join('')
+    : '<div class="loading">Test en cours…</div>');
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function updateSummary(){
+  const all = Object.values(results).flat();
+  const n = s => all.filter(r=>r.status===s).length;
+  $('#sOk').textContent = n('ok'); $('#sWarn').textContent = n('warn'); $('#sErr').textContent = n('err');
+  const g = $('#sGlobal');
+  if (n('err')) { g.textContent = 'Problèmes détectés'; g.style.color = 'var(--err)'; }
+  else if (n('warn')) { g.textContent = 'Quelques points à vérifier'; g.style.color = 'var(--warn)'; }
+  else { g.textContent = 'Tout semble correct'; g.style.color = 'var(--ok)'; }
+  $('#banner').style.display = (externalFails && !externalOk && navigator.onLine) ? 'block' : 'none';
+}
+
+async function runAll(){
+  $('#btnRun').disabled = true;
+  externalFails = 0; externalOk = 0; traceData = null;
+  for (const k in results) delete results[k];
+  $('#grid').innerHTML = sections.map(s=>`<div class="card" id="card-${s.id}"></div>`).join('') +
+    `<div class="card" id="card-speed" style="display:none"></div>`;
+  sections.forEach(s=>renderCard(s, null));
+  $('#sGlobal').textContent = 'Analyse…'; $('#sGlobal').style.color = '';
+  // ordre : sections locales en parallèle, puis réseau (net avant ip/clock pour réutiliser la trace)
+  const local = sections.filter(s=>['sys','gpu','screen','media','bat'].includes(s.id));
+  const runOne = async s => {
+    let rows; try { rows = await s.run(); } catch(e) { rows = [row('Erreur', e.message, 'err')]; }
+    results[s.id] = rows; renderCard(s, rows); updateSummary();
+  };
+  const localP = Promise.all(local.map(runOne));
+  for (const id of ['net','ip','dns','clock']) await runOne(sections.find(s=>s.id===id));
+  await localP;
+  $('#stamp').textContent = 'Dernière analyse : ' + new Date().toLocaleString('fr-FR');
+  $('#btnRun').disabled = false;
+}
+
+/* ---------- Test de débit ---------- */
+async function speedTest(){
+  const btn = $('#btnSpeed'); btn.disabled = true;
+  const card = $('#card-speed'); card.style.display = '';
+  const sec = {id:'speed', title:'Débit'};
+  renderCard(sec, null);
+  const rows = [];
+  try {
+    const bytes = 25e6;
+    const t0 = performance.now();
+    const r = await withTimeout(fetch(bust('https://speed.cloudflare.com/__down?bytes='+bytes), {cache:'no-store'}), 30000);
+    const reader = r.body.getReader(); let got = 0;
+    while (true) { const {done, value} = await reader.read(); if (done) break; got += value.length; }
+    const s = (performance.now()-t0)/1000;
+    const mbps = got*8/s/1e6;
+    rows.push(row('Descendant', mbps.toFixed(1)+' Mb/s', mbps < 5 ? 'warn' : 'ok', `${fmtBytes(got)} en ${s.toFixed(1)} s`));
+  } catch(e) { rows.push(netFail('Descendant', e)); }
+  try {
+    const data = new Uint8Array(8e6);
+    const t0 = performance.now();
+    await withTimeout(fetch('https://speed.cloudflare.com/__up', {method:'POST', body:data}), 30000);
+    const s = (performance.now()-t0)/1000;
+    const mbps = data.length*8/s/1e6;
+    rows.push(row('Montant', mbps.toFixed(1)+' Mb/s', mbps < 1 ? 'warn' : 'ok', `${fmtBytes(data.length)} en ${s.toFixed(1)} s`));
+  } catch(e) { rows.push(netFail('Montant', e)); }
+  results.speed = rows; renderCard(sec, rows); updateSummary();
+  btn.disabled = false;
+}
+
+/* ---------- Rapport ---------- */
+function report(){
+  let t = 'RAPPORT DE DIAGNOSTIC — ' + new Date().toLocaleString('fr-FR') + '\n';
+  t += 'État : ' + $('#sGlobal').textContent + '\n';
+  for (const s of [...sections, {id:'speed', title:'Débit'}]) {
+    const rows = results[s.id]; if (!rows) continue;
+    t += '\n## ' + s.title + '\n';
+    rows.forEach(r => t += `- [${LABEL[r.status]}] ${r.label} : ${r.value}${r.hint ? ' — ' + r.hint : ''}\n`);
+  }
+  return t;
+}
+function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'), 1800); }
+$('#btnCopy').addEventListener('click', async () => {
+  const txt = report();
+  try { await navigator.clipboard.writeText(txt); toast('Rapport copié'); }
+  catch { const f=$('#fallback'); f.style.display='block'; f.value=txt; f.focus(); f.select(); toast('Copiez le texte ci-dessous'); }
+});
+$('#btnRun').addEventListener('click', runAll);
+$('#btnSpeed').addEventListener('click', speedTest);
+window.addEventListener('online', runAll);
+window.addEventListener('offline', runAll);
+runAll();
+</script>
+</body>
+</html>
