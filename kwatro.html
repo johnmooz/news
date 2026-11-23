@@ -1,107 +1,883 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site en construction</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #f8fafc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 50px 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            letter-spacing: -0.5px;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #cbd5e1;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
-            overflow: hidden;
-            margin-bottom: 30px;
-        }
-
-        .progress-fill {
-            width: 75%;
-            height: 100%;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            border-radius: 999px;
-        }
-
-        .contact-btn {
-            display: inline-block;
-            padding: 12px 28px;
-            background-color: #38bdf8;
-            color: #0f172a;
-            text-decoration: none;
-            font-weight: 600;
-            border-radius: 8px;
-            transition: background-color 0.2s, transform 0.2s;
-        }
-
-        .contact-btn:hover {
-            background-color: #7dd3fc;
-            transform: translateY(-2px);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kwatro — IOTA</title>
+<style>
+:root{
+  --bg:#efeee9; --panel:#ffffff; --ink:#1d1d1f; --muted:#77736b; --line:#e2dfd7;
+  --red:#e53935; --green:#2e9e48; --blue:#1e78d6; --yellow:#f5a623;
+  --accent:#1d1d1f; --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+#app{display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:minmax(0,1fr);height:100vh;height:100dvh;width:100%}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.logo{font-weight:900;font-size:22px;letter-spacing:2px;display:flex;align-items:baseline;gap:8px}
+.logo b:nth-child(1){color:var(--red)}.logo b:nth-child(2){color:var(--green)}.logo b:nth-child(3){color:var(--blue)}.logo b:nth-child(4){color:var(--yellow)}
+.logo b{font-weight:900}
+.logo small{font-size:12px;color:var(--muted);letter-spacing:1px;font-weight:600}
+.spacer{flex:1}
+.hbtn{height:36px;min-width:36px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:#fafaf7;font-size:15px;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:.15s}
+.hbtn:hover{background:#f0efe9}
+.hbtn.off{opacity:.45}
+.hbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{display:flex;min-height:0}
+#boardWrap{position:relative;flex:1;overflow:hidden;cursor:grab;touch-action:none;
+  background-color:var(--bg);
+  background-image:radial-gradient(#d7d4cb 1px,transparent 1px);background-size:22px 22px}
+#boardWrap.dragging{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.bcard,.slot{position:absolute;width:70px;height:70px}
+.bcard{border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.12);transition:box-shadow .2s, transform .2s;animation:pop .28s ease-out}
+.bcard svg{width:100%;height:100%;display:block}
+.bcard.staged{box-shadow:0 0 0 3px #111,0 6px 14px rgba(0,0,0,.25);cursor:pointer}
+.bcard.last{box-shadow:0 0 0 3px rgba(30,120,214,.55),0 4px 10px rgba(0,0,0,.18)}
+.bcard.swappable{cursor:pointer;box-shadow:0 0 0 3px var(--yellow),0 0 18px rgba(245,166,35,.8);animation:pulse 1.1s infinite}
+.swapb{position:absolute;right:-8px;top:-8px;background:var(--yellow);color:#111;border-radius:50%;width:22px;height:22px;font-size:13px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.slot{border:2px dashed #9a958a;border-radius:8px;background:rgba(255,255,255,.55);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:.15s}
+.slot:hover{background:#fff;border-color:#111;transform:scale(1.05)}
+.slot .pts{font-weight:800;font-size:15px}
+.slot .risk{font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:6px;color:#fff}
+.r-low{background:#2e9e48}.r-mid{background:#e6901a}.r-high{background:#d6342f}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes pulse{50%{box-shadow:0 0 0 3px var(--yellow),0 0 4px rgba(245,166,35,.4)}}
+.zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom button{width:38px;height:38px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:18px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+#popup{position:absolute;left:24px;top:24px;font-size:26px;line-height:1.25;font-weight:500;pointer-events:none;z-index:6;opacity:0;transition:opacity .35s, transform .35s;transform:translateY(-8px);text-align:right;
+  background:rgba(255,255,255,.88);padding:12px 18px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+#popup.show{opacity:1;transform:none}
+#popup .tot{border-top:2px solid var(--ink);margin-top:4px;padding-top:4px;font-weight:800}
+#popup .mul{font-size:16px;color:#b5651d;font-weight:700}
+#popup .who{font-size:14px;color:var(--muted);text-align:left;font-weight:600}
+#banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:7px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:6;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+aside{width:290px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.sect{padding:14px 16px;border-bottom:1px solid var(--line)}
+.sect h3{margin:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.pl{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:6px;border:1px solid transparent}
+.pl.cur{background:#f6f5f0;border-color:var(--line)}
+.pl .chip{width:10px;height:34px;border-radius:4px}
+.pl .nm{flex:1;min-width:0}
+.pl .nm div:first-child{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .nm div:last-child{font-size:12px;color:var(--muted)}
+.pl .sc{font-size:24px;font-weight:800;min-width:56px;text-align:center;background:#fff;border:2px solid var(--ink);border-radius:8px;padding:2px 6px}
+.deck{display:flex;align-items:center;gap:10px;font-size:14px}
+.deck .mini{width:30px;height:40px;border-radius:5px;background:#1d1d1f;position:relative;box-shadow:2px 2px 0 #bbb,4px 4px 0 #ddd}
+.deck .mini:after{content:"";position:absolute;inset:11px 7px;background:conic-gradient(var(--red) 0 25%,var(--green) 0 50%,var(--blue) 0 75%,var(--yellow) 0);border-radius:3px}
+#lastMove{font-size:14px;line-height:1.5}
+#log{flex:1;overflow:auto;padding:10px 16px;font-size:13px;line-height:1.45}
+#log div{padding:4px 0;border-bottom:1px dashed #eee}
+#log b{font-weight:700}
+footer{background:var(--panel);border-top:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-height:120px}
+#handInfo{min-width:150px}
+#handInfo .who{font-weight:800;font-size:16px}
+#handInfo .sub{font-size:12px;color:var(--muted);margin-top:2px}
+#hand{display:flex;gap:10px;align-items:flex-end}
+.hcard{width:84px;height:84px;border-radius:9px;box-shadow:0 3px 8px rgba(0,0,0,.15);cursor:pointer;transition:transform .15s, box-shadow .15s;position:relative}
+.hcard svg{width:100%;height:100%;display:block}
+.hcard:hover{transform:translateY(-4px)}
+.hcard.sel{transform:translateY(-12px);box-shadow:0 0 0 3px #111,0 10px 18px rgba(0,0,0,.25)}
+.hcard.ex{transform:translateY(-12px);box-shadow:0 0 0 3px var(--red),0 10px 18px rgba(0,0,0,.25)}
+.hcard.ex:after{content:"⇆";position:absolute;right:-6px;top:-6px;background:var(--red);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.hcard.back{cursor:default;background:#1d1d1f}
+.hcard.back:hover{transform:none}
+.hcard.empty{box-shadow:none;border:2px dashed var(--line);cursor:default}
+.hcard.empty:hover{transform:none}
+#actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.btn{height:42px;padding:0 16px;border-radius:11px;border:1px solid var(--line);background:#fafaf7;font-weight:650;font-size:14px;transition:.15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:#efeee8}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover:not(:disabled){background:#000}
+.btn.warn{background:#fff4f2;border-color:#f3c9c3;color:#b3261e}
+#stagedInfo{font-size:14px;min-width:200px}
+#stagedInfo .big{font-size:20px;font-weight:800}
+.riskline{font-size:13px;margin-top:3px;font-weight:600}
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(239,238,233,.86);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.overlay.show{display:flex}
+.modal{background:var(--panel);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:26px 28px;width:min(640px,100%);max-height:94vh;overflow:auto}
+.modal h1{margin:0 0 4px;font-size:34px;letter-spacing:3px;font-weight:900}
+.modal h1 span:nth-child(1){color:var(--red)}.modal h1 span:nth-child(2){color:var(--green)}.modal h1 span:nth-child(3){color:var(--blue)}.modal h1 span:nth-child(4){color:var(--yellow)}
+.modal .tag{color:var(--muted);margin:0 0 18px}
+.modal h2{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:18px 0 10px}
+.seg{display:inline-flex;background:#f1f0eb;border-radius:12px;padding:4px;gap:4px}
+.seg button{padding:8px 16px;border-radius:9px;font-weight:700}
+.seg button.on{background:var(--ink);color:#fff}
+.prow{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.prow .chip{width:12px;height:38px;border-radius:4px;flex:none}
+.prow input{flex:1;min-width:120px;height:40px;border-radius:10px;border:1px solid var(--line);padding:0 12px;font:inherit;font-size:15px;background:#fafaf7}
+.prow input:focus{outline:2px solid var(--ink);outline-offset:-1px}
+.prow .dice{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#fafaf7;font-size:18px}
+.prow select{height:40px;border-radius:10px;border:1px solid var(--line);background:#fafaf7;font:inherit;padding:0 8px}
+.prow .seg button{padding:7px 10px;font-size:13px}
+.opts label{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:15px;cursor:pointer}
+.opts input{width:18px;height:18px;accent-color:#111}
+.mfoot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.rules p,.rules li{line-height:1.55;font-size:15px}
+.rules ul{padding-left:20px}
+.rank{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:12px;margin-bottom:8px;background:#f6f5f0;font-size:17px}
+.rank .m{font-size:28px;width:36px;text-align:center}
+.rank .n{flex:1;font-weight:700}
+.rank .s{font-size:26px;font-weight:900}
+.rank.first{background:#fff6dd;box-shadow:0 0 0 2px var(--yellow)}
+.examples{display:flex;gap:8px;margin:10px 0}
+.examples svg{width:58px;height:58px}
+@media (max-width:860px){
+  main{flex-direction:column}
+  aside{width:auto;border-left:none;border-top:1px solid var(--line);order:-1;max-height:none}
+  aside .sect{padding:8px 10px}
+  aside .sect h3,#log,#lastSect{display:none}
+  #players{display:flex;gap:6px;overflow-x:auto}
+  .pl{margin:0;padding:5px 8px;flex:none}
+  .pl .chip{height:26px}
+  .pl .sc{font-size:17px;min-width:42px}
+  #deckSect{display:none}
+  .hcard{width:66px;height:66px}
+  footer{gap:10px;padding:8px 10px;min-height:0}
+  #handInfo{min-width:0;width:100%}
+  #actions{margin-left:0;width:100%}
+  .btn{height:38px;padding:0 12px;font-size:13px}
+  .logo small{display:none}
+  header{gap:6px;padding:8px 10px}
+  .logo{font-size:18px;letter-spacing:1px}
+  .hbtn{height:32px;min-width:32px;padding:0 7px;font-size:13px}
+  #bRisk .t{display:none}
+  #boardWrap{min-height:0}
+  #popup{font-size:19px;left:10px;top:10px}
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🚧</div>
-        <h1>Page en construction</h1>
-        <p>Nous travaillons actuellement sur la création de ce site pour vous offrir la meilleure expérience possible. Revenez très bientôt !</p>
-        
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
+<div id="app">
+  <header>
+    <div class="logo"><span><b>K</b><b>W</b><b>A</b><b>T</b>RO</span><small>· IOTA</small></div>
+    <div class="spacer"></div>
+    <button class="hbtn" id="bRisk" title="Afficher les pourcentages de risque">%<span class="t">&nbsp;risque</span></button>
+    <button class="hbtn" id="bSfx" title="Bruitages">🔊</button>
+    <button class="hbtn" id="bMusic" title="Musique d'ambiance">🎵</button>
+    <button class="hbtn" id="bRules" title="Règles">?</button>
+    <button class="hbtn" id="bMenu" title="Nouvelle partie">☰</button>
+  </header>
+  <main>
+    <section id="boardWrap">
+      <div id="world"></div>
+      <div id="popup"></div>
+      <div id="banner" style="display:none"></div>
+      <div class="zoom">
+        <button id="zIn" title="Zoomer">+</button>
+        <button id="zOut" title="Dézoomer">−</button>
+        <button id="zFit" title="Recentrer">◎</button>
+      </div>
+    </section>
+    <aside>
+      <div class="sect"><h3>Joueurs</h3><div id="players"></div></div>
+      <div class="sect" id="deckSect"><div class="deck"><div class="mini"></div><div><b id="deckCount">0</b> cartes dans la pioche</div></div></div>
+      <div class="sect" id="lastSect"><h3>Dernier coup</h3><div id="lastMove">—</div></div>
+      <div id="log"></div>
+    </aside>
+  </main>
+  <footer>
+    <div id="handInfo"></div>
+    <div id="hand"></div>
+    <div id="stagedInfo"></div>
+    <div id="actions"></div>
+  </footer>
+</div>
 
-        <a href="index.html" class="contact-btn">Revenir sur la page d'accueil</a>
+<!-- SETUP -->
+<div class="overlay show" id="setup">
+  <div class="modal">
+    <h1><span>K</span><span>W</span><span>A</span><span>T</span>RO</h1>
+    <p class="tag">Le jeu de cartes IOTA — couleurs, formes, nombres : tout pareil ou tout différent.</p>
+    <h2>Nombre de joueurs</h2>
+    <div class="seg" id="countSeg"></div>
+    <h2>Joueurs</h2>
+    <div id="pRows"></div>
+    <h2>Options</h2>
+    <div class="opts">
+      <label><input type="checkbox" id="oRisk" checked> Afficher les pourcentages de risque</label>
+      <label><input type="checkbox" id="oSfx" checked> Bruitages</label>
+      <label><input type="checkbox" id="oMusic" checked> Musique d'ambiance relaxante</label>
     </div>
+    <div class="mfoot">
+      <button class="btn" id="sRules">Règles du jeu</button>
+      <button class="btn primary" id="sStart" style="padding:0 28px">Jouer ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDOFF -->
+<div class="overlay" id="handoff">
+  <div class="modal" style="text-align:center;width:min(420px,100%)">
+    <div style="font-size:44px">🎴</div>
+    <h2 style="margin-top:6px">Passe l'appareil à</h2>
+    <div id="hoName" style="font-size:30px;font-weight:900;margin:6px 0 18px"></div>
+    <button class="btn primary" id="hoGo" style="padding:0 28px">Voir ma main</button>
+  </div>
+</div>
+
+<!-- RULES -->
+<div class="overlay" id="rules">
+  <div class="modal rules">
+    <h2 style="margin-top:0">Règles de Kwatro / IOTA</h2>
+    <p>64 cartes, chacune avec <b>une couleur</b> (rouge, vert, bleu, jaune), <b>une forme</b> (triangle, carré, cercle, croix) et <b>un nombre</b> (1 à 4), plus 2 <b>jokers</b>.</p>
+    <div class="examples" id="ruleEx"></div>
+    <ul>
+      <li>Chaque joueur a 4 cartes. Une carte de départ est posée au centre.</li>
+      <li>À ton tour, pose <b>1 à 4 cartes</b> sur une <b>même ligne</b> (rangée ou colonne), reliée à la grille.</li>
+      <li>Une ligne fait <b>2 à 4 cartes</b> consécutives. Pour chaque propriété, les cartes sont <b>toutes identiques</b> ou <b>toutes différentes</b>.</li>
+      <li>Une ligne ne dépasse jamais 4 cartes : certaines cases resteront impossibles à remplir.</li>
+      <li>Ou bien <b>passe</b> en remettant 0 à 4 cartes sous la pioche pour en reprendre autant.</li>
+      <li><b>Score</b> : additionne les nombres de toutes les lignes créées ou prolongées. Une carte présente dans deux lignes compte deux fois.</li>
+      <li><b>×2</b> pour chaque ligne de 4 cartes terminée (un « lot »), <b>×2</b> si tu poses tes 4 cartes, <b>×2</b> pour le dernier coup de la partie.</li>
+      <li><b>Joker</b> : remplace n'importe quelle carte. Tu peux le récupérer sur la table en posant à sa place une carte de ta main qui convient (sélectionne la carte puis clique sur le joker, avant de poser).</li>
+      <li>Fin : quand la pioche est vide et qu'un joueur pose sa dernière carte. Le meilleur score gagne.</li>
+    </ul>
+    <p><b>Pourcentage de risque</b> : probabilité qu'un adversaire ait en main une carte qui complète un lot à partir de la ligne de 3 que tu lui laisses.</p>
+    <div class="mfoot"><button class="btn primary" id="rClose">Compris</button></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="overlay" id="gameover">
+  <div class="modal" style="width:min(480px,100%)">
+    <div style="text-align:center;font-size:46px">🏆</div>
+    <h2 style="text-align:center;margin-top:4px">Fin de la partie</h2>
+    <div id="ranking"></div>
+    <div class="mfoot"><button class="btn" id="goMenu">Menu</button><button class="btn primary" id="goAgain">Rejouer</button></div>
+  </div>
+</div>
+
+<script>
+// ================= CORE START =================
+const COLORS=['#e53935','#2e9e48','#1e78d6','#f5a623'];
+const COLOR_N=['rouge','vert','bleu','jaune'];
+const SHAPE_N=['triangle','carré','cercle','croix'];
+const K=(x,y)=>x+','+y;
+
+let G=null;
+
+function makeDeck(){
+  const d=[];let id=0;
+  for(let c=0;c<4;c++)for(let s=0;s<4;s++)for(let n=0;n<4;n++)d.push({id:id++,p:[c,s,n],wild:false});
+  d.push({id:64,wild:true,p:null});d.push({id:65,wild:true,p:null});
+  return d;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function newGame(players){
+  const all=makeDeck();
+  const deck=shuffle(all.slice());
+  G={players:players.map(p=>({...p,hand:[],score:0})),deck,board:new Map(),staged:[],cur:0,passes:0,swapped:false,over:false,all,turn:0,last:null,lastKeys:new Set(),id:Math.random()};
+  // starter: first non-wild
+  let i=deck.length-1;while(deck[i].wild)i--;
+  const starter=deck.splice(i,1)[0];
+  G.board.set(K(0,0),starter);
+  for(const p of G.players)refill(p);
+  G.cur=Math.floor(Math.random()*G.players.length);
+}
+const curPlayer=()=>G.players[G.cur];
+const get=(x,y)=>G.board.get(K(x,y));
+const isStaged=(x,y)=>G.staged.some(s=>s.x===x&&s.y===y);
+function refill(p){while(p.hand.length<4&&G.deck.length)p.hand.push(G.deck.pop());}
+
+function lineAt(x,y,dx,dy){
+  let sx=x,sy=y;while(G.board.has(K(sx-dx,sy-dy))){sx-=dx;sy-=dy;}
+  const pos=[];let cx=sx,cy=sy;while(G.board.has(K(cx,cy))){pos.push([cx,cy]);cx+=dx;cy+=dy;}
+  return pos;
+}
+function linesThrough(cells){
+  const m=new Map();
+  for(const [x,y] of cells)for(const [dx,dy,dir] of [[1,0,'H'],[0,1,'V']]){
+    const pos=lineAt(x,y,dx,dy);
+    if(pos.length>=2){const k=dir+pos[0][0]+','+pos[0][1];if(!m.has(k))m.set(k,{key:k,dir,pos});}
+  }
+  return [...m.values()];
+}
+// Validate lines; handles jokers (each joker gets one consistent identity, per property)
+function solve(lines){
+  for(const L of lines)if(L.pos.length>4)return null;
+  const all=new Map(lines.map(l=>[l.key,l]));
+  const wilds=[];let changed=true;
+  while(changed){changed=false;
+    for(const L of [...all.values()])for(const [x,y] of L.pos){
+      const c=get(x,y);if(!c.wild)continue;const k=K(x,y);
+      if(wilds.includes(k))continue;wilds.push(k);changed=true;
+      for(const l2 of linesThrough([[x,y]]))if(!all.has(l2.key)){if(l2.pos.length>4)return null;all.set(l2.key,l2);}
+    }
+  }
+  const L=[...all.values()];const nA=Math.pow(4,wilds.length);let numAssigns=null;
+  for(let p=0;p<3;p++){
+    const valid=[];
+    for(let a=0;a<nA;a++){
+      const asg={};let t=a;for(const wk of wilds){asg[wk]=t%4;t=Math.floor(t/4);}
+      let ok=true;
+      for(const line of L){
+        const vals=line.pos.map(([x,y])=>{const c=get(x,y);return c.wild?asg[K(x,y)]:c.p[p];});
+        const s=new Set(vals).size;if(!(s===1||s===vals.length)){ok=false;break;}
+      }
+      if(ok)valid.push(asg);
+    }
+    if(!valid.length)return null;
+    if(p===2)numAssigns=valid;
+  }
+  return {numAssigns,wilds};
+}
+function cellFits(x,y,card){
+  const k=K(x,y);if(G.board.has(k))return false;
+  G.board.set(k,card);
+  const lines=linesThrough([[x,y]]);
+  const ok=lines.length>0&&solve(lines)!==null;
+  G.board.delete(k);return ok;
+}
+function candidateCells(){
+  const st=G.staged;const out=new Map();
+  const add=(x,y)=>{if(!G.board.has(K(x,y)))out.set(K(x,y),[x,y]);};
+  if(!st.length){
+    for(const k of G.board.keys()){const [x,y]=k.split(',').map(Number);add(x+1,y);add(x-1,y);add(x,y+1);add(x,y-1);}
+  }else{
+    const axes=st.length===1?[[1,0],[0,1]]:(st[0].y===st[1].y?[[1,0]]:[[0,1]]);
+    for(const [dx,dy] of axes){
+      const pos=lineAt(st[0].x,st[0].y,dx,dy);const a=pos[0],b=pos[pos.length-1];
+      add(a[0]-dx,a[1]-dy);add(b[0]+dx,b[1]+dy);
+    }
+  }
+  return [...out.values()];
+}
+function canPlace(x,y,card){return candidateCells().some(([a,b])=>a===x&&b===y)&&cellFits(x,y,card);}
+function stage(x,y,handIdx){
+  const p=curPlayer();const c=p.hand.splice(handIdx,1)[0];
+  G.board.set(K(x,y),c);G.staged.push({x,y,card:c});
+}
+function unstageTo(i){
+  const p=curPlayer();
+  while(G.staged.length>i){const s=G.staged.pop();G.board.delete(K(s.x,s.y));p.hand.push(s.card);}
+}
+function scoreCurrent(){
+  if(!G.staged.length)return null;
+  const lines=linesThrough(G.staged.map(s=>[s.x,s.y]));
+  if(!lines.length)return null;
+  const sol=solve(lines);if(!sol)return null;
+  let best=-1,br=null;
+  for(const asg of sol.numAssigns){
+    let tot=0;
+    const b=lines.map(L=>{const s=L.pos.reduce((a,[x,y])=>{const c=get(x,y);return a+(c.wild?asg[K(x,y)]:c.p[2])+1;},0);tot+=s;return {dir:L.dir,sum:s,len:L.pos.length};});
+    if(tot>best){best=tot;br=b;}
+  }
+  const p=curPlayer();
+  const lots=br.filter(b=>b.len===4).length;
+  const allFour=G.staged.length===4;
+  const final=G.deck.length===0&&p.hand.length===0;
+  const mult=Math.pow(2,lots)*(allFour?2:1)*(final?2:1);
+  return {base:best,breakdown:br,lots,allFour,final,mult,total:best*mult,cards:G.staged.length};
+}
+function unseenCards(pi){
+  const seen=new Set();for(const c of G.board.values())seen.add(c.id);
+  for(const c of G.players[pi].hand)seen.add(c.id);
+  return G.all.filter(c=>!seen.has(c.id));
+}
+// Probability (0-100) that next opponent holds a card completing a 4-line from a 3-line we leave
+function riskOf(pi){
+  if(G.players.length<2||!G.staged.length)return null;
+  const lines=linesThrough(G.staged.map(s=>[s.x,s.y])).filter(L=>L.pos.length===3);
+  const spots=[];
+  for(const L of lines){const [dx,dy]=L.dir==='H'?[1,0]:[0,1];const a=L.pos[0],b=L.pos[2];
+    for(const [x,y] of [[a[0]-dx,a[1]-dy],[b[0]+dx,b[1]+dy]])if(!G.board.has(K(x,y)))spots.push([x,y]);}
+  if(!spots.length)return 0;
+  const unseen=unseenCards(pi);const U=unseen.length;if(!U)return 0;
+  let k=0;for(const c of unseen)if(spots.some(([x,y])=>cellFits(x,y,c)))k++;
+  let h=G.players[(G.cur+1)%G.players.length].hand.length;if(!h)h=Math.min(4,U);
+  h=Math.min(h,U);
+  let pNone=1;for(let i=0;i<h;i++){pNone*=Math.max(0,U-k-i)/(U-i);}
+  return Math.round((1-pNone)*100);
+}
+function canSwapWild(x,y,card){
+  const w=get(x,y);if(!w||!w.wild||!card||card.wild||isStaged(x,y))return false;
+  G.board.set(K(x,y),card);const ok=solve(linesThrough([[x,y]]))!==null;G.board.set(K(x,y),w);return ok;
+}
+function doSwap(x,y,handIdx){const p=curPlayer();const card=p.hand[handIdx];const w=get(x,y);G.board.set(K(x,y),card);p.hand[handIdx]=w;G.swapped=true;}
+
+function allMoves(withRisk){
+  const p=curPlayer();const moves=[];const seen=new Set();
+  function rec(){
+    if(G.staged.length){
+      const key=G.staged.map(s=>s.x+','+s.y+':'+(s.card.wild?'W':s.card.id)).sort().join('|');
+      if(seen.has(key))return;seen.add(key);
+      const sc=scoreCurrent();if(!sc)return;
+      moves.push({pl:G.staged.map(s=>({x:s.x,y:s.y,id:s.card.id})),score:sc.total,cards:G.staged.length,
+        risk:withRisk?riskOf(G.cur):0,wilds:G.staged.filter(s=>s.card.wild).length});
+    }
+    if(!p.hand.length)return;
+    const cands=candidateCells();
+    for(const [x,y] of cands){
+      let wildTried=false;
+      for(let i=0;i<p.hand.length;i++){
+        const c=p.hand[i];
+        if(c.wild){if(wildTried)continue;wildTried=true;}
+        if(!cellFits(x,y,c))continue;
+        p.hand.splice(i,1);G.board.set(K(x,y),c);G.staged.push({x,y,card:c});
+        rec();
+        G.staged.pop();G.board.delete(K(x,y));p.hand.splice(i,0,c);
+      }
+    }
+  }
+  rec();return moves;
+}
+function chooseMove(moves,level){
+  if(!moves.length)return null;
+  if(level==='easy'){
+    const s=moves.slice().sort((a,b)=>b.score-a.score);
+    const top=s.slice(0,Math.max(1,Math.ceil(s.length*0.45)));
+    return top[Math.floor(Math.random()*top.length)];
+  }
+  const val=m=>{
+    let v=m.score+m.cards*0.3;
+    if(m.wilds&&m.score<24)v-=5*m.wilds;
+    if(level==='hard'&&m.risk)v-=m.risk/100*16;
+    return v;
+  };
+  let best=moves[0],bv=-1e9;for(const m of moves){const v=val(m);if(v>bv){bv=v;best=m;}}
+  return best;
+}
+function findWildSwap(){
+  const p=curPlayer();if(G.swapped||G.staged.length)return null;
+  for(const [k,c] of G.board)if(c.wild){const [x,y]=k.split(',').map(Number);
+    for(let i=0;i<p.hand.length;i++)if(canSwapWild(x,y,p.hand[i]))return {x,y,i};}
+  return null;
+}
+function commitTurn(){
+  const sc=scoreCurrent();if(!sc)return null;
+  const p=curPlayer();p.score+=sc.total;
+  G.lastKeys=new Set(G.staged.map(s=>K(s.x,s.y)));
+  G.staged=[];G.passes=0;G.turn++;
+  if(sc.final){G.over=true;return sc;}
+  refill(p);return sc;
+}
+function exchange(indices){
+  const p=curPlayer();const n=Math.min(indices.length,G.deck.length);
+  const chosen=indices.slice().sort((a,b)=>b-a).slice(0,n).map(i=>p.hand.splice(i,1)[0]);
+  for(let i=0;i<n;i++)p.hand.push(G.deck.pop());
+  G.deck.unshift(...chosen);G.passes++;G.turn++;G.lastKeys=new Set();
+  return n;
+}
+function nextTurn(){
+  G.cur=(G.cur+1)%G.players.length;G.swapped=false;
+  if(G.deck.length===0&&G.passes>=G.players.length)G.over=true;
+  if(G.passes>=G.players.length*4)G.over=true;
+}
+// ================= CORE END =================
+
+// ================= AUDIO =================
+const SND={
+  ctx:null,sfxOn:true,musicOn:true,timer:null,
+  init(){
+    if(this.ctx){if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});return;}
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    try{this.ctx=new AC();}catch(e){return;}
+    const c=this.ctx;
+    this.master=c.createGain();this.master.gain.value=.85;
+    const comp=c.createDynamicsCompressor();this.master.connect(comp);comp.connect(c.destination);
+    this.sfx=c.createGain();this.sfx.gain.value=.7;this.sfx.connect(this.master);
+    this.mus=c.createGain();this.mus.gain.value=0;this.mus.connect(this.master);
+    // reverb
+    const len=c.sampleRate*3.5,buf=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);}
+    this.rev=c.createConvolver();this.rev.buffer=buf;
+    const rg=c.createGain();rg.gain.value=.55;this.rev.connect(rg);rg.connect(this.master);
+    this.mus.connect(this.rev);
+    this.sfxRev=c.createGain();this.sfxRev.gain.value=.25;this.sfx.connect(this.sfxRev);this.sfxRev.connect(this.rev);
+  },
+  f:m=>440*Math.pow(2,(m-69)/12),
+  tone(freq,dur,o={}){
+    if(!this.ctx||!this.sfxOn)return;const c=this.ctx,t=c.currentTime+(o.when||0);
+    const osc=c.createOscillator(),g=c.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(freq,t);
+    if(o.slide)osc.frequency.exponentialRampToValueAtTime(o.slide,t+dur);
+    const v=o.vol??.25;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+(o.att||.006));
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);osc.connect(g);g.connect(this.sfx);osc.start(t);osc.stop(t+dur+.05);
+  },
+  noise(dur,o={}){
+    if(!this.ctx||!this.sfxOn)return;const c=this.ctx,t=c.currentTime+(o.when||0);
+    const b=c.createBuffer(1,c.sampleRate*dur,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type=o.ft||'lowpass';f.frequency.setValueAtTime(o.freq||1200,t);
+    if(o.to)f.frequency.exponentialRampToValueAtTime(o.to,t+dur);
+    const g=c.createGain();g.gain.setValueAtTime(o.vol||.2,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    s.connect(f);f.connect(g);g.connect(this.sfx);s.start(t);
+  },
+  click(){this.tone(1300,.04,{type:'triangle',vol:.12});},
+  place(){this.tone(260,.14,{slide:120,vol:.35});this.noise(.06,{freq:1800,vol:.18});this.tone(1500,.05,{type:'triangle',vol:.05});},
+  lift(){this.tone(500,.08,{slide:800,type:'triangle',vol:.12});},
+  invalid(){this.tone(170,.12,{type:'square',vol:.07});this.tone(125,.18,{type:'square',vol:.07,when:.13});},
+  score(pts){const sc=[72,74,76,79,81,84,86,88];const n=Math.min(8,2+Math.floor(pts/8));
+    for(let i=0;i<n;i++){this.tone(this.f(sc[i]),.35,{vol:.16,when:i*.07});this.tone(this.f(sc[i])*2,.2,{type:'triangle',vol:.04,when:i*.07});}},
+  lot(){[72,76,79,84,79,84,88,91].forEach((m,i)=>{this.tone(this.f(m),.5,{type:'triangle',vol:.17,when:i*.09});});
+    [60,64,67,72].forEach(m=>this.tone(this.f(m),1.6,{vol:.08,when:.75,att:.05}));this.noise(1.2,{ft:'highpass',freq:6000,vol:.05,when:.7});},
+  shuffle(){for(let i=0;i<5;i++)this.noise(.09,{ft:'bandpass',freq:2500+i*400,to:900,vol:.22,when:i*.07});},
+  turn(){this.tone(this.f(81),.6,{vol:.07});this.tone(this.f(88),.6,{vol:.04,when:.08});},
+  swap(){this.tone(400,.25,{slide:1200,type:'triangle',vol:.12});this.tone(1200,.25,{slide:400,type:'triangle',vol:.1,when:.15});},
+  win(){[67,72,76,79,84,79,84,88].forEach((m,i)=>this.tone(this.f(m),i===7?1.4:.4,{type:'triangle',vol:.18,when:i*.15}));},
+  start(){[60,67,72,76].forEach((m,i)=>this.tone(this.f(m),.8,{vol:.1,when:i*.12}));},
+  // ---- ambient music ----
+  setMusic(on){
+    this.musicOn=on;if(!this.ctx)return;const c=this.ctx,t=c.currentTime;
+    this.mus.gain.cancelScheduledValues(t);this.mus.gain.setValueAtTime(this.mus.gain.value,t);
+    if(on){this.mus.gain.linearRampToValueAtTime(.55,t+2);
+      if(!this.timer){this.nextChord=t+.1;this.nextBell=t+2;this.ci=0;this.timer=setInterval(()=>this.sched(),300);}
+    }else{this.mus.gain.linearRampToValueAtTime(0,t+1.2);clearInterval(this.timer);this.timer=null;}
+  },
+  chords:[[50,57,61,64,66],[47,54,57,61,62],[43,50,54,59,62],[45,52,57,59,64]],
+  sched(){const c=this.ctx;if(!c)return;const t=c.currentTime;
+    while(this.nextChord<t+1){this.pad(this.chords[this.ci%4],this.nextChord);this.ci++;this.nextChord+=8;}
+    while(this.nextBell<t+1){this.bell(this.nextBell);this.nextBell+=1.4+Math.random()*2.6;}
+  },
+  pad(notes,t){const c=this.ctx;
+    const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;lp.connect(this.mus);
+    notes.forEach((m,i)=>{[-5,5].forEach((det,j)=>{
+      const o=c.createOscillator();o.type=j?'triangle':'sine';o.frequency.value=this.f(m);o.detune.value=det;
+      const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(i===0?.05:.032,t+2.8);
+      g.gain.setValueAtTime(i===0?.05:.032,t+6.5);g.gain.linearRampToValueAtTime(0.0001,t+10.5);
+      o.connect(g);g.connect(lp);o.start(t);o.stop(t+10.6);});});
+  },
+  bell(t){const c=this.ctx;const sc=[74,76,78,81,83,86,88,90];const m=sc[Math.floor(Math.random()*sc.length)];
+    [[1,.045],[2.76,.012]].forEach(([r,v])=>{const o=c.createOscillator();o.frequency.value=this.f(m)*r;const g=c.createGain();
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(0.0001,t+2.8);
+      o.connect(g);g.connect(this.mus);o.start(t);o.stop(t+3);});
+  }
+};
+
+// ================= CARD ART =================
+function shapeEl(s,col,cx,cy,r){
+  switch(s){
+    case 0:return `<polygon points="${cx},${cy-r*1.05} ${cx+r*1.12},${cy+r*.85} ${cx-r*1.12},${cy+r*.85}" fill="${col}"/>`;
+    case 1:return `<rect x="${cx-r*.86}" y="${cy-r*.86}" width="${r*1.72}" height="${r*1.72}" fill="${col}"/>`;
+    case 2:return `<circle cx="${cx}" cy="${cy}" r="${r*.95}" fill="${col}"/>`;
+    default:{const a=r*.36,b=r*1.0;return `<polygon points="${cx-a},${cy-b} ${cx+a},${cy-b} ${cx+a},${cy-a} ${cx+b},${cy-a} ${cx+b},${cy+a} ${cx+a},${cy+a} ${cx+a},${cy+b} ${cx-a},${cy+b} ${cx-a},${cy+a} ${cx-b},${cy+a} ${cx-b},${cy-a} ${cx-a},${cy-a}" fill="${col}"/>`;}
+  }
+}
+function dotsEl(n,cx,cy,d,rad,col='#fff'){
+  const P=[[[0,0]],[[-1,0],[1,0]],[[0,-.95],[-1,.75],[1,.75]],[[-1,-1],[1,-1],[-1,1],[1,1]]][n];
+  return P.map(([a,b])=>`<circle cx="${cx+a*d}" cy="${cy+b*d}" r="${rad}" fill="${col}"/>`).join('');
+}
+const artCache=new Map();
+function cardSVG(card){
+  const key=card.wild?'W':card.p.join('');if(artCache.has(key))return artCache.get(key);
+  let inner;
+  if(card.wild){
+    const q=[[0,0,0,0],[1,1,1,1],[2,2,2,2],[3,3,3,3]];
+    inner=q.map(([c,s,n],i)=>{const x=15+(i%2)*36,y=15+Math.floor(i/2)*36;
+      return `<rect x="${x}" y="${y}" width="34" height="34" fill="${COLORS[c]}"/>${shapeEl(s,'#111',x+17,y+17+(s===0?1:0),10)}${dotsEl(n,x+17,y+17+(s===0?3:0),3.6,1.6)}`;}).join('');
+    inner+=`<text x="7" y="11" font-size="9" font-weight="800" fill="#111">★</text><text x="93" y="96" font-size="9" font-weight="800" fill="#111" text-anchor="end">★</text>`;
+  }else{
+    const [c,s,n]=card.p,col=COLORS[c];
+    const dy=s===0?6:0;
+    inner=`<rect x="14" y="14" width="72" height="72" rx="2" fill="#111"/>${shapeEl(s,col,50,50+(s===0?2:0),25)}${dotsEl(n,50,50+dy,n===0?0:7.5,3.6)}`+
+      `<text x="7" y="11.5" font-size="10" font-weight="800" fill="${col}">${n+1}</text>`+
+      `<text x="93" y="96" font-size="10" font-weight="800" fill="${col}" text-anchor="end">${n+1}</text>`+
+      `<g transform="translate(91,9) scale(.22)">${shapeEl(s,col,0,0,14)}</g><g transform="translate(9,91) scale(.22)">${shapeEl(s,col,0,0,14)}</g>`;
+  }
+  const svg=`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="0.5" width="99" height="99" rx="8" fill="#fff" stroke="#d9d6cf"/>${inner}</svg>`;
+  artCache.set(key,svg);return svg;
+}
+function backSVG(){return `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="9" fill="#1d1d1f"/><g transform="translate(50,50) rotate(45)">
+  <rect x="-15" y="-15" width="14" height="14" fill="${COLORS[0]}"/><rect x="1" y="-15" width="14" height="14" fill="${COLORS[1]}"/>
+  <rect x="-15" y="1" width="14" height="14" fill="${COLORS[2]}"/><rect x="1" y="1" width="14" height="14" fill="${COLORS[3]}"/></g>
+  <text x="50" y="88" fill="#fff" font-size="10" font-weight="800" text-anchor="middle" letter-spacing="2">KWATRO</text></svg>`;}
+function cardName(c){return c.wild?'Joker':`${c.p[2]+1} ${SHAPE_N[c.p[1]]} ${COLOR_N[c.p[0]]}`;}
+
+// ================= UI =================
+const $=s=>document.querySelector(s);
+const PCOL=['#e53935','#2e9e48','#1e78d6','#f5a623'];
+const NAMES=['Léa','Hugo','Chloé','Louis','Manon','Arthur','Inès','Jules','Camille','Nathan','Zoé','Gabriel','Alice','Raphaël','Emma','Victor','Margaux','Théo','Sacha','Lina','Capitaine Carré','Pr. Triangle','Dame Croix','M. Rond','Lucie','Oscar','Rose','Basile'];
+const LEVEL_N={easy:'Facile',medium:'Moyen',hard:'Difficile'};
+const CS=76;
+const UI={sel:null,mode:'play',ex:new Set(),zoom:1,panX:0,panY:0,hidden:false,busy:false,showRisk:true,log:[]};
+let setupState={count:2,players:[]};
+
+function store(k,v){try{localStorage.setItem('kwatro_'+k,JSON.stringify(v));}catch(e){}}
+function load(k,d){try{const v=localStorage.getItem('kwatro_'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function randName(except){const pool=NAMES.filter(n=>!except.includes(n));return pool[Math.floor(Math.random()*pool.length)];}
+
+function initSetup(){
+  const saved=load('setup',null);
+  if(saved&&saved.players&&saved.players.length===4)setupState=saved;
+  else{setupState={count:2,players:[]};const used=[];
+    for(let i=0;i<4;i++){const n=randName(used);used.push(n);setupState.players.push({name:n,type:i===0?'human':'ai',level:'medium'});}}
+  const opts=load('opts',{risk:true,sfx:true,music:true});
+  $('#oRisk').checked=opts.risk;$('#oSfx').checked=opts.sfx;$('#oMusic').checked=opts.music;
+  renderSetup();
+}
+function renderSetup(){
+  $('#countSeg').innerHTML=[1,2,3,4].map(n=>`<button data-n="${n}" class="${setupState.count===n?'on':''}">${n}</button>`).join('');
+  let h='';
+  for(let i=0;i<setupState.count;i++){const p=setupState.players[i];
+    h+=`<div class="prow" data-i="${i}"><div class="chip" style="background:${PCOL[i]}"></div>
+      <input value="${p.name.replace(/"/g,'&quot;')}" maxlength="18" data-f="name" aria-label="Nom du joueur ${i+1}">
+      <button class="dice" data-f="dice" title="Nom au hasard">🎲</button>
+      <div class="seg"><button data-f="human" class="${p.type==='human'?'on':''}">👤 Joueur</button><button data-f="ai" class="${p.type==='ai'?'on':''}">🤖 Ordi</button></div>
+      ${p.type==='ai'?`<select data-f="level">${Object.entries(LEVEL_N).map(([k,v])=>`<option value="${k}" ${p.level===k?'selected':''}>${v}</option>`).join('')}</select>`:''}
+    </div>`;}
+  $('#pRows').innerHTML=h;
+}
+$('#countSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setupState.count=+b.dataset.n;renderSetup();});
+$('#pRows').addEventListener('input',e=>{const r=e.target.closest('.prow');if(!r)return;const p=setupState.players[+r.dataset.i];
+  if(e.target.dataset.f==='name')p.name=e.target.value;});
+$('#pRows').addEventListener('change',e=>{const r=e.target.closest('.prow');if(!r)return;const p=setupState.players[+r.dataset.i];
+  if(e.target.dataset.f==='level')p.level=e.target.value;});
+$('#pRows').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const r=b.closest('.prow');const i=+r.dataset.i;const p=setupState.players[i];
+  const f=b.dataset.f;
+  if(f==='dice'){p.name=randName(setupState.players.map(q=>q.name));}
+  else if(f==='human'||f==='ai')p.type=f;
+  renderSetup();});
+
+function startFromSetup(){
+  SND.init();
+  const opts={risk:$('#oRisk').checked,sfx:$('#oSfx').checked,music:$('#oMusic').checked};store('opts',opts);
+  UI.showRisk=opts.risk;SND.sfxOn=opts.sfx;SND.setMusic(opts.music);
+  const ps=setupState.players.slice(0,setupState.count).map((p,i)=>({name:(p.name||'').trim()||('Joueur '+(i+1)),type:p.type,level:p.level,color:PCOL[i]}));
+  store('setup',setupState);
+  $('#setup').classList.remove('show');
+  beginGame(ps);
+}
+let lastPlayers=null;
+function beginGame(ps){
+  lastPlayers=ps;newGame(ps);
+  UI.sel=null;UI.mode='play';UI.ex=new Set();UI.log=[];UI.busy=false;UI.hidden=false;
+  $('#lastMove').textContent='—';
+  addLog(`Nouvelle partie — carte de départ : <b>${cardName(get(0,0))}</b>.`);
+  UI.zoom=1;fitView(true);SND.start();updateHeader();
+  startTurn();
+}
+function humanCount(){return G.players.filter(p=>p.type==='human').length;}
+
+function startTurn(){
+  if(G.over){render();setTimeout(showGameOver,900);return;}
+  const p=curPlayer();UI.sel=null;UI.mode='play';UI.ex=new Set();UI.busy=false;
+  showBanner(`Au tour de ${p.name}${p.type==='ai'?' 🤖':''}`);
+  if(p.type==='ai'){UI.hidden=false;render();UI.busy=true;const gid=G.id;setTimeout(()=>aiTurn(gid),750);}
+  else if(humanCount()>1){UI.hidden=true;render();$('#hoName').textContent=p.name;$('#hoName').style.color=p.color;$('#handoff').classList.add('show');}
+  else{UI.hidden=false;render();SND.turn();}
+}
+$('#hoGo').onclick=()=>{$('#handoff').classList.remove('show');UI.hidden=false;SND.init();SND.turn();render();};
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function aiTurn(gid){
+  if(!G||G.id!==gid)return;
+  const p=curPlayer();
+  if(p.level!=='easy'){const sw=findWildSwap();
+    if(sw){const c=p.hand[sw.i];doSwap(sw.x,sw.y,sw.i);SND.swap();addLog(`<b>${p.name}</b> récupère un joker en posant ${cardName(c)}.`);render();await sleep(800);if(!G||G.id!==gid)return;}}
+  await sleep(50);
+  const moves=allMoves(p.level==='hard'&&G.players.length>1);
+  const m=chooseMove(moves,p.level);
+  if(!m){
+    const idx=p.hand.map((c,i)=>c.wild?-1:i).filter(i=>i>=0);
+    const n=exchange(idx);
+    if(n){SND.shuffle();addLog(`<b>${p.name}</b> passe et échange ${n} carte${n>1?'s':''}.`);}
+    else addLog(`<b>${p.name}</b> passe.`);
+    render();await sleep(900);if(!G||G.id!==gid)return;
+    nextTurn();startTurn();return;
+  }
+  for(const pl of m.pl){
+    const i=p.hand.findIndex(c=>c.id===pl.id);
+    stage(pl.x,pl.y,i);SND.place();render();ensureVisible();
+    await sleep(520);if(!G||G.id!==gid)return;
+  }
+  finishTurn();
+}
+function finishTurn(){
+  const p=curPlayer();const placed=G.staged.map(s=>s.card);
+  const sc=commitTurn();if(!sc){SND.invalid();return;}
+  UI.sel=null;UI.busy=true;
+  showPopup(p,sc);
+  if(sc.lots||sc.final)SND.lot();else SND.score(sc.total);
+  const det=sc.breakdown.map(b=>`${b.sum}${b.dir==='H'?'→':'↓'}`).join(' + ');
+  const mul=sc.mult>1?` ×${sc.mult}`:'';
+  addLog(`<b>${p.name}</b> pose ${placed.length} carte${placed.length>1?'s':''} : ${det}${mul} = <b>${sc.total} pts</b>${sc.lots?' 🎉 lot !':''}`);
+  $('#lastMove').innerHTML=moveText(p,sc);
+  render();ensureVisible();
+  const gid=G.id;
+  setTimeout(()=>{if(!G||G.id!==gid)return;nextTurn();startTurn();},p.type==='ai'?1300:900);
+}
+function moveText(p,sc){
+  const parts=[];const h=sc.breakdown.filter(b=>b.dir==='H').reduce((a,b)=>a+b.sum,0),v=sc.breakdown.filter(b=>b.dir==='V').reduce((a,b)=>a+b.sum,0);
+  if(h)parts.push(`${h} horizontal`);if(v)parts.push(`${v} vertical`);
+  const m=[];if(sc.lots)m.push(`lot ×${Math.pow(2,sc.lots)}`);if(sc.allFour)m.push('4 cartes ×2');if(sc.final)m.push('dernier coup ×2');
+  return `<b style="color:${p.color}">${p.name}</b><br>${parts.join(' + ')} = ${sc.base}${m.length?'<br><span style="color:#b5651d;font-weight:700">'+m.join(' · ')+'</span>':''}<br><b style="font-size:18px">${sc.total} points</b>`;
+}
+let popT=null;
+function showPopup(p,sc){
+  const el=$('#popup');
+  const h=sc.breakdown.filter(b=>b.dir==='H').reduce((a,b)=>a+b.sum,0),v=sc.breakdown.filter(b=>b.dir==='V').reduce((a,b)=>a+b.sum,0);
+  let html=`<div class="who" style="color:${p.color}">${p.name}</div>`;
+  const rows=[];if(h)rows.push(`${h} horizontal`);if(v)rows.push(`${rows.length?'+':''}${v} vertical`);
+  html+=rows.map(r=>`<div>${r}</div>`).join('');
+  const m=[];if(sc.lots)m.push(`lot${sc.lots>1?'s':''} ×${Math.pow(2,sc.lots)}`);if(sc.allFour)m.push('4 cartes ×2');if(sc.final)m.push('dernier coup ×2');
+  if(m.length)html+=`<div class="mul">${m.join(' · ')}</div>`;
+  html+=`<div class="tot">${sc.total} points</div>`;
+  el.innerHTML=html;el.classList.add('show');clearTimeout(popT);popT=setTimeout(()=>el.classList.remove('show'),2600);
+}
+let banT=null;
+function showBanner(t){const b=$('#banner');b.textContent=t;b.style.display='block';clearTimeout(banT);banT=setTimeout(()=>b.style.display='none',1800);}
+function addLog(h){UI.log.unshift(h);if(UI.log.length>60)UI.log.pop();$('#log').innerHTML=UI.log.map(l=>`<div>${l}</div>`).join('');}
+
+function riskClass(r){return r<25?'r-low':r<50?'r-mid':'r-high';}
+function previewAt(x,y,hi){
+  stage(x,y,hi);const sc=scoreCurrent();const r=(UI.showRisk&&G.players.length>1)?riskOf(G.cur):null;
+  // put card back at original index
+  const s=G.staged.pop();G.board.delete(K(s.x,s.y));curPlayer().hand.splice(hi,0,s.card);
+  return {score:sc?sc.total:0,risk:r};
+}
+function isHumanActive(){const p=G&&curPlayer();return p&&p.type==='human'&&!UI.hidden&&!G.over&&!UI.busy;}
+
+function render(){if(!G)return;renderBoard();renderHand();renderSide();}
+function renderBoard(){
+  const human=isHumanActive();const p=curPlayer();let h='';
+  const selCard=human&&UI.sel!=null&&UI.mode==='play'?p.hand[UI.sel]:null;
+  for(const [k,c] of G.board){const [x,y]=k.split(',').map(Number);const st=isStaged(x,y);
+    let cls='bcard'+(st?' staged':'')+(!st&&G.lastKeys.has(k)?' last':'');let extra='';
+    if(selCard&&!G.staged.length&&!G.swapped&&c.wild&&canSwapWild(x,y,selCard)){cls+=' swappable';extra='<span class="swapb">⇄</span>';}
+    h+=`<div class="${cls}" data-x="${x}" data-y="${y}" style="left:${x*CS}px;top:${y*CS}px" title="${cardName(c)}">${cardSVG(c)}${extra}</div>`;}
+  if(selCard){
+    for(const [x,y] of candidateCells()){if(!cellFits(x,y,selCard))continue;
+      const pv=previewAt(x,y,UI.sel);
+      const rk=pv.risk!=null?`<span class="risk ${riskClass(pv.risk)}" title="Risque qu'un adversaire complète un lot">⚠ ${pv.risk}%</span>`:'';
+      h+=`<div class="slot" data-x="${x}" data-y="${y}" style="left:${x*CS}px;top:${y*CS}px"><span class="pts">+${pv.score}</span>${rk}</div>`;}
+  }
+  $('#world').innerHTML=h;applyTransform();
+}
+function renderHand(){
+  const p=curPlayer();const human=p.type==='human';
+  const hi=$('#handInfo'),hd=$('#hand'),ac=$('#actions'),si=$('#stagedInfo');
+  hi.innerHTML=`<div class="who" style="color:${p.color}">${p.name}${p.type==='ai'?' 🤖':''}</div><div class="sub">${
+    G.over?'Partie terminée':p.type==='ai'?`Ordinateur (${LEVEL_N[p.level]}) réfléchit…`:UI.hidden?'En attente…':
+    UI.mode==='exchange'?'Choisis les cartes à remettre sous la pioche':G.staged.length?'Pose d\'autres cartes sur la même ligne ou valide':'Choisis une carte puis une case'}</div>`;
+  let h='';
+  if(human&&!UI.hidden){
+    p.hand.forEach((c,i)=>{const cls='hcard'+(UI.mode==='play'&&UI.sel===i?' sel':'')+(UI.mode==='exchange'&&UI.ex.has(i)?' ex':'');
+      h+=`<div class="${cls}" data-i="${i}" title="${cardName(c)}">${cardSVG(c)}</div>`;});
+    for(let i=p.hand.length+G.staged.length;i<4;i++)h+=`<div class="hcard empty"></div>`;
+    for(let i=0;i<G.staged.length;i++)h+=`<div class="hcard empty"></div>`;
+  }else{for(let i=0;i<p.hand.length;i++)h+=`<div class="hcard back">${backSVG()}</div>`;}
+  hd.innerHTML=h;
+  // staged info
+  let s='';
+  if(G.staged.length){const sc=scoreCurrent();
+    if(sc){s=`<div class="big">${sc.base}${sc.mult>1?` ×${sc.mult}`:''} = ${sc.total} pts</div><div style="color:var(--muted);font-size:12px">${sc.breakdown.map(b=>`${b.sum}${b.dir==='H'?'→':'↓'}`).join(' + ')}${sc.lots?' · lot !':''}${sc.allFour?' · 4 cartes':''}${sc.final?' · dernier coup':''}</div>`;
+      if(UI.showRisk&&G.players.length>1&&human){const r=riskOf(G.cur);s+=`<div class="riskline" style="color:${r<25?'#2e9e48':r<50?'#c77700':'#d6342f'}">⚠ Risque d'offrir un lot : ${r}%</div>`;}}}
+  si.innerHTML=s;
+  // actions
+  let a='';
+  if(human&&!UI.hidden&&!G.over&&!UI.busy){
+    if(UI.mode==='play'){
+      a=`<button class="btn" id="aHint" title="Suggestion du meilleur coup">💡 Suggestion</button>
+         <button class="btn" id="aUndo" ${G.staged.length?'':'disabled'}>↶ Annuler</button>
+         <button class="btn warn" id="aPass" ${G.staged.length?'disabled':''}>⇆ Échanger / Passer</button>
+         <button class="btn primary" id="aOk" ${G.staged.length?'':'disabled'}>✔ Valider</button>`;
+    }else{
+      const n=UI.ex.size;const lim=G.deck.length;
+      a=`<span style="font-size:13px;color:var(--muted)">${lim?`Pioche : ${lim} carte${lim>1?'s':''}`:'Pioche vide : tu ne peux que passer'}</span>
+         <button class="btn" id="aBack">Retour</button>
+         <button class="btn primary" id="aEx">${n?`Échanger ${Math.min(n,lim)} carte${Math.min(n,lim)>1?'s':''}`:'Passer sans échanger'}</button>`;
+    }
+  }
+  ac.innerHTML=a;
+}
+function renderSide(){
+  $('#players').innerHTML=G.players.map((p,i)=>`<div class="pl ${i===G.cur&&!G.over?'cur':''}"><div class="chip" style="background:${p.color}"></div>
+    <div class="nm"><div>${p.type==='ai'?'🤖 ':''}${p.name}</div><div>${i===G.cur&&!G.over?'▶ joue':p.hand.length+' cartes'}</div></div><div class="sc">${p.score}</div></div>`).join('');
+  $('#deckCount').textContent=G.deck.length;
+}
+function updateHeader(){
+  $('#bRisk').classList.toggle('on',UI.showRisk);
+  $('#bSfx').classList.toggle('off',!SND.sfxOn);$('#bSfx').textContent=SND.sfxOn?'🔊':'🔇';
+  $('#bMusic').classList.toggle('off',!SND.musicOn);
+}
+
+// ---- interactions ----
+$('#hand').addEventListener('click',e=>{
+  const el=e.target.closest('.hcard[data-i]');if(!el||!isHumanActive())return;const i=+el.dataset.i;SND.init();
+  if(UI.mode==='exchange'){UI.ex.has(i)?UI.ex.delete(i):UI.ex.add(i);SND.click();}
+  else{UI.sel=UI.sel===i?null:i;SND.click();}
+  render();
+});
+let drag=null,justDragged=false;
+const bw=$('#boardWrap');
+bw.addEventListener('pointerdown',e=>{if(e.target.closest('.zoom'))return;drag={x:e.clientX,y:e.clientY,px:UI.panX,py:UI.panY,moved:false,id:e.pointerId};});
+window.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(!drag.moved&&Math.hypot(dx,dy)>6){drag.moved=true;bw.classList.add('dragging');}
+  if(drag.moved){UI.panX=drag.px+dx;UI.panY=drag.py+dy;applyTransform();}});
+window.addEventListener('pointerup',e=>{if(!drag)return;justDragged=drag.moved;drag=null;bw.classList.remove('dragging');setTimeout(()=>justDragged=false,0);});
+bw.addEventListener('click',e=>{
+  if(justDragged)return;
+  const t=e.target.closest('.slot,.bcard');if(!t||!isHumanActive())return;
+  const x=+t.dataset.x,y=+t.dataset.y;const p=curPlayer();
+  if(t.classList.contains('slot')&&UI.sel!=null){
+    if(canPlace(x,y,p.hand[UI.sel])){stage(x,y,UI.sel);UI.sel=p.hand.length?0:null;if(p.hand.length&&!candidateCells().some(([a,b])=>p.hand.some(c=>cellFits(a,b,c))))UI.sel=null;SND.place();render();}
+    else SND.invalid();
+  }else if(t.classList.contains('swappable')&&UI.sel!=null){
+    const c=p.hand[UI.sel];doSwap(x,y,UI.sel);SND.swap();addLog(`<b>${p.name}</b> récupère un joker en posant ${cardName(c)}.`);UI.sel=null;render();
+  }else if(t.classList.contains('staged')){
+    const i=G.staged.findIndex(s=>s.x===x&&s.y===y);unstageTo(i);SND.lift();UI.sel=null;render();
+  }else if(UI.sel!=null&&t.classList.contains('bcard'))SND.invalid();
+});
+bw.addEventListener('wheel',e=>{e.preventDefault();const r=bw.getBoundingClientRect();zoomAt(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+$('#actions').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!isHumanActive())return;const p=curPlayer();SND.init();
+  switch(b.id){
+    case 'aOk':finishTurn();break;
+    case 'aUndo':unstageTo(0);SND.lift();UI.sel=null;render();break;
+    case 'aPass':UI.mode='exchange';UI.ex=new Set();UI.sel=null;SND.click();render();break;
+    case 'aBack':UI.mode='play';UI.ex=new Set();render();break;
+    case 'aEx':{const n=exchange([...UI.ex]);if(n){SND.shuffle();addLog(`<b>${p.name}</b> passe et échange ${n} carte${n>1?'s':''}.`);}else{SND.click();addLog(`<b>${p.name}</b> passe.`);}
+      UI.mode='play';UI.busy=true;render();const gid=G.id;setTimeout(()=>{if(!G||G.id!==gid)return;nextTurn();startTurn();},500);break;}
+    case 'aHint':{unstageTo(0);const moves=allMoves(G.players.length>1);const m=chooseMove(moves,'hard');
+      if(!m){showBanner('Aucun coup possible : échange tes cartes');SND.invalid();render();break;}
+      for(const pl of m.pl){const i=p.hand.findIndex(c=>c.id===pl.id);stage(pl.x,pl.y,i);}
+      UI.sel=null;SND.place();showBanner('Suggestion posée — valide ou annule');render();ensureVisible();break;}
+  }
+});
+// ---- view ----
+function applyTransform(){$('#world').style.transform=`translate(${UI.panX}px,${UI.panY}px) scale(${UI.zoom})`;}
+function bounds(){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const k of G.board.keys()){const [x,y]=k.split(',').map(Number);a=Math.min(a,x);b=Math.min(b,y);c=Math.max(c,x);d=Math.max(d,y);}
+  return {x0:(a-1)*CS,y0:(b-1)*CS,x1:(c+2)*CS,y1:(d+2)*CS};}
+function fitView(force){
+  const r=bw.getBoundingClientRect();const B=bounds();const w=B.x1-B.x0,h=B.y1-B.y0;
+  let z=Math.min(1.15,(r.width-40)/w,(r.height-40)/h);z=Math.max(.35,z);
+  if(force||z<UI.zoom)UI.zoom=z;
+  UI.panX=r.width/2-(B.x0+w/2)*UI.zoom;UI.panY=r.height/2-(B.y0+h/2)*UI.zoom;applyTransform();
+}
+function ensureVisible(){
+  const r=bw.getBoundingClientRect();const B=bounds();
+  const sx0=B.x0*UI.zoom+UI.panX,sy0=B.y0*UI.zoom+UI.panY,sx1=B.x1*UI.zoom+UI.panX,sy1=B.y1*UI.zoom+UI.panY;
+  if(sx0<0||sy0<0||sx1>r.width||sy1>r.height)fitView(false);
+}
+function zoomAt(f,cx,cy){const nz=Math.min(2.2,Math.max(.3,UI.zoom*f));UI.panX=cx-(cx-UI.panX)*nz/UI.zoom;UI.panY=cy-(cy-UI.panY)*nz/UI.zoom;UI.zoom=nz;applyTransform();}
+$('#zIn').onclick=()=>{const r=bw.getBoundingClientRect();zoomAt(1.2,r.width/2,r.height/2);};
+$('#zOut').onclick=()=>{const r=bw.getBoundingClientRect();zoomAt(1/1.2,r.width/2,r.height/2);};
+$('#zFit').onclick=()=>{if(G)fitView(true);};
+window.addEventListener('resize',()=>{if(G)ensureVisible();});
+// ---- header buttons ----
+$('#bRisk').onclick=()=>{UI.showRisk=!UI.showRisk;const o=load('opts',{});o.risk=UI.showRisk;store('opts',o);updateHeader();render();};
+$('#bSfx').onclick=()=>{SND.init();SND.sfxOn=!SND.sfxOn;const o=load('opts',{});o.sfx=SND.sfxOn;store('opts',o);updateHeader();SND.click();};
+$('#bMusic').onclick=()=>{SND.init();SND.setMusic(!SND.musicOn);const o=load('opts',{});o.music=SND.musicOn;store('opts',o);updateHeader();};
+$('#bRules').onclick=()=>$('#rules').classList.add('show');
+$('#sRules').onclick=()=>$('#rules').classList.add('show');
+$('#rClose').onclick=()=>$('#rules').classList.remove('show');
+$('#bMenu').onclick=()=>{if(G)G.id=Math.random();initSetup();$('#gameover').classList.remove('show');$('#handoff').classList.remove('show');$('#setup').classList.add('show');};
+$('#sStart').onclick=startFromSetup;
+$('#goAgain').onclick=()=>{$('#gameover').classList.remove('show');beginGame(lastPlayers);};
+$('#goMenu').onclick=()=>{$('#gameover').classList.remove('show');initSetup();$('#setup').classList.add('show');};
+function showGameOver(){
+  const r=G.players.slice().sort((a,b)=>b.score-a.score);const med=['🥇','🥈','🥉','🎖️'];
+  $('#ranking').innerHTML=r.map((p,i)=>`<div class="rank ${i===0?'first':''}"><div class="m">${med[i]}</div><div class="n" style="color:${p.color}">${p.type==='ai'?'🤖 ':''}${p.name}</div><div class="s">${p.score}</div></div>`).join('')+
+    (G.players.length===1?`<p style="text-align:center;color:var(--muted)">Partie solo — essaie de battre ton record !</p>`:'');
+  if(G.players.length===1){const best=load('best',0);if(r[0].score>best){store('best',r[0].score);$('#ranking').innerHTML+=`<p style="text-align:center;font-weight:800">Nouveau record : ${r[0].score} !</p>`;}else $('#ranking').innerHTML+=`<p style="text-align:center;color:var(--muted)">Record : ${best}</p>`;}
+  $('#gameover').classList.add('show');SND.win();
+}
+// rule examples
+$('#ruleEx').innerHTML=[{p:[0,0,0]},{p:[1,1,1]},{p:[2,2,2]},{p:[3,3,3]},{wild:true}].map(c=>cardSVG(c)).join('');
+initSetup();
+</script>
 </body>
 </html>
