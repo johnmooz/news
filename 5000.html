@@ -220,6 +220,11 @@
         <div class="score-value" id="turnValue">0</div>
         <div class="score-detail" id="turnDetail"></div>
       </div>
+      <div class="score">
+        <div class="score-label">Prochain lancer</div>
+        <div class="score-value" id="chanceValue">–</div>
+        <div class="score-detail" id="chanceDetail"></div>
+      </div>
     </div>
 
     <div class="controls">
@@ -557,12 +562,33 @@
         const d = noiseBuf.getChannelData(0);
         for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       }
-      if (actx.state === 'suspended') actx.resume().catch(() => {});
+      if (actx.state !== 'running') actx.resume().catch(() => {});
       return actx;
     } catch (e) { return null; }
   }
-  document.addEventListener('pointerdown', () => { if (!prefs.muted) audio(); }, true);
-  document.addEventListener('keydown', () => { if (!prefs.muted) audio(); }, true);
+  // iPhone / iPad : jouer le son même quand le téléphone est en mode silencieux
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+
+  // Déblocage du son au geste de l'utilisateur (selon les navigateurs : touchend, click, pointerup…)
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (prefs.muted) return;
+    const c = audio();
+    if (!c) return;
+    try { // un son vide joué pendant le geste débloque l'audio sur iOS
+      const s = c.createBufferSource();
+      s.buffer = c.createBuffer(1, 1, 22050);
+      s.connect(c.destination);
+      s.start(0);
+    } catch (e) {}
+    if (c.state === 'running') audioUnlocked = true;
+  }
+  ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, () => { if (!audioUnlocked) unlockAudio(); }, true));
+  // Au retour sur la page (changement d'appli, écran verrouillé), le son peut être suspendu
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && actx && actx.state !== 'running') { audioUnlocked = false; actx.resume().catch(() => {}); }
+  });
 
   function tone(freq, at, dur, { type = 'sine', vol = 0.18, to = null } = {}) {
     const t = actx.currentTime + at;
@@ -609,8 +635,10 @@
   function play(name) {
     if (prefs.muted || !SOUNDS[name]) return;
     const c = audio();
-    if (!c || c.state !== 'running') return;
-    try { SOUNDS[name](); } catch (e) {}
+    if (!c) return;
+    if (c.state === 'running') { try { SOUNDS[name](); } catch (e) {} return; }
+    // contexte encore suspendu : on tente de le réveiller puis on joue le son
+    c.resume().then(() => { if (c.state === 'running') { audioUnlocked = true; try { SOUNDS[name](); } catch (e) {} } }).catch(() => {});
   }
 
   const soundBtn = $('soundBtn');
@@ -622,7 +650,7 @@
     prefs.muted = !prefs.muted;
     savePrefs();
     renderSoundBtn();
-    if (!prefs.muted) { audio(); setTimeout(() => play('select'), 30); }
+    if (!prefs.muted) { unlockAudio(); play('select'); }
   });
   renderSoundBtn();
 
@@ -948,7 +976,24 @@
     return 6;
   }
 
+  // Encadré permanent : chance de marquer avec les dés qui restent à lancer
+  function drawChance(I) {
+    const val = $('chanceValue'), det = $('chanceDetail');
+    const n = nextRollCount(I);
+    const chance = 1 - PROBA[n].lose;
+    const kept = G.dice.filter(d => d.kept).length;
+    const sel = G.dice.filter(d => d.selected).length;
+    const blocked = (G.phase === 'choose' || G.phase === 'enter') ? kept + sel : 0;
+    val.textContent = pct(chance);
+    val.style.color = chance >= 0.8 ? '#7fe0a4' : chance >= 0.6 ? '#f5d76e' : '#ff9b8a';
+    let txt = `de marquer avec ${n} dé${n > 1 ? 's' : ''}`;
+    if (G.phase === 'choose' && blocked === 6) txt += ' (main pleine : on relance tout)';
+    else if (blocked > 0) txt += ` (${blocked} bloqué${blocked > 1 ? 's' : ''})`;
+    det.textContent = txt;
+  }
+
   function drawProba(I) {
+    drawChance(I);
     const panel = $('probaPanel');
     $('probaBtn').textContent = prefs.showProba ? '📊 Masquer les probabilités' : '📊 Probabilités';
     $('probaBtn').setAttribute('aria-pressed', prefs.showProba ? 'true' : 'false');
