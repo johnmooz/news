@@ -136,6 +136,26 @@
   button.action.secondary { background: transparent; color: #f5d76e; box-shadow: none; }
   button.action.secondary:hover:not(:disabled) { background: rgba(245,215,110,.12); }
   button.small { font-size: .85rem; padding: 7px 16px; }
+  .proba {
+    margin-top: 14px; width: 100%; max-width: 480px; padding: 16px 20px; border-radius: 18px;
+    background: rgba(0,0,0,.25); box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  }
+  .proba h3 { margin: 0 0 10px; font-size: 1rem; text-align: center; letter-spacing: .05em; color: #f5d76e; }
+  .proba-row { display: grid; grid-template-columns: 1fr 90px 64px; align-items: center; gap: 10px; padding: 4px 0; font-size: .88rem; }
+  .proba-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .proba-bar span { display: block; height: 100%; border-radius: 999px; background: #f5d76e; }
+  .proba-row.good .proba-bar span { background: #7fe0a4; }
+  .proba-row.bad .proba-bar span { background: #ff9b8a; }
+  .proba-row.bad .proba-val { color: #ff9b8a; }
+  .proba-val { text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; }
+  .proba-avg { text-align: center; font-size: .85rem; opacity: .85; margin-top: 8px; }
+  .proba-sub { text-align: center; font-size: .75rem; text-transform: uppercase; letter-spacing: .12em; opacity: .7; margin: 14px 0 6px; }
+  .risk-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .risk { text-align: center; padding: 6px 2px; border-radius: 10px; background: rgba(255,255,255,.06); font-size: .78rem; }
+  .risk b { display: block; font-weight: normal; opacity: .75; font-size: .7rem; }
+  .risk span { font-weight: bold; color: #ff9b8a; }
+  .risk.on { outline: 2px solid #f5d76e; background: rgba(245,215,110,.12); }
+  @media (max-width: 520px) { .proba-row { grid-template-columns: 1fr 60px 56px; } }
   .stop-hint { font-size: .85rem; opacity: .75; text-align: center; margin-top: 8px; min-height: 1.2em; }
 
   /* ---------- Victoire ---------- */
@@ -207,6 +227,17 @@
       <button class="action stop hidden" id="stopBtn">S'arrêter</button>
     </div>
     <div class="stop-hint" id="stopHint"></div>
+
+    <div class="controls">
+      <button class="action secondary small" id="probaBtn" type="button" aria-pressed="false">📊 Probabilités</button>
+    </div>
+    <div class="proba hidden" id="probaPanel">
+      <h3 id="probaTitle"></h3>
+      <div id="probaRows"></div>
+      <div class="proba-avg" id="probaAvg"></div>
+      <div class="proba-sub">Risque de ne rien faire selon le nombre de dés</div>
+      <div class="risk-row" id="probaRisk"></div>
+    </div>
 
     <div class="controls">
       <button class="action secondary small" id="quitBtn">Nouvelle partie</button>
@@ -504,7 +535,7 @@
   // =====================================================================
   // Sons (synthétisés avec Web Audio, aucun fichier)
   // =====================================================================
-  const prefs = { mode: 'virtual', count: 2, names: [], cpu: [], muted: false };
+  const prefs = { mode: 'virtual', count: 2, names: [], cpu: [], muted: false, showProba: false };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem('5000-prefs') || '{}')); } catch (e) {}
   if (!Array.isArray(prefs.names)) prefs.names = [];
   if (!Array.isArray(prefs.cpu)) prefs.cpu = [];
@@ -868,7 +899,94 @@
       rollBtn.textContent = `Au tour de ${G.players[(G.current + 1) % G.players.length].name}`;
       rollBtn.disabled = false;
     }
+
+    drawProba(I);
   }
+
+  // =====================================================================
+  // Probabilités (calcul exact sur tous les résultats possibles)
+  // =====================================================================
+  const PROBA = {};   // PROBA[n] pour n dés lancés
+  (function computeProba() {
+    for (let n = 1; n <= 6; n++) {
+      const total = 6 ** n;
+      const s = { lose: 0, one: 0, five: 0, triple: 0, pairs: 0, straight: 0, sum: 0, full: 0 };
+      const vals = new Array(n);
+      for (let k = 0; k < total; k++) {
+        let x = k;
+        const counts = [0,0,0,0,0,0,0];
+        for (let j = 0; j < n; j++) { vals[j] = x % 6 + 1; x = Math.floor(x / 6); counts[vals[j]]++; }
+        const r = computeScore(vals);
+        if (r.score === 0) s.lose++;
+        if (counts[1]) s.one++;
+        if (counts[5]) s.five++;
+        if (counts.some(c => c >= 3)) s.triple++;
+        if (n === 6 && counts.filter(c => c === 2).length === 3) s.pairs++;
+        if (n === 6 && counts.slice(1).every(c => c === 1)) s.straight++;
+        if (r.used === n && r.score > 0) s.full++;
+        s.sum += r.score;
+      }
+      PROBA[n] = {
+        lose: s.lose / total, one: s.one / total, five: s.five / total, triple: s.triple / total,
+        pairs: s.pairs / total, straight: s.straight / total, full: s.full / total, avg: s.sum / total
+      };
+    }
+  })();
+
+  const pct = p => {
+    const v = p * 100;
+    if (v === 0) return '0 %';
+    if (v < 0.1) return '< 0,1 %';
+    return (v < 10 ? v.toFixed(1) : Math.round(v)).toString().replace('.', ',') + ' %';
+  };
+
+  // Nombre de dés du prochain lancer
+  function nextRollCount(I) {
+    if (!G) return 6;
+    if (G.phase === 'enter') return G.pending.length;
+    if (G.phase === 'choose') return I.remaining === 0 ? 6 : I.remaining;
+    return 6;
+  }
+
+  function drawProba(I) {
+    const panel = $('probaPanel');
+    $('probaBtn').textContent = prefs.showProba ? '📊 Masquer les probabilités' : '📊 Probabilités';
+    $('probaBtn').setAttribute('aria-pressed', prefs.showProba ? 'true' : 'false');
+    panel.classList.toggle('hidden', !prefs.showProba);
+    if (!prefs.showProba) return;
+    const n = nextRollCount(I);
+    const p = PROBA[n];
+    const rows = [
+      ['Au moins une combinaison', 1 - p.lose, 'good'],
+      ['Aucune combinaison (tour perdu)', p.lose, 'bad'],
+      ['Au moins un 1', p.one],
+      ['Au moins un 5', p.five]
+    ];
+    if (n >= 3) rows.push(['3 dés identiques (ou plus)', p.triple]);
+    if (n === 6) {
+      rows.push(['3 paires (2000)', p.pairs]);
+      rows.push(['Suite 1 à 6 (1500)', p.straight]);
+    }
+    rows.push([n === 6 ? 'Les 6 dés comptent' : `Les ${n} dés comptent (on relance les 6)`, p.full]);
+    $('probaTitle').textContent = G && G.phase === 'enter'
+      ? `Pour ce lancer de ${n} dé${n > 1 ? 's' : ''}`
+      : `Si vous lancez ${n} dé${n > 1 ? 's' : ''}`;
+    $('probaRows').innerHTML = rows.map(([label, v, kind]) => `
+      <div class="proba-row${kind ? ' ' + kind : ''}">
+        <span class="proba-label">${label}</span>
+        <span class="proba-bar"><span style="width:${(v * 100).toFixed(1)}%"></span></span>
+        <span class="proba-val">${pct(v)}</span>
+      </div>`).join('');
+    $('probaAvg').textContent = `Points moyens sur ce lancer : ${Math.round(p.avg)}`;
+    $('probaRisk').innerHTML = [1,2,3,4,5,6].map(k =>
+      `<div class="risk${k === n ? ' on' : ''}"><b>${k} dé${k > 1 ? 's' : ''}</b><span>${pct(PROBA[k].lose)}</span></div>`).join('');
+  }
+
+  $('probaBtn').addEventListener('click', () => {
+    prefs.showProba = !prefs.showProba;
+    savePrefs();
+    if (G) drawProba(info(G));
+  });
 
   // =====================================================================
   // Victoire
