@@ -1,1 +1,295 @@
-vide
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Résolution de triangle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calme, scolaire, précis — une page de cahier de géométrie bien tenue.
+   IDEA: la feuille à petits carreaux avec sa marge rouge, où l'on trace la figure puis on rédige la solution.
+   PICTURE: le triangle tracé à l'échelle, grand, sur quadrillage, données en bleu et résultats en rouge.
+   COLOUR and TYPE: papier blanc, encre bleu nuit, bleu stylo pour les données, rouge marge pour les calculs; Lexend + STIX Two pour les formules.
+   LAYOUT: titre, puis figure à gauche et saisie à droite (empilés sous 900px), puis la rédaction des formules. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0f1320);--paper:light-dark(#ffffff,#121828);--grid:light-dark(#dbe6f4,#1d2740);
+--ink:light-dark(#18213d,#e7ebf5);--mute:light-dark(#5b6584,#9aa4c0);--line:light-dark(#c9d3e6,#2a3552);
+--blue:light-dark(#1f4fd1,#86a8ff);--red:light-dark(#c8243a,#ff6b7b);--fill:light-dark(#eef3fd,#18213a);--chip:light-dark(#f3f6fc,#182036)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Lexend,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(22px,4vw,52px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h1{font-size:clamp(30px,5vw,46px);line-height:1.05;margin:0 0 10px;font-weight:600;text-wrap:balance}
+h2{font-size:24px;margin:0 0 14px;font-weight:600}
+.lead{margin:0;color:var(--mute);max-width:62ch}
+.main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px;padding-top:0}
+@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.fig{position:relative;min-height:360px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;background-position:-1px -1px}
+.fig::before{content:"";position:absolute;top:0;bottom:0;left:38px;width:2px;background:var(--red);opacity:.35}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font-family:"STIX Two Text",serif;font-size:17px}
+.vx{font-family:Lexend,sans-serif;font-weight:600;font-size:19px;fill:var(--ink)}
+.giv{fill:var(--blue)}.cal{fill:var(--red)}.ph{fill:var(--mute)}
+.panel{display:flex;flex-direction:column;gap:16px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px}
+.f label{display:block;font-size:14px;color:var(--mute);margin-bottom:4px;white-space:nowrap}
+.f label b{font-family:"STIX Two Text",serif;font-style:italic;font-size:20px;color:var(--ink);font-weight:400;margin-right:4px}
+.f .w{position:relative}
+.f input{width:100%;height:48px;font:500 16px Lexend,sans-serif;padding:0 26px 0 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper);color:var(--blue)}
+.f input:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 35%,transparent);outline-offset:1px;border-color:var(--blue)}
+.f input.calc{color:var(--red);border-style:dashed;border-color:color-mix(in srgb,var(--red) 55%,var(--line));background:color-mix(in srgb,var(--red) 5%,var(--paper))}
+.f .u{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mute);pointer-events:none}
+.msg{padding:12px 14px;border-radius:10px;background:var(--chip);border-left:4px solid var(--mute);font-size:15px}
+.msg.ok{border-color:var(--blue)}.msg.err{border-color:var(--red)}.msg.warn{border-color:#d9961a}
+.kind{display:none;flex-wrap:wrap;gap:8px}.kind.show{display:flex}
+.kind div{border:1.5px solid var(--red);border-radius:10px;padding:8px 12px;background:color-mix(in srgb,var(--red) 7%,var(--paper))}
+.kind b{display:block;font-weight:600;font-size:17px}.kind span{font-family:"STIX Two Text",serif;font-size:17px;color:var(--mute)}
+.kind div.q{border-color:var(--line);background:var(--chip)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row .t{font-size:14px;color:var(--mute);margin-right:4px}
+button{font:500 15px Lexend,sans-serif;min-height:44px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--blue)}button:focus-visible{outline:3px solid color-mix(in srgb,var(--blue) 40%,transparent)}
+button.on{background:var(--red);border-color:var(--red);color:#fff}
+.leg{font-size:14px;color:var(--mute)}.leg span{font-weight:600}
+.sw{display:none}.sw.show{display:flex}
+ol.steps{list-style:none;padding:0;margin:0;display:grid;gap:12px;counter-reset:s}
+ol.steps li{counter-increment:s;border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 56px;position:relative;background:var(--paper)}
+ol.steps li::before{content:counter(s);position:absolute;left:14px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font:600 14px/28px Lexend;text-align:center}
+ol.steps li.x::before{content:"+";background:var(--mute)}
+.law{font-size:13px;color:var(--mute);margin-bottom:4px}
+.eq{font-family:"STIX Two Text",serif;font-size:20px;line-height:1.9;overflow-x:auto;white-space:nowrap}
+.eq.n{font-size:18px;color:var(--mute)}
+.res{font-family:"STIX Two Text",serif;font-size:20px;color:var(--red);font-weight:600;white-space:nowrap;overflow-x:auto;line-height:2}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.3}
+.fr>span:first-child{border-bottom:1.5px solid currentColor;padding:0 4px}.fr>span{padding:0 4px}
+.rt{white-space:nowrap}.rt>span{border-top:1.5px solid currentColor;padding:0 3px 0 2px;margin-left:1px}
+.empty{color:var(--mute);border:1.5px dashed var(--line);border-radius:12px;padding:18px}
+.note{font-size:14px;color:var(--mute);margin-top:14px}
+</style>
+</head>
+<body>
+<header class="band">
+<h1>Résolution de triangle</h1>
+<p class="lead">Saisissez exactement trois valeurs parmi les six — côtés et angles — : la figure se trace à l'échelle et chaque inconnue est calculée, formule à l'appui.</p>
+</header>
+
+<section class="band main">
+<div class="fig" id="fig" role="img" aria-label="Triangle ABC tracé à l'échelle"><svg id="svg"></svg></div>
+<div class="panel">
+<div class="fields" id="fields">
+<div class="f"><label for="i0"><b>a</b>côté BC</label><div class="w"><input id="i0" inputmode="decimal" autocomplete="off"></div></div>
+<div class="f"><label for="i1"><b>b</b>côté CA</label><div class="w"><input id="i1" inputmode="decimal" autocomplete="off"></div></div>
+<div class="f"><label for="i2"><b>c</b>côté AB</label><div class="w"><input id="i2" inputmode="decimal" autocomplete="off"></div></div>
+<div class="f"><label for="i3"><b>α</b>angle en A</label><div class="w"><input id="i3" inputmode="decimal" autocomplete="off"><span class="u">°</span></div></div>
+<div class="f"><label for="i4"><b>β</b>angle en B</label><div class="w"><input id="i4" inputmode="decimal" autocomplete="off"><span class="u">°</span></div></div>
+<div class="f"><label for="i5"><b>γ</b>angle en C</label><div class="w"><input id="i5" inputmode="decimal" autocomplete="off"><span class="u">°</span></div></div>
+</div>
+<div class="msg" id="msg" aria-live="polite"></div>
+<div class="kind" id="kind" aria-live="polite"></div>
+<div class="row sw" id="sw"><span class="t">Cas ambigu :</span><button id="s0">Triangle 1</button><button id="s1">Triangle 2</button></div>
+<div class="row"><span class="t">Exemples</span>
+<button data-p="0">3 côtés</button><button data-p="1">2 côtés + angle compris</button><button data-p="2">2 côtés + angle opposé</button><button data-p="3">1 côté + 2 angles</button></div>
+<div class="row"><button id="clr">Tout effacer</button><span class="leg"><span style="color:var(--blue)">Bleu</span> : vos données · <span style="color:var(--red)">rouge</span> : valeurs calculées</span></div>
+</div>
+</section>
+
+<section class="band">
+<h2>Formules de résolution</h2>
+<ol class="steps" id="steps"></ol>
+<p class="note">Le côté a est opposé au sommet A (angle α), b à B (β), c à C (γ). Angles en degrés ; résultats arrondis à 4 décimales, mais les calculs enchaînés utilisent les valeurs exactes. Quand c'est possible, la forme exacte est donnée aussi (fraction, racine carrée, ou arccos d'une valeur exacte pour un angle) ; elle n'existe pas toujours, par exemple avec un angle de 50°.</p>
+</section>
+
+<script>
+{
+const S=['a','b','c'],G=['α','β','γ'];
+const nf=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:4}),nf2=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2});
+const f=x=>nf.format(Math.abs(x)<1e-12?0:x),f2=x=>nf2.format(x);
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+const V=i=>`<i>${S[i]}</i>`,A=i=>`<i>${G[i]}</i>`;
+const fr=(n,d)=>`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const rt=x=>`<span class="rt">√<span>${x}</span></span>`;
+const oth=i=>[0,1,2].filter(x=>x!==i);
+const ins=[...Array(6)].map((_,i)=>document.getElementById('i'+i));
+const $=id=>document.getElementById(id);
+let given=new Set(),res=null,sel=0;
+
+// Formes exactes : fraction, k√m/d, u + v√r, ou √(p + q√r) dénichée en √X ± √Y
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b)[a,b]=[b,a%b];return a||1};
+function rat(x,maxD,tol=1e-11){let h1=1,h0=0,k1=0,k0=1,b=x;
+ for(let n=0;n<40;n++){const a=Math.floor(b);[h1,h0]=[a*h1+h0,h1];[k1,k0]=[a*k1+k0,k1];if(k1>maxD)return null;
+  if(Math.abs(x-h1/k1)<=tol*Math.max(1,Math.abs(x)))return[h1,k1];const r=b-a;if(r<1e-15)return null;b=1/r}return null}
+const termRat=x=>{const r=rat(x,1000);if(!r)return false;let d=r[1];while(d%2===0)d/=2;while(d%5===0)d/=5;return d===1};
+function sqf(n){let k=1,m=n;for(let p=2;p*p<=m;p++)while(m%(p*p)===0){m/=p*p;k*=p}return[k,m]}
+function tsq(n,d){if(n===0)return[];const N=n*d;if(N>1e10||N<0)return null;const[k,m]=sqf(N),g=gcd(k,d);return[{k:k/g,m,d:d/g}]}
+const qh=(n,d)=>{const g=gcd(n,d);n/=g;d/=g;return(n<0?'−':'')+(d===1?Math.abs(n):fr(Math.abs(n),d))};
+function sh(ts){ts=ts.filter(t=>t.k);if(!ts.length)return'0';let L=1;for(const t of ts)L=L*t.d/gcd(L,t.d);
+ let ns=ts.map(t=>({k:t.k*L/t.d,m:t.m})).sort((a,b)=>b.k-a.k);const g=ns.reduce((a,t)=>gcd(a,t.k),L);L/=g;ns=ns.map(t=>({k:t.k/g,m:t.m}));
+ const str=ns.map((t,n)=>{const a=Math.abs(t.k),v=t.m===1?a:(a===1?'':a)+rt(t.m);return(t.k<0?(n?' − ':'−'):(n?' + ':''))+v}).join('');
+ return L===1?str:fr(str,L)}
+function lin(x,Dm){if(Math.abs(x)>1e4)return null;
+ for(let D=1;D<=Dm;D++)for(const r of[2,3,5,6]){const sr=Math.sqrt(r),lim=Math.ceil((10*Math.abs(x)+50)*D/sr);
+  for(let kv=-lim;kv<=lim;kv++){if(!kv)continue;const w=(x-kv*sr/D)*D,W=Math.round(w);
+   if(Math.abs(w-W)<=1e-11*Math.max(1,Math.abs(x))*D)return{W,kv,D,r}}}return null}
+function exact(x){
+ if(x<0){const e=exact(-x);return e&&'−'+e}
+ const r=rat(x,1000);if(r)return qh(r[0],r[1]);
+ const r2=rat(x*x,1000);if(r2){const t=tsq(r2[0],r2[1]);if(t)return sh(t)}
+ const L=lin(x,12);if(L)return sh([{k:L.W,m:1,d:L.D},{k:L.kv,m:L.r,d:L.D}]);
+ const Y=lin(x*x,4);if(!Y)return null;
+ const{W:a,kv:b,D,r:rr}=Y,disc=(a*a-b*b*rr)/(D*D),s=disc>=0&&rat(Math.sqrt(disc),1000);
+ if(s){const[n,m]=s,Xn=a*m+n*D,Yn=a*m-n*D,Xd=2*D*m;
+  if(Xn>=0&&Yn>=0){const tx=tsq(Xn,Xd),ty=tsq(Yn,Xd);
+   if(tx&&ty&&Math.abs(Math.sqrt(Xn/Xd)+Math.sign(b)*Math.sqrt(Yn/Xd)-x)<1e-9*Math.max(1,x))return sh([...tx,...ty.map(t=>({...t,k:t.k*Math.sign(b)}))])}}
+ return rt(`${a?qh(a,D)+(b<0?' − ':' + '):(b<0?'−':'')}${Math.abs(b)===D?'':qh(Math.abs(b),D)}√${rr}`)}
+function Rv(lhs,v){if(termRat(v))return`${lhs} = ${f(v)}`;const e=exact(v);return e?`${lhs} = ${e} ≈ ${f(v)}`:`${lhs} ≈ ${f(v)}`}
+const Rs=(i,v)=>Rv(V(i),v);
+function Rg(i,v){if(rat(v,4,1e-9))return`${A(i)} = ${f(v)}°`;const e=exact(Math.cos(rad(v)));return e?`${A(i)} = arccos(${e}) ≈ ${f(v)}°`:`${A(i)} ≈ ${f(v)}°`}
+
+// Étapes de calcul (chaque fonction calcule la valeur puis rend la formule)
+function cosSide(i,s,g){const[j,k]=oth(i);s[i]=Math.sqrt(s[j]**2+s[k]**2-2*s[j]*s[k]*Math.cos(rad(g[i])));
+ return{law:'Loi des cosinus (Al-Kashi)',f:`${V(i)} = ${rt(`${V(j)}² + ${V(k)}² − 2${V(j)}${V(k)} cos ${A(i)}`)}`,
+ n:`${V(i)} = ${rt(`${f(s[j])}² + ${f(s[k])}² − 2 × ${f(s[j])} × ${f(s[k])} × cos ${f(g[i])}°`)}`,r:Rs(i,s[i])}}
+function cosAng(i,s,g){const[j,k]=oth(i);g[i]=deg(Math.acos(Math.max(-1,Math.min(1,(s[j]**2+s[k]**2-s[i]**2)/(2*s[j]*s[k])))));
+ return{law:'Loi des cosinus (Al-Kashi)',f:`${A(i)} = arccos ${fr(`${V(j)}² + ${V(k)}² − ${V(i)}²`,`2${V(j)}${V(k)}`)}`,
+ n:`${A(i)} = arccos ${fr(`${f(s[j])}² + ${f(s[k])}² − ${f(s[i])}²`,`2 × ${f(s[j])} × ${f(s[k])}`)}`,r:Rg(i,g[i])}}
+function sumAng(i,s,g){const[j,k]=oth(i);g[i]=180-g[j]-g[k];
+ return{law:'Somme des angles d’un triangle = 180°',f:`${A(i)} = 180° − ${A(j)} − ${A(k)}`,n:`${A(i)} = 180° − ${f(g[j])}° − ${f(g[k])}°`,r:Rg(i,g[i])}}
+function sinSide(i,p,s,g){s[i]=s[p]*Math.sin(rad(g[i]))/Math.sin(rad(g[p]));
+ return{law:'Loi des sinus',f:`${V(i)} = ${fr(`${V(p)} · sin ${A(i)}`,`sin ${A(p)}`)}`,n:`${V(i)} = ${fr(`${f(s[p])} × sin ${f(g[i])}°`,`sin ${f(g[p])}°`)}`,r:Rs(i,s[i])}}
+
+function solve(v){
+ const sk=[0,1,2].filter(i=>v[i]!=null),ak=[0,1,2].filter(i=>v[i+3]!=null);
+ for(const i of sk)if(!(v[i]>0))return{err:`Le côté ${S[i]} doit être un nombre strictement positif.`};
+ for(const i of ak)if(!(v[i+3]>0&&v[i+3]<180))return{err:`L’angle ${G[i]} doit être compris strictement entre 0° et 180°.`};
+ if(ak.length===3)return{err:'Avec trois angles seulement, il existe une infinité de triangles semblables : donnez au moins un côté.'};
+ if(ak.reduce((t,i)=>t+v[i+3],0)>=180)return{err:'La somme des angles connus atteint ou dépasse 180° : aucun triangle possible.'};
+ const s=v.slice(0,3),g=v.slice(3);
+ if(sk.length===3){
+  for(const i of [0,1,2]){const[j,k]=oth(i);if(s[i]>=s[j]+s[k])return{err:`Aucun triangle : ${S[i]} ≥ ${S[j]} + ${S[k]} (inégalité triangulaire non respectée).`}}
+  const st=[cosAng(0,s,g),cosAng(1,s,g),sumAng(2,s,g)];return{case:'3 côtés (CCC)',sols:[{s,g,st}]};
+ }
+ if(sk.length===2){
+  const i=ak[0],m=[0,1,2].find(x=>!sk.includes(x));
+  if(i===m){const[j,k]=oth(m);const st=[cosSide(m,s,g),cosAng(j,s,g),sumAng(k,s,g)];return{case:'2 côtés et l’angle compris (CAC)',sols:[{s,g,st}]}}
+  const j=sk.find(x=>x!==i),k=m,x=s[j]*Math.sin(rad(g[i]))/s[i];
+  const pre={law:'Loi des sinus',f:`sin ${A(j)} = ${fr(`${V(j)} · sin ${A(i)}`,V(i))}`,n:`sin ${A(j)} = ${fr(`${f(s[j])} × sin ${f(g[i])}°`,f(s[i]))} ≈ ${f(x)}`};
+  if(x>1+1e-12)return{err:`Aucun triangle : sin ${G[j]} = ${f(x)} > 1. Le côté ${S[i]} est trop court pour rejoindre l’autre côté.`,pre};
+  const a1=deg(Math.asin(Math.min(1,x)));let c=[a1];if(Math.abs(a1-90)>1e-9)c.push(180-a1);
+  c=c.filter(t=>g[i]+t<180-1e-9);
+  const sols=c.map((t,n)=>{const s2=s.slice(),g2=g.slice();g2[j]=t;
+   const st=[{...pre,law:n?'Loi des sinus — 2ᵉ solution (angle obtus)':'Loi des sinus',r:n?`${G[j]} = 180° − ${f(a1)}° ≈ ${f(t)}°`:`${G[j]} = arcsin(${f(x)}) ≈ ${f(t)}°`},sumAng(k,s2,g2),sinSide(k,i,s2,g2)];
+   return{s:s2,g:g2,st}});
+  return{case:'2 côtés et un angle non compris (CCA)',amb:sols.length===2,sols};
+ }
+ const p=sk[0],m=[0,1,2].find(x=>!ak.includes(x)),st=[sumAng(m,s,g)];
+ for(const i of oth(p))st.push(sinSide(i,p,s,g));
+ return{case:'1 côté et 2 angles (ACA / AAC)',sols:[{s,g,st}]};
+}
+
+function parse(t){t=t.replace(/\s/g,'').replace(',','.');if(t==='')return null;const n=Number(t);return isFinite(n)?n:NaN}
+
+function run(){
+ const v=ins.map((e,i)=>given.has(i)?parse(e.value):null);
+ ins.forEach((e,i)=>{if(!given.has(i)){e.value='';e.classList.remove('calc')}});
+ res=null;const m=$('msg');m.className='msg';$('sw').classList.remove('show');
+ const n=given.size;
+ if(n<3){m.textContent=n?`Encore ${3-n} valeur${3-n>1?'s':''} à saisir.`:'Saisissez trois valeurs parmi les six champs.';}
+ else if(n>3){m.className='msg warn';m.textContent=`${n} valeurs saisies : il en faut exactement 3. Videz un champ.`;}
+ else if(v.some(x=>Number.isNaN(x))){m.className='msg err';m.textContent='Une valeur n’est pas un nombre valide.';}
+ else{const r=solve(v);
+  if(r.err){m.className='msg err';m.textContent=r.err;res={err:r.err,pre:r.pre};}
+  else if(!r.sols.length){m.className='msg err';m.textContent='Aucun triangle ne correspond à ces données.';}
+  else{res=r;sel=Math.min(sel,r.sols.length-1);m.className='msg ok';
+   m.textContent=`Cas : ${r.case}.`+(r.amb?' Deux triangles différents conviennent — choisissez ci-dessous.':' Solution unique.');
+   if(r.amb)$('sw').classList.add('show');}
+ }
+ save();show();
+}
+
+// Nature du triangle : côtés égaux (sommet principal) et angle droit / obtus
+function nature(so){
+ const{s,g}=so,eq=(x,y)=>Math.abs(x-y)<=1e-7*Math.max(x,y);
+ const iso=[0,1,2].filter(i=>{const[j,k]=oth(i);return eq(s[j],s[k])});
+ const r=[0,1,2].find(i=>Math.abs(g[i]-90)<1e-7),o=[0,1,2].find(i=>g[i]>90+1e-7);
+ const X=i=>'ABC'[i],eqs=i=>{const[j,k]=oth(i);return`<i>${S[j]}</i> = <i>${S[k]}</i>`};
+ const pyth=i=>{const[j,k]=oth(i);return`<i>${S[i]}</i>² = <i>${S[j]}</i>² + <i>${S[k]}</i>²`};
+ const t=[];
+ if(iso.length===3)t.push(['Équilatéral','<i>a</i> = <i>b</i> = <i>c</i>, angles de 60°']);
+ else if(iso.length&&r!=null)t.push([`Rectangle isocèle en ${X(r)}`,`${eqs(r)}, <i>${G[r]}</i> = 90°, angles de 45°`]);
+ else{
+  if(iso.length)t.push([`Isocèle en ${X(iso[0])}`,`${eqs(iso[0])} : angles à la base égaux`]);
+  if(r!=null)t.push([`Rectangle en ${X(r)}`,`<i>${G[r]}</i> = 90° et ${pyth(r)} (Pythagore)`]);
+ }
+ if(o!=null)t.push([`Obtusangle en ${X(o)}`,`<i>${G[o]}</i> > 90°`]);
+ if(!t.length)t.push(['Quelconque','acutangle : trois angles aigus','q']);
+ return{t,iso,r};
+}
+
+function cur(){return res&&res.sols?res.sols[sel]:null}
+
+function show(){
+ const so=cur();
+ $('s0').classList.toggle('on',sel===0);$('s1').classList.toggle('on',sel===1);
+ if(so){const all=[...so.s,...so.g];ins.forEach((e,i)=>{if(!given.has(i)){e.value=f(all[i]);e.classList.add('calc')}})}
+ const kd=$('kind');
+ if(so){kd.innerHTML=nature(so).t.map(([h,d,c])=>`<div${c?' class="q"':''}><b>${h}</b><span>${d}</span></div>`).join('');kd.classList.add('show')}
+ else{kd.innerHTML='';kd.classList.remove('show')}
+ const ol=$('steps');
+ if(so){const P=so.s[0]+so.s[1]+so.s[2],Ar=.5*so.s[1]*so.s[2]*Math.sin(rad(so.g[0]));
+  ol.innerHTML=so.st.map(t=>`<li><div class="law">${t.law}</div><div class="eq">${t.f}</div><div class="eq n">${t.n}</div><div class="res">${t.r}</div></li>`).join('')+
+  `<li class="x"><div class="law">En bonus : périmètre et aire</div><div class="eq">${Rv('<i>P</i> = <i>a</i> + <i>b</i> + <i>c</i>',P)}</div><div class="eq">${Rv(`<i>𝒜</i> = ${fr('1','2')}<i>b c</i> sin <i>α</i>`,Ar)}</div></li>`;}
+ else if(res&&res.pre){const t=res.pre;ol.innerHTML=`<li><div class="law">${t.law}</div><div class="eq">${t.f}</div><div class="eq n">${t.n}</div><div class="res">> 1 : impossible</div></li>`}
+ else ol.innerHTML='<li class="empty" style="padding-left:18px">Les formules apparaîtront ici dès que trois valeurs compatibles seront saisies.</li>';
+ draw();
+}
+
+const svg=$('svg'),fig=$('fig');
+function draw(){
+ const W=fig.clientWidth,H=fig.clientHeight;if(!W)return;
+ const so=cur(),ph=!so,t=so||{s:[5.5,4.6,6],g:[58.2,45.2,76.6]};
+ const[,b,c]=t.s,al=rad(t.g[0]);
+ let P=[[0,0],[c,0],[b*Math.cos(al),b*Math.sin(al)]];
+ const xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys),dw=Math.max(...xs)-x0,dh=Math.max(...ys)-y0;
+ const pad=W<460?54:72,sc=Math.min((W-2*pad)/dw,(H-2*pad)/(dh||1e-9));
+ const ox=(W-sc*dw)/2,oy=(H-sc*dh)/2;
+ P=P.map(([x,y])=>[ox+(x-x0)*sc,H-oy-(y-y0)*sc]);
+ const C=[(P[0][0]+P[1][0]+P[2][0])/3,(P[0][1]+P[1][1]+P[2][1])/3];
+ const nrm=(x,y)=>{const l=Math.hypot(x,y)||1;return[x/l,y/l]};
+ const cls=i=>ph?'ph':given.has(i)?'giv':'cal';
+ const nat=ph?{iso:[]}:nature(t);
+ const tk=[0,0,0];if(nat.iso.length===3)tk.fill(1);else if(nat.iso.length){const[j,k]=oth(nat.iso[0]);tk[j]=tk[k]=1}
+ let o=`<polygon points="${P.map(p=>p.join(',')).join(' ')}" fill="var(--fill)" fill-opacity=".8" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round"/>`;
+ for(let i=0;i<3;i++){
+  const[j,k]=oth(i),p=P[i],u=nrm(P[j][0]-p[0],P[j][1]-p[1]),w=nrm(P[k][0]-p[0],P[k][1]-p[1]);
+  const e=Math.min(Math.hypot(P[j][0]-p[0],P[j][1]-p[1]),Math.hypot(P[k][0]-p[0],P[k][1]-p[1]));
+  const r=Math.max(14,Math.min(30,e*.28)),col=ph?'var(--mute)':given.has(i+3)?'var(--blue)':'var(--red)';
+  if(Math.abs(t.g[i]-90)<1e-6){const q=r*.6;o+=`<path d="M${p[0]+u[0]*q},${p[1]+u[1]*q} l${w[0]*q},${w[1]*q} l${-u[0]*q},${-u[1]*q}" fill="none" stroke="${col}" stroke-width="1.8"/>`}
+  else{const sw=(u[0]*w[1]-u[1]*w[0])>0?1:0;o+=`<path d="M${p[0]+u[0]*r},${p[1]+u[1]*r} A${r},${r} 0 0 ${sw} ${p[0]+w[0]*r},${p[1]+w[1]*r}" fill="none" stroke="${col}" stroke-width="1.8"/>`}
+  const d=nrm(u[0]+w[0],u[1]+w[1]),lr=r+(ph?14:26);
+  o+=`<text x="${p[0]+d[0]*lr}" y="${p[1]+d[1]*lr}" text-anchor="middle" dominant-baseline="middle" class="${cls(i+3)}"><tspan font-style="italic">${G[i]}</tspan>${ph?'':' '+f2(t.g[i])+'°'}</text>`;
+  const vo=nrm(p[0]-C[0],p[1]-C[1]);
+  o+=`<text x="${p[0]+vo[0]*20}" y="${p[1]+vo[1]*20}" text-anchor="middle" dominant-baseline="middle" class="vx">${'ABC'[i]}</text>`;
+  const mx=(P[j][0]+P[k][0])/2,my=(P[j][1]+P[k][1])/2,so2=nrm(mx-C[0],my-C[1]);
+  if(tk[i]){const dn=nrm(P[k][0]-P[j][0],P[k][1]-P[j][1]),q=[-dn[1]*7,dn[0]*7];
+   o+=`<line x1="${mx-q[0]}" y1="${my-q[1]}" x2="${mx+q[0]}" y2="${my+q[1]}" stroke="var(--red)" stroke-width="2.4" stroke-linecap="round"/>`}
+  o+=`<text x="${mx+so2[0]*20}" y="${my+so2[1]*20}" text-anchor="middle" dominant-baseline="middle" class="${cls(i)}"><tspan font-style="italic">${S[i]}</tspan>${ph?'':' = '+f2(t.s[i])}</text>`;
+ }
+ svg.innerHTML=o;
+}
+const ro=new ResizeObserver(draw);ro.observe(fig);
+
+ins.forEach((e,i)=>e.addEventListener('input',()=>{if(e.value.trim()==='')given.delete(i);else given.add(i);e.classList.remove('calc');sel=0;run()}));
+$('s0').onclick=()=>{sel=0;show()};$('s1').onclick=()=>{sel=1;show()};
+$('clr').onclick=()=>{given.clear();ins.forEach(e=>e.value='');run();ins[0].focus()};
+const PR=[{0:'3',1:'4',2:'5'},{1:'5',2:'6',3:'50'},{0:'5',1:'7',3:'40'},{2:'8',3:'45',4:'60'}];
+function load(p){given=new Set(Object.keys(p).map(Number));ins.forEach((e,i)=>e.value=p[i]??'');sel=0;run()}
+document.querySelectorAll('[data-p]').forEach(bt=>bt.onclick=()=>load(PR[+bt.dataset.p]));
+function save(){try{const o={};given.forEach(i=>o[i]=ins[i].value);localStorage.setItem('tri-abc',JSON.stringify(o))}catch(e){}}
+let init=PR[1];try{const s=JSON.parse(localStorage.getItem('tri-abc')||'null');if(s&&Object.keys(s).length)init=s}catch(e){}
+load(init);
+}
+</script>
+</body>
+</html>
