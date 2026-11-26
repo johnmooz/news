@@ -1,1 +1,375 @@
-vieillir-une-personne.html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>La machine à âges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ludique mais soigné, comme un labo photo de quartier
+   IDEA: la machine à remonter le temps d'un photomaton, avec une frise des âges
+   PICTURE: la photo elle-même, grande, et la frise des âges dessous
+   COLOUR and TYPE: blanc / encre profonde, accent magenta de chambre noire ; Instrument Serif + Inter Tight
+   LAYOUT: photo à gauche, panneau de réglages à droite ; empilé sous 860px */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#141016);--ink:light-dark(#17121a,#f3eef4);--soft:light-dark(#6b6370,#a89fae);--line:light-dark(#e6e1e8,#2c2530);--panel:light-dark(#f7f4f8,#1d1720);--acc:#d6246e;--acc2:light-dark(#2b1d33,#e9d9f0)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Inter Tight",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3.5vw,48px) max(5vw,16px);max-width:1280px;margin:0 auto}
+h1{font:400 clamp(34px,5vw,52px)/1.05 "Instrument Serif",Georgia,serif;margin:0 0 6px;text-wrap:balance}
+h1 i{color:var(--acc)}
+.lead{color:var(--soft);margin:0 0 22px;max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;background:var(--panel);border-radius:18px;min-height:420px;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}
+#view{display:block;max-width:100%;max-height:78vh;touch-action:none}
+#view.pick{cursor:crosshair}
+.drop{display:grid;place-items:center;text-align:center;gap:12px;padding:40px 20px;width:100%;min-height:420px;cursor:pointer;border:2px dashed transparent;border-radius:18px}
+.drop.over{border-color:var(--acc)}
+.drop svg{width:120px;height:120px}
+.drop b{font:400 28px/1.1 "Instrument Serif",serif}
+.drop small{color:var(--soft)}
+.hint{position:absolute;left:12px;right:12px;bottom:12px;background:rgba(23,18,26,.86);color:#fff;padding:10px 14px;border-radius:12px;font-size:15px;display:flex;gap:10px;align-items:center}
+.hint .dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(214,36,110,.35)}
+.badge{position:absolute;top:12px;left:12px;background:var(--acc);color:#fff;border-radius:999px;padding:6px 14px;font-weight:600;font-size:15px}
+.side{display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.big .n{font:400 clamp(56px,8vw,84px)/1 "Instrument Serif",serif;color:var(--ink)}
+.big .u{font-size:20px}
+.big .d{color:var(--acc);font-weight:600;white-space:nowrap}
+.sub{color:var(--soft);font-size:14px;margin:2px 0 14px}
+input[type=range]{width:100%;height:44px;accent-color:var(--acc);margin:0;cursor:pointer}
+.ticks{position:relative;height:22px;font-size:13px;color:var(--soft)}
+.ticks span{position:absolute;transform:translateX(-50%)}
+.ticks .me{color:var(--acc);font-weight:600}
+.ends{display:flex;justify-content:space-between;font-size:14px;color:var(--soft);margin-top:-4px}
+.fx{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;font-size:15px}
+.fx li{display:grid;grid-template-columns:9.5em minmax(0,1fr);align-items:center;gap:10px}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:9px;transition:width .15s}
+.row{display:grid;gap:4px;margin-top:10px}
+.row label{font-size:14px;color:var(--soft)}
+.check{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--acc)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:500 15px "Inter Tight",sans-serif;min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button.main{background:var(--acc);color:#fff;border-color:var(--acc)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:13px;color:var(--soft);margin:0}
+dialog{border:0;border-radius:20px;padding:0;max-width:440px;width:calc(100% - 32px);background:var(--bg);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(20,12,24,.55)}
+dialog form{padding:24px;display:grid;gap:14px}
+dialog h2{font:400 30px/1.1 "Instrument Serif",serif;margin:0}
+dialog input[type=number]{font:600 22px "Inter Tight";width:120px;min-height:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice label{border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;display:grid;gap:6px;justify-items:center;text-align:center;font-size:15px}
+.choice input{position:absolute;opacity:0}
+.choice label:has(input:checked){border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
+.choice svg{width:54px;height:54px}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="band">
+  <h1>La machine <i>à âges</i></h1>
+  <p class="lead">Chargez une photo, dites-nous l'âge de la personne, posez trois repères sur le visage, puis faites glisser la frise : rides, cheveux gris, oreilles et nez qui grandissent… ou peau lisse et joues d'enfant. Sur une photo en pied, la silhouette grandit ou rapetisse.</p>
+
+  <div class="grid">
+    <div class="stage" id="stage">
+      <label class="drop" id="drop" for="file">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><rect x="14" y="26" width="92" height="72" rx="14" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="60" cy="58" r="16" fill="none" stroke="#d6246e" stroke-width="3"/><path d="M60 42v-6M60 80v-6" stroke="#d6246e" stroke-width="3" stroke-linecap="round"/><circle cx="60" cy="58" r="4" fill="#d6246e"/><rect x="40" y="18" width="40" height="10" rx="4" fill="currentColor"/></svg>
+        <b>Déposez une photo ici</b>
+        <small>ou cliquez pour en choisir une · elle reste sur votre appareil</small>
+      </label>
+      <input type="file" id="file" accept="image/*" hidden>
+      <canvas id="view" hidden></canvas>
+      <div class="badge" id="badge" hidden>Original</div>
+      <div class="hint" id="hint" hidden><span class="dot"></span><span id="hintTxt"></span></div>
+    </div>
+
+    <aside class="side">
+      <div class="card">
+        <div class="big"><span class="n" id="ageN">—</span><span class="u">ans</span><span class="d" id="ageD"></span></div>
+        <p class="sub" id="ageSub">Chargez d'abord une photo.</p>
+        <input type="range" id="age" min="1" max="100" value="40" disabled aria-label="Âge affiché">
+        <div class="ticks" id="ticks"></div>
+        <div class="ends"><span>← plus jeune</span><span>plus vieux →</span></div>
+        <ul class="fx" id="fx"></ul>
+      </div>
+      <div class="card">
+        <div class="btns">
+          <button id="cmp" disabled>Maintenir pour comparer</button>
+          <button id="redo" disabled>Replacer les repères</button>
+          <button id="edit" disabled>Modifier l'âge réel</button>
+          <button id="new">Nouvelle photo</button>
+          <button id="snd" aria-pressed="true">Son : activé</button>
+        </div>
+        <div class="row"><label for="k">Exagération des effets</label><input type="range" id="k" min="0.4" max="2" step="0.1" value="1"></div>
+        <div class="row"><label for="hs">Taille de la zone des cheveux</label><input type="range" id="hs" min="0.7" max="1.5" step="0.05" value="1"></div>
+        <label class="check"><input type="checkbox" id="marks"> Afficher les repères</label>
+        <label class="check" id="cutRow" hidden><input type="checkbox" id="cut" checked> Détourage automatique (fond uni)</label>
+        <p class="note">Pour garder le résultat : clic droit (ou appui long) sur l'image puis « Enregistrer l'image ». Tout est calculé dans votre navigateur, la photo n'est envoyée nulle part. Bruitages : un tic à chaque année, un grincement à chaque dizaine en vieillissant, des clochettes en rajeunissant.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" id="dform">
+    <h2>Qui est sur la photo ?</h2>
+    <label>Âge actuel de la personne<br><input type="number" id="real" min="1" max="100" value="35" required> ans</label>
+    <div class="choice">
+      <label><input type="radio" name="mode" value="portrait" checked>
+        <svg viewBox="0 0 54 54" aria-hidden="true"><rect x="3" y="3" width="48" height="48" rx="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="27" cy="22" r="10" fill="none" stroke="#d6246e" stroke-width="2.5"/><path d="M10 51c2-10 9-15 17-15s15 5 17 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>Portrait<br><small>visage en gros plan</small></label>
+      <label><input type="radio" name="mode" value="full">
+        <svg viewBox="0 0 54 54" aria-hidden="true"><rect x="3" y="3" width="48" height="48" rx="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="27" cy="12" r="4.5" fill="none" stroke="#d6246e" stroke-width="2.5"/><path d="M27 17v16M27 33l-6 13M27 33l6 13M19 23h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Photo entière<br><small>la taille change</small></label>
+    </div>
+    <div class="btns"><button class="main" value="ok">C'est parti</button></div>
+  </form>
+</dialog>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w));c.height=Math.max(1,Math.ceil(h));return c};
+const view=$('#view'),vctx=view.getContext('2d');
+let src=null,work=null,wctx=null,W=0,H=0,real=35,mode='portrait',pts=[],F=null,picking=false,comparing=false,raf=0;
+
+const STEPS={portrait:['Cliquez au centre de l’œil gauche (à votre gauche)','Cliquez au centre de l’œil droit','Cliquez au milieu de la bouche'],
+ full:['Cliquez au centre de l’œil gauche (à votre gauche)','Cliquez au centre de l’œil droit','Cliquez au milieu de la bouche','Cliquez le coin en haut à gauche de la personne (cheveux et bras compris)','Cliquez le coin en bas à droite (sous les pieds)']};
+
+/* ---------- bruitages (Web Audio, synthétisés) ---------- */
+let AC=null,muted=false,lastAge=null,lastTick=0;
+function ac(){if(muted)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume().catch(()=>{});return AC}
+function tone(f,dur,type='sine',vol=.12,f2=0,delay=0,lp=0){const a=ac();if(!a)return;const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);let n=o;if(lp){const fl=a.createBiquadFilter();fl.type='lowpass';fl.frequency.value=lp;o.connect(fl);n=fl}n.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.05)}
+function noise(dur,vol,freq,q=1,delay=0,f2=0){const a=ac();if(!a)return;const t=a.currentTime+delay,len=Math.ceil(a.sampleRate*dur),b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  const s=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();s.buffer=b;fl.type='bandpass';fl.Q.value=q;fl.frequency.setValueAtTime(freq,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl).connect(g).connect(a.destination);s.start(t)}
+const sfx={
+  shutter(){noise(.05,.35,3200,.8);noise(.09,.28,1600,.8,.07);tone(90,.08,'square',.05,60,.07,600)},
+  pop(){tone(420,.13,'sine',.16,1250)},
+  ready(){[523,659,784,1047].forEach((f,i)=>tone(f,.3,'triangle',.09,0,i*.08))},
+  tick(older){const now=performance.now();if(now-lastTick<45)return;lastTick=now;older?tone(300,.05,'triangle',.06,240,0,1500):tone(1400,.04,'sine',.05,1800)},
+  older(){tone(190,.45,'sawtooth',.05,110,0,900);tone(196,.45,'sawtooth',.03,118,.02,700);noise(.35,.05,500,3,.05,300)},
+  younger(){[1320,1760,2093,2637].forEach((f,i)=>tone(f,.22,'triangle',.06,0,i*.05));noise(.3,.03,6000,2,0,9000)},
+  century(){[392,330,262,196].forEach((f,i)=>tone(f,.4,'sawtooth',.05,f*.97,i*.16,1200))},
+  baby(){tone(700,.18,'sine',.1,1100);tone(1100,.25,'sine',.09,800,.18)},
+  whoosh(){noise(.35,.12,300,1.2,0,3000)}
+};
+function ageSound(t){if(lastAge===null){lastAge=t;return}if(t===lastAge)return;const up=t>lastAge;sfx.tick(up);
+  const crossed=Math.floor(t/10)!==Math.floor(lastAge/10);
+  if(t>=100&&lastAge<100)sfx.century();else if(t<=1&&lastAge>1)sfx.baby();else if(crossed)up?sfx.older():sfx.younger();lastAge=t}
+
+/* ---------- géométrie du visage ---------- */
+const toG=(x,y)=>{const c=Math.cos(F.a),s=Math.sin(F.a);return{x:F.cx+x*c-y*s,y:F.cy+x*s+y*c}};
+function frame(){
+  let [A,B,M]=pts;if(A.x>B.x)[A,B]=[B,A];
+  const f={cx:(A.x+B.x)/2,cy:(A.y+B.y)/2,u:Math.max(6,Math.hypot(B.x-A.x,B.y-A.y)),a:Math.atan2(B.y-A.y,B.x-A.x)};
+  const dx=M.x-f.cx,dy=M.y-f.cy;f.m=clamp(-dx*Math.sin(f.a)+dy*Math.cos(f.a),0.7*f.u,1.7*f.u);
+  f.chin=f.m+0.72*f.u;f.top=-1.05*f.u;return f;
+}
+function rnd(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const hash=(x,y)=>{let n=Math.imul(x,374761393)+Math.imul(y,668265263)|0;n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967296};
+
+/* ---------- paramètres selon l'âge ---------- */
+const HT=[[0,.29],[1,.43],[2,.5],[3,.55],[4,.59],[5,.63],[6,.67],[8,.73],[10,.79],[12,.85],[14,.92],[16,.97],[18,.99],[25,1],[50,.99],[70,.97],[85,.945],[100,.92]];
+function height(a){for(let i=1;i<HT.length;i++)if(a<=HT[i][0]){const[a0,h0]=HT[i-1],[a1,h1]=HT[i];return h0+(h1-h0)*(a-a0)/(a1-a0)}return .92}
+function params(t){
+  const c=real,k=+$('#k').value;
+  const Wf=a=>sstep(25,82,a),Gf=a=>sstep(33,78,a),Ef=a=>Math.max(0,a-20)*0.004,Sf=a=>sstep(40,90,a),Kf=a=>sstep(16,2,a);
+  const kid=clamp((Kf(t)-Kf(c))*k,-1,1.2),sag=clamp((Sf(t)-Sf(c))*k,-1,1.4);
+  return{
+    wr:clamp((Wf(t)-Wf(c))*k*1.3,0,1.4),
+    smooth:clamp((Wf(c)-Wf(t))*k*1.4+(t<c?sstep(0,15,c-t)*0.3:0),0,1),
+    gray:clamp((Gf(t)-Gf(c))*k,0,1),dark:clamp((Gf(c)-Gf(t))*k,0,1),
+    ear:clamp(1+(Ef(t)-Ef(c))*k,0.82,1.45),
+    nose:clamp(1+(Ef(t)-Ef(c))*0.55*k-0.12*kid,0.75,1.35),
+    eyes:clamp(1+0.13*kid-0.04*Math.max(0,sag),0.85,1.2),kid,sag,
+    s:height(t)/height(c)};
+}
+
+/* ---------- déformation douce (pixels) ---------- */
+function bil(s,w,h,x,y,d,i){x=clamp(x,0,w-1.001);y=clamp(y,0,h-1.001);const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,a=(y0*w+x0)*4,b=a+4,c=a+w*4,e=c+4;
+  for(let k=0;k<4;k++)d[i+k]=(s[a+k]*(1-fx)+s[b+k]*fx)*(1-fy)+(s[c+k]*(1-fx)+s[e+k]*fx)*fy}
+function warp(R,e){
+  if(Math.abs(e.sx-1)<0.004&&Math.abs(e.sy-1)<0.004)return;
+  const S=R.d.slice(),C=toG(e.x,e.y),rad=Math.max(e.rx,e.ry)*1.02,co=Math.cos(F.a),si=Math.sin(F.a);
+  const x0=Math.max(0,Math.floor(C.x-rad-R.ox)),x1=Math.min(R.w-1,Math.ceil(C.x+rad-R.ox)),y0=Math.max(0,Math.floor(C.y-rad-R.oy)),y1=Math.min(R.h-1,Math.ceil(C.y+rad-R.oy));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const dx=x+R.ox-F.cx,dy=y+R.oy-F.cy,lx=dx*co+dy*si,ly=-dx*si+dy*co,nx=(lx-e.x)/e.rx,ny=(ly-e.y)/e.ry,r2=nx*nx+ny*ny;
+    if(r2>=1)continue;const w=(1-r2)*(1-r2),fx=1+(e.sx-1)*w,fy=1+(e.sy-1)*w,qx=e.ax+(lx-e.ax)/fx,qy=e.ay+(ly-e.ay)/fy;
+    bil(S,R.w,R.h,F.cx+qx*co-qy*si-R.ox,F.cy+qx*si+qy*co-R.oy,R.d,(y*R.w+x)*4);
+  }
+}
+function skinColor(R){
+  const u=F.u,pts2=[[-.45*u,.5*F.m],[.45*u,.5*F.m],[0,-.55*u]];let r=0,g=0,b=0,n=0;
+  for(const[x,y]of pts2){const p=toG(x,y);for(let j=-3;j<=3;j++)for(let i=-3;i<=3;i++){const X=Math.round(p.x-R.ox+i),Y=Math.round(p.y-R.oy+j);if(X<0||Y<0||X>=R.w||Y>=R.h)continue;const q=(Y*R.w+X)*4;r+=R.d[q];g+=R.d[q+1];b+=R.d[q+2];n++}}
+  return n?[r/n,g/n,b/n]:[200,160,140];
+}
+function hair(R,P,hs){
+  if(P.gray<0.01&&P.dark<0.01)return;
+  const u=F.u,[sr,sg,sb]=skinColor(R),co=Math.cos(F.a),si=Math.sin(F.a),d=R.d,fcy=(F.top+F.chin)/2,fry=(F.chin-F.top)/2;
+  const z=(lx,ly,cx,cy,rx,ry)=>1-sstep(0.72,1,Math.hypot((lx-cx)/rx,(ly-cy)/ry));
+  for(let y=0;y<R.h;y++)for(let x=0;x<R.w;x++){
+    const dx=x+R.ox-F.cx,dy=y+R.oy-F.cy,lx=dx*co+dy*si,ly=-dx*si+dy*co;
+    if(ly>F.chin)continue;
+    let w=Math.max(z(lx,ly,0,-.6*u,1.5*u*hs,1.2*u*hs),z(lx,ly,0,.25*u,1.45*u*hs,.95*u));
+    if(w<=0)continue;
+    w*=sstep(1.08,0.9,Math.hypot(lx/(0.95*u),(ly-fcy)/fry));if(w<=0)continue;
+    const i=(y*R.w+x)*4,r=d[i],g=d[i+1],b=d[i+2],L=.3*r+.59*g+.11*b;
+    w*=sstep(32,75,Math.hypot(r-sr,g-sg,b-sb));if(w<=0.01)continue;
+    if(P.gray>0){
+      const ww=w*P.gray*(1-sstep(185,230,L))*(0.55+0.45*hash(Math.floor(lx/(u*.014)),Math.floor(ly/(u*.09))));
+      const gv=clamp(95+L*0.68+(hash(x>>1,y>>2)-.5)*36,0,245);
+      d[i]=r+(gv-r)*ww;d[i+1]=g+(gv-g)*ww;d[i+2]=b+(gv+4-b)*ww;
+    }else{
+      const ww=w*P.dark*0.8;d[i]=r+(r*.55+22-r)*ww;d[i+1]=g+(g*.5+14-g)*ww;d[i+2]=b+(b*.48+8-b)*ww;
+    }
+  }
+}
+
+/* ---------- dessin (rides, peau) ---------- */
+function ell(c,x,y,rx,ry,inner,rgb,al,full){
+  c.save();c.translate(x,y);c.scale(rx,ry);const g=c.createRadialGradient(0,0,0,0,0,1);
+  g.addColorStop(0,`rgba(${rgb},${al})`);g.addColorStop(inner,`rgba(${rgb},${al})`);g.addColorStop(1,`rgba(${rgb},0)`);
+  c.fillStyle=g;if(full)c.fillRect(-60,-60,120,120);else{c.beginPath();c.arc(0,0,1,0,7);c.fill()}c.restore();
+}
+function blurInto(c,r){const w=c.width,h=c.height,t=mk(w/r,h/r),tc=t.getContext('2d');tc.imageSmoothingQuality='high';tc.drawImage(c,0,0,t.width,t.height);const cc=c.getContext('2d');cc.clearRect(0,0,w,h);cc.imageSmoothingQuality='high';cc.drawImage(t,0,0,w,h)}
+function faceBox(pad){const C=toG(0,F.m*.35),r=pad*F.u;const x=Math.max(0,Math.floor(C.x-r)),y=Math.max(0,Math.floor(C.y-r));return{x,y,w:Math.min(W,Math.ceil(C.x+r))-x,h:Math.min(H,Math.ceil(C.y+r))-y}}
+function local(c,b){c.setTransform(1,0,0,1,-b.x,-b.y);c.translate(F.cx,F.cy);c.rotate(F.a)}
+function smoothSkin(P){
+  if(P.smooth<0.02)return;const b=faceBox(1.9);if(b.w<4||b.h<4)return;
+  const t=mk(b.w,b.h),c=t.getContext('2d');c.drawImage(work,b.x,b.y,b.w,b.h,0,0,b.w,b.h);blurInto(t,Math.max(2,F.u*0.055));
+  const u=F.u,m=F.m;local(c,b);c.globalCompositeOperation='destination-in';ell(c,0,(F.top+F.chin)/2,0.95*u,(F.chin-F.top)/2,0.6,'0,0,0',1,true);
+  c.globalCompositeOperation='destination-out';for(const s of[-1,1])ell(c,s*.5*u,-.03*u,.32*u,.2*u,.5,'0,0,0',1);ell(c,0,m,.5*u,.2*u,.5,'0,0,0',1);ell(c,0,.72*m,.22*u,.12*u,.4,'0,0,0',.8);
+  wctx.save();wctx.globalAlpha=P.smooth*0.8;wctx.drawImage(t,b.x,b.y);wctx.restore();
+  wctx.save();wctx.translate(F.cx,F.cy);wctx.rotate(F.a);wctx.globalCompositeOperation='screen';for(const s of[-1,1])ell(wctx,s*.55*u,.55*m,.35*u,.28*u,.2,'255,205,200',.16*P.smooth);ell(wctx,0,-.2*u,.9*u,.6*u,.3,'255,240,230',.06*P.smooth);wctx.restore();
+}
+function wrinkles(P){
+  const a=P.wr;if(a<0.02)return;const c=wctx,u=F.u,m=F.m,ch=F.chin,R=rnd(Math.round(F.cx*7+F.cy*13));
+  c.save();c.translate(F.cx,F.cy);c.rotate(F.a);c.lineCap='round';c.lineJoin='round';
+  c.globalCompositeOperation='multiply';ell(c,0,(F.top+F.chin)/2,.95*u,(F.chin-F.top)/2,.5,'226,208,190',.3*Math.min(1,a));c.globalCompositeOperation='source-over';
+  const stroke=(path,w,al)=>{al=Math.min(.9,al);c.globalCompositeOperation='multiply';c.strokeStyle=`rgba(95,58,42,${al})`;c.lineWidth=w;c.shadowColor=`rgba(95,58,42,${al*.7})`;c.shadowBlur=w*2.2;c.beginPath();path();c.stroke();
+    c.shadowBlur=0;c.globalCompositeOperation='screen';c.strokeStyle=`rgba(255,236,222,${al*.3})`;c.lineWidth=w*.8;c.save();c.translate(0,w*1.2);c.beginPath();path();c.stroke();c.restore()};
+  const wavy=(x0,x1,y,arch,w,al)=>{let x=x0;while(x<x1){const len=u*(.18+R()*.3),xe=Math.min(x1,x+len),pts=[];for(let xx=x;xx<=xe;xx+=u*.05){const t=(xx-x0)/(x1-x0)*2-1;pts.push([xx,y-arch*(1-t*t)+Math.sin(xx/u*9+R())*u*.008])}
+    if(pts.length>1)stroke(()=>{c.moveTo(...pts[0]);for(const p of pts)c.lineTo(...p)},w,al*(.6+R()*.4));x=xe+u*(.02+R()*.08)}};
+  const fy=[-.55,-.72,-.89];fy.forEach((y,i)=>{if(a>i*.18)wavy(-.6*u,.6*u,y*u,.07*u,u*.017,a*.55*sstep(i*.18,i*.18+.3,a))});
+  for(const s of[-1,1]){
+    stroke(()=>{c.moveTo(s*.07*u,-.4*u);c.quadraticCurveTo(s*.09*u,-.28*u,s*.06*u,-.16*u)},u*.016,a*.45*sstep(.15,.5,a));
+    for(let j=-1;j<=1;j++){const an=j*.42+(R()-.5)*.15,L=u*(.18+R()*.1),bx=s*.8*u,by=.02*u+j*.03*u;stroke(()=>{c.moveTo(bx,by);c.quadraticCurveTo(bx+s*L*.55*Math.cos(an),by+L*.5*Math.sin(an)-u*.02,bx+s*L*Math.cos(an),by+L*Math.sin(an))},u*.014,a*.55)}
+    c.globalCompositeOperation='multiply';ell(c,s*.5*u,.22*u,.27*u,.11*u,.2,'120,78,80',.22*Math.min(1,a));c.globalCompositeOperation='source-over';
+    stroke(()=>{c.moveTo(s*.32*u,.17*u);c.quadraticCurveTo(s*.5*u,.27*u,s*.7*u,.15*u)},u*.015,a*.45);
+    stroke(()=>{c.moveTo(s*.36*u,.27*u);c.quadraticCurveTo(s*.52*u,.36*u,s*.68*u,.25*u)},u*.013,a*.3*sstep(.3,.7,a));
+    stroke(()=>{c.moveTo(s*.25*u,.66*m);c.quadraticCurveTo(s*.48*u,.82*m,s*.5*u,m+.1*u)},u*.028,a*.6);
+    stroke(()=>{c.moveTo(s*.45*u,m+.1*u);c.quadraticCurveTo(s*.52*u,m+.3*u,s*.42*u,m+.48*u)},u*.02,a*.5*sstep(.3,.7,a));
+  }
+  if(a>.5)for(let i=0;i<6;i++){const x=(i-2.5)*.07*u+(R()-.5)*.03*u;stroke(()=>{c.moveTo(x,m-.14*u);c.lineTo(x+(R()-.5)*.02*u,m-.05*u)},u*.008,(a-.5)*.5)}
+  [.35,.6,.85].forEach((y,i)=>{if(a>.2+i*.2)wavy(-.55*u,.55*u,ch+y*u,-.05*u,u*.018,a*.4)});
+  const nS=Math.floor(sstep(.35,1.2,a)*20);c.globalCompositeOperation='multiply';
+  for(let i=0;i<nS;i++){const zone=R();let x,y;if(zone<.45){x=(R()-.5)*1.4*u;y=(-.4-R()*.5)*u}else{x=(R()<.5?-1:1)*(.6+R()*.35)*u;y=(R()*.9-.1)*u}const r=u*(.015+R()*.03);ell(c,x,y,r,r*(.7+R()*.5),.3,'140,92,58',.28*Math.min(1,a))}
+  c.restore();
+}
+
+/* ---------- photo entière ---------- */
+function full(P){
+  const s=P.s;if(Math.abs(s-1)<.004||pts.length<5)return work;
+  const x0=Math.round(Math.min(pts[3].x,pts[4].x)),x1=Math.round(Math.max(pts[3].x,pts[4].x)),y0=Math.round(Math.min(pts[3].y,pts[4].y)),y1=Math.round(Math.max(pts[3].y,pts[4].y)),bw=x1-x0,bh=y1-y0;
+  if(bw<10||bh<10)return work;
+  const out=mk(W,H),oc=out.getContext('2d');oc.drawImage(work,0,0);
+  const bg=mk(bw,bh),g=bg.getContext('2d'),st=Math.max(4,Math.round(bw*.06)),hasL=x0-st>=0,hasR=x1+st<=W;
+  if(hasL)g.drawImage(work,x0-st,y0,st,bh,0,0,bw,bh);
+  if(hasR){const t=mk(bw,bh),tc=t.getContext('2d');tc.drawImage(work,x1,y0,st,bh,0,0,bw,bh);if(hasL){tc.globalCompositeOperation='destination-in';const gr=tc.createLinearGradient(0,0,bw,0);gr.addColorStop(.25,'rgba(0,0,0,0)');gr.addColorStop(.75,'#000');tc.fillStyle=gr;tc.fillRect(0,0,bw,bh)}g.drawImage(t,0,0)}
+  if(!hasL&&!hasR){g.drawImage(work,x0,Math.max(0,y0-st),bw,st,0,0,bw,bh)}
+  blurInto(bg,Math.max(2,Math.max(bw,bh)/24));oc.drawImage(bg,x0,y0);
+  const p=mk(bw,bh),pc=p.getContext('2d');pc.drawImage(work,x0,y0,bw,bh,0,0,bw,bh);
+  const pd=pc.getImageData(0,0,bw,bh),bd=g.getImageData(0,0,bw,bh),cut=$('#cut').checked,fe=Math.max(3,bw*.04);
+  const co=Math.cos(F.a),si=Math.sin(F.a),fcy=(F.top+F.chin)/2,fry=(F.chin-F.top)/2*1.1;
+  for(let y=0;y<bh;y++)for(let x=0;x<bw;x++){const i=(y*bw+x)*4;let al=sstep(0,1,Math.min(x,bw-1-x,y)/fe);
+    if(cut){const dx=x+x0-F.cx,dy=y+y0-F.cy,lx=dx*co+dy*si,ly=-dx*si+dy*co,inFace=Math.hypot(lx/F.u,(ly-fcy)/fry)<1;
+      if(!inFace)al*=sstep(16,52,Math.hypot(pd.data[i]-bd.data[i],pd.data[i+1]-bd.data[i+1],pd.data[i+2]-bd.data[i+2]))}
+    pd.data[i+3]=al*255}
+  pc.putImageData(pd,0,0);
+  const neck=toG(0,F.chin+.15*F.u).y-y0,fx=F.cx-x0,sh=Math.pow(s,.45);
+  if(neck>bh*.05&&neck<bh*.6){
+    const hH=neck,bH=bh-neck,sb=Math.max(.05,(s*bh-sh*hH)/bH),top=y1-bH*sb,ov=Math.min(bH,hH*.25);
+    oc.drawImage(p,0,neck,bw,bH,x0+fx-fx*sb,top,bw*sb,bH*sb);
+    const hc=mk(bw,hH+ov),hx=hc.getContext('2d');hx.drawImage(p,0,0);hx.globalCompositeOperation='destination-in';const gr=hx.createLinearGradient(0,hH,0,hH+ov);gr.addColorStop(0,'#000');gr.addColorStop(1,'rgba(0,0,0,0)');hx.fillStyle=gr;hx.fillRect(0,0,bw,hH+ov);
+    oc.drawImage(hc,x0+fx-fx*sh,top-hH*sh,bw*sh,(hH+ov)*sh);
+  }else oc.drawImage(p,x0+fx-fx*s,y1-bh*s,bw*s,bh*s);
+  return out;
+}
+
+/* ---------- rendu ---------- */
+function render(){
+  raf=0;if(!src)return;
+  const t=+$('#age').value;$('#ageN').textContent=t;const dd=t-real;
+  $('#ageD').textContent=dd===0?'âge réel':(dd>0?`+${dd} ans`:`${dd} ans`);
+  if(comparing||picking||!F){drawView(src);return}
+  const P=params(t),u=F.u,m=F.m;
+  wctx.setTransform(1,0,0,1,0,0);wctx.globalAlpha=1;wctx.globalCompositeOperation='source-over';wctx.clearRect(0,0,W,H);wctx.drawImage(src,0,0);
+  const b=faceBox(2.9);
+  if(b.w>2&&b.h>2){
+    const id=wctx.getImageData(b.x,b.y,b.w,b.h),R={d:id.data,w:b.w,h:b.h,ox:b.x,oy:b.y};
+    for(const s of[-1,1])warp(R,{x:s*1.12*u,y:.45*m,rx:.42*u,ry:.8*u,ax:s*.82*u,ay:.4*m,sx:P.ear,sy:P.ear});
+    warp(R,{x:0,y:.62*m,rx:.34*u,ry:.45*m,ax:0,ay:.3*m,sx:P.nose,sy:P.nose});
+    for(const s of[-1,1])warp(R,{x:s*.5*u,y:0,rx:.36*u,ry:.28*u,ax:s*.5*u,ay:0,sx:P.eyes,sy:P.eyes});
+    warp(R,{x:0,y:m+.15*u,rx:1.1*u,ry:.85*u,ax:0,ay:.45*m,sx:1+.035*P.sag-.09*P.kid,sy:1+.07*P.sag-.07*P.kid});
+    hair(R,P,+$('#hs').value);wctx.putImageData(id,b.x,b.y);
+  }
+  smoothSkin(P);wrinkles(P);
+  drawView(mode==='full'?full(P):work);
+  const fx=[['Rides',P.wr/1.4],['Cheveux gris',P.gray],['Oreilles, nez',Math.max(0,(P.ear-1)/.45)],['Peau lissée',P.smooth],['Traits d’enfant',Math.max(0,P.kid)]];
+  if(mode==='full')fx.push(['Taille',clamp(P.s/1.1,0,1)]);
+  $('#fx').innerHTML=fx.map(([n,v])=>`<li><span>${n}</span><span class="bar"><i style="width:${Math.round(clamp(v,0,1)*100)}%"></i></span></li>`).join('');
+}
+function drawView(c){
+  vctx.setTransform(1,0,0,1,0,0);vctx.clearRect(0,0,W,H);vctx.drawImage(c,0,0);
+  if(picking||$('#marks').checked){const r=Math.max(4,W/160);vctx.lineWidth=r/2;
+    pts.forEach((p,i)=>{vctx.fillStyle='#d6246e';vctx.strokeStyle='#fff';vctx.beginPath();vctx.arc(p.x,p.y,r,0,7);vctx.fill();vctx.stroke()});
+    if(pts.length>=5){vctx.setLineDash([r,r]);vctx.strokeStyle='#d6246e';vctx.strokeRect(pts[3].x,pts[3].y,pts[4].x-pts[3].x,pts[4].y-pts[3].y);vctx.setLineDash([])}}
+  $('#badge').hidden=!comparing;
+}
+const req=()=>{if(!raf)raf=requestAnimationFrame(render)};
+
+/* ---------- interactions ---------- */
+function ticks(){$('#ticks').innerHTML=[1,20,40,60,80,100].map(v=>`<span style="left:${(v-1)/99*100}%">${v}</span>`).join('')+`<span class="me" style="left:${(real-1)/99*100}%;top:-1px">▲</span>`;
+  $('#ageSub').textContent=`Âge réel : ${real} ans · ${mode==='full'?'photo entière':'portrait'}`}
+function startPick(){pts=[];F=null;picking=true;view.classList.add('pick');step();['#age','#cmp','#redo'].forEach(s=>$(s).disabled=true);req()}
+function step(){const L=STEPS[mode];$('#hint').hidden=!picking;if(picking)$('#hintTxt').textContent=`${pts.length+1}/${L.length} — ${L[pts.length]}`}
+view.addEventListener('click',e=>{if(!picking)return;const r=view.getBoundingClientRect();pts.push({x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height});
+  if(pts.length>=STEPS[mode].length){sfx.ready();lastAge=+$('#age').value;picking=false;}else sfx.pop();
+  if(!picking&&!F){view.classList.remove('pick');F=frame();['#age','#cmp','#redo','#edit'].forEach(s=>$(s).disabled=false)}step();req()});
+function load(file){if(!file||!file.type.startsWith('image/'))return;const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{const k=Math.min(1,1400/Math.max(im.width,im.height));W=Math.round(im.width*k);H=Math.round(im.height*k);
+    src=mk(W,H);src.getContext('2d').drawImage(im,0,0,W,H);work=mk(W,H);wctx=work.getContext('2d',{willReadFrequently:true});view.width=W;view.height=H;
+    URL.revokeObjectURL(url);sfx.shutter();$('#drop').hidden=true;view.hidden=false;pts=[];F=null;drawView(src);$('#dlg').showModal()};
+  im.src=url}
+$('#file').addEventListener('change',e=>{ac();load(e.target.files[0])});
+const drop=$('#stage');
+drop.addEventListener('dragover',e=>{e.preventDefault();$('#drop').classList.add('over')});
+drop.addEventListener('dragleave',()=>$('#drop').classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();ac();$('#drop').classList.remove('over');load(e.dataTransfer.files[0])});
+$('#dform').addEventListener('submit',()=>{const prevMode=mode;real=clamp(Math.round(+$('#real').value||35),1,100);mode=document.querySelector('input[name=mode]:checked').value;
+  $('#age').value=real;$('#cutRow').hidden=mode!=='full';ticks();
+  if(!F||prevMode!==mode||pts.length<STEPS[mode].length)startPick();else{F=frame();req()}});
+$('#dlg').addEventListener('cancel',e=>e.preventDefault());
+['#age','#k','#hs','#marks','#cut'].forEach(s=>$(s).addEventListener('input',req));
+$('#age').addEventListener('input',()=>ageSound(+$('#age').value));
+$('#snd').onclick=()=>{muted=!muted;$('#snd').textContent=muted?'Son : coupé':'Son : activé';$('#snd').setAttribute('aria-pressed',String(!muted));if(!muted)sfx.pop()};
+$('#redo').onclick=startPick;$('#edit').onclick=()=>{$('#real').value=real;$('#dlg').showModal()};
+$('#new').onclick=()=>{$('#file').value='';$('#file').click()};
+const cmp=$('#cmp'),on=()=>{if(!comparing)sfx.whoosh();comparing=true;req()},off=()=>{if(comparing){comparing=false;req()}};
+cmp.addEventListener('pointerdown',on);['pointerup','pointerleave','pointercancel'].forEach(ev=>cmp.addEventListener(ev,off));
+cmp.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();on()}});cmp.addEventListener('keyup',off);
+ticks();
+}
+</script>
+</body>
+</html>
