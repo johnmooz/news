@@ -23,7 +23,9 @@ h1{font:400 clamp(32px,5vw,48px)/1.05 "Instrument Serif",Georgia,serif;margin:0;
 .strip i{flex:1}
 .work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;padding:20px max(4vw,16px) 40px;max-width:1500px;margin:0 auto}
 @media(max-width:900px){.work{grid-template-columns:minmax(0,1fr)}}
-.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;min-height:420px;display:grid;place-items:center;overflow:hidden;touch-action:none}
+.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;min-height:420px;display:grid;place-items:center;overflow:hidden}
+.stage.zoomed{display:block;overflow:auto;height:78vh}
+.stage.zoomed canvas{max-width:none;max-height:none}
 .stage canvas{max-width:100%;max-height:78vh;display:block}
 .drop{text-align:center;padding:40px 20px;max-width:420px}
 .drop b{display:block;font:400 28px/1.1 "Instrument Serif",serif;margin-bottom:8px}
@@ -95,6 +97,14 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
     </div>
 
     <div class="card">
+      <h2>Yeux <span>couleur de l'iris</span></h2>
+      <div class="sw" id="eyeSw"></div>
+      <div class="row"><input type="color" id="eyeCustom" value="#3f6e8c" aria-label="Couleur d'yeux personnalisée" title="Couleur personnalisée"></div>
+      <label class="sl">Baguette<input type="range" id="etol" min="4" max="40" value="14"><output id="etolO">14</output></label>
+      <p class="hint">Zoome sur le visage, puis peins chaque iris au pinceau yeux, ou clique dedans avec la baguette. La pupille et le reflet gardent leur couleur.</p>
+    </div>
+
+    <div class="card">
       <h2>Outils</h2>
       <div class="tools" id="tools">
         <button class="btn" data-t="pick">Pipette peau</button>
@@ -103,9 +113,13 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
         <button class="btn" data-t="skinRem">Gomme peau</button>
         <button class="btn" data-t="hairAdd">Pinceau cheveux</button>
         <button class="btn" data-t="hairRem">Gomme cheveux</button>
+        <button class="btn" data-t="eyeWand">Baguette yeux</button>
+        <button class="btn" data-t="eyeAdd">Pinceau yeux</button>
+        <button class="btn" data-t="eyeRem">Gomme yeux</button>
       </div>
-      <label class="sl">Taille pinceau<input type="range" id="brush" min="4" max="120" value="30"><output id="brushO">30</output></label>
-      <label class="chk"><input type="checkbox" id="showMask"> Afficher les zones (peau rose, cheveux bleu)</label>
+      <label class="sl">Taille pinceau<input type="range" id="brush" min="2" max="120" value="30"><output id="brushO">30</output></label>
+      <label class="sl">Zoom<input type="range" id="zoom" min="100" max="400" step="25" value="100"><output id="zoomO">100%</output></label>
+      <label class="chk"><input type="checkbox" id="showMask"> Afficher les zones (peau rose, cheveux bleu, yeux vert)</label>
       <div class="row">
         <button class="btn" id="mute" aria-pressed="false">Son : activé</button>
         <button class="btn" id="before" disabled>Maintenir : avant</button>
@@ -122,6 +136,8 @@ input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-rad
 {
 const SKIN=[['Très claire',[80,9,15]],['Claire',[71,12,19]],['Médium',[62,14,23]],['Mate',[53,15,25]],['Brune',[43,15,24]],['Foncée',[33,13,19]],['Très foncée',[24,10,13]]];
 const HAIR=[['Noir',[11,1,2]],['Brun foncé',[21,4,8]],['Châtain',[33,8,16]],['Roux',[42,26,36]],['Blond foncé',[52,6,22]],['Blond',[70,3,28]],['Gris',[62,0,2]]];
+const EYES=[['Marron foncé',[22,6,12]],['Marron',[35,10,22]],['Noisette',[45,6,30]],['Vert',[48,-18,22]],['Bleu',[52,-4,-26]],['Gris',[58,-2,-6]],['Ambre',[52,14,46]]];
+const BRUSH=['skinAdd','skinRem','hairAdd','hairRem','eyeAdd','eyeRem'];
 const $=id=>document.getElementById(id);
 // --- bruitages (Web Audio, synthétisés)
 let AC=null,muted=false,lastBrush=0;
@@ -141,6 +157,7 @@ const SFX={
   load:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.35,{delay:i*.07,vol:.12,type:'triangle'})),
   invert:()=>{noise(.7,{f:300,to:4000,q:2,vol:.22});tone(220,.7,{to:880,vol:.08,type:'sawtooth'})},
   wand:()=>{for(let i=0;i<6;i++)tone(1800+Math.random()*1800,.18,{delay:i*.045,vol:.07})},
+  eye:()=>{tone(1568,.3,{vol:.1});tone(2093,.4,{vol:.07,delay:.08})},
   pick:()=>{tone(900,.06,{vol:.15});tone(1350,.09,{vol:.12,delay:.06})},
   brush:()=>{const n=performance.now();if(n-lastBrush<70)return;lastBrush=n;noise(.09,{f:tool&&tool.endsWith('Rem')?700:2600,q:.8,vol:.05})},
   shutter:()=>{noise(.05,{f:3000,q:.7,vol:.3});noise(.07,{f:1800,q:.7,vol:.25,delay:.09})},
@@ -149,8 +166,8 @@ const SFX={
 };
 
 const cv=$('cv'),ctx=cv.getContext('2d',{willReadFrequently:true});
-let W=0,H=0,N=0,src,Lc,Ac,Bc,auto,sAdd,sRem,hair,ref=null;
-let skinT=null,hairT=null,tool=null,showOrig=false,painting=false,queued=false;
+let W=0,H=0,N=0,src,Lc,Ac,Bc,auto,sAdd,sRem,hair,eyes,ref=null;
+let skinT=null,hairT=null,eyeT=null,tool=null,showOrig=false,painting=false,queued=false;
 
 // --- couleurs : sRGB <-> Lab
 const lin=new Float32Array(256);for(let i=0;i<256;i++){const c=i/255;lin[i]=c<=.04045?c/12.92:((c+.055)/1.055)**2.4}
@@ -173,6 +190,8 @@ const mkSw=(el,list,cb)=>{el.innerHTML=list.map((s,i)=>`<button data-i="${i}" ti
 const mark=(el,b)=>el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b))
 mkSw($('skinSw'),SKIN,l=>{skinT=l;draw()});
 mkSw($('hairSw'),HAIR,l=>{hairT=l;if(!hasHair())setTool('wand');draw()});
+mkSw($('eyeSw'),EYES,l=>{eyeT=l;if(!hasEyes()&&!BRUSH.includes(tool)&&tool!=='eyeWand')setTool('eyeAdd');draw()});
+$('eyeCustom').addEventListener('input',e=>{eyeT=hex2lab(e.target.value);mark($('eyeSw'),null);draw()});
 $('skinCustom').addEventListener('input',e=>{skinT=hex2lab(e.target.value);mark($('skinSw'),null);draw()});
 
 // --- chargement
@@ -181,7 +200,7 @@ function load(file){if(!file||!file.type.startsWith('image/'))return;const img=n
     cv.width=W;cv.height=H;ctx.drawImage(img,0,0,W,H);src=ctx.getImageData(0,0,W,H).data.slice();
     Lc=new Float32Array(N);Ac=new Float32Array(N);Bc=new Float32Array(N);
     for(let i=0,p=0;i<N;i++,p+=4){const l=rgb2lab(src[p],src[p+1],src[p+2]);Lc[i]=l[0];Ac[i]=l[1];Bc[i]=l[2]}
-    sAdd=new Float32Array(N);sRem=new Float32Array(N);hair=new Float32Array(N);ref=null;skinT=null;hairT=null;
+    sAdd=new Float32Array(N);sRem=new Float32Array(N);hair=new Float32Array(N);eyes=new Float32Array(N);ref=null;skinT=null;hairT=null;eyeT=null;mark($('eyeSw'),null);setZoom(100);
     mark($('skinSw'),null);mark($('hairSw'),null);$('saved').style.display='none';
     $('drop').hidden=true;cv.hidden=false;['invert','before','reset','save'].forEach(id=>$(id).disabled=false);
     detect();SFX.load();URL.revokeObjectURL(img.src)};
@@ -213,13 +232,15 @@ function detect(){if(!N)return;if(!ref)ref=findRef();const tol=+$('tol').value,l
 
 // --- rendu
 const hasHair=()=>{for(let i=0;i<N;i+=7)if(hair[i]>.5)return true;return false};
+const hasEyes=()=>{for(let i=0;i<N;i++)if(eyes[i]>.5)return true;return false};
 function draw(){if(!N||queued)return;queued=true;requestAnimationFrame(render)}
 function render(){queued=false;const out=ctx.createImageData(W,H),o=out.data;o.set(src);
   if(showOrig){ctx.putImageData(out,0,0);return}
-  const ms=new Float32Array(N);let sw=0,sL=0,sa=0,sb=0,hw=0,hL=0,ha=0,hb=0;
-  for(let i=0;i<N;i++){let v=auto[i]*(1-sRem[i])+sAdd[i];v=(v>1?1:v)*(1-hair[i]);ms[i]=v;
+  const ms=new Float32Array(N);let sw=0,sL=0,sa=0,sb=0,hw=0,hL=0,ha=0,hb=0,ew=0,eL=0,ea=0,eb=0;
+  for(let i=0;i<N;i++){let v=auto[i]*(1-sRem[i])+sAdd[i];v=(v>1?1:v)*(1-hair[i])*(1-eyes[i]);ms[i]=v;
+    if(eyes[i]>.5&&Lc[i]>12&&Lc[i]<85){ew++;eL+=Lc[i];ea+=Ac[i];eb+=Bc[i]}
     if(v>.5){sw++;sL+=Lc[i];sa+=Ac[i];sb+=Bc[i]}if(hair[i]>.5){hw++;hL+=Lc[i];ha+=Ac[i];hb+=Bc[i]}}
-  const sk=sw?[sL/sw,sa/sw,sb/sw]:null,hs=hw?[hL/hw,ha/hw,hb/hw]:null;
+  const sk=sw?[sL/sw,sa/sw,sb/sw]:null,hs=hw?[hL/hw,ha/hw,hb/hw]:null,es=ew?[eL/ew,ea/ew,eb/ew]:null;
   $('srcInfo').innerHTML=sk?`teint détecté <i style="display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;background:${lab2hex(sk)}"></i>`:'aucune peau détectée';
   window._srcL=sk?sk[0]:null;
   const k=+$('intens').value/100,mask=$('showMask').checked;
@@ -228,17 +249,20 @@ function render(){queued=false;const out=ctx.createImageData(W,H),o=out.data;o.s
   for(let i=0,p=0;i<N;i++,p+=4){let L=Lc[i],a=Ac[i],b=Bc[i],ch=false;
     const s=ms[i]*k;if(sk&&skinT&&s>.003){const nL=skinT[0]+(L-sk[0])*cS,na=skinT[1]+(a-sk[1]),nb=skinT[2]+(b-sk[2]);
       L+=(nL-L)*s;a+=(na-a)*s;b+=(nb-b)*s;ch=true}
-    const h=hair[i]*k;if(hs&&hairT&&h>.003){const nL=hairT[0]+(Lc[i]-hs[0])*cH,na=hairT[1]+(Ac[i]-hs[1])*.8,nb=hairT[2]+(Bc[i]-hs[2])*.8;
+    const h=hair[i]*(1-eyes[i])*k;if(hs&&hairT&&h>.003){const nL=hairT[0]+(Lc[i]-hs[0])*cH,na=hairT[1]+(Ac[i]-hs[1])*.8,nb=hairT[2]+(Bc[i]-hs[2])*.8;
       L+=(nL-L)*h;a+=(na-a)*h;b+=(nb-b)*h;ch=true}
+    const ey=eyes[i]*k;if(es&&eyeT&&ey>.003){const L0=Lc[i],w=L0<12?0:L0<18?(L0-12)/6:L0>85?0:L0>78?(85-L0)/7:1,e2=ey*w;
+      if(e2>.003){const nL=L0+(eyeT[0]-es[0])*.7,na=eyeT[1]+(Ac[i]-es[1])*.5,nb=eyeT[2]+(Bc[i]-es[2])*.5;L+=(nL-L)*e2;a+=(na-a)*e2;b+=(nb-b)*e2;ch=true}}
     if(ch)lab2rgb(L<0?0:L>100?100:L,a,b,o,p);
     if(mask){const ms2=ms[i]*.5,hh=hair[i]*.55;
       if(ms2>.01){o[p]+=(255-o[p])*ms2;o[p+1]*=1-ms2;o[p+2]+=(200-o[p+2])*ms2}
-      if(hh>.01){o[p]*=1-hh;o[p+1]+=(170-o[p+1])*hh;o[p+2]+=(255-o[p+2])*hh}}}
+      if(hh>.01){o[p]*=1-hh;o[p+1]+=(170-o[p+1])*hh;o[p+2]+=(255-o[p+2])*hh}
+      const ee=eyes[i]*.6;if(ee>.01){o[p]*=1-ee;o[p+1]+=(255-o[p+1])*ee;o[p+2]*=1-ee}}}
   ctx.putImageData(out,0,0)}
 
 // --- outils
 function setTool(t){tool=tool===t?null:t;document.querySelectorAll('#tools .btn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===tool));
-  cv.style.cursor=tool?'crosshair':'default';if(!['skinAdd','skinRem','hairAdd','hairRem'].includes(tool))$('cursor').style.display='none'}
+  cv.style.cursor=tool?'crosshair':'default';cv.style.touchAction=tool?'none':'auto';if(!BRUSH.includes(tool))$('cursor').style.display='none'}
 $('tools').addEventListener('click',e=>{const b=e.target.closest('button');if(b){setTool(b.dataset.t);SFX.click()}});
 const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height,r.width/W]};
 function paint(x,y){const R=+$('brush').value*Math.max(W,H)/1000,R0=R*.55;
@@ -247,28 +271,40 @@ function paint(x,y){const R=+$('brush').value*Math.max(W,H)/1000,R0=R*.55;
     if(tool==='skinAdd'){sAdd[q]=Math.max(sAdd[q],v);sRem[q]*=1-v}
     else if(tool==='skinRem'){sRem[q]=Math.max(sRem[q],v);sAdd[q]*=1-v}
     else if(tool==='hairAdd')hair[q]=Math.max(hair[q],v);
-    else if(tool==='hairRem')hair[q]*=1-v}
+    else if(tool==='hairRem')hair[q]*=1-v
+    else if(tool==='eyeAdd')eyes[q]=Math.max(eyes[q],v);
+    else if(tool==='eyeRem')eyes[q]*=1-v}
   SFX.brush();draw()}
-function wand(x,y){const s=(y|0)*W+(x|0),tol=+$('htol').value,sL=Lc[s],sa=Ac[s],sb=Bc[s];
+function wand(x,y,arr=hair,tid='htol'){const s=(y|0)*W+(x|0),tol=+$(tid).value,sL=Lc[s],sa=Ac[s],sb=Bc[s];
   const seen=new Uint8Array(N),reg=new Float32Array(N),q=new Int32Array(N);let h=0,t=0;q[t++]=s;seen[s]=1;
   while(h<t){const i=q[h++];reg[i]=1;const px=i%W;
     for(const n of [px>0?i-1:-1,px<W-1?i+1:-1,i-W,i+W]){if(n<0||n>=N||seen[n])continue;seen[n]=1;
       if(Math.hypot((Lc[n]-sL)*.6,Ac[n]-sa,Bc[n]-sb)<tol)q[t++]=n}}
-  const b=boxBlur(reg,Math.max(1,Math.round(Math.max(W,H)/600)));for(let i=0;i<N;i++)if(b[i]>hair[i])hair[i]=Math.min(1,b[i]*1.4);
+  const b=boxBlur(reg,Math.max(1,Math.round(Math.max(W,H)/600)));for(let i=0;i<N;i++)if(b[i]>arr[i])arr[i]=Math.min(1,b[i]*1.4);
   draw()}
 cv.addEventListener('pointerdown',e=>{if(!tool||!N)return;const[x,y]=pos(e);
   if(tool==='pick'){const i=(y|0)*W+(x|0);ref=[Ac[i],Bc[i]];detect();SFX.pick();return}
   if(tool==='wand'){wand(x,y);SFX.wand();return}
+  if(tool==='eyeWand'){wand(x,y,eyes,'etol');SFX.eye();return}
   painting=true;cv.setPointerCapture(e.pointerId);paint(x,y)});
 cv.addEventListener('pointermove',e=>{const c=$('cursor');
-  if(['skinAdd','skinRem','hairAdd','hairRem'].includes(tool)){const r=cv.getBoundingClientRect(),sr=st.getBoundingClientRect(),d=2*$('brush').value*Math.max(W,H)/1000*r.width/W;
-    Object.assign(c.style,{display:'block',left:e.clientX-sr.left+'px',top:e.clientY-sr.top+'px',width:d+'px',height:d+'px'})}
+  if(BRUSH.includes(tool)){const r=cv.getBoundingClientRect(),sr=st.getBoundingClientRect(),d=2*$('brush').value*Math.max(W,H)/1000*r.width/W;
+    Object.assign(c.style,{display:'block',left:e.clientX-sr.left+st.scrollLeft+'px',top:e.clientY-sr.top+st.scrollTop+'px',width:d+'px',height:d+'px'})}
   if(painting){const[x,y]=pos(e);paint(x,y)}});
 cv.addEventListener('pointerup',()=>painting=false);cv.addEventListener('pointerleave',()=>{$('cursor').style.display='none'});
 
+// --- zoom
+let baseW=0;
+function setZoom(z){$('zoom').value=z;$('zoomO').textContent=z+'%';
+  if(z===100){st.classList.remove('zoomed');cv.style.width='';return}
+  if(!st.classList.contains('zoomed'))baseW=cv.clientWidth||W;
+  const sx=st.scrollLeft,sy=st.scrollTop,ow=cv.clientWidth,oh=cv.clientHeight;
+  st.classList.add('zoomed');cv.style.width=Math.round(baseW*z/100)+'px';
+  if(ow){const r=cv.clientWidth/ow;st.scrollLeft=(sx+st.clientWidth/2)*r-st.clientWidth/2;st.scrollTop=(sy+st.clientHeight/2)*r-st.clientHeight/2}}
 // --- réglages et boutons
 const bind=(id,fmt,fn)=>$(id).addEventListener('input',e=>{$(id+'O').textContent=fmt(e.target.value);SFX.slide();fn()});
-bind('intens',v=>v+'%',draw);bind('tol',v=>v,detect);bind('htol',v=>v,()=>{});bind('brush',v=>v,()=>{});
+bind('intens',v=>v+'%',draw);bind('tol',v=>v,detect);bind('htol',v=>v,()=>{});bind('brush',v=>v,()=>{});bind('etol',v=>v,()=>{});
+$('zoom').addEventListener('input',e=>{setZoom(+e.target.value);SFX.slide()});
 $('showMask').onchange=()=>{SFX.click();draw()};
 $('skinCustom').addEventListener('change',()=>SFX.pop(50));
 $('mute').onclick=()=>{muted=!muted;$('mute').textContent='Son : '+(muted?'coupé':'activé');$('mute').setAttribute('aria-pressed',muted);if(!muted)SFX.click()};
@@ -278,7 +314,7 @@ $('invert').onclick=()=>{const L=window._srcL??60,dark=L>50;skinT=(dark?SKIN[5]:
 const bf=$('before');const on=()=>{showOrig=true;SFX.click();render()},off=()=>{showOrig=false;render()};
 bf.addEventListener('pointerdown',on);bf.addEventListener('pointerup',off);bf.addEventListener('pointerleave',off);
 bf.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();on()}});bf.addEventListener('keyup',off);
-$('reset').onclick=()=>{sAdd.fill(0);sRem.fill(0);hair.fill(0);ref=null;skinT=null;hairT=null;mark($('skinSw'),null);mark($('hairSw'),null);$('intens').value=100;$('intensO').textContent='100%';SFX.reset();detect()};
+$('reset').onclick=()=>{sAdd.fill(0);sRem.fill(0);hair.fill(0);eyes.fill(0);ref=null;skinT=null;hairT=null;eyeT=null;mark($('skinSw'),null);mark($('hairSw'),null);mark($('eyeSw'),null);$('intens').value=100;$('intensO').textContent='100%';SFX.reset();detect()};
 $('save').onclick=()=>{const m=$('showMask').checked;$('showMask').checked=false;SFX.shutter();render();
   cv.toBlob(b=>{const u=URL.createObjectURL(b);$('savedImg').src=u;$('saved').style.display='block';$('showMask').checked=m;render();
     try{const a=document.createElement('a');a.href=u;a.download='teint.png';a.click()}catch(e){}},'image/png')};
