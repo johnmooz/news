@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miroir déformant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, fête foraine, un jouet qu'on prend en main tout de suite
+   IDEA: le palais des glaces — un miroir déformant à ampoules
+   PICTURE: la photo elle-même, sertie dans un cadre de miroir à ampoules
+   COLOUR and TYPE: bleu électrique, jaune ampoule, rose bonbon ; Bungee + Rubik
+   LAYOUT: titre modeste, miroir en grand, panneau de commandes à droite (dessous sur mobile) */
+:root{color-scheme:light dark;--bg:light-dark(#2847f0,#0b1240);--panel:light-dark(#ffffff,#161f58);--txt:light-dark(#141a3a,#eef1ff);--mute:light-dark(#5a6290,#a9b1e0);--line:light-dark(#dfe3f5,#2a3577);--yel:#ffd23f;--pink:#ff4f8b}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:#fff;font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip;min-height:100vh;
+  background-image:radial-gradient(circle at 20% 0,rgba(255,255,255,.14),transparent 50%),radial-gradient(circle at 90% 100%,rgba(255,79,139,.25),transparent 45%)}
+header{padding:20px max(4vw,16px) 6px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font:400 clamp(30px,5vw,46px)/1.05 Bungee,Rubik,sans-serif;margin:0;color:var(--yel);text-shadow:3px 3px 0 var(--pink);text-wrap:balance}
+header p{margin:0;opacity:.85;max-width:52ch}
+main{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;padding:16px max(4vw,16px) 32px;align-items:start;max-width:1300px;margin:0 auto}
+.stage{display:flex;justify-content:center}
+.mirror{position:relative;width:100%;padding:16px;border-radius:30px;background:radial-gradient(circle,#fff8cf 0 4px,#ffe78a 5px,transparent 7px) 0 0/26px 26px,var(--yel);box-shadow:0 18px 40px rgba(0,0,0,.35),inset 0 0 0 3px rgba(0,0,0,.12)}
+.glass{position:relative;border-radius:16px;overflow:hidden;background:#111;line-height:0}
+#cv{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+#cv.face{cursor:move}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.drop{position:absolute;inset:0;display:none;place-items:center;background:rgba(40,71,240,.75);color:#fff;font:400 22px Bungee,sans-serif;line-height:1.2;text-align:center}
+.glass.over .drop{display:grid}
+aside{background:var(--panel);color:var(--txt);border-radius:22px;padding:20px;display:grid;gap:18px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.lbl{font-weight:700;font-size:14px;margin:0 0 8px;display:flex;justify-content:space-between}
+.lbl span{font-weight:400;color:var(--mute)}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:999px;padding:4px;gap:4px}
+.seg button{border:0;border-radius:999px;min-height:40px;font:500 15px Rubik,sans-serif;background:transparent;color:var(--txt);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--bg);color:#fff}
+input[type=range]{width:100%;accent-color:var(--pink);height:28px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--txt);font:500 15px Rubik,sans-serif;cursor:pointer;text-align:center}
+.btn:hover{border-color:var(--mute)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.big{background:var(--pink);border-color:var(--pink);color:#fff;font:400 17px Bungee,Rubik,sans-serif;min-height:56px;box-shadow:0 4px 0 #b8245a}
+.btn.big:active{transform:translateY(2px);box-shadow:0 2px 0 #b8245a}
+.btn.photo{background:var(--yel);border-color:var(--yel);color:#141a3a;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button:focus-visible,label.btn:focus-within,input:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+#status{font-size:14px;color:var(--mute);margin:0;min-height:42px}
+.hint{font-size:13px;color:var(--mute);margin:0;border-top:1px solid var(--line);padding-top:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#faceBox[hidden]{display:none}
+@media(max-width:900px){main{grid-template-columns:minmax(0,1fr)}aside{max-width:640px;width:100%;margin:0 auto}}
+@media(max-width:600px){.mirror{padding:10px;border-radius:22px;background-size:20px 20px}header{padding-top:14px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Miroir déformant</h1>
+  <p>Chargez une photo, puis cliquez et faites glisser pour l'étirer comme au palais des glaces.</p>
+</header>
+<main>
+  <div class="stage">
+    <div class="mirror" id="mirror">
+      <div class="glass" id="glass">
+        <canvas id="cv" aria-label="Photo à déformer"></canvas>
+        <svg id="ov" preserveAspectRatio="none" aria-hidden="true">
+          <circle id="ring" r="0" fill="none" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke" opacity="0"/>
+          <ellipse id="oval" fill="rgba(255,210,63,.12)" stroke="#ffd23f" stroke-width="3" stroke-dasharray="10 7" vector-effect="non-scaling-stroke" opacity="0"/>
+        </svg>
+        <div class="drop">Déposez<br>votre photo</div>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <label class="btn photo" for="file">Choisir une photo
+      <input id="file" class="sr" type="file" accept="image/*">
+    </label>
+
+    <div>
+      <p class="lbl">Outil</p>
+      <div class="seg" role="group" aria-label="Outil">
+        <button id="mWarp" aria-pressed="true">Étirer</button>
+        <button id="mFace" aria-pressed="false">Cadrer le visage</button>
+      </div>
+    </div>
+
+    <div id="brushBox">
+      <p class="lbl"><label for="brush">Taille du pinceau</label><span id="brushV">12 %</span></p>
+      <input id="brush" type="range" min="4" max="30" value="12">
+    </div>
+
+    <div id="faceBox" hidden>
+      <p class="lbl"><label for="fsize">Taille du visage</label><span id="fsizeV"></span></p>
+      <input id="fsize" type="range" min="10" max="95" value="50">
+    </div>
+
+    <button class="btn big" id="rand">Déformer au hasard</button>
+
+    <div class="row">
+      <button class="btn" id="undo" disabled>Annuler</button>
+      <button class="btn" id="reset">Réinitialiser</button>
+    </div>
+    <button class="btn" id="snd" aria-pressed="true">Son activé</button>
+
+    <p id="status" aria-live="polite">Visage de démonstration chargé : essayez-le, ou choisissez votre photo.</p>
+    <p class="hint">Le hasard vise les yeux, le front, le menton, le nez, la bouche, les joues et les oreilles. Si l'ovale jaune n'est pas sur le visage, utilisez « Cadrer le visage » et faites-le glisser. Ctrl + Z annule.</p>
+  </aside>
+</main>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d',{willReadFrequently:true}),ov=$('ov'),ring=$('ring'),oval=$('oval');
+const MAX=900,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W=0,H=0,src=null,D=null,Dc=null,out=null,hist=[],face={x:0,y:0,w:0},mode='warp',drag=null,busy=false,ovalTimer=0;
+
+function status(t){$('status').textContent=t}
+
+/* Sons synthétisés (Web Audio) */
+let ac=null,muted=false,str=null;
+try{muted=localStorage.getItem('miroir-muet')==='1'}catch(e){}
+function audio(){
+  if(muted)return null;
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){return null}
+  return ac;
+}
+function startStretch(){
+  const a=audio();if(!a)return;
+  const o=a.createOscillator(),o2=a.createOscillator(),f=a.createBiquadFilter(),g=a.createGain();
+  o.type='sawtooth';o2.type='square';o.frequency.value=90;o2.frequency.value=91.5;
+  f.type='lowpass';f.frequency.value=500;f.Q.value=9;g.gain.value=0;
+  o.connect(f);o2.connect(f);f.connect(g);g.connect(a.destination);o.start();o2.start();
+  str={o,o2,f,g,pull:0};
+}
+function stretchMove(speed,pull){
+  if(!str)return;const t=ac.currentTime,sp=Math.min(1,speed/20),p=Math.min(1,pull/(Math.min(W,H)*.5));
+  str.pull=p;const fr=80+p*420;
+  str.o.frequency.setTargetAtTime(fr,t,.04);str.o2.frequency.setTargetAtTime(fr*1.015,t,.04);
+  str.f.frequency.setTargetAtTime(400+sp*2600+p*1200,t,.03);
+  str.g.gain.setTargetAtTime(.09*sp,t,.02);str.g.gain.setTargetAtTime(0,t+.06,.09);
+}
+function stopStretch(){
+  if(!str)return;const s=str,t=ac.currentTime;str=null;
+  s.g.gain.setTargetAtTime(0,t,.03);s.o.stop(t+.3);s.o2.stop(t+.3);
+  if(s.pull>.08)boing(160+s.pull*300,.5,0,.18);
+}
+function boing(freq,dur,delay,vol){
+  const a=audio();if(!a)return;const t=a.currentTime+(delay||0);
+  const o=a.createOscillator(),lfo=a.createOscillator(),ld=a.createGain(),g=a.createGain();
+  o.type='triangle';o.frequency.setValueAtTime(freq*1.8,t);o.frequency.exponentialRampToValueAtTime(freq*.55,t+dur);
+  lfo.frequency.value=13;ld.gain.setValueAtTime(freq*.25,t);ld.gain.exponentialRampToValueAtTime(1,t+dur);
+  lfo.connect(ld);ld.connect(o.frequency);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.2,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);g.connect(a.destination);o.start(t);lfo.start(t);o.stop(t+dur+.05);lfo.stop(t+dur+.05);
+}
+function slide(f0,f1,dur,vol,type){
+  const a=audio();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05);
+}
+function setSnd(){const b=$('snd');b.setAttribute('aria-pressed',!muted);b.textContent=muted?'Son coupé':'Son activé'}
+
+function setup(img){
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+  const s=Math.min(1,MAX/Math.max(iw,ih));
+  W=Math.max(2,Math.round(iw*s));H=Math.max(2,Math.round(ih*s));
+  cv.width=W;cv.height=H;
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.drawImage(img,0,0,W,H);
+  src=ctx.getImageData(0,0,W,H).data;out=ctx.createImageData(W,H);
+  D=new Float32Array(W*H*2);Dc=new Float32Array(W*H*2);hist=[];updBtns();
+  ov.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  $('mirror').style.maxWidth=`calc(70vh * ${(W/H).toFixed(4)} + 32px)`;
+  render(0,0,W,H);
+}
+
+function render(x0,y0,x1,y1){
+  x0=Math.max(0,Math.floor(x0));y0=Math.max(0,Math.floor(y0));x1=Math.min(W,Math.ceil(x1));y1=Math.min(H,Math.ceil(y1));
+  if(x1<=x0||y1<=y0)return;
+  const o=out.data,Wm=W-1,Hm=H-1;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+    const i=y*W+x;let sx=x+D[2*i],sy=y+D[2*i+1];
+    if(sx<0)sx=0;else if(sx>Wm)sx=Wm;if(sy<0)sy=0;else if(sy>Hm)sy=Hm;
+    const ix=sx|0,iy=sy|0,fx=sx-ix,fy=sy-iy,ix1=ix<Wm?ix+1:ix,iy1=iy<Hm?iy+1:iy;
+    const a=(iy*W+ix)*4,b=(iy*W+ix1)*4,c=(iy1*W+ix)*4,d=(iy1*W+ix1)*4,j=i*4;
+    for(let k=0;k<3;k++){const t=src[a+k]+(src[b+k]-src[a+k])*fx,u=src[c+k]+(src[d+k]-src[c+k])*fx;o[j+k]=t+(u-t)*fy}
+    o[j+3]=255;
+  }
+  ctx.putImageData(out,0,0,x0,y0,x1-x0,y1-y0);
+}
+
+function sD(x,y,r){
+  const Wm=W-1,Hm=H-1;
+  if(x<0)x=0;else if(x>Wm)x=Wm;if(y<0)y=0;else if(y>Hm)y=Hm;
+  const ix=x|0,iy=y|0,fx=x-ix,fy=y-iy,ix1=ix<Wm?ix+1:ix,iy1=iy<Hm?iy+1:iy;
+  const a=(iy*W+ix)*2,b=(iy*W+ix1)*2,c=(iy1*W+ix)*2,d=(iy1*W+ix1)*2;
+  for(let k=0;k<2;k++){const t=Dc[a+k]+(Dc[b+k]-Dc[a+k])*fx,u=Dc[c+k]+(Dc[d+k]-Dc[c+k])*fx;r[k]=t+(u-t)*fy}
+}
+
+/* Transforme le champ de déplacement dans un disque : q = point source à aller chercher */
+function apply(cx,cy,r,fn){
+  Dc.set(D);
+  const x0=Math.max(0,Math.floor(cx-r)),x1=Math.min(W,Math.ceil(cx+r)),y0=Math.max(0,Math.floor(cy-r)),y1=Math.min(H,Math.ceil(cy+r));
+  const r2=r*r,q=[0,0],s=[0,0];
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+    const dx=x-cx,dy=y-cy,d2=dx*dx+dy*dy;if(d2>=r2)continue;
+    const t=1-d2/r2,w=t*t;fn(x,y,dx,dy,w,q);sD(q[0],q[1],s);
+    const i=2*(y*W+x);D[i]=s[0]+q[0]-x;D[i+1]=s[1]+q[1]-y;
+  }
+  return [x0,y0,x1,y1];
+}
+const OPS={
+  push:(vx,vy)=>(x,y,dx,dy,w,q)=>{q[0]=x-w*vx;q[1]=y-w*vy},
+  bloat:s=>(x,y,dx,dy,w,q)=>{const k=1-s*w;q[0]=x-dx+dx*k;q[1]=y-dy+dy*k},
+  hs:s=>(x,y,dx,dy,w,q)=>{q[0]=x-dx+dx*(1-s*w);q[1]=y},
+  vs:s=>(x,y,dx,dy,w,q)=>{q[0]=x;q[1]=y-dy+dy*(1-s*w)}
+};
+const merge=(bb,b)=>{bb[0]=Math.min(bb[0],b[0]);bb[1]=Math.min(bb[1],b[1]);bb[2]=Math.max(bb[2],b[2]);bb[3]=Math.max(bb[3],b[3])};
+
+function saveHist(){hist.push(D.slice());if(hist.length>12)hist.shift();updBtns()}
+function updBtns(){$('undo').disabled=!hist.length}
+function undo(){if(!hist.length||busy)return;D=hist.pop();updBtns();render(0,0,W,H);slide(700,350,.12,.12,'square');status('Dernière déformation annulée.')}
+function reset(){if(!W||busy)return;saveHist();D.fill(0);render(0,0,W,H);slide(1200,180,.45,.15);status('Photo remise à zéro.')}
+
+const brushR=()=>$('brush').value/100*Math.min(W,H);
+function pt(e){const b=cv.getBoundingClientRect();return [(e.clientX-b.left)*W/b.width,(e.clientY-b.top)*H/b.height]}
+
+function drawOval(show){
+  const h=face.w*1.3;
+  oval.setAttribute('cx',face.x);oval.setAttribute('cy',face.y);oval.setAttribute('rx',face.w/2);oval.setAttribute('ry',h/2);
+  oval.setAttribute('opacity',show?1:0);
+}
+function flashOval(ms){clearTimeout(ovalTimer);drawOval(true);if(mode!=='face')ovalTimer=setTimeout(()=>drawOval(false),ms)}
+function syncFaceSlider(){const v=Math.round(face.w/W*100);$('fsize').value=v;$('fsizeV').textContent=v+' %'}
+
+cv.addEventListener('pointerdown',e=>{
+  if(!W||busy)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pt(e);
+  if(mode==='face')drag={face:true,ox:face.x-p[0],oy:face.y-p[1]};
+  else{saveHist();drag={x:p[0],y:p[1],sx:p[0],sy:p[1]};moveRing(p);startStretch()}
+});
+cv.addEventListener('pointermove',e=>{
+  if(!W)return;const p=pt(e);
+  if(mode==='warp')moveRing(p);
+  if(!drag)return;
+  if(drag.face){face.x=p[0]+drag.ox;face.y=p[1]+drag.oy;drawOval(true);return}
+  const vx=p[0]-drag.x,vy=p[1]-drag.y,len=Math.hypot(vx,vy);if(len<.5)return;
+  const r=brushR(),n=Math.ceil(len/(r*.2)),bb=[W,H,0,0];
+  for(let i=0;i<n;i++)merge(bb,apply(drag.x+vx*i/n,drag.y+vy*i/n,r,OPS.push(vx/n,vy/n)));
+  render(...bb);drag.x=p[0];drag.y=p[1];
+  stretchMove(len*400/Math.min(W,H),Math.hypot(p[0]-drag.sx,p[1]-drag.sy));
+});
+const end=()=>{drag=null;stopStretch()};
+cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+cv.addEventListener('pointerleave',()=>{if(!drag)ring.setAttribute('opacity',0)});
+function moveRing(p){ring.setAttribute('cx',p[0]);ring.setAttribute('cy',p[1]);ring.setAttribute('r',brushR());ring.setAttribute('opacity',.8)}
+
+function setMode(m){
+  mode=m;$('mWarp').setAttribute('aria-pressed',m==='warp');$('mFace').setAttribute('aria-pressed',m==='face');
+  cv.classList.toggle('face',m==='face');$('faceBox').hidden=m!=='face';$('brushBox').hidden=m==='face';
+  ring.setAttribute('opacity',0);clearTimeout(ovalTimer);drawOval(m==='face');
+  if(m==='face'){syncFaceSlider();status('Faites glisser l\'ovale jaune sur le visage et ajustez sa taille.')}
+  else status('Cliquez et faites glisser sur la photo pour l\'étirer.');
+}
+$('mWarp').onclick=()=>setMode('warp');$('mFace').onclick=()=>setMode('face');
+$('fsize').oninput=e=>{face.w=e.target.value/100*W;$('fsizeV').textContent=e.target.value+' %';drawOval(true)};
+$('brush').oninput=e=>{$('brushV').textContent=e.target.value+' %'};
+
+/* Parties du visage, placées par rapport à l'ovale */
+const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.random()*a.length|0];
+function parts(){
+  const {x,y,w}=face,h=w*1.3;
+  return {
+    'les yeux':()=>{const s=pick([rnd(.35,.6),-rnd(.25,.4)]);return [-1,1].map(k=>['bloat',x+k*.2*w,y-.08*h,.17*w,s])},
+    'le front':()=>[['push',x,y-.36*h,.42*w,0,-rnd(.12,.22)*h],['hs',x,y-.36*h,.42*w,rnd(-.2,.35)]],
+    'le menton':()=>[['push',x,y+.42*h,.32*w,rnd(-.08,.08)*w,rnd(.1,.2)*h]],
+    'le nez':()=>[pick([['bloat',x,y+.07*h,.15*w,rnd(.4,.65)],['vs',x,y+.07*h,.17*w,rnd(.4,.6)]])],
+    'la bouche':()=>[pick([['hs',x,y+.25*h,.24*w,rnd(.35,.55)],['bloat',x,y+.25*h,.2*w,rnd(.35,.55)],['hs',x,y+.25*h,.24*w,-rnd(.3,.45)]])],
+    'les joues':()=>{const s=rnd(.25,.45);return [-1,1].map(k=>['bloat',x+k*.3*w,y+.13*h,.2*w,s])},
+    'les oreilles':()=>[-1,1].map(k=>['push',x+k*.48*w,y,.18*w,k*rnd(.08,.15)*w,0])
+  };
+}
+function randomize(){
+  if(!W||busy)return;saveHist();
+  const P=parts(),keys=Object.keys(P).sort(()=>Math.random()-.5).slice(0,2+(Math.random()*3|0));
+  const ops=keys.flatMap(k=>P[k]()),N=16;let i=0;busy=true;
+  const step=()=>{
+    const bb=[W,H,0,0];
+    for(const o of ops)merge(bb,apply(o[1],o[2],o[3],o[0]==='push'?OPS.push(o[4]/N,o[5]/N):OPS[o[0]](o[4]/N)));
+    render(...bb);
+    if(++i<N){reduce?step():requestAnimationFrame(step)}else busy=false;
+  };
+  step();flashOval(900);
+  keys.forEach((k,j)=>boing(rnd(140,420),rnd(.35,.6),j*.13,.16));
+  status('Déformé : '+keys.join(', ')+'.');
+}
+$('snd').onclick=()=>{muted=!muted;try{localStorage.setItem('miroir-muet',muted?'1':'0')}catch(e){}setSnd();if(!muted)boing(300,.35,0,.15)};setSnd();
+$('rand').onclick=randomize;$('undo').onclick=undo;$('reset').onclick=reset;
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo()}});
+
+/* Chargement d'une photo */
+async function autoFace(){
+  face={x:W/2,y:H*.42,w:Math.min(W*.45,H*.33)};let found=false;
+  if('FaceDetector' in window){
+    try{const r=await new FaceDetector({fastMode:true,maxDetectedFaces:1}).detect(cv);
+      if(r.length){const b=r[0].boundingBox;face={x:b.x+b.width/2,y:b.y+b.height*.55,w:b.width*1.05};found=true}}catch(err){}
+  }
+  syncFaceSlider();
+  if(mode==='face')drawOval(true);else flashOval(2600);
+  status(found?'Visage détecté. Étirez avec la souris ou tentez le hasard !':'Photo chargée. Vérifiez que l\'ovale jaune couvre le visage, sinon utilisez « Cadrer le visage ».');
+}
+function loadFile(f){
+  if(!f||!f.type.startsWith('image/')){status('Ce fichier n\'est pas une image.');return}
+  const url=URL.createObjectURL(f),img=new Image();
+  img.onload=()=>{setup(img);URL.revokeObjectURL(url);autoFace()};
+  img.onerror=()=>{status('Impossible de lire cette image.');URL.revokeObjectURL(url)};
+  img.src=url;
+}
+$('file').onchange=e=>{loadFile(e.target.files[0]);e.target.value=''};
+const glass=$('glass');
+['dragenter','dragover'].forEach(t=>glass.addEventListener(t,e=>{e.preventDefault();glass.classList.add('over')}));
+['dragleave','drop'].forEach(t=>glass.addEventListener(t,()=>glass.classList.remove('over')));
+glass.addEventListener('drop',e=>{e.preventDefault();loadFile(e.dataTransfer.files[0])});
+
+/* Visage de démonstration dessiné */
+function demo(){
+  const c=document.createElement('canvas');c.width=600;c.height=760;const g=c.getContext('2d');
+  const bg=g.createLinearGradient(0,0,0,760);bg.addColorStop(0,'#bfe3ff');bg.addColorStop(1,'#ffd6e6');g.fillStyle=bg;g.fillRect(0,0,600,760);
+  for(let i=0;i<12;i++){g.fillStyle=i%2?'rgba(255,255,255,.25)':'rgba(255,255,255,0)';g.fillRect(i*50,0,50,760)}
+  const el=(x,y,rx,ry,col)=>{g.fillStyle=col;g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fill()};
+  el(300,820,260,200,'#2f6bdb');g.fillStyle='#e8b089';g.fillRect(250,500,100,140);
+  el(300,250,200,200,'#4a2c1a');
+  el(142,345,32,48,'#eab48f');el(458,345,32,48,'#eab48f');
+  el(300,330,165,210,'#f2c29b');
+  g.fillStyle='#4a2c1a';g.beginPath();g.moveTo(130,260);g.quadraticCurveTo(170,110,300,115);g.quadraticCurveTo(440,110,470,260);g.quadraticCurveTo(400,170,300,175);g.quadraticCurveTo(200,170,130,260);g.fill();
+  el(200,395,34,22,'rgba(255,120,140,.35)');el(400,395,34,22,'rgba(255,120,140,.35)');
+  for(const x of [234,366]){el(x,306,36,24,'#fff');el(x,306,15,15,'#3a6ea5');el(x,306,7,7,'#111');el(x+5,301,4,4,'#fff');
+    g.strokeStyle='#4a2c1a';g.lineWidth=9;g.lineCap='round';g.beginPath();g.moveTo(x-34,265);g.quadraticCurveTo(x,248,x+34,265);g.stroke()}
+  g.strokeStyle='#c98a65';g.lineWidth=6;g.beginPath();g.moveTo(300,320);g.quadraticCurveTo(292,370,282,380);g.quadraticCurveTo(300,392,318,380);g.stroke();
+  g.fillStyle='#c4384f';g.beginPath();g.moveTo(240,438);g.quadraticCurveTo(300,490,360,438);g.quadraticCurveTo(300,456,240,438);g.fill();
+  setup(c);face={x:300,y:340,w:330};syncFaceSlider();
+}
+demo();
+}
+</script>
+</body>
+</html>
