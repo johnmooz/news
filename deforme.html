@@ -32,7 +32,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;padding:16p
 aside{background:var(--panel);color:var(--txt);border-radius:22px;padding:20px;display:grid;gap:18px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
 .lbl{font-weight:700;font-size:14px;margin:0 0 8px;display:flex;justify-content:space-between}
 .lbl span{font-weight:400;color:var(--mute)}
-.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:999px;padding:4px;gap:4px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--line);border-radius:24px;padding:4px;gap:4px}
 .seg button{border:0;border-radius:999px;min-height:40px;font:500 15px Rubik,sans-serif;background:transparent;color:var(--txt);cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--bg);color:#fff}
 input[type=range]{width:100%;accent-color:var(--pink);height:28px}
@@ -80,6 +80,8 @@ button:focus-visible,label.btn:focus-within,input:focus-visible{outline:3px soli
       <p class="lbl">Outil</p>
       <div class="seg" role="group" aria-label="Outil">
         <button id="mWarp" aria-pressed="true">Étirer</button>
+        <button id="mBloat" aria-pressed="false">Grossir</button>
+        <button id="mPinch" aria-pressed="false">Pincer</button>
         <button id="mFace" aria-pressed="false">Cadrer le visage</button>
       </div>
     </div>
@@ -103,7 +105,7 @@ button:focus-visible,label.btn:focus-within,input:focus-visible{outline:3px soli
     <button class="btn" id="snd" aria-pressed="true">Son activé</button>
 
     <p id="status" aria-live="polite">Visage de démonstration chargé : essayez-le, ou choisissez votre photo.</p>
-    <p class="hint">Le hasard vise les yeux, le front, le menton, le nez, la bouche, les joues et les oreilles. Si l'ovale jaune n'est pas sur le visage, utilisez « Cadrer le visage » et faites-le glisser. Ctrl + Z annule.</p>
+    <p class="hint">Grossir et Pincer : maintenez le clic sur une zone, l'effet s'amplifie tant que vous appuyez. Le hasard vise les yeux, le front, le menton, le nez, la bouche, les joues et les oreilles. Si l'ovale jaune n'est pas sur le visage, utilisez « Cadrer le visage » et faites-le glisser. Ctrl + Z annule.</p>
   </aside>
 </main>
 
@@ -158,6 +160,24 @@ function slide(f0,f1,dur,vol,type){
   o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
   o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05);
+}
+let hs=null;
+function startHold(sign){
+  const a=audio();if(!a)return;
+  const o=a.createOscillator(),lfo=a.createOscillator(),ld=a.createGain(),g=a.createGain();
+  o.type='sine';o.frequency.value=sign>0?180:700;lfo.frequency.value=sign>0?9:16;ld.gain.value=25;
+  lfo.connect(ld);ld.connect(o.frequency);g.gain.value=0;g.gain.setTargetAtTime(.12,a.currentTime,.03);
+  o.connect(g);g.connect(a.destination);o.start();lfo.start();
+  hs={o,lfo,ld,g,sign,f:o.frequency.value};
+}
+function holdTick(){
+  if(!hs)return;hs.f=hs.sign>0?Math.min(1100,hs.f*1.012):Math.max(70,hs.f*.988);
+  hs.o.frequency.setTargetAtTime(hs.f,ac.currentTime,.02);hs.ld.gain.setTargetAtTime(hs.f*.12,ac.currentTime,.02);
+}
+function stopHold(){
+  if(!hs)return;const s=hs,t=ac.currentTime;hs=null;
+  s.g.gain.setTargetAtTime(0,t,.03);s.o.stop(t+.25);s.lfo.stop(t+.25);
+  slide(s.sign>0?900:400,s.sign>0?1500:120,.08,.1);
 }
 function setSnd(){const b=$('snd');b.setAttribute('aria-pressed',!muted);b.textContent=muted?'Son coupé':'Son activé'}
 
@@ -236,32 +256,47 @@ function syncFaceSlider(){const v=Math.round(face.w/W*100);$('fsize').value=v;$(
 cv.addEventListener('pointerdown',e=>{
   if(!W||busy)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pt(e);
   if(mode==='face')drag={face:true,ox:face.x-p[0],oy:face.y-p[1]};
-  else{saveHist();drag={x:p[0],y:p[1],sx:p[0],sy:p[1]};moveRing(p);startStretch()}
+  else if(mode==='warp'){saveHist();drag={x:p[0],y:p[1],sx:p[0],sy:p[1]};moveRing(p);startStretch()}
+  else{
+    saveHist();const sign=mode==='bloat'?1:-1;drag={hold:true,x:p[0],y:p[1],sign};moveRing(p);startHold(sign);
+    const tick=()=>{
+      if(!drag||!drag.hold)return;
+      render(...apply(drag.x,drag.y,brushR(),OPS.bloat(.045*drag.sign)));holdTick();requestAnimationFrame(tick);
+    };
+    tick();
+  }
 });
 cv.addEventListener('pointermove',e=>{
   if(!W)return;const p=pt(e);
-  if(mode==='warp')moveRing(p);
+  if(mode!=='face')moveRing(p);
   if(!drag)return;
   if(drag.face){face.x=p[0]+drag.ox;face.y=p[1]+drag.oy;drawOval(true);return}
+  if(drag.hold){drag.x=p[0];drag.y=p[1];return}
   const vx=p[0]-drag.x,vy=p[1]-drag.y,len=Math.hypot(vx,vy);if(len<.5)return;
   const r=brushR(),n=Math.ceil(len/(r*.2)),bb=[W,H,0,0];
   for(let i=0;i<n;i++)merge(bb,apply(drag.x+vx*i/n,drag.y+vy*i/n,r,OPS.push(vx/n,vy/n)));
   render(...bb);drag.x=p[0];drag.y=p[1];
   stretchMove(len*400/Math.min(W,H),Math.hypot(p[0]-drag.sx,p[1]-drag.sy));
 });
-const end=()=>{drag=null;stopStretch()};
+const end=()=>{drag=null;stopStretch();stopHold()};
 cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
 cv.addEventListener('pointerleave',()=>{if(!drag)ring.setAttribute('opacity',0)});
 function moveRing(p){ring.setAttribute('cx',p[0]);ring.setAttribute('cy',p[1]);ring.setAttribute('r',brushR());ring.setAttribute('opacity',.8)}
 
 function setMode(m){
-  mode=m;$('mWarp').setAttribute('aria-pressed',m==='warp');$('mFace').setAttribute('aria-pressed',m==='face');
+  mode=m;for(const k in MODES)$(MODES[k].id).setAttribute('aria-pressed',k===m);
   cv.classList.toggle('face',m==='face');$('faceBox').hidden=m!=='face';$('brushBox').hidden=m==='face';
   ring.setAttribute('opacity',0);clearTimeout(ovalTimer);drawOval(m==='face');
   if(m==='face'){syncFaceSlider();status('Faites glisser l\'ovale jaune sur le visage et ajustez sa taille.')}
-  else status('Cliquez et faites glisser sur la photo pour l\'étirer.');
+  else status(MODES[m].msg);
 }
-$('mWarp').onclick=()=>setMode('warp');$('mFace').onclick=()=>setMode('face');
+const MODES={
+  warp:{id:'mWarp',msg:'Cliquez et faites glisser sur la photo pour l\'étirer.'},
+  bloat:{id:'mBloat',msg:'Maintenez le clic sur une zone pour la faire grossir.'},
+  pinch:{id:'mPinch',msg:'Maintenez le clic sur une zone pour la pincer.'},
+  face:{id:'mFace',msg:''}
+};
+for(const k in MODES)$(MODES[k].id).onclick=()=>setMode(k);
 $('fsize').oninput=e=>{face.w=e.target.value/100*W;$('fsizeV').textContent=e.target.value+' %';drawOval(true)};
 $('brush').oninput=e=>{$('brushV').textContent=e.target.value+' %'};
 
