@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allume la lampe !</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, pédagogique, un jeu pour petits et grands électriciens
+   IDEA: une boîte à outils d'électricien rouge contenant un tableau d'ardoise où le circuit est câblé
+   PICTURE: le circuit lui-même, grand, fils cuivre qui s'illuminent quand le courant passe
+   COLOUR and TYPE: rouge boîte à outils, ardoise, cuivre, jaune ampoule ; Baloo 2
+   LAYOUT: titre modeste, plateau de jeu en haut, état + actions dessous, légende en bas */
+:root{color-scheme:light dark;
+ --bg:light-dark(#f6f1ea,#141618);--ink:light-dark(#1f1d1b,#f1ece6);--muted:light-dark(#6d6359,#a39a90);
+ --box:#d9361f;--boxd:#a8240f;--slate:#23292e;--slate2:#2c343a;--chalk:#e7ecef;
+ --copper:#c77b43;--live:#ffd23f;--short:#ff4b3a;--ok:#2fbf71;--card:light-dark(#fff,#1f2225)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Baloo 2",ui-rounded,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:920px;margin:0 auto;padding:14px max(3vw,12px) 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.05;margin:0;font-weight:800}
+.hbtns{display:flex;gap:8px}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;min-height:44px;padding:0 16px;cursor:pointer;background:var(--card);color:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+button:focus-visible,.sw:focus-visible{outline:3px solid var(--live);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+button.main{background:var(--box);color:#fff;box-shadow:0 3px 0 var(--boxd)}
+.box{background:var(--box);border-radius:22px;padding:12px;box-shadow:0 6px 0 var(--boxd),0 14px 30px rgba(0,0,0,.25)}
+.boxtop{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#fff;padding:2px 6px 10px;flex-wrap:wrap}
+.lvl{font-size:14px;opacity:.85}
+h2{margin:0;font-size:22px;line-height:1.1}
+.score{display:flex;gap:14px;align-items:center;font-size:15px}
+.score b{font-size:22px}
+.goal{background:rgba(0,0,0,.18);border-radius:10px;padding:2px 10px;white-space:nowrap}
+.board{background:var(--slate);border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 3px #1a1f23}
+svg#b{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.status{margin:12px 2px 0;padding:10px 14px;border-radius:12px;background:rgba(0,0,0,.22);color:#fff;font-weight:700;min-height:48px;display:flex;align-items:center}
+.status.ok{background:var(--ok)}.status.bad{background:#7a120a;animation:pulse .5s infinite alternate}
+.intro{margin:14px 2px 6px;font-size:17px;max-width:70ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.strip button{flex:none;scroll-snap-align:center;min-width:56px;height:56px;padding:0 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;border-radius:14px}
+.strip b{font-size:19px}.strip span{font-size:11px;color:#f5b301;letter-spacing:1px}
+.strip button.cur{background:var(--box);color:#fff;box-shadow:0 3px 0 var(--boxd)}.strip button.cur span{color:#ffe38a}
+.stars span{display:inline-block}.stars .pop{animation:pop .35s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{from{transform:scale(.2)}to{transform:scale(1)}}
+.hint{background:var(--card);border-radius:12px;padding:10px 14px;border-left:5px solid var(--live);margin:6px 0}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px;margin-top:22px}
+.legend h3{grid-column:1/-1;margin:0;font-size:20px}
+.card{background:var(--card);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:center}
+.card svg{width:86px;height:auto;background:var(--slate);border-radius:10px}
+.card b{display:block;line-height:1.2}.card p{margin:2px 0 0;font-size:14.5px;color:var(--muted);line-height:1.35}
+.ov{position:fixed;inset:0;background:rgba(10,10,12,.62);display:grid;place-items:center;padding:16px;z-index:5}
+.ov[hidden]{display:none}
+.dlg{background:var(--card);border-radius:20px;padding:22px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.4);max-height:90vh;overflow:auto}
+.dlg h2{font-size:30px}
+.stars{font-size:44px;letter-spacing:6px;color:#d9d2c8;line-height:1.2}
+.stars .on{color:#f5b301}
+.dlg .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:14px;text-align:left}
+.grid button{height:auto;padding:10px;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.grid small{font-weight:500;color:var(--muted)}
+.grid .st{color:#f5b301;letter-spacing:2px}
+/* SVG */
+.w{stroke:var(--copper);stroke-width:.08;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.w.live{stroke:var(--live);filter:url(#gl)}
+.w.sh{stroke:var(--short);animation:fl .25s infinite alternate}
+.dot{fill:var(--chalk)}.jn{fill:var(--copper)}
+.bl{stroke:var(--chalk);stroke-width:.11;stroke-linecap:round}
+.bl.live{stroke:var(--live)}
+.pv{fill:var(--chalk)}
+.box2{fill:rgba(255,255,255,.04);stroke:rgba(231,236,239,.45);stroke-width:.035;stroke-dasharray:.1 .08}
+.dl{stroke:var(--chalk);stroke-width:.1;stroke-linecap:round;transition:opacity .25s}
+.dl.live{stroke:var(--live)}
+.batt{fill:#3a4650;stroke:var(--chalk);stroke-width:.05}
+.hot .batt{fill:#6b1a12;stroke:var(--short)}
+.hot .shk{animation:shk .1s infinite}
+.pl{stroke:var(--live);stroke-width:.09}.ps{stroke:var(--chalk);stroke-width:.16}
+.bulb{fill:#323b42;stroke:var(--chalk);stroke-width:.06}
+.bulb.forb{stroke:var(--short);stroke-width:.08}
+.fil{stroke:var(--chalk);stroke-width:.05;fill:none;stroke-linecap:round}
+.glow,.bfill{transition:opacity .3s}
+.lab{font-size:.36px;font-weight:800;fill:#aeb9c1}
+.pm{font-size:.5px;font-weight:800}
+.sw{cursor:pointer;outline:none}
+.hit{fill:transparent}
+.sw:hover .hit{fill:rgba(255,255,255,.05)}
+.sw.lock{cursor:not-allowed}.sw.lock .bl,.sw.lock .dl{stroke:#78848c}
+.sw.lock .bl.live,.sw.lock .dl.live{stroke:#c9a92e}
+.coil{fill:#2c343a;stroke:#5fd3c8;stroke-width:.06;transition:fill .2s}.coil.on{fill:#1f8f86;filter:url(#gl)}
+.coilx{stroke:#5fd3c8;stroke-width:.04}
+.rel .bl{stroke:#5fd3c8}.rel .bl.live{stroke:var(--live)}.rel{cursor:help}
+.plg{stroke:var(--chalk);stroke-width:.06}
+.push{touch-action:none}
+.lab.rl{fill:#5fd3c8}
+.sepl{stroke:rgba(231,236,239,.35);stroke-width:.03;stroke-dasharray:.15 .12}
+.zone{font-size:.3px;font-weight:700;fill:rgba(231,236,239,.38)}
+.nope{animation:shk .08s 4}
+@keyframes fl{to{opacity:.35}}
+@keyframes pulse{to{background:#b31b0e}}
+@keyframes shk{0%{transform:translate(.03px,0)}50%{transform:translate(-.03px,.02px)}100%{transform:translate(0,-.02px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:600px){.box{padding:8px;border-radius:16px}h2{font-size:19px}.card{grid-template-columns:70px 1fr}.card svg{width:70px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header>
+  <h1>Allume la lampe !</h1>
+  <div class="hbtns"><button id="snd" aria-label="Son">Son : oui</button><button id="menuB">Niveaux</button></div>
+ </header>
+
+ <nav class="strip" id="strip" aria-label="Choix du niveau"></nav>
+ <div class="box">
+  <div class="boxtop">
+   <div><div class="lvl">Niveau <span id="ln">1</span> sur <span id="lt">10</span></div><h2 id="lname"></h2></div>
+   <div class="score"><div>Coups <b id="mv">0</b></div><div class="goal" id="goal"></div></div>
+  </div>
+  <div class="board"><svg id="b" viewBox="0 0 12 8" role="img" aria-label="Circuit électrique"></svg></div>
+  <div class="status" id="st"></div>
+ </div>
+
+ <p class="intro" id="intro"></p>
+ <div class="actions">
+  <button class="main" id="reset">Recommencer</button>
+  <button id="hintB">Un indice ?</button>
+  <button id="prev" aria-label="Niveau précédent">‹ Précédent</button>
+  <button id="next" aria-label="Niveau suivant">Suivant ›</button>
+ </div>
+ <div class="hint" id="hint" hidden></div>
+
+ <section class="legend">
+  <h3>Les pièces du circuit</h3>
+  <div class="card"><svg viewBox="-1.2 -0.9 2.4 1.5"><line class="w" x1="-1" y1="0" x2="-.5" y2="0"/><line class="w" x1=".5" y1="0" x2="1" y2="0"/><circle class="dot" cx=".5" cy="0" r=".07"/><line class="bl" x1="-.5" y1="0" x2=".32" y2="-.57"/><circle class="pv" cx="-.5" r=".1"/></svg><div><b>Interrupteur simple</b><p>Ouvert, il coupe le circuit. Fermé, il laisse passer le courant.</p></div></div>
+  <div class="card"><svg viewBox="-1.2 -0.9 2.4 1.8"><line class="w" x1="-1" y1="0" x2="-.45" y2="0"/><line class="w" x1=".5" y1="-.5" x2="1" y2="-.5"/><line class="w" x1=".5" y1=".5" x2="1" y2=".5"/><circle class="dot" cx=".5" cy="-.5" r=".07"/><circle class="dot" cx=".5" cy=".5" r=".07"/><line class="bl" x1="-.45" y1="0" x2=".5" y2="-.5"/><circle class="pv" cx="-.45" r=".1"/></svg><div><b>Va-et-vient</b><p>Il envoie le courant soit vers le fil du haut, soit vers celui du bas. Par deux, ils allument une lampe depuis les deux bouts d'un couloir.</p></div></div>
+  <div class="card"><svg viewBox="-1.2 -1 2.4 2"><rect class="box2" x="-.7" y="-.85" width="1.4" height="1.7" rx=".2"/><line class="w" x1="-1" y1="-.5" x2="-.5" y2="-.5"/><line class="w" x1="-1" y1=".5" x2="-.5" y2=".5"/><line class="w" x1=".5" y1="-.5" x2="1" y2="-.5"/><line class="w" x1=".5" y1=".5" x2="1" y2=".5"/><line class="dl" x1="-.5" y1="-.5" x2=".5" y2=".5"/><line class="dl" x1="-.5" y1=".5" x2=".5" y2="-.5"/></svg><div><b>Inverseur (permutateur)</b><p>Il garde les deux fils droits ou les croise. On le place entre deux va-et-vient pour un troisième point de commande.</p></div></div>
+  <div class="card"><svg viewBox="-1.2 -0.9 2.4 1.8"><line class="w" x1="-1" y1="0" x2="-.42" y2="0"/><line class="w" x1=".42" y1="0" x2="1" y2="0"/><circle class="bulb forb" r=".42"/><path class="fil" d="M-.3-.3L.3.3M-.3.3L.3-.3"/></svg><div><b>Lampe rouge</b><p>Elle doit rester éteinte ! Les lampes normales, elles, doivent toutes s'allumer.</p></div></div>
+ <div class="card"><svg viewBox="-1.2 -0.9 2.4 1.8"><line class="w" x1="-1" y1="0" x2="-.45" y2="0"/><line class="w" x1=".45" y1="0" x2="1" y2="0"/><rect class="coil" x="-.45" y="-.32" width=".9" height=".64" rx=".06"/><path class="coilx" d="M-.45 .32L.45-.32"/></svg><div><b>Relais (bobine + contacts)</b><p>Quand sa bobine reçoit du courant, elle devient un aimant et fait bouger ses contacts, même dans un autre circuit.</p></div></div>
+  <div class="card"><svg viewBox="-1.2 -1 2.4 1.6"><line class="w" x1="-1" y1="0" x2="-.5" y2="0"/><line class="w" x1=".5" y1="0" x2="1" y2="0"/><circle class="dot" cx="-.5" r=".07"/><circle class="dot" cx=".5" r=".07"/><g transform="translate(0 -.3)"><line class="bl" x1="-.58" x2=".58"/><line class="plg" y2="-.55"/><rect x="-.3" y="-.72" width=".6" height=".2" rx=".08" fill="#2fbf71"/></g></svg><div><b>Bouton poussoir</b><p>Il ne fonctionne que tant qu'on appuie dessus. Vert : Marche (ferme le circuit). Rouge : Arrêt (l'ouvre).</p></div></div>
+ </section>
+</div>
+
+<div class="ov" id="win" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="wt">
+ <h2 id="wt">Bravo !</h2>
+ <div class="stars" id="wstars"></div>
+ <p id="wtxt"></p>
+ <div class="row"><button id="wagain">Rejouer</button><button class="main" id="wnext">Niveau suivant</button></div>
+</div></div>
+
+<div class="ov" id="menu" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mt">
+ <h2 id="mt">Choisis un niveau</h2>
+ <div class="grid" id="mgrid"></div>
+ <div class="row"><button id="mclose">Fermer</button></div>
+</div></div>
+
+<script>
+{
+//<logic>
+const TYPES={
+ battery:{terms:{a:[-1,0],b:[1,0]}},
+ lamp:{terms:{a:[-1,0],b:[1,0]},res:true},
+ coil:{terms:{a:[-1,0],b:[1,0]},res:true},
+ node:{terms:{o:[0,0]}},
+ simple:{terms:{a:[-1,0],b:[1,0]},links:[[],[['a','b']]],toggle:true},
+ spdt:{terms:{c:[-1,0],u:[1,-.5],d:[1,.5]},links:[[['c','u']],[['c','d']]],toggle:true},
+ dpdt:{terms:{a1:[-1,-.5],a2:[-1,.5],b1:[1,-.5],b2:[1,.5]},links:[[['a1','b1'],['a2','b2']],[['a1','b2'],['a2','b1']]],toggle:true},
+ pushNO:{terms:{a:[-1,0],b:[1,0]},links:[[],[['a','b']]],push:true},
+ pushNC:{terms:{a:[-1,0],b:[1,0]},links:[[['a','b']],[]],push:true},
+ cNO:{terms:{a:[-1,0],b:[1,0]},links:[[],[['a','b']]],ctl:true},
+ cNC:{terms:{a:[-1,0],b:[1,0]},links:[[['a','b']],[]],ctl:true},
+ cCO:{terms:{c:[-1,0],u:[1,-.5],d:[1,.5]},links:[[['c','u']],[['c','d']]],ctl:true}
+};
+const stOf=(c,states,rs)=>TYPES[c.type].ctl?(rs[c.relay]?1:0):states[c.id];
+const rot=([x,y],r)=>{r=((r||0)%360+360)%360;return r===90?[-y,x]:r===180?[-x,-y]:r===270?[y,-x]:[x,y];};
+const ref=p=>p.includes('.')?p:p+'.o';
+const Bat=()=>({id:'B',type:'battery',x:1,y:4,r:90});
+const Lamp=(id,x,y,r=90,must='on')=>({id,type:'lamp',x,y,r,must});
+const Sw=(id,type,x,y,r=0,state=0,locked=false)=>({id,type,x,y,r,state,locked});
+const N=(id,x,y)=>({id,type:'node',x,y,r:0});
+const BOTTOM=['L1.b',[11,7],[1,7],'B.b'];
+const Bat2=(id,x,y)=>({id,type:'battery',x,y,r:90});
+const Coil=(id,x,y,r=90)=>({id,type:'coil',x,y,r});
+const Ct=(id,type,relay,x,y,r=0)=>({id,type,relay,x,y,r});
+const Push=(id,type,x,y,label)=>({id,type,x,y,r:0,label});
+const PB=()=>Bat2('B',1,2.5),CB=()=>Bat2('B2',1,7.6);
+const ZONES=(px,py,cx,cy)=>({sep:4.85,zones:[[px,py,'Circuit de puissance'],[cx,cy,'Circuit de commande']]});
+const RET=(lx)=>['L1.b',[lx,4.4],[1,4.4],'B.b'];
+
+const LEVELS=[
+{name:"La première lampe",
+ intro:"Le courant doit faire un tour complet : il part de la borne + de la pile, traverse la lampe et revient à la borne −. Touche l'interrupteur pour le fermer.",
+ hint:"Un interrupteur ouvert, c'est un pont levé : le courant ne peut pas passer.",
+ comps:[Bat(),Sw('S1','simple',6,1),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'S1.a'],['S1.b',[11,1],'L1.a'],BOTTOM]},
+{name:"En série",
+ intro:"Deux interrupteurs l'un après l'autre : on dit qu'ils sont en série. Il faut qu'ils soient tous fermés pour que la lampe s'allume.",
+ hint:"Ferme S1 et S2.",
+ comps:[Bat(),Sw('S1','simple',4,1),Sw('S2','simple',8,1),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'S1.a'],['S1.b','S2.a'],['S2.b',[11,1],'L1.a'],BOTTOM]},
+{name:"Deux chemins",
+ intro:"S1 et S2 sont en parallèle : le courant passe si au moins un des deux chemins est fermé. Essaie d'allumer avec le moins de coups possible.",
+ hint:"Un seul des deux interrupteurs S1 ou S2 suffit… mais n'oublie pas S3.",
+ comps:[Bat(),N('J1',3,1),N('J2',7,1),Sw('S1','simple',5,1),Sw('S2','simple',5,2.5),Sw('S3','simple',9,1),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'J1'],['J1','S1.a'],['S1.b','J2'],['J1',[3,2.5],'S2.a'],['S2.b',[7,2.5],'J2'],['J2','S3.a'],['S3.b',[11,1],'L1.a'],BOTTOM]},
+{name:"Attention, court-circuit !",
+ intro:"Si le courant peut aller du + au − sans traverser la lampe, c'est un court-circuit : la lampe reste éteinte et la pile chauffe dangereusement !",
+ hint:"S2 fait un raccourci autour de la lampe. Ouvre-le avant de fermer S1.",
+ comps:[Bat(),Sw('S1','simple',6,1),N('J1',11,2),N('J2',11,6),Sw('S2','simple',9,4,90,1),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'S1.a'],['S1.b',[11,1],'J1'],['J1','L1.a'],['J1',[9,2],'S2.a'],['S2.b',[9,6],'J2'],['L1.b','J2'],['J2',[11,7],[1,7],'B.b']]},
+{name:"Le va-et-vient",
+ intro:"Comme dans un couloir : un va-et-vient à chaque bout. Ils sont reliés par deux fils, celui du haut et celui du bas.",
+ hint:"Les deux va-et-vient doivent être branchés sur le même fil.",
+ comps:[Bat(),Sw('V1','spdt',4,1),Sw('V2','spdt',8,1,180),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'V1.c'],['V1.u','V2.d'],['V1.d','V2.u'],['V2.c',[11,1],'L1.a'],BOTTOM]},
+{name:"Va-et-vient et interrupteur",
+ intro:"Un interrupteur simple a été ajouté sur le chemin du retour, vers la borne − de la pile.",
+ hint:"Il faut fermer S1 et mettre V1 et V2 sur le même fil.",
+ comps:[Bat(),Sw('V1','spdt',4,1,0,1),Sw('V2','spdt',8,1,180,1),Sw('S1','simple',6,7),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'V1.c'],['V1.u','V2.d'],['V1.d','V2.u'],['V2.c',[11,1],'L1.a'],['L1.b',[11,7],'S1.b'],['S1.a',[1,7],'B.b']]},
+{name:"L'inverseur",
+ intro:"Les deux va-et-vient sont bloqués par un cadenas. Au milieu, un inverseur peut croiser les deux fils.",
+ hint:"Touche l'inverseur P1 : le fil du haut passe en bas, et celui du bas passe en haut.",
+ comps:[Bat(),Sw('V1','spdt',3,1,0,0,true),Sw('P1','dpdt',6,1),Sw('V2','spdt',9,1,180,0,true),Lamp('L1',11,4)],
+ wires:[['B.a',[1,1],'V1.c'],['V1.u','P1.a1'],['V1.d','P1.a2'],['P1.b1','V2.d'],['P1.b2','V2.u'],['V2.c',[11,1],'L1.a'],BOTTOM]},
+{name:"Deux lampes",
+ intro:"Les deux lampes sont en parallèle et doivent s'allumer toutes les deux. S3 relie les deux branches.",
+ hint:"Grâce à S3 déjà fermé, un seul interrupteur peut allumer les deux lampes.",
+ comps:[Bat(),N('J1',5,1),Sw('S1','simple',5,2.5,90),N('K1',5,4),Lamp('L1',5,5.5),N('J3',5,7),Sw('S2','simple',9,2.5,90),N('K2',9,4),Lamp('L2',9,5.5),Sw('S3','simple',7,4,0,1)],
+ wires:[['B.a',[1,1],'J1'],['J1','S1.a'],['J1',[9,1],'S2.a'],['S1.b','K1'],['K1','L1.a'],['K1','S3.a'],['S3.b','K2'],['S2.b','K2'],['K2','L2.a'],['L1.b','J3'],['L2.b',[9,7],'J3'],['J3',[1,7],'B.b']]},
+{name:"L'aiguillage",
+ intro:"La lampe jaune doit s'allumer, mais la lampe rouge doit rester éteinte. Le va-et-vient et l'inverseur choisissent le chemin.",
+ hint:"Suis le fil depuis V1 : à travers P1, vers quelle lampe arrive-t-il ? N'oublie pas S1 en bas.",
+ comps:[Bat(),Sw('V1','spdt',3,1),Sw('P1','dpdt',6,1,0,1),Lamp('L1',11,4),Lamp('L2',8,4,90,'off'),N('J3',8,7),Sw('S1','simple',5,7)],
+ wires:[['B.a',[1,1],'V1.c'],['V1.u','P1.a1'],['V1.d','P1.a2'],['P1.b1',[11,.5],'L1.a'],['P1.b2',[8,1.5],'L2.a'],['L2.b','J3'],['L1.b',[11,7],'J3'],['J3','S1.b'],['S1.a',[1,7],'B.b']]},
+{name:"Le grand couloir",
+ intro:"Quatre points de commande pour la lampe jaune, un inverseur bloqué, et une lampe rouge déjà allumée… Réussis en 3 coups !",
+ hint:"Éteins d'abord la lampe rouge avec S1. Ensuite, un seul changement sur la chaîne V1 · P1 · V2 suffit, plus S2.",
+ comps:[Bat(),N('J0',1,2),Sw('V1','spdt',3,1),Sw('P1','dpdt',5.5,1),Sw('P2','dpdt',8,1,0,1,true),Sw('V2','spdt',10.5,1,180,1),Lamp('L1',11.5,4),Sw('S1','simple',3,4,0,1),Lamp('L2',6,4,0,'off'),N('J3',7,7),Sw('S2','simple',9.5,7)],
+ wires:[['B.a','J0'],['J0',[1,1],'V1.c'],['J0',[2,2],'S1.a'],['V1.u','P1.a1'],['V1.d','P1.a2'],['P1.b1','P2.a1'],['P1.b2','P2.a2'],['P2.b1','V2.d'],['P2.b2','V2.u'],['V2.c','L1.a'],['S1.b','L2.a'],['L2.b','J3'],['L1.b',[11.5,7],'S2.b'],['S2.a','J3'],['J3',[1,7],'B.b']]},
+{name:"Le relais",h:10,...ZONES(6,2.9,5.5,7.7),
+ intro:"Deux circuits séparés, deux piles ! En bas, le circuit de commande alimente la bobine K1 du relais. Quand la bobine reçoit du courant, elle devient un aimant et ferme le contact K1a du circuit de puissance, en haut.",
+ hint:"Tu ne peux pas toucher K1a directement : ferme S1 pour activer la bobine.",
+ comps:[PB(),Ct('K1a','cNO','K1',6,1),Lamp('L1',11,2.5),CB(),Sw('S1','simple',4,5.7),Coil('K1',9,7.6)],
+ wires:[['B.a',[1,1],'K1a.a'],['K1a.b',[11,1],'L1.a'],RET(11),['B2.a',[1,5.7],'S1.a'],['S1.b',[9,5.7],'K1.a'],['K1.b',[9,9.5],[1,9.5],'B2.b']]},
+{name:"Contact de repos",h:10,...ZONES(9.5,0.55,5.5,7.7),
+ intro:"Un relais peut avoir plusieurs contacts. K1a est ouvert au repos (contact « travail »), K1b est fermé au repos (contact « repos »). La lampe rouge est allumée : à toi de tout inverser.",
+ hint:"Quand la bobine K1 est alimentée, K1a se ferme et K1b s'ouvre en même temps.",
+ comps:[PB(),N('J1',3,1),Ct('K1a','cNO','K1',5,1),Ct('K1b','cNC','K1',5,2.1),Lamp('L1',11,2.5),Lamp('L2',8,3.1,90,'off'),N('J2',8,4.4),CB(),Sw('S1','simple',4,5.7),Coil('K1',9,7.6)],
+ wires:[['B.a',[1,1],'J1'],['J1','K1a.a'],['K1a.b',[11,1],'L1.a'],['J1',[3,2.1],'K1b.a'],['K1b.b','L2.a'],['L2.b','J2'],['L1.b',[11,4.4],'J2'],['J2',[1,4.4],'B.b'],['B2.a',[1,5.7],'S1.a'],['S1.b',[9,5.7],'K1.a'],['K1.b',[9,9.5],[1,9.5],'B2.b']]},
+{name:"Relais inverseur",h:10,...ZONES(4.6,3.3,5,8.2),
+ intro:"Ce relais a un contact inverseur : au repos il alimente la lampe rouge, activé il bascule vers la lampe jaune. Sa bobine est commandée par un va-et-vient.",
+ hint:"Mets V1 et V2 sur le même fil pour alimenter la bobine K1.",
+ comps:[PB(),Ct('K1a','cCO','K1',4,1),Lamp('L1',8,2.8),Lamp('L2',11,2.5,90,'off'),N('J2',8,4.4),CB(),Sw('V1','spdt',3.5,5.9),Sw('V2','spdt',7,5.9,180),Coil('K1',9,7.6)],
+ wires:[['B.a',[1,1],'K1a.c'],['K1a.u',[11,.5],'L2.a'],['K1a.d',[8,1.5],'L1.a'],['L1.b','J2'],['L2.b',[11,4.4],'J2'],['J2',[1,4.4],'B.b'],['B2.a',[1,5.9],'V1.c'],['V1.u','V2.d'],['V1.d','V2.u'],['V2.c',[9,5.9],'K1.a'],['K1.b',[9,9.5],[1,9.5],'B2.b']]},
+{name:"Relais en cascade",h:10,...ZONES(6,2.9,8,8),
+ intro:"Le contact du relais K1 alimente la bobine d'un second relais, K2. C'est K2 qui allume la lampe.",
+ hint:"Il faut que K1 soit activé (S1) et que le chemin vers K2 soit fermé (S2).",
+ comps:[PB(),Ct('K2a','cNO','K2',6,1),Lamp('L1',11,2.5),CB(),Sw('S1','simple',3,5.7),N('J1',5,5.7),Coil('K1',5,7.6),N('J3',5,9.5),Ct('K1a','cNO','K1',6.5,5.7),Sw('S2','simple',9,5.7),Coil('K2',11,7.6)],
+ wires:[['B.a',[1,1],'K2a.a'],['K2a.b',[11,1],'L1.a'],RET(11),['B2.a',[1,5.7],'S1.a'],['S1.b','J1'],['J1','K1.a'],['K1.b','J3'],['J1','K1a.a'],['K1a.b','S2.a'],['S2.b',[11,5.7],'K2.a'],['K2.b',[11,9.5],'J3'],['J3',[1,9.5],'B2.b']]},
+{name:"Marche / Arrêt",h:10,...ZONES(6,2.9,4,8.6),
+ intro:"Nouveaux composants : des boutons poussoirs ! Appuie et garde le doigt dessus : ils ne restent pas enfoncés. La lampe doit rester allumée quand tu lâches le bouton.",
+ hint:"Appuie sur Marche : la bobine ferme K1a, qui continue d'alimenter la bobine quand tu lâches. C'est l'auto-maintien. Arrêt coupe tout.",
+ comps:[PB(),Ct('K1b','cNO','K1',6,1),Lamp('L1',11,2.5),CB(),Push('BA','pushNC',2.7,5.7,'Arrêt'),N('J1',4.5,5.7),Push('BM','pushNO',6,5.7,'Marche'),N('J2',8,5.7),Ct('K1a','cNO','K1',6,7),Coil('K1',9.5,7.6)],
+ wires:[['B.a',[1,1],'K1b.a'],['K1b.b',[11,1],'L1.a'],RET(11),['B2.a',[1,5.7],'BA.a'],['BA.b','J1'],['J1','BM.a'],['BM.b','J2'],['J1',[4.5,7],'K1a.a'],['K1a.b',[8,7],'J2'],['J2',[9.5,5.7],'K1.a'],['K1.b',[9.5,9.5],[1,9.5],'B2.b']]},
+{name:"La mémoire",h:10,...ZONES(6,2.9,7.6,7.6),
+ intro:"Le grand défi des relais ! K1b (fermé au repos) coupe la lampe quand K1 est activé. Mais le relais K2 sait se souvenir… Trouve la bonne séquence.",
+ hint:"Ferme S1 : K1 puis K2 s'activent, et K2b maintient K2 alimenté. Ensuite, ouvre S1 : K1 se relâche, K1b se referme… et K2 reste collé !",
+ comps:[PB(),Ct('K2a','cNO','K2',4,1),Ct('K1b','cNC','K1',8,1),Lamp('L1',11,2.5),CB(),N('J0',2,6.6),N('J4',3.2,6.6),Sw('S1','simple',3.2,7.8,90),Coil('K1',5,8.8,0),Ct('K1a','cNO','K1',5.5,6.6),N('J2',8,6.6),Coil('K2',10.5,8),Ct('K2b','cNO','K2',5,5.4),N('J3',7,9.6)],
+ wires:[['B.a',[1,1],'K2a.a'],['K2a.b','K1b.a'],['K1b.b',[11,1],'L1.a'],RET(11),['B2.a','J0'],['J0','J4'],['J4','K1a.a'],['J4','S1.a'],['S1.b','K1.a'],['K1.b',[7,8.8],'J3'],['K1a.b','J2'],['J2',[10.5,6.6],'K2.a'],['K2.b',[10.5,9.6],'J3'],['J3',[1,9.6],'B2.b'],['J0',[2,5.4],'K2b.a'],['K2b.b',[8,5.4],'J2']]}
+];
+
+function gauss(A,b){const n=b.length;for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];[b[c],b[p]]=[b[p],b[c]];const d=A[c][c];if(Math.abs(d)<1e-15)continue;for(let r=c+1;r<n;r++){const f=A[r][c]/d;if(!f)continue;for(let k=c;k<n;k++)A[r][k]-=f*A[c][k];b[r]-=f*b[c];}}const x=new Array(n).fill(0);for(let i=n-1;i>=0;i--){let s=b[i];for(let k=i+1;k<n;k++)s-=A[i][k]*x[k];x[i]=Math.abs(A[i][i])<1e-15?0:s/A[i][i];}return x;}
+
+function solve(level,states,rs){
+ const par={};
+ const find=k=>{if(par[k]===undefined)par[k]=k;while(par[k]!==k){par[k]=par[par[k]];k=par[k];}return k;};
+ const uni=(a,b)=>{a=find(a);b=find(b);if(a!==b)par[a]=b;};
+ for(const c of level.comps)for(const t in TYPES[c.type].terms)find(c.id+'.'+t);
+ for(const w of level.wires){const e=w.filter(p=>typeof p==='string').map(ref);uni(e[0],e[e.length-1]);}
+ for(const c of level.comps){const T=TYPES[c.type];if(T.links)for(const[a,b]of T.links[stOf(c,states,rs)])uni(c.id+'.'+a,c.id+'.'+b);}
+ const res=level.comps.filter(c=>TYPES[c.type].res),cur={};res.forEach(c=>cur[c.id]=0);
+ const allRoots=[...new Set(Object.keys(par).map(find))];
+ const gp={},gf=k=>{if(gp[k]===undefined)gp[k]=k;while(gp[k]!==k)k=gp[k];return k;};
+ res.forEach(c=>{const a=gf(find(c.id+'.a')),b=gf(find(c.id+'.b'));if(a!==b)gp[a]=b;});
+ const shortRoots=new Set();
+ for(const bt of level.comps.filter(c=>c.type==='battery')){
+  const rp=find(bt.id+'.a'),rn=find(bt.id+'.b');
+  if(rp===rn){shortRoots.add(rp);continue;}
+  const g=gf(rp);if(gf(rn)!==g)continue;
+  const roots=allRoots.filter(r=>r!==rp&&r!==rn&&gf(r)===g),idx={};roots.forEach((r,i)=>idx[r]=i);
+  const n=roots.length,A=roots.map(()=>new Array(n).fill(0)),bv=new Array(n).fill(0);
+  const known=r=>r===rp?1:r===rn?0:null;
+  const half=(ra,rb)=>{const i=idx[ra];if(i===undefined)return;A[i][i]+=1;const k=known(rb);if(k===null)A[i][idx[rb]]-=1;else bv[i]+=k;};
+  const els=res.filter(c=>gf(find(c.id+'.a'))===g);
+  for(const c of els){const r1=find(c.id+'.a'),r2=find(c.id+'.b');if(r1!==r2){half(r1,r2);half(r2,r1);}}
+  for(let i=0;i<n;i++)A[i][i]+=1e-9;
+  const x=gauss(A,bv),V=r=>{const k=known(r);return k!==null?k:x[idx[r]];};
+  for(const c of els)cur[c.id]=Math.abs(V(find(c.id+'.a'))-V(find(c.id+'.b')));
+ }
+ const active=new Set();
+ for(const c of res)if(cur[c.id]>.05){active.add(find(c.id+'.a'));active.add(find(c.id+'.b'));}
+ const lamps=res.filter(c=>c.type==='lamp');
+ const tg=lamps.filter(l=>l.must!=='off'),fb=lamps.filter(l=>l.must==='off');
+ const litT=tg.filter(l=>cur[l.id]>.25).length,forbLit=fb.some(l=>cur[l.id]>.05);
+ const short=shortRoots.size>0,pressed=level.comps.some(c=>TYPES[c.type].push&&states[c.id]);
+ return {find,shortRoots,short,cur,active,litT,nT:tg.length,forbLit,pressed,win:!short&&!pressed&&litT===tg.length&&!forbLit};
+}
+function initRelays(level){const r={};level.comps.forEach(c=>{if(c.type==='coil')r[c.id]=0;});return r;}
+function settle(level,states,rs0){
+ let rs={...rs0},R;
+ for(let i=0;i<20;i++){R=solve(level,states,rs);let ch=false;const n={};for(const k in rs){n[k]=R.cur[k]>.25?1:0;if(n[k]!==rs[k])ch=true;}rs=n;if(!ch)break;}
+ R=solve(level,states,rs);R.rs=rs;return R;
+}
+function evaluate(level,states,rs){return settle(level,states,rs||initRelays(level));}
+function initStates(level){const s={};level.comps.forEach(c=>{const T=TYPES[c.type];if(T.links&&!T.ctl)s[c.id]=c.state||0;});return s;}
+function minMoves(level){
+ const tog=level.comps.filter(c=>TYPES[c.type].toggle&&!c.locked),push=level.comps.filter(c=>TYPES[c.type].push);
+ const s0=initStates(level),r0=settle(level,s0,initRelays(level)).rs;
+ const key=(s,r)=>JSON.stringify([s,r]),seen=new Set([key(s0,r0)]);
+ let q=[[s0,r0]];
+ for(let d=0;d<=10;d++){
+  const nq=[];
+  for(const[s,r]of q){
+   if(settle(level,s,r).win)return d;
+   const nexts=[];
+   tog.forEach(c=>{const t={...s,[c.id]:1-s[c.id]};nexts.push([t,settle(level,t,r).rs]);});
+   push.forEach(c=>{const p={...s,[c.id]:1};const r1=settle(level,p,r).rs;nexts.push([s,settle(level,s,r1).rs]);});
+   for(const[t,rr]of nexts){const k=key(t,rr);if(!seen.has(k)){seen.add(k);nq.push([t,rr]);}}
+  }
+  q=nq;if(!q.length)break;
+ }
+ return Infinity;
+}
+//</logic>
+
+const NS='http://www.w3.org/2000/svg',$=id=>document.getElementById(id);
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const KEY='allume-la-lampe-v1';
+let save={stars:{}};try{save=JSON.parse(localStorage.getItem(KEY))||save;}catch(e){}
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}};
+let sound=save.sound!==false,actx=null;
+const ctx=()=>{try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();return actx;}catch(e){return null;}};
+const beep=(f,d,type='square',v=.04,delay=0,f2)=>{if(!sound)return;const a=ctx();if(!a)return;try{const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02);}catch(e){}};
+let noiseBuf=null;
+const noise=(d,freq,v=.25,delay=0)=>{if(!sound)return;const a=ctx();if(!a)return;try{if(!noiseBuf){noiseBuf=a.createBuffer(1,a.sampleRate*.5,a.sampleRate);const c=noiseBuf.getChannelData(0);for(let i=0;i<c.length;i++)c[i]=Math.random()*2-1;}const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime+delay;s.buffer=noiseBuf;f.type='bandpass';f.frequency.value=freq;f.Q.value=1.2;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f).connect(g).connect(a.destination);s.start(t);s.stop(t+d+.02);}catch(e){}};
+const SFX={
+ simple:()=>{noise(.04,3200,.35);noise(.05,1800,.3,.035);beep(220,.05,'square',.02,.035);},
+ spdt:()=>{noise(.05,2400,.35);beep(660,.06,'triangle',.05,.0,440);noise(.04,1400,.25,.05);},
+ dpdt:()=>{noise(.04,2800,.3);noise(.04,2800,.3,.07);beep(520,.12,'triangle',.05,.0,780);},
+ lampOn:()=>{beep(880,.35,'sine',.07,0,1320);beep(1760,.25,'sine',.025,.05);},
+ lampOff:()=>{beep(520,.25,'sine',.05,0,180);},
+ redOn:()=>{beep(300,.18,'square',.04);beep(240,.25,'square',.04,.18);},
+ lock:()=>{beep(140,.12,'square',.05,0,90);noise(.06,600,.3);},
+ ui:()=>{beep(1250,.04,'triangle',.03);},
+ star:i=>{beep(988+i*262,.3,'triangle',.07);beep((988+i*262)*2,.2,'sine',.02);},
+ fanfare:()=>{[523,659,784,1047].forEach((f,i)=>beep(f,.3,'triangle',.07,i*.11));beep(1568,.6,'sine',.04,.44);},
+ relay:()=>{noise(.035,1300,.6);beep(150,.07,'square',.05,0,90);noise(.03,4000,.25,.03);},
+ press:()=>{noise(.03,3500,.35);beep(700,.04,'triangle',.04);},
+ release:()=>{noise(.03,2200,.25);beep(500,.04,'triangle',.03);},
+ level:()=>{beep(392,.1,'triangle',.04);beep(587,.14,'triangle',.04,.08);}
+};
+let buzz=null;
+const buzzOn=()=>{if(buzz||!sound)return;const a=ctx();if(!a)return;try{const o=a.createOscillator(),lfo=a.createOscillator(),lg=a.createGain(),g=a.createGain(),f=a.createBiquadFilter();o.type='sawtooth';o.frequency.value=100;lfo.frequency.value=13;lg.gain.value=.03;f.type='lowpass';f.frequency.value=900;g.gain.value=.04;lfo.connect(lg).connect(g.gain);o.connect(f).connect(g).connect(a.destination);o.start();lfo.start();buzz={o,lfo,g};noise(.25,2500,.4);}catch(e){}};
+const buzzOff=()=>{if(!buzz)return;try{const t=actx.currentTime;buzz.g.gain.cancelScheduledValues(t);buzz.g.gain.setValueAtTime(.03,t);buzz.g.gain.exponentialRampToValueAtTime(.0001,t+.15);buzz.o.stop(t+.2);buzz.lfo.stop(t+.2);}catch(e){}buzz=null;};
+
+let li=0,L,states,relays={},moves,won,minM,ui,wasShort=false,prevLit={};
+const svg=$('b');
+const unlocked=()=>true;
+const termPos=(c,t)=>{const o=rot(TYPES[c.type].terms[t],c.r);return[c.x+o[0],c.y+o[1]];};
+
+function padlock(p,x,y){const g=el('g',{transform:`translate(${x} ${y})`},p);el('path',{d:'M-.09-.08v-.08a.09.09 0 0 1 .18 0v.08',fill:'none',stroke:'#c9a92e','stroke-width':.04},g);el('rect',{x:-.13,y:-.08,width:.26,height:.2,rx:.03,fill:'#c9a92e'},g);}
+
+function draw(){
+ svg.innerHTML='';ui={wires:[],leads:[],blades:[],dl:[],lamps:[],batts:[],coils:[],pushes:[],sw:{}};
+ const W=L.w||12,H=L.h||8;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ const defs=el('defs',{},svg);
+ const pat=el('pattern',{id:'gr',width:1,height:1,patternUnits:'userSpaceOnUse'},defs);
+ el('circle',{cx:.5,cy:.5,r:.025,fill:'rgba(231,236,239,.13)'},pat);
+ [['gY','#fff8cf','#ffd23f','#ffae00'],['gR','#ffd2c8','#ff5a3c','#d61f0a']].forEach(([id,a,b,c])=>{const g=el('radialGradient',{id},defs);el('stop',{offset:0,'stop-color':a},g);el('stop',{offset:.3,'stop-color':b,'stop-opacity':.65},g);el('stop',{offset:1,'stop-color':c,'stop-opacity':0},g);});
+ const f=el('filter',{id:'gl',filterUnits:'userSpaceOnUse',x:-1,y:-1,width:W+2,height:H+2},defs);
+ el('feGaussianBlur',{stdDeviation:.05,result:'bl'},f);const m=el('feMerge',{},f);el('feMergeNode',{in:'bl'},m);el('feMergeNode',{in:'SourceGraphic'},m);
+ el('rect',{x:0,y:0,width:W,height:H,fill:'url(#gr)'},svg);
+ if(L.sep){el('line',{x1:.2,y1:L.sep,x2:W-.2,y2:L.sep,class:'sepl'},svg);}
+ (L.zones||[]).forEach(([x,y,t])=>{el('text',{x,y,class:'zone','text-anchor':'middle'},svg).textContent=t;});
+ const cmap={};L.comps.forEach(c=>cmap[c.id]=c);
+ const wl=el('g',{},svg),cl=el('g',{},svg),ll=el('g',{},svg);
+ for(const w of L.wires){
+  const pts=w.map(p=>{if(typeof p!=='string')return p;const[id,t]=ref(p).split('.');return termPos(cmap[id],t);});
+  const e=el('polyline',{points:pts.map(p=>p.join(',')).join(' '),class:'w'},wl);
+  ui.wires.push({e,key:ref(w.find(p=>typeof p==='string'))});
+ }
+ for(const c of L.comps){
+  if(c.type==='node'){el('circle',{cx:c.x,cy:c.y,r:.11,class:'jn'},cl);continue;}
+  const g=el('g',{transform:`translate(${c.x} ${c.y}) rotate(${c.r||0})`},cl);
+  const lead=(x1,y1,x2,y2,t)=>ui.leads.push({e:el('line',{x1,y1,x2,y2,class:'w'},g),key:c.id+'.'+t});
+  const dot=(x,y)=>el('circle',{cx:x,cy:y,r:.075,class:'dot'},g);
+  if(c.type==='battery'){
+   lead(-1,0,-.5,0,'a');lead(.5,0,1,0,'b');
+   const s=el('g',{class:'shk'},g);
+   el('rect',{x:-.5,y:-.68,width:1,height:1.36,rx:.16,class:'batt'},s);
+   el('line',{x1:-.17,y1:-.45,x2:-.17,y2:.45,class:'pl'},s);el('line',{x1:.17,y1:-.24,x2:.17,y2:.24,class:'ps'},s);
+   ui.batts.push({g,id:c.id});
+   const p=rot([-.5,.85],c.r),q=rot([.5,.85],c.r);
+   el('text',{x:c.x+p[0],y:c.y+p[1]+.17,class:'pm',fill:'#ffd23f','text-anchor':'middle'},ll).textContent='+';
+   el('text',{x:c.x+q[0],y:c.y+q[1]+.17,class:'pm',fill:'#9fc3ff','text-anchor':'middle'},ll).textContent='−';
+   continue;
+  }
+  if(c.type==='lamp'){
+   const forb=c.must==='off';
+   const glow=el('circle',{r:1.25,fill:forb?'url(#gR)':'url(#gY)',class:'glow',opacity:0},g);
+   lead(-1,0,-.42,0,'a');lead(.42,0,1,0,'b');
+   el('circle',{r:.42,class:'bulb'+(forb?' forb':'')},g);
+   const fill=el('circle',{r:.38,fill:forb?'#ff8b74':'#fff4b8',class:'bfill',opacity:0},g);
+   el('path',{d:'M-.3-.3L.3.3M-.3.3L.3-.3',class:'fil'},g);
+   ui.lamps.push({c,glow,fill});continue;
+  }
+  if(c.type==='coil'){
+   lead(-1,0,-.45,0,'a');lead(.45,0,1,0,'b');
+   const rect=el('rect',{x:-.45,y:-.32,width:.9,height:.64,rx:.06,class:'coil'},g);
+   el('path',{d:'M-.45 .32L.45-.32',class:'coilx'},g);
+   ui.coils.push({c,rect});
+   const vert=(c.r||0)%180!==0;
+   el('text',{x:vert?c.x-.5:c.x,y:vert?c.y+.13:c.y-.5,class:'lab rl','text-anchor':vert?'end':'middle'},ll).textContent=c.id;
+   continue;
+  }
+  const T=TYPES[c.type];
+  const sg=el('g',{class:'sw'+(c.locked?' lock':'')+(T.ctl?' rel':'')+(T.push?' push':''),tabindex:0,role:'button','aria-label':(c.label||c.id)+(T.ctl?' (contact de relais)':'')},g);
+  ui.sw[c.id]=sg;
+  if(T.push){
+   el('rect',{x:-1,y:-1.05,width:2,height:1.6,rx:.2,class:'hit'},sg);
+   lead(-1,0,-.5,0,'a');lead(.5,0,1,0,'b');g.appendChild(sg);
+   dot(-.5,0);dot(.5,0);
+   const mv=el('g',{},sg);
+   const bar=el('line',{x1:-.58,y1:0,x2:.58,y2:0,class:'bl'},mv);
+   el('line',{x1:0,y1:0,x2:0,y2:-.55,class:'plg'},mv);
+   el('rect',{x:-.3,y:-.72,width:.6,height:.2,rx:.08,fill:c.type==='pushNO'?'#2fbf71':'#ff4b3a'},mv);
+   ui.pushes.push({c,mv,bar,key:c.id+'.a'});
+  }else if(c.type==='simple'||c.type==='cNO'||c.type==='cNC'){
+   el('rect',{x:-1,y:-.75,width:2,height:1.5,rx:.2,class:'hit'},sg);
+   lead(-1,0,-.5,0,'a');lead(.5,0,1,0,'b');g.appendChild(sg);
+
+   dot(.5,0);
+   const t=el('g',{transform:'translate(-.5 0)'},sg),inner=el('g',{},t);
+   const line=el('line',{x1:0,y1:0,x2:1,y2:0,class:'bl'},inner);el('circle',{r:.1,class:'pv'},t);
+   if(c.type==='cNC')el('line',{x1:.5,y1:0,x2:.5,y2:.22,class:'dot',stroke:'#e7ecef','stroke-width':.05},sg);
+   const nc=c.type==='cNC';
+   ui.blades.push({c,inner,line,ang:null,angles:nc?[0,-35]:[-35,0],key:c.id+'.a',liveIf:s=>nc?s===0:s===1});
+  }else if(c.type==='spdt'||c.type==='cCO'){
+   el('rect',{x:-1,y:-.9,width:2,height:1.8,rx:.2,class:'hit'},sg);
+   lead(-1,0,-.45,0,'c');lead(.5,-.5,1,-.5,'u');lead(.5,.5,1,.5,'d');g.appendChild(sg);
+   dot(.5,-.5);dot(.5,.5);
+   const a=Math.atan2(.5,.95)*180/Math.PI,len=Math.hypot(.95,.5);
+   const t=el('g',{transform:'translate(-.45 0)'},sg),inner=el('g',{},t);
+   const line=el('line',{x1:0,y1:0,x2:len,y2:0,class:'bl'},inner);el('circle',{r:.1,class:'pv'},t);
+   ui.blades.push({c,inner,line,ang:null,angles:[-a,a],key:c.id+'.c',liveIf:()=>true});
+  }else if(c.type==='dpdt'){
+   el('rect',{x:-.95,y:-.95,width:1.9,height:1.9,rx:.2,class:'hit'},sg);
+   el('rect',{x:-.7,y:-.85,width:1.4,height:1.7,rx:.2,class:'box2'},sg);
+   lead(-1,-.5,-.5,-.5,'a1');lead(-1,.5,-.5,.5,'a2');lead(.5,-.5,1,-.5,'b1');lead(.5,.5,1,.5,'b2');g.appendChild(sg);
+   [[-.5,-.5,.5,-.5,'a1',0],[-.5,.5,.5,.5,'a2',0],[-.5,-.5,.5,.5,'a1',1],[-.5,.5,.5,-.5,'a2',1]].forEach(([x1,y1,x2,y2,t,s])=>ui.dl.push({c,s,key:c.id+'.'+t,e:el('line',{x1,y1,x2,y2,class:'dl'},sg)}));
+   [[-.5,-.5],[-.5,.5],[.5,-.5],[.5,.5]].forEach(([x,y])=>dot(x,y));
+  }
+  // label
+  const vert=(c.r||0)%180!==0,ext={simple:.2,spdt:.5,dpdt:.85,cNO:.2,cNC:.2,cCO:.5,pushNO:.2,pushNC:.2}[c.type];
+  const lx=vert?c.x-.6:c.x,ly=vert?c.y+.13:c.y+ext+.48;
+  const tx=el('text',{x:lx+(c.locked&&!vert?.12:0),y:ly,class:'lab'+(T.ctl?' rl':''),'text-anchor':vert?'end':'middle'},ll);tx.textContent=c.label||c.id;
+  if(c.locked)padlock(ll,vert?lx-.62:lx-.28,ly-.12);
+  if(T.push){
+   const press=e=>{e.preventDefault();if(won||states[c.id])return;try{e.pointerId!=null&&sg.setPointerCapture(e.pointerId);}catch(_){}states[c.id]=1;moves++;SFX.press();update(true);};
+   const rel=()=>{if(!states[c.id])return;states[c.id]=0;SFX.release();update(true);};
+   sg.addEventListener('pointerdown',press);['pointerup','pointercancel','lostpointercapture'].forEach(n=>sg.addEventListener(n,rel));
+   sg.addEventListener('contextmenu',e=>e.preventDefault());
+   sg.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat)press(e);});
+   sg.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')rel();});
+  }else{
+   const act=e=>{e.preventDefault();toggle(c);};
+   sg.addEventListener('click',act);
+   sg.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')act(e);});
+  }
+ }
+}
+
+function setBlade(b,target,anim){
+ if(b.ang===null||!anim){b.ang=target;b.inner.setAttribute('transform',`rotate(${target})`);return;}
+ const from=b.ang,t0=performance.now();b.ang=target;
+ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const step=t=>{const p=reduce?1:Math.min(1,(t-t0)/200),c=1.7,e=1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2);b.inner.setAttribute('transform',`rotate(${from+(target-from)*e})`);if(p<1)requestAnimationFrame(step);};
+ requestAnimationFrame(step);
+}
+
+function update(anim){
+ const R=settle(L,states,relays);
+ if(anim&&Object.keys(R.rs).some(k=>R.rs[k]!==relays[k]))SFX.relay();
+ relays=R.rs;
+ const live=k=>R.active.has(R.find(k)),sh=k=>R.shortRoots.has(R.find(k));
+ const paint=(e,k)=>{e.classList.toggle('live',!sh(k)&&live(k));e.classList.toggle('sh',sh(k));};
+ ui.wires.forEach(w=>paint(w.e,w.key));ui.leads.forEach(w=>paint(w.e,w.key));
+ ui.blades.forEach(b=>{const s=stOf(b.c,states,relays);setBlade(b,b.angles[s],anim);b.line.classList.toggle('live',b.liveIf(s)&&live(b.key));});
+ ui.dl.forEach(d=>{const on=stOf(d.c,states,relays)===d.s;d.e.style.opacity=on?1:0;d.e.classList.toggle('live',on&&live(d.key));});
+ ui.lamps.forEach(l=>{const v=Math.min(1,R.cur[l.c.id]);l.glow.setAttribute('opacity',v);l.fill.setAttribute('opacity',v*.95);});
+ ui.batts.forEach(b=>b.g.classList.toggle('hot',sh(b.id+'.a')));
+ ui.coils.forEach(k=>k.rect.classList.toggle('on',!!relays[k.c.id]));
+ ui.pushes.forEach(p=>{const d=states[p.c.id];const y=p.c.type==='pushNO'?(d?0:-.3):(d?.3:0);p.mv.setAttribute('transform',`translate(0 ${y})`);const closed=p.c.type==='pushNO'?d:!d;p.bar.classList.toggle('live',!!closed&&live(p.key));});
+ const st=$('st');st.className='status';
+ if(anim){let on=0,off=0,red=0;ui.lamps.forEach(l=>{const lit=R.cur[l.c.id]>.25,was=!!prevLit[l.c.id];if(lit&&!was){l.c.must==='off'?red++:on++;}if(!lit&&was)off++;});if(red)SFX.redOn();else if(on)SFX.lampOn();else if(off)SFX.lampOff();}
+ ui.lamps.forEach(l=>prevLit[l.c.id]=R.cur[l.c.id]>.25);
+ if(R.short&&anim)buzzOn();else if(!R.short)buzzOff();
+ if(R.short){st.textContent="Court-circuit ! Le courant va du + au − sans passer par une lampe. Ouvre vite un interrupteur !";st.classList.add('bad');}
+ else if(R.win){st.textContent=R.nT>1?"Bravo, toutes les lampes sont allumées !":"Bravo, la lampe est allumée !";st.classList.add('ok');}
+ else if(R.forbLit)st.textContent="La lampe rouge est allumée : elle doit rester éteinte.";
+ else if(R.pressed&&R.litT===R.nT)st.textContent="La lampe brille… mais restera-t-elle allumée quand tu lâcheras le bouton ?";
+ else if(R.litT>0)st.textContent=`Encore un effort : ${R.litT} lampe${R.litT>1?'s':''} allumée${R.litT>1?'s':''} sur ${R.nT}.`;
+ else st.textContent=Object.values(relays).some(v=>v)?"Le relais est activé, mais le circuit de la lampe n'est pas encore fermé.":"Le circuit est ouvert : le courant ne fait pas le tour.";
+ wasShort=R.short;
+ $('mv').textContent=moves;
+ if(R.win&&!won&&anim){won=true;setTimeout(showWin,750);}
+}
+
+function toggle(c){
+ if(won)return;
+ if(TYPES[c.type].ctl){const g=ui.sw[c.id];g.classList.remove('nope');void g.getBBox();g.classList.add('nope');SFX.lock();$('st').textContent=`${c.id} est un contact du relais ${c.relay} : seule la bobine ${c.relay} peut le faire bouger.`;return;}
+ if(c.locked){const g=ui.sw[c.id];g.classList.remove('nope');void g.getBBox();g.classList.add('nope');SFX.lock();$('st').textContent=`${c.id} est bloqué par un cadenas.`;return;}
+ states[c.id]=1-states[c.id];moves++;SFX[c.type]();update(true);
+}
+
+const starsFor=m=>m<=minM?3:m<=minM+2?2:1;
+function showWin(){
+ const s=starsFor(moves);
+ save.stars[li]=Math.max(save.stars[li]||0,s);persist();
+ buzzOff();SFX.fanfare();
+ $('wstars').innerHTML=[0,1,2].map(()=>`<span>★</span>`).join('');
+ [...$('wstars').children].forEach((e,i)=>{if(i<s)setTimeout(()=>{e.classList.add('on','pop');SFX.star(i);},650+i*280);});
+ const last=li===LEVELS.length-1;
+ $('wt').textContent=last?'Tu es un vrai électricien !':'Bravo !';
+ $('wtxt').textContent=`Réussi en ${moves} coup${moves>1?'s':''}. `+(s===3?'Parfait, impossible de faire mieux !':`On peut le faire en ${minM} coup${minM>1?'s':''} : retente ta chance pour 3 étoiles.`)+(last?' Tu as terminé tous les niveaux.':'');
+ $('wnext').hidden=last;
+ $('win').hidden=false;$('wnext').hidden?$('wagain').focus():$('wnext').focus();
+ refreshNav();
+}
+
+function load(i){
+ li=i;L=LEVELS[i];states=initStates(L);relays=settle(L,states,initRelays(L)).rs;moves=0;won=false;wasShort=false;prevLit={};buzzOff();minM=minMoves(L);
+ $('ln').textContent=i+1;$('lt').textContent=LEVELS.length;$('lname').textContent=L.name;
+ $('intro').textContent=L.intro;$('hint').textContent=L.hint;$('hint').hidden=true;
+ $('goal').textContent=`3 étoiles : ${minM} coup${minM>1?'s':''}`;
+ draw();update(false);refreshNav();renderStrip();
+ save.last=i;persist();
+}
+function renderStrip(){
+ $('strip').innerHTML=LEVELS.map((l,i)=>{const s=save.stars[i]||0;return `<button data-i="${i}" class="${i===li?'cur':''}" aria-label="Niveau ${i+1} : ${l.name}" ${i===li?'aria-current="true"':''}><b>${i+1}</b><span>${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`;}).join('');
+ const cur=$('strip').children[li];if(cur)cur.scrollIntoView({block:'nearest',inline:'center'});
+}
+$('strip').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b&&+b.dataset.i!==li){SFX.level();load(+b.dataset.i);}});
+function refreshNav(){$('prev').disabled=li===0;$('next').disabled=li===LEVELS.length-1;}
+function openMenu(){
+ $('mgrid').innerHTML=LEVELS.map((l,i)=>{const s=save.stars[i]||0,u=unlocked(i);return `<button data-i="${i}" ${u?'':'disabled'}><span>${i+1}. ${l.name}</span><small>${s?'Réussi':'À faire'}</small><span class="st">${'★'.repeat(s)}${'☆'.repeat(3-s)}</span></button>`;}).join('');
+ $('menu').hidden=false;
+}
+$('mgrid').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b){$('menu').hidden=true;SFX.level();load(+b.dataset.i);}});
+$('menuB').onclick=()=>{SFX.ui();openMenu();};$('mclose').onclick=()=>$('menu').hidden=true;
+$('reset').onclick=()=>{SFX.ui();load(li);};
+$('hintB').onclick=()=>{SFX.ui();$('hint').hidden=!$('hint').hidden;};
+$('prev').onclick=()=>{if(li>0){SFX.level();load(li-1);}};
+$('next').onclick=()=>{if(li<LEVELS.length-1){SFX.level();load(li+1);}};
+$('wagain').onclick=()=>{$('win').hidden=true;load(li);};
+$('wnext').onclick=()=>{$('win').hidden=true;load(li+1);};
+const sndTxt=()=>{$('snd').textContent=sound?'Son : oui':'Son : non';};
+$('snd').onclick=()=>{sound=!sound;save.sound=sound;persist();sndTxt();if(sound)SFX.ui();else buzzOff();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('menu').hidden=true;}});
+sndTxt();
+const start=save.last!=null&&LEVELS[save.last]&&unlocked(save.last)?save.last:0;
+load(start);
+}
+</script>
+</body>
+</html>
