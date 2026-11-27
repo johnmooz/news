@@ -705,18 +705,41 @@
 
   // Prénoms proposés (modifiables)
   const FIRST_NAMES = [
-    'Léon', 'Margaux', 'Gaspard', 'Inès', 'Basile', 'Capucine', 'Achille', 'Romane', 'Félix', 'Louise',
-    'Anatole', 'Jeanne', 'Octave', 'Clémence', 'Marius', 'Albane', 'Victor', 'Suzanne', 'Jules', 'Héloïse',
-    'Augustin', 'Mathilde', 'Lucien', 'Joséphine', 'Firmin', 'Rose', 'Hector', 'Colette', 'Edmond', 'Lison',
-    'Gustave', 'Apolline', 'Ernest', 'Blanche', 'Côme', 'Adèle', 'Maxence', 'Lucie', 'Timothée', 'Elsa'
+    'Jo', 'Tim', 'Virg', 'Telio', 'Jacqueline', 'Alain', 'Ophélie', 'Toto', 'Nath', 'Sandra',
+    'Greg', 'Lucas', 'Théo', 'Alizée', 'Seb', 'Manon', 'Fred', 'Chloé', 'Nico', 'Julie',
+    'Kévin', 'Mimi', 'Patrick', 'Léa', 'Max', 'Sophie', 'Bernard', 'Inès', 'Dédé', 'Karine',
+    'Hugo', 'Emma', 'Jérôme', 'Lili', 'Mathis', 'Christine', 'Tony', 'Zoé', 'Gégé', 'Margot'
   ];
+  // Noms des ordinateurs : consonance informatique
+  const CPU_NAMES = [
+    'Bitou', 'Pixel', 'Octet', 'Algo', 'Robotix', 'Mégaoctet', 'Dé-Bot', 'Bip-Bop', 'Kilobit', 'Circuit',
+    'Binaire', 'Turbo-Dé', 'Zéro-Un', 'Puce', 'Silicium', 'Gigabit', 'Processeur', 'Kernel', 'Byte', 'Logik',
+    'Cyber-Dé', 'Data', 'Néon', 'Clavier', 'Algorythme', 'Wifi', 'Disquette', 'Modem', 'Bug', 'Quantik'
+  ];
+  // anciens prénoms proposés automatiquement : on les remplace par les nouveaux
+  const OLD_NAMES = ['Léon','Margaux','Gaspard','Basile','Capucine','Achille','Romane','Félix','Louise','Anatole','Jeanne','Octave','Clémence','Marius','Albane','Victor','Suzanne','Jules','Héloïse','Augustin','Mathilde','Lucien','Joséphine','Firmin','Rose','Hector','Colette','Edmond','Lison','Gustave','Apolline','Ernest','Blanche','Côme','Adèle','Maxence','Lucie','Timothée','Elsa'];
+  prefs.names = prefs.names.map(n => OLD_NAMES.includes((n || '').trim()) ? '' : n);
+
+  const isCpuRow = i => prefs.mode === 'virtual' && !!prefs.cpu[i];
+  const isAutoName = n => FIRST_NAMES.includes((n || '').trim()) || CPU_NAMES.includes((n || '').trim());
   function inventName(i) {
+    const list = isCpuRow(i) ? CPU_NAMES : FIRST_NAMES;
     const taken = new Set(prefs.names.filter((n, k) => k !== i && k < prefs.count).map(n => (n || '').trim()));
-    const free = FIRST_NAMES.filter(n => !taken.has(n) && n !== prefs.names[i]);
+    const free = list.filter(n => !taken.has(n) && n !== prefs.names[i]);
     return free[Math.floor(Math.random() * free.length)] || defaultName(i);
+  }
+  // Un nom proposé automatiquement suit le type du joueur (prénom ↔ nom d'ordinateur)
+  function fixAutoNames() {
+    for (let i = 0; i < prefs.count; i++) {
+      const n = (prefs.names[i] || '').trim();
+      if (!isAutoName(n)) continue;
+      const wrongList = isCpuRow(i) ? FIRST_NAMES.includes(n) : CPU_NAMES.includes(n);
+      if (wrongList) prefs.names[i] = inventName(i);
+    }
   }
 
   function renderSetup() {
+    fixAutoNames();
     for (let i = 0; i < prefs.count; i++) if (!(prefs.names[i] || '').trim()) prefs.names[i] = inventName(i);
     modePicker.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.mode === prefs.mode));
     [...countPicker.children].forEach((b, i) => b.classList.toggle('on', i + 1 === prefs.count));
@@ -735,7 +758,7 @@
       reroll.type = 'button';
       reroll.className = 'reroll';
       reroll.textContent = '🎲';
-      reroll.title = 'Proposer un autre prénom';
+      reroll.title = isCpuRow(i) ? 'Proposer un autre nom d\'ordinateur' : 'Proposer un autre prénom';
       reroll.setAttribute('aria-label', `Proposer un autre prénom pour le joueur ${i + 1}`);
       reroll.addEventListener('click', () => { saveSetupInputs(); prefs.names[i] = inventName(i); renderSetup(); play('tick'); });
       row.appendChild(reroll);
