@@ -264,12 +264,10 @@ const LOWER = [
 const ALL = [...UPPER, ...LOWER];
 const IDS = new Set(ALL.map(r=>r.id));
 const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-const NAMES = ['Alice','Bruno','Chloé','David','Emma','Félix','Gabrielle','Hugo','Inès','Jules','Karim','Léa',
-  'Louis','Manon','Nina','Oscar','Paul','Rose','Sacha','Théo','Victor','Yasmine','Zoé','Lucas','Margot','Noé',
-  'Camille','Arthur','Jade','Malo','Lina','Basile','Elsa','Gaspard','Mila','Raphaël'];
-const CPU_NAMES = ['Ordi Savant','Pr Probabilité','Dr Dé','Capitaine Calcul','Madame Stat','Robot Malin',
-  'Puce Futée','Génie du Dé','Algo le Sage','Cerveau 3000','Lady Hasard','Puce Maligne','Byte le Brave',
-  'Mister Calcul','Turbo Neurone','Sir Algorithme','Baronne Binaire','Pixel Rusé'];
+const NAMES = ['Jo','Tim','Virg','Telio','Jacqueline','Alain','Ophélie','Toto','Nath','Sandra','Greg','Lucas',
+  'Théo','Alizée','Manu','Léa','Sophie','Max','Nico','Julie','Seb','Chloé','Fred','Emma','Paulo','Mimi','Lulu','Pat'];
+const CPU_NAMES = ['Bit-Bot','RAM-Bo','CPU-Dé','Octet','Giga-Byte','Pixel-9000','Algo-404','Binaire','Data-Dé',
+  'Cyber-Yams','Proc-X','Wifi-Bot','USB-Max','Silicium','Turbo-RAM','Kilo-Octet','Firewall','Mega-Hertz','Robo-Code','Disque-Dur'];
 const defNames = ()=>Array.from({length:MAXP},(_,i)=>`Joueur ${i+1}`);
 const cleanName = s => String(s==null?'':s).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,16);
 const esc = s => String(s).replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -685,6 +683,9 @@ let draft = null;
 function showSetup(){
   const base = S.started ? S : (load(KEY) ? normalize(load(KEY)) : S);
   draft = {mode:base.mode||'auto', nb:base.nb||2, names:[...base.names], cpu:[...base.cpu]};
+  // noms par défaut (« Joueur 1 »…) remplacés par des noms tirés au hasard
+  for(let p=0;p<MAXP;p++) if(/^Joueur \d$/.test(draft.names[p]||''))
+    draft.names[p] = randomName(draft.names.filter((_,i)=>i!==p), draft.cpu[p]);
   renderSetup(); $('setup').classList.add('show');
 }
 function hideSetup(){ $('setup').classList.remove('show'); }
