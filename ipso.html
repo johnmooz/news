@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IPSO – jeu de cartes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, table de jeu en famille
+   IDEA: un tapis de feutre bordeaux sur lequel on pose des cartes crème colorées
+   PICTURE: la pyramide du joueur actif, grande, au centre de l'écran
+   COLOUR and TYPE: feutre bordeaux, cartes crème, 5 encres de cartes, or pour l'étoile ; Baloo 2 + Nunito
+   LAYOUT: pioche (2 cartes) en haut, pyramide active au centre, petites pyramides des autres dessous */
+:root{color-scheme:dark;--felt:#5e1631;--felt2:#4a0f25;--ink:#fff6ec;--soft:#f3d9df;--cream:#fffaf1;--gold:#f6c445;--line:rgba(255,255,255,.16)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip;
+background:radial-gradient(120% 80% at 50% 0%,#7a2142 0%,var(--felt) 45%,var(--felt2) 100%) fixed}
+h1,h2,h3,.card b,.big{font-family:"Baloo 2",Nunito,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:16px max(4vw,12px) 40px}
+.logo{font-size:clamp(44px,10vw,72px);line-height:1;margin:8px 0 0;letter-spacing:.02em}
+.logo span{display:inline-block;padding:0 .08em}
+.tag{color:var(--soft);margin:4px 0 20px}
+.panel{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:18px;padding:16px}
+.lbl{font-weight:700;margin:0 0 8px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button,.btn{min-height:44px;min-width:44px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.08);padding:0 14px;font-weight:700}
+.seg button[aria-pressed=true]{background:var(--gold);color:#3a0b1c;border-color:var(--gold)}
+.btn.main{background:var(--gold);color:#3a0b1c;border-color:var(--gold);font-size:18px;padding:0 22px}
+.btn:disabled{opacity:.45;cursor:default}
+.prow{display:grid;grid-template-columns:28px minmax(0,1fr) auto 44px;gap:8px;align-items:center;margin-top:10px}
+.prow .num{font-family:"Baloo 2";font-size:20px;text-align:center;color:var(--gold)}
+.prow input{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--cream);color:#2a0a16;padding:0 12px;font-size:16px;width:100%}
+.prow .seg{flex-wrap:nowrap;gap:4px}
+.prow .seg button{padding:0 10px;font-size:14px}
+.row-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;justify-content:space-between}
+details{margin-top:16px}summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+details li{margin:4px 0}
+/* cartes */
+.card{--k:#888;--cw:var(--w,64px);width:var(--cw);height:calc(var(--cw)*1.38);border-radius:calc(var(--cw)*.14);background:var(--cream);
+position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;
+border:calc(var(--cw)*.07) solid var(--k);box-shadow:0 3px 0 rgba(0,0,0,.25),0 6px 14px rgba(0,0,0,.25);color:var(--k)}
+.card b{font-size:calc(var(--cw)*.5);line-height:1}
+.card i{font-style:normal;color:var(--gold);font-size:calc(var(--cw)*.2);line-height:1;height:calc(var(--cw)*.2);text-shadow:0 0 1px #8a5a00}
+.card.back{border-color:#f1d27a;background:repeating-linear-gradient(45deg,#8c2449 0 6px,#7a1d3e 6px 12px);color:#f1d27a}
+.card.back span{font-family:"Baloo 2";font-weight:800;font-size:calc(var(--cw)*.24);transform:rotate(-18deg)}
+.card.flip{animation:flip .45s ease}
+@keyframes flip{0%{transform:rotateY(90deg) scale(1.1)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.card.flip{animation:none}}
+.slot{padding:0;border:0;background:none;border-radius:12px}
+.slot.can .card{outline:3px dashed var(--gold);outline-offset:3px}
+.slot.can:hover .card{transform:translateY(-3px)}
+.slot.last .card{box-shadow:0 0 0 4px var(--gold),0 6px 14px rgba(0,0,0,.3)}
+.pick{padding:0;border:0;background:none;border-radius:12px;transition:transform .15s}
+.pick.on{transform:translateY(-8px)}.pick.on .card{box-shadow:0 0 0 4px var(--gold),0 10px 22px rgba(0,0,0,.35)}
+/* pyramide */
+.pyr{display:flex;flex-direction:column;align-items:center;gap:calc(var(--w)*.14)}
+.prw{display:flex;gap:calc(var(--w)*.1);align-items:center;position:relative}
+.mark{position:absolute;left:100%;margin-left:8px;font-weight:800;font-size:14px;white-space:nowrap}
+.mark.ok{color:#9ff0b5}.mark.ko{color:#ffb0b0}
+.starcard{width:calc(var(--w)*.9);height:calc(var(--w)*.9);border-radius:50%;display:grid;place-items:center;background:var(--gold);color:#5e1631;font-size:calc(var(--w)*.55);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.starcard.gone{background:transparent;border:2px dashed var(--line);color:var(--line)}
+/* jeu */
+.top{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.chip{padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:14px;white-space:nowrap}
+.chip.cur{background:var(--gold);color:#3a0b1c;font-weight:800}
+.table{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center}
+.zone{display:flex;gap:12px;align-items:flex-end;justify-content:center}
+.zone .card{--w:72px}
+.msg{font-size:18px;font-weight:700}
+.sub{color:var(--soft);font-size:15px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#main{display:flex;justify-content:center;padding:22px 0 18px;--w:clamp(44px,13.5vw,74px)}
+#main .pyr{--w:inherit}
+.who{text-align:center;font-family:"Baloo 2";font-size:26px;line-height:1.1;margin:6px 0 0}
+.others{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mini{--w:22px;padding:10px;border-radius:14px;background:rgba(0,0,0,.2);border:1px solid var(--line);text-align:center}
+.mini h3{margin:0 0 6px;font-size:16px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini .card{border-width:2px;border-radius:4px;box-shadow:none}
+.mini .card b{font-size:11px}.mini .card i{display:none}
+.mini .starcard{font-size:13px}
+.log{margin-top:18px;font-size:14px;color:var(--soft);max-height:140px;overflow:auto}
+.log p{margin:2px 0}
+/* fin */
+.res{display:grid;gap:12px}
+.rcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rcard.win{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.rank{font-family:"Baloo 2";font-size:34px;color:var(--gold);width:40px;text-align:center}
+.big{font-size:40px;line-height:1;text-align:right}
+.rcard .pyr{--w:26px;align-items:flex-start}
+.rcard .card{border-width:2px;border-radius:5px;box-shadow:none}.rcard .card i{display:none}.rcard .card b{font-size:12px}
+.rcard .mark{position:static;margin-left:6px}
+.rcard .prw.dead .card{opacity:.35}
+@media(max-width:600px){.table{grid-template-columns:1fr;text-align:center}.acts{justify-content:center}.zone .card{--w:62px}
+.rcard{grid-template-columns:auto minmax(0,1fr)}.rcard .big{grid-column:1/-1;text-align:left;font-size:30px}.mark{display:none}.rcard .mark{display:inline}}
+</style>
+</head>
+<body>
+<button class="btn" id="mute" style="position:fixed;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.35)"></button>
+<div class="wrap">
+  <section id="setup">
+    <h1 class="logo" aria-label="IPSO"><span style="color:#2e9e4f">I</span><span style="color:#e9b81c">P</span><span style="color:#2f72d6">S</span><span style="color:#ee7420">O</span></h1>
+    <p class="tag">Construisez votre pyramide à l'aveugle… et espérez des lignes croissantes.</p>
+    <div class="panel">
+      <p class="lbl">Nombre de joueurs</p>
+      <div class="seg" id="count"></div>
+      <div id="plist"></div>
+      <div class="row-btns">
+        <button class="btn" id="randAll">Noms au hasard</button>
+        <button class="btn main" id="go">Commencer la partie</button>
+      </div>
+    </div>
+    <details class="panel">
+      <summary>Règles du jeu</summary>
+      <ul>
+        <li>Chaque joueur reçoit 14 cartes face cachée, en pyramide de 2, 3, 4 et 5 cartes, avec une carte Étoile au sommet.</li>
+        <li>À votre tour : prenez une des 2 cartes visibles au centre et remplacez une carte cachée de votre pyramide. La carte remplacée est révélée et rejoint le centre.</li>
+        <li>Une carte visible de votre pyramide ne peut plus être changée.</li>
+        <li>Quand toutes les pyramides sont visibles, chacun choisit : garder son Étoile (+3 points) ou la sacrifier pour piocher une carte et remplacer n'importe quelle carte de sa pyramide (ou la défausser).</li>
+        <li>Seules les lignes croissantes (de gauche à droite) comptent : 1 point par carte, 2 points par carte si la ligne est d'une seule couleur, +1 par petite étoile ★.</li>
+        <li>Égalité : le joueur avec le plus de petites étoiles l'emporte.</li>
+      </ul>
+      <p class="sub">La répartition des petites étoiles sur les cartes est tirée au hasard à chaque partie.</p>
+    </details>
+  </section>
+
+  <section id="game" hidden>
+    <div class="top" id="chips"></div>
+    <div class="panel table">
+      <div class="zone" id="center"></div>
+      <div><div class="msg" id="msg"></div><div class="sub" id="sub"></div><div class="acts" id="acts"></div></div>
+    </div>
+    <div class="who" id="who"></div>
+    <div id="main"></div>
+    <div class="others" id="others"></div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section id="end" hidden>
+    <h1 class="logo" style="font-size:44px">Résultats</h1>
+    <p class="tag" id="winner"></p>
+    <div class="res" id="res"></div>
+    <div class="row-btns"><button class="btn" id="newG">Changer les joueurs</button><button class="btn main" id="again">Rejouer</button></div>
+  </section>
+</div>
+<script>
+{
+const COLS=['#2e9e4f','#e9b81c','#2f72d6','#cf2f8a','#ee7420'];
+const HUMANS=['Jo','Tim','Virg','Telio','Jacqueline','Alain','Ophélie','Toto','Nath','Sandra','Greg','Lucas','Théo','Alizée','Manu','Steph','Fanny','Kévin','Juju','Marco','Lili','Seb','Coco','Mimi'];
+const BOTS=['Robotix','Pixel-3000','Octet','Binaire','Algo-Rythme','Cyber-Max','Turbo-PC','Nanobot','Silicium','Mégaoctet','Bug-Zéro','Kernel','Byte-Man','Gigahertz','Circuit-7','Puce-X','Logicielle','Wifi-Max','Data-Bot','Processeur'];
+const ROWS=[2,3,4,5];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- sons (Web Audio, aucun fichier externe) ---------- */
+let AC=null,muted=false;
+try{muted=localStorage.getItem('ipso-muted')==='1'}catch(e){}
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}
+  if(AC.state==='suspended')AC.resume().catch(()=>{});return AC}
+function tone(f,d,type='sine',vol=.12,delay=0,slide=0){const a=ac();if(!a||muted)return;const t=a.currentTime+delay;
+  const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05)}
+function noise(d,vol=.2,delay=0,freq=2000){const a=ac();if(!a||muted)return;const t=a.currentTime+delay;
+  const b=a.createBuffer(1,Math.ceil(a.sampleRate*d),a.sampleRate),ch=b.getChannelData(0);
+  for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);
+  const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type='bandpass';f.frequency.value=freq;f.Q.value=.8;
+  g.gain.value=vol;s.connect(f);f.connect(g);g.connect(a.destination);s.start(t)}
+const SFX={
+  pick:()=>tone(700,.07,'triangle',.1),
+  place:()=>{noise(.1,.3,0,1500);tone(180,.09,'triangle',.12)},
+  flip:()=>{noise(.16,.22,.12,3200);tone(450,.12,'sine',.06,.12,950)},
+  good:()=>{tone(784,.12,'sine',.09,.3);tone(1046,.2,'sine',.09,.38)},
+  bad:()=>tone(240,.28,'sawtooth',.05,.3,130),
+  turn:()=>{tone(523,.08,'sine',.07);tone(659,.1,'sine',.07,.07)},
+  star:()=>[1046,1318,1568,2093].forEach((f,i)=>tone(f,.35,'sine',.08,i*.07)),
+  draw:()=>{noise(.3,.25,0,900);tone(300,.25,'triangle',.07,0,600)},
+  toss:()=>{noise(.2,.2,0,700);tone(400,.2,'triangle',.06,0,180)},
+  shuffle:()=>{for(let i=0;i<7;i++)noise(.07,.22,i*.06,1800+Math.random()*1500)},
+  final:()=>[392,523,659].forEach((f,i)=>tone(f,.3,'triangle',.09,i*.12)),
+  win:()=>[523,659,784,1046,784,1046,1318].forEach((f,i)=>tone(f,i===6?.6:.22,'triangle',.11,i*.13))
+};
+const sfx=k=>{try{SFX[k]()}catch(e){}};
+const muteBtn=document.getElementById('mute');
+function paintMute(){muteBtn.textContent=muted?'🔇 Son coupé':'🔊 Son';muteBtn.setAttribute('aria-pressed',String(!muted))}
+paintMute();
+muteBtn.onclick=()=>{muted=!muted;try{localStorage.setItem('ipso-muted',muted?'1':'0')}catch(e){}paintMute();if(!muted){ac();sfx('pick')}};
+document.addEventListener('pointerdown',()=>ac(),{once:true});
+const rowOk=row=>{const up=row.filter(s=>s.up).map(s=>s.card);return up.every((c,i)=>!i||c.n>up[i-1].n)};
+
+/* ---------- configuration ---------- */
+let cfg=[{name:'',ai:false}];
+function randName(skip){const used=cfg.map((p,i)=>i===skip?null:p.name);const list=cfg[skip]&&cfg[skip].ai?BOTS:HUMANS;const free=list.filter(n=>!used.includes(n));return free[Math.random()*free.length|0]||((cfg[skip]&&cfg[skip].ai?'Robot-':'Joueur ')+(Math.random()*99|0))}
+function setCount(n){while(cfg.length<n)cfg.push({name:'',ai:true}),cfg[cfg.length-1].name=randName(cfg.length-1);cfg.length=n;renderSetup()}
+cfg[0].name=randName(0);setCount(3);
+function renderSetup(){
+  $('#count').innerHTML=[2,3,4,5,6].map(n=>`<button aria-pressed="${n===cfg.length}" data-n="${n}">${n}</button>`).join('');
+  $('#plist').innerHTML=cfg.map((p,i)=>`<div class="prow"><span class="num">${i+1}</span>
+    <input id="nm${i}" data-i="${i}" value="${esc(p.name)}" maxlength="16" aria-label="Nom du joueur ${i+1}">
+    <div class="seg"><button data-t="${i}" data-ai="0" aria-pressed="${!p.ai}">Joueur</button><button data-t="${i}" data-ai="1" aria-pressed="${p.ai}">Ordinateur</button></div>
+    <button class="btn" data-r="${i}" title="Nom au hasard" aria-label="Nom au hasard">🎲</button></div>`).join('');
+}
+$('#count').onclick=e=>{const b=e.target.closest('button');if(b)setCount(+b.dataset.n)};
+$('#plist').oninput=e=>{if(e.target.dataset.i)cfg[+e.target.dataset.i].name=e.target.value};
+$('#plist').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.t){const i=+b.dataset.t,ai=b.dataset.ai==='1';if(cfg[i].ai!==ai){const nm=cfg[i].name.trim();cfg[i].ai=ai;if(!nm||(ai?HUMANS:BOTS).includes(nm)||/^(Joueur|Robot-) ?\d+$/.test(nm))cfg[i].name=randName(i)}renderSetup()}
+  if(b.dataset.r){const i=+b.dataset.r;cfg[i].name=randName(i);renderSetup()}};
+$('#randAll').onclick=()=>{cfg.forEach(p=>p.name='');cfg.forEach((p,i)=>p.name=randName(i));renderSetup()};
+$('#go').onclick=()=>{cfg.forEach((p,i)=>{p.name=p.name.trim()||('Joueur '+(i+1))});newGame()};
+$('#again').onclick=()=>newGame();
+$('#newG').onclick=()=>{show('setup');renderSetup()};
+function show(id){for(const s of ['setup','game','end'])$('#'+s).hidden=s!==id;scrollTo(0,0)}
+
+/* ---------- partie ---------- */
+let G=null,sel=null,token=0;
+function makeDeck(){const col=shuffle([].concat(...COLS.map((c,i)=>Array(18).fill(i))));
+  return shuffle(Array.from({length:90},(_,i)=>{const r=Math.random();return{n:i+1,c:col[i],s:r<.5?0:r<.82?1:r<.95?2:3}}))}
+function newGame(){
+  const d=makeDeck();token++;sel=null;
+  G={players:cfg.map(p=>({name:p.name,ai:p.ai,star:true,choice:null,
+      pyr:ROWS.map(L=>Array.from({length:L},()=>({card:d.pop(),up:false})))})),
+     center:[d.pop(),d.pop()],pile:d,cur:0,phase:'play',last:null,drawn:null,log:[],fresh:null};
+  show('game');sfx('shuffle');step();
+}
+const P=()=>G.players[G.cur];
+function addLog(t){G.log.unshift(t);G.log.length=Math.min(G.log.length,30)}
+
+function rowsScore(pyr){return pyr.map(row=>{const cs=row.map(s=>s.card);
+  const asc=cs.every((c,i)=>!i||c.n>cs[i-1].n),mono=cs.every(c=>c.c===cs[0].c),st=cs.reduce((a,c)=>a+c.s,0);
+  return{asc,mono,st,pts:asc?cs.length*(mono?2:1)+st:0}})}
+function score(p){const rows=rowsScore(p.pyr);return{rows,tot:rows.reduce((a,r)=>a+r.pts,0)+(p.star?3:0),stars:p.pyr.flat().reduce((a,s)=>a+s.card.s,0)}}
+const allUp=()=>G.players.every(p=>p.pyr.every(r=>r.every(s=>s.up)));
+
+function play(ci,r,c){
+  const p=P(),slot=p.pyr[r][c],taken=G.center[ci],old=slot.card;
+  slot.card=taken;slot.up=true;G.center[ci]=old;G.last={p:G.cur,r,c};G.fresh=ci;sel=null;
+  addLog(`${p.name} pose le ${taken.n} et révèle le ${old.n}.`);sfx('place');sfx('flip');sfx(rowOk(p.pyr[r])?'good':'bad');
+  if(allUp()){G.phase='final';G.pile.unshift(...G.center);G.center=[];G.cur=0;addLog('Toutes les pyramides sont révélées : tour final !');setTimeout(()=>sfx('final'),600)}
+  else G.cur=(G.cur+1)%G.players.length;
+  step();
+}
+function finalKeep(){const p=P();p.choice='keep';addLog(`${p.name} garde son étoile (+3).`);sfx('star');nextFinal()}
+function finalDraw(){const p=P();p.choice='draw';p.star=false;G.drawn=G.pile.pop();addLog(`${p.name} sacrifie son étoile et pioche le ${G.drawn.n}.`);sfx('draw');G.fresh='d';render()}
+function finalPlace(r,c){const p=P(),s=p.pyr[r][c];addLog(`${p.name} remplace le ${s.card.n} par le ${G.drawn.n}.`);sfx('place');s.card=G.drawn;G.drawn=null;G.last={p:G.cur,r,c};nextFinal()}
+function finalDiscard(){addLog(`${P().name} défausse le ${G.drawn.n}.`);sfx('toss');G.drawn=null;nextFinal()}
+function nextFinal(){G.cur++;if(G.cur>=G.players.length){G.phase='end';endGame()}else step()}
+
+/* ---------- ordinateur ---------- */
+function evalPlace(row,c,card){
+  const up=row.map((s,i)=>s.up?{i,n:s.card.n,c:s.card.c}:null).filter(Boolean);
+  if(up.some((u,k)=>k&&u.n<up[k-1].n))return 3;            // ligne déjà perdue : on y jette les mauvaises cartes
+  const L=up.filter(u=>u.i<c).pop()||{i:-1,n:0},R=up.find(u=>u.i>c)||{i:row.length,n:91};
+  if(card.n<=L.n||card.n>=R.n)return -40;
+  if(card.n-L.n-1<c-L.i-1||R.n-card.n-1<R.i-c-1)return -35;
+  const sp=(R.n-L.n)/(R.i-L.i),dev=Math.abs(card.n-(L.n+sp*(c-L.i)))/sp;
+  let s=20-dev*14+card.s*2.5;
+  if(up.length&&up.every(u=>u.c===card.c))s+=3+up.length*1.5;
+  return s;
+}
+async function aiTurn(){
+  const t=token,p=P();await wait(800);if(t!==token)return;
+  if(G.phase==='play'){
+    let best=null;
+    G.center.forEach((card,ci)=>p.pyr.forEach((row,r)=>row.forEach((s,c)=>{if(s.up)return;
+      const v=evalPlace(row,c,card)+Math.random()*1.5;if(!best||v>best.v)best={v,ci,r,c}})));
+    sel=best.ci;sfx('pick');render();await wait(650);if(t!==token)return;play(best.ci,best.r,best.c);
+  }else if(G.phase==='final'){
+    const base=score({pyr:p.pyr,star:false}).tot;
+    const gain=card=>{let g=0,b=null;p.pyr.forEach((row,r)=>row.forEach((s,c)=>{const o=s.card;s.card=card;
+      const v=score({pyr:p.pyr,star:false}).tot-base;s.card=o;if(v>g){g=v;b={r,c}}}));return{g,b}};
+    const avg=G.pile.reduce((a,c)=>a+gain(c).g,0)/Math.max(1,G.pile.length);
+    if(avg<=3){finalKeep();return}
+    finalDraw();await wait(900);if(t!==token)return;
+    const {b}=gain(G.drawn);b?finalPlace(b.r,b.c):finalDiscard();
+  }
+}
+
+/* ---------- affichage ---------- */
+const cardH=(card,cls='')=>`<div class="card ${cls}" style="--k:${COLS[card.c]}"><b>${card.n}</b><i>${'★'.repeat(card.s)}</i></div>`;
+const backH=()=>`<div class="card back"><span>ipso</span></div>`;
+function liveMark(row){const up=row.filter(s=>s.up).map(s=>s.card);if(!up.length)return'';
+  const ok=up.every((c,i)=>!i||c.n>up[i-1].n);return`<span class="mark ${ok?'ok':'ko'}">${ok?'✓':'✗'}</span>`}
+function pyrH(p,pi,click){
+  return`<div class="pyr"><div class="starcard ${p.star?'':'gone'}" title="Carte Étoile">★</div>`+
+  p.pyr.map((row,r)=>`<div class="prw">${row.map((s,c)=>{const inner=s.up?cardH(s.card,G.last&&G.last.p===pi&&G.last.r===r&&G.last.c===c?'flip':''):backH();
+    const can=click&&click(s);const last=G.last&&G.last.p===pi&&G.last.r===r&&G.last.c===c;
+    return click?`<button class="slot ${can?'can':''} ${last?'last':''}" data-r="${r}" data-c="${c}" ${can?'':'disabled'} aria-label="Ligne ${r+1}, carte ${c+1}">${inner}</button>`:inner}).join('')}${liveMark(row)}</div>`).join('')+`</div>`;
+}
+function render(){
+  const p=P(),human=!p.ai,N=G.players.length;
+  $('#chips').innerHTML=G.players.map((q,i)=>`<span class="chip ${i===G.cur?'cur':''}">${esc(q.name)}${q.ai?' · ordi':''}</span>`).join('')+
+    `<span class="chip">Pioche : ${G.pile.length}</span>`;
+  let msg='',sub='',acts='';
+  if(G.phase==='play'){
+    $('#center').innerHTML=G.center.map((c,i)=>`<button class="pick ${sel===i?'on':''}" data-ci="${i}" ${human?'':'disabled'} aria-label="Prendre le ${c.n}">${cardH(c,G.fresh===i?'flip':'')}</button>`).join('');
+    msg=human?(sel===null?`${esc(p.name)}, choisissez une carte au centre`:`Touchez une carte cachée pour y poser le ${G.center[sel].n}`):`${esc(p.name)} réfléchit…`;
+    sub='Visez des lignes croissantes de gauche à droite. Une ligne d’une seule couleur vaut double.';
+  }else{
+    $('#center').innerHTML=G.drawn?cardH(G.drawn,'flip'):backH();
+    if(G.drawn){msg=human?`Touchez une carte de votre pyramide à remplacer par le ${G.drawn.n}`:`${esc(p.name)} place sa carte…`;
+      if(human)acts=`<button class="btn" id="disc">Défausser le ${G.drawn.n}</button>`}
+    else{msg=`Tour final — ${esc(p.name)}`;sub=`Score actuel : ${score(p).tot} pts (étoile comprise).`;
+      if(human)acts=`<button class="btn main" id="keep">Garder l’étoile (+3)</button><button class="btn" id="draw">Sacrifier l’étoile et piocher</button>`;
+      else msg+=' réfléchit…'}
+  }
+  $('#msg').innerHTML=msg;$('#sub').textContent=sub;$('#acts').innerHTML=acts;
+  $('#who').textContent=p.name;
+  const click=!human?null:G.phase==='play'?(s=>sel!==null&&!s.up):(s=>!!G.drawn);
+  $('#main').innerHTML=pyrH(p,G.cur,click||(()=>false));
+  $('#others').innerHTML=G.players.map((q,i)=>i===G.cur?'':`<div class="mini"><h3>${esc(q.name)}</h3>${pyrH(q,i,null)}</div>`).join('');
+  $('#log').innerHTML=G.log.map(l=>`<p>${esc(l)}</p>`).join('');
+  G.fresh=null;
+  if(G.last&&G.last.p!==G.cur)G.last=G.last; // garde la surbrillance chez l'autre joueur
+}
+let prevCur=-1;
+function step(){render();if(P().ai)aiTurn();else if(prevCur!==G.cur)sfx('turn');prevCur=G.cur}
+
+$('#center').onclick=e=>{const b=e.target.closest('.pick');if(!b||P().ai||G.phase!=='play')return;const i=+b.dataset.ci;sel=sel===i?null:i;sfx('pick');render()};
+$('#main').onclick=e=>{const b=e.target.closest('.slot');if(!b||b.disabled||P().ai)return;const r=+b.dataset.r,c=+b.dataset.c;
+  if(G.phase==='play'&&sel!==null)play(sel,r,c);else if(G.phase==='final'&&G.drawn)finalPlace(r,c)};
+$('#acts').onclick=e=>{const id=e.target.closest('button')?.id;if(id==='keep')finalKeep();if(id==='draw')finalDraw();if(id==='disc')finalDiscard()};
+
+function endGame(){
+  token++;
+  const res=G.players.map(p=>({p,...score(p)})).sort((a,b)=>b.tot-a.tot||b.stars-a.stars);
+  const tie=res.length>1&&res[0].tot===res[1].tot&&res[0].stars===res[1].stars;
+  $('#winner').textContent=tie?'Égalité parfaite ! Une revanche s’impose.':`${res[0].p.name} gagne avec ${res[0].tot} points !`;
+  $('#res').innerHTML=res.map((x,k)=>`<div class="rcard ${k===0&&!tie?'win':''}"><div class="rank">${k+1}</div>
+    <div><h3 style="margin:0 0 6px">${esc(x.p.name)}${x.p.ai?' <span class="sub">(ordinateur)</span>':''}</h3>
+    <div class="pyr">${x.p.pyr.map((row,r)=>{const s=x.rows[r];return`<div class="prw ${s.asc?'':'dead'}">${row.map(q=>cardH(q.card)).join('')}
+      <span class="mark ${s.asc?'ok':'ko'}">${s.asc?`${s.pts} pts${s.mono?' · unie ×2':''}${s.st?` · ${s.st}★`:''}`:'0 · pas croissante'}</span></div>`}).join('')}
+    <span class="sub">Étoile : ${x.p.star?'+3':'sacrifiée'} · ${x.stars} petites étoiles</span></div></div>
+    <div class="big">${x.tot}<div class="sub" style="font-size:14px">points</div></div></div>`).join('');
+  show('end');setTimeout(()=>sfx('win'),300);
+}
+}
+</script>
+</body>
+</html>
