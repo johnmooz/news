@@ -64,6 +64,20 @@ button.b.red{border-color:var(--red);background:#3d1714}
 .rules summary{cursor:pointer;font-family:"IM Fell English SC",serif;font-size:21px}
 .rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px;max-width:1100px}
 .rules h3{margin:14px 0 4px}.rules ul{margin:0;padding-left:20px}.rules li{margin:3px 0}
+.seg{display:flex;border:1px solid var(--gold);border-radius:10px;overflow:hidden;margin:6px 0 10px}
+.seg button{flex:1;min-height:44px;border:0;background:#2e261a;color:var(--ink);font:500 16px "Alegreya Sans",sans-serif;cursor:pointer}
+.seg button+button{border-left:1px solid var(--gold)}
+.seg button.on{background:var(--gold);color:#1b150c;font-weight:700}
+.seg.big button{font-size:18px}
+.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:6px 0 16px}
+@media(max-width:520px){.roles{grid-template-columns:minmax(0,1fr)}}
+.role{border-radius:12px;padding:12px;background:#17140f}
+.role.E{border:1px solid var(--inv)}.role.J{border:1px solid var(--red)}
+.nm{display:grid;gap:4px;margin-bottom:8px;font-size:14px;color:var(--mute)}
+.nm input{min-height:44px;font:16px "Alegreya Sans",sans-serif;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:#2a231a;color:var(--ink);width:100%}
+.nm input[readonly]{color:var(--gold);font-weight:700}
+.role .b{width:100%}
+#modal .box{max-height:92vh;overflow:auto}
 #modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
 #modal.show{display:flex}
 #modal .box{background:#231d15;border:2px solid var(--gold);border-radius:16px;max-width:480px;width:100%;padding:22px;box-shadow:0 30px 80px #000}
@@ -77,7 +91,7 @@ button.b.red{border-color:var(--red);background:#3d1714}
 <body>
 <div class="wrap">
 <header>
-  <div><h1>Mr. Jack Pocket</h1><p>Un Enquêteur contre Mr. Jack, à deux sur le même écran.</p></div>
+  <div><h1>Mr. Jack Pocket</h1><p>Un Enquêteur contre Mr. Jack — seul contre l'ordinateur ou à deux sur le même écran.</p></div>
   <div class="btns"><button class="b ghost" id="musBtn" aria-pressed="true">Musique : oui</button><button class="b ghost" id="sfxBtn" aria-pressed="true">Bruitages : oui</button><button class="b red" id="secretBtn">Dossier secret de Mr. Jack</button><button class="b ghost" id="newBtn">Nouvelle partie</button></div>
 </header>
 
@@ -158,7 +172,6 @@ const LBL={holmes:"Holmes",watson:"Watson",toby:"Le Chien",alibi:"Alibi",rotatio
 const DET={H:["Holmes","#e8c46a","H"],W:["Watson","#9cc7e6","W"],T:["Le Chien","#c98b5a","C"]};
 const KEY={holmes:"H",watson:"W",toby:"T"};
 const ODD=["E","J","J","E"],EVEN=["J","E","E","J"];
-const WHO={E:"l'Enquêteur",J:"Mr. Jack"};
 const $=id=>document.getElementById(id);
 let G;
 /* ---- audio : tout est synthétisé avec Web Audio, aucun fichier externe ---- */
@@ -238,19 +251,59 @@ function setAudio(k){
   audioBtns();
 }
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
-const cur=()=>(G.turn%2?ODD:EVEN)[G.step];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const HUMANS=["Jo","Tim","Virg","Telio","Jacqueline","Alain","Ophélie","Toto","Nath","Sandra","Greg","Lucas","Théo","Alizée","Manon","Hugo","Léa","Nico","Chloé","Paulo"];
+const BOTS=["Pixel 3000","Octet-Man","RAM-Bo","Bit-Bout","Kernel","Algo-Rythme","Turing-9","Silicium","Cache-Cache","Data-Lou","Giga-Bob","Binaire","Clé-USB","Mégahertz","Robo-Jo","Proxy-Max","Cyber-Nath","Byte-Byte"];
+const ROLE={E:"Enquêteur",J:"Mr. Jack"};
+const cur=()=>G.step<4?(G.turn%2?ODD:EVEN)[G.step]:null;
+const isAI=r=>!!(G&&r&&G.P[r].ai);
+const nm=r=>esc(G.P[r].name);
 const face=i=>TOK[i][G.tok[i]?0:1];
 const log=t=>{G.log.unshift(`T${G.turn} · ${t}`);G.log.length=Math.min(G.log.length,60)};
+const modalOpen=()=>$("modal").classList.contains("show");
 
-function newGame(){
+/* ---- écran de départ ---- */
+let SET={n:1,E:{ai:false,name:""},J:{ai:true,name:""}};
+function rndName(ai,avoid){const L=ai?BOTS:HUMANS;let n;do n=L[Math.random()*L.length|0];while(n===avoid);return n}
+SET.E.name=rndName(false);SET.J.name=rndName(true);
+function setupScreen(canCancel){
+  const box=$("mbox"),role=r=>{const p=SET[r];return`<div class="role ${r}"><h3>${r==="E"?"L'Enquêteur":"Mr. Jack"}</h3>
+    <div class="seg"><button data-r="${r}" data-ai="0" class="${p.ai?"":"on"}">Joueur</button><button data-r="${r}" data-ai="1" class="${p.ai?"on":""}">Ordinateur</button></div>
+    <label class="nm"><span>Nom</span><input id="nm${r}" maxlength="18" value="${esc(p.name)}" ${p.ai?"readonly":""} autocomplete="off"></label>
+    <button class="b ghost" data-dice="${r}">Nom au hasard</button></div>`};
+  box.innerHTML=`<h2>Nouvelle partie</h2><p>Nombre de joueurs</p>
+    <div class="seg big"><button data-n="1" class="${SET.n===1?"on":""}">1 joueur</button><button data-n="2" class="${SET.n===2?"on":""}">2 joueurs</button></div>
+    <div class="roles">${role("E")}${role("J")}</div>
+    <div class="btns"><button class="b pri" id="go">Commencer</button>${canCancel?`<button class="b ghost" id="nogo">Annuler</button>`:""}</div>`;
+  $("modal").classList.add("show");
+  const keep=()=>{SET.E.name=$("nmE").value;SET.J.name=$("nmJ").value};
+  box.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{keep();sfx("click");SET.n=+b.dataset.n;
+    if(SET.n===2)["E","J"].forEach(r=>{if(SET[r].ai){SET[r].ai=false;SET[r].name=rndName(false)}});
+    else if(!SET.E.ai&&!SET.J.ai){SET.J.ai=true;SET.J.name=rndName(true)}
+    setupScreen(canCancel)});
+  box.querySelectorAll("[data-ai]").forEach(b=>b.onclick=()=>{keep();sfx("click");const r=b.dataset.r,o=r==="E"?"J":"E",ai=b.dataset.ai==="1";
+    if(SET[r].ai!==ai){SET[r].ai=ai;SET[r].name=rndName(ai,SET[o].name)}
+    if(ai){SET.n=1;if(SET[o].ai){SET[o].ai=false;SET[o].name=rndName(false,SET[r].name)}}
+    else if(SET.n===1&&!SET[o].ai){SET.n=2}
+    setupScreen(canCancel)});
+  box.querySelectorAll("[data-dice]").forEach(b=>b.onclick=()=>{keep();sfx("card");const r=b.dataset.dice,o=r==="E"?"J":"E";SET[r].name=rndName(SET[r].ai,SET[o].name);setupScreen(canCancel)});
+  $("go").onclick=()=>{keep();sfx("bell");
+    ["E","J"].forEach(r=>{SET[r].name=SET[r].name.trim()||rndName(SET[r].ai)});
+    $("modal").classList.remove("show");newGame({E:{...SET.E},J:{...SET.J}})};
+  if(canCancel)$("nogo").onclick=()=>{sfx("click");$("modal").classList.remove("show");maybeAI()};
+  $("go").focus();
+}
+
+function newGame(P){
   const tiles=shuffle([...Array(9).keys()]).map(s=>({s,rot:Math.random()*4|0,inn:false}));
   tiles[3].rot=3;tiles[5].rot=1;tiles[7].rot=2; /* murs face à Holmes, Watson et au Chien */
   const jack=Math.random()*9|0;
-  G={tiles,det:{H:10,W:4,T:7},turn:1,step:0,tok:TOK.map(()=>Math.random()<.5),used:[0,0,0,0],rotated:[],
-     deck:shuffle([...Array(9).keys()].filter(i=>i!==jack)),jack,jackCards:[],time:[],pursuit:false,over:null,act:null,sel:[],log:[]};
-  log("Nouvelle partie. Les jetons Action sont lancés.");
+  G={P,tiles,det:{H:10,W:4,T:7},turn:1,step:0,tok:TOK.map(()=>Math.random()<.5),used:[0,0,0,0],rotated:[],
+     deck:shuffle([...Array(9).keys()].filter(i=>i!==jack)),jack,jackCards:[],time:[],pursuit:false,over:null,act:null,sel:[],log:[],busy:false};
+  log(`${nm("E")} (Enquêteur) contre ${nm("J")} (Mr. Jack). Les jetons Action sont lancés.`);
   render();
-  modal(`<h2>Mr. Jack, à vous seul</h2><p>Enquêteur, détournez les yeux. Mr. Jack, découvrez l'identité que vous avez piochée.</p><div class="secret" id="sec" hidden>${chip(jack)}<p style="margin:8px 0 0">C'est vous pour toute la partie.</p></div>`,
+  if(P.J.ai)modal(`<h2>Mr. Jack est dans le brouillard</h2><p>${nm("J")} a pioché son identité en secret. À ${nm("E")} de le démasquer.</p>`,[{l:"Commencer",pri:1}]);
+  else modal(`<h2>${nm("J")}, à vous seul</h2><p>${P.E.ai?"":`${nm("E")}, détournez les yeux. `}Découvrez l'identité que vous avez piochée.</p><div class="secret" id="sec" hidden>${chip(jack)}<p style="margin:8px 0 0">C'est vous pour toute la partie.</p></div>`,
    [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Cacher et commencer",pri:1}]);
 }
 
@@ -262,13 +315,53 @@ function line(p){
   const r=11-p;return{c:[r*3,r*3+1,r*3+2],d:3};
 }
 const open=(t,side)=>(t.inn&&t.s===CROSS)?true:side!==t.rot;
-function visible(){
+function visible(st=G){
   const v=new Set();
-  for(const k in G.det){const{c,d}=line(G.det[k]);
-    for(const i of c){const t=G.tiles[i];if(!open(t,d))break;v.add(i);if(!open(t,(d+2)%4))break}}
+  for(const k in st.det){const{c,d}=line(st.det[k]);
+    for(const i of c){const t=st.tiles[i];if(!open(t,d))break;v.add(i);if(!open(t,(d+2)%4))break}}
   return v;
 }
-const jackCell=()=>G.tiles.findIndex(t=>t.s===G.jack);
+const jackCell=(st=G)=>st.tiles.findIndex(t=>t.s===G.jack);
+const jackHG=()=>G.time.filter(x=>x==="J").length+G.jackCards.reduce((a,c)=>a+SUS[c][2],0);
+
+/* ---- ordinateur ---- */
+function gen(t){
+  if(KEY[t])return[1,2].map(n=>({k:"mv",d:KEY[t],n}));
+  if(t==="joker")return Object.keys(DET).flatMap(d=>[0,1].map(n=>({k:"mv",d,n})));
+  if(t==="rotation"){const m=[];for(let i=0;i<9;i++)if(!G.rotated.includes(i))for(const n of[1,2,3])m.push({k:"rot",i,n});return m}
+  if(t==="echange"){const m=[];for(let x=0;x<9;x++)for(let y=x+1;y<9;y++)m.push({k:"sw",x,y});return m}
+  return[{k:"al"}];
+}
+function applyMove(st,m){
+  if(m.k==="mv")st.det[m.d]=(st.det[m.d]+m.n)%12;
+  else if(m.k==="rot")st.tiles[m.i].rot=(st.tiles[m.i].rot+m.n)%4;
+  else if(m.k==="sw")[st.tiles[m.x],st.tiles[m.y]]=[st.tiles[m.y],st.tiles[m.x]];
+}
+function split(st){const v=visible(st);let V=0,I=0;st.tiles.forEach((t,i)=>{if(!t.inn)v.has(i)?V++:I++});return{v,V,I}}
+/* l'Enquêteur ne connaît pas Jack : il cherche à couper les suspects en deux groupes égaux */
+function evalE(st,al){const{V,I}=split(st),R=V+I;if(R<=1)return 0;return-(V*V+I*I)/R-.5*I/R+(al&&G.deck.length?.9:0)}
+/* Mr. Jack se cache dans le plus grand groupe, de préférence invisible pour gagner un sablier */
+function evalJ(st,al){
+  const{v,V,I}=split(st),jv=v.has(jackCell(st)),grp=jv?V:I,hg=jackHG()+(al&&G.deck.length?.8:0);
+  let s=grp;
+  if(!jv){s+=1.5;if(hg+1>=6&&grp>1)s+=50}
+  if(grp===1&&!(!jv&&hg+1>=6))s-=30;
+  return s+(al&&G.deck.length?.8:0);
+}
+function aiChoose(){
+  const r=cur(),ev=r==="E"?evalE:evalJ;let best=null;
+  TOK.forEach((_,i)=>{if(G.used[i])return;const t=face(i);
+    for(const m of gen(t)){const st={tiles:G.tiles.map(x=>({...x})),det:{...G.det}};applyMove(st,m);
+      const sc=ev(st,m.k==="al")+Math.random()*.05;if(!best||sc>best.sc)best={sc,i,m}}});
+  return best;
+}
+function maybeAI(){
+  if(!G||G.over||G.busy||G.act||G.step>=4||!isAI(cur())||modalOpen())return;
+  G.busy=true;render();
+  setTimeout(()=>{const c=aiChoose();G.act={i:c.i,t:face(c.i)};sfx("tok");
+    if(c.m.k==="rot")G.sel=[c.m.i];if(c.m.k==="sw")G.sel=[c.m.x,c.m.y];if(c.m.k==="mv"&&G.act.t==="joker")G.sel=[c.m.d];
+    render();setTimeout(()=>{G.busy=false;G.sel=[];doMove(c.m)},950)},850);
+}
 
 /* ---- dessin ---- */
 function slotXY(p){
@@ -276,7 +369,7 @@ function slotXY(p){
   if(p<9)return[130+120*(8-p),466];return[34,130+120*(11-p)];
 }
 function targets(){
-  const a=G.act;if(!a)return[];
+  const a=G.act;if(!a||G.busy)return[];
   if(KEY[a.t]){const p=G.det[KEY[a.t]];return[(p+1)%12,(p+2)%12]}
   if(a.t==="joker"&&G.sel[0]){const p=G.det[G.sel[0]];return[p,(p+1)%12]}
   return[];
@@ -292,7 +385,7 @@ function render(){
     s+=`<circle data-slot="${p}" cx="${x}" cy="${y}" r="${on?22:15}" fill="${on?"#e8c46a33":"#2a231a"}" stroke="${on?"#e8c46a":"#3d3427"}" stroke-width="${on?3:1.5}" ${on?'class="pulse" style="cursor:pointer"':""}/>`}
   G.tiles.forEach((t,i)=>{
     const x=70+120*(i%3),y=70+120*(i/3|0),cross=t.inn&&t.s===CROSS,su=SUS[t.s],issel=sel.includes(i),
-      canClick=G.act&&(G.act.t==="echange"||(G.act.t==="rotation"&&!G.rotated.includes(i)));
+      canClick=G.act&&!G.busy&&(G.act.t==="echange"||(G.act.t==="rotation"&&!G.rotated.includes(i)));
     s+=`<g data-cell="${i}" transform="translate(${x} ${y})" style="cursor:${canClick?"pointer":"default"}">
       <rect width="120" height="120" fill="#4a3f31"/>
       ${[[4,4],[80,4],[4,80],[80,80]].map(([a,b])=>`<rect x="${a}" y="${b}" width="36" height="36" rx="3" fill="#5e4f3b"/><path d="M${a+4} ${b+18}h28" stroke="#3b3125" stroke-width="2"/>`).join("")}
@@ -318,22 +411,27 @@ function render(){
 
   const who=G.over?null:cur();
   $("banner").className="banner "+(who||"");
-  $("banner").innerHTML=G.over?`<span>Partie terminée — ${G.over}</span>`:`<span>Tour ${G.turn}/8 · à ${WHO[who]} de jouer</span><small>${G.turn%2?"tour impair : jetons lancés":"tour pair : jetons retournés"}</small>`;
+  $("banner").innerHTML=G.over?`<span>Partie terminée — ${G.over}</span>`:!who?`<span>Tour ${G.turn}/8 · Appel à témoin…</span>`:`<span>Tour ${G.turn}/8 · à ${nm(who)} (${ROLE[who]}${isAI(who)?", ordinateur":""}) de jouer</span><small>${G.turn%2?"tour impair : jetons lancés":"tour pair : jetons retournés"}</small>`;
   const ord=G.turn%2?ODD:EVEN;
-  $("order").innerHTML=ord.map((w,i)=>`<i class="${w} ${i<G.step?"done":""} ${i===G.step&&!G.over?"now":""}">${i+1}. ${w==="E"?"Enquêteur":"Jack"}</i>`).join("");
+  $("order").innerHTML=ord.map((w,i)=>`<i class="${w} ${i<G.step?"done":""} ${i===G.step&&!G.over?"now":""}">${i+1}. ${nm(w)}</i>`).join("");
+  const lock=G.over||G.busy||isAI(cur());
   $("tokens").innerHTML=TOK.map((_,i)=>{const f=face(i),o=TOK[i][G.tok[i]?1:0];
-    return`<button class="tok ${G.act&&G.act.i===i?"on":""}" data-tok="${i}" ${G.used[i]||G.over||(G.act&&G.act.i!==i)?"disabled":""}>${LBL[f]}<span>verso : ${LBL[o]}</span></button>`}).join("");
+    return`<button class="tok ${G.act&&G.act.i===i?"on":""}" data-tok="${i}" ${G.used[i]||(lock&&!(G.act&&G.act.i===i))||(G.act&&G.act.i!==i)?"disabled":""}>${LBL[f]}<span>verso : ${LBL[o]}</span></button>`}).join("");
   $("act").innerHTML=actPanel();
   const rem=G.tiles.filter(t=>!t.inn).length;
   $("sRem").textContent=rem;$("sTime").textContent=G.time.filter(x=>x==="J").length;$("sCards").textContent=G.jackCards.length;
   $("time").innerHTML=[...Array(8)].map((_,i)=>`<div class="${G.time[i]||""} ${i===G.turn-1&&!G.over?"cur":""}" title="Tour ${i+1}">${G.time[i]==="J"?"⧗":i+1}</div>`).join("");
   $("log").innerHTML=G.log.map(t=>`<li>${t}</li>`).join("");
+  $("secretBtn").hidden=G.P.J.ai;
+  if(!G.act)setTimeout(maybeAI,0);
 }
 function chip(s){return`<span class="chip"><i style="background:${SUS[s][3]}"></i>${SUS[s][0]} · ${SUS[s][2]} sablier${SUS[s][2]>1?"s":""}</span>`}
 function actPanel(){
   if(G.over)return`<p>${G.over}</p><div class="btns"><button class="b pri" data-do="new">Rejouer</button></div>`;
+  if(G.step>=4)return`<p>Appel à témoin…</p>`;
   const a=G.act;
-  if(!a)return`<p><b>${WHO[cur()]}</b>, choisissez un jeton Action ci-dessus.</p><p style="color:var(--mute);margin:0">Halo doré sur le plateau = suspect actuellement visible par un détective.</p>`;
+  if(isAI(cur())){return`<p class="pulse"><b>${nm(cur())}</b> réfléchit${a?` : ${LBL[a.t]}…`:"…"}</p>`}
+  if(!a)return`<p><b>${nm(cur())}</b>, choisissez un jeton Action ci-dessus.</p><p style="color:var(--mute);margin:0">Halo doré sur le plateau = suspect actuellement visible par un détective.</p>`;
   const cancel=`<button class="b ghost" data-do="cancel">Annuler</button>`;
   if(KEY[a.t])return`<p>Déplacez <b>${LBL[a.t]}</b> de 1 ou 2 cases dans le sens horaire (ou cliquez une case dorée).</p><div class="btns"><button class="b pri" data-do="mv1">+1 case</button><button class="b pri" data-do="mv2">+2 cases</button>${cancel}</div>`;
   if(a.t==="joker"){
@@ -350,52 +448,67 @@ function actPanel(){
 
 /* ---- actions ---- */
 function finish(txt){
-  log(`${WHO[cur()]} — ${txt}`);
+  log(`${nm(cur())} — ${txt}`);
   G.used[G.act.i]=1;G.act=null;G.sel=[];G.step++;
   render();
-  if(G.step===4)setTimeout(witness,250);
+  if(G.step===4)setTimeout(witness,350);
 }
 function pickTok(i){
-  if(G.over||G.act||G.used[i])return;
+  if(G.over||G.act||G.used[i]||G.busy||isAI(cur()))return;
   G.act={i,t:face(i)};G.sel=[];sfx("tok");
   if(G.act.t==="alibi")return alibi();
   render();
 }
-function moveDet(k,n){G.det[k]=(G.det[k]+n)%12;sfx("step",n)}
+function doMove(m){
+  const a=G.act;
+  if(m.k==="al")return alibi();
+  if(m.k==="mv"){const d=DET[m.d][0];
+    if(m.n===0)return finish(`Joker : ${d} reste sur place.`);
+    applyMove(G,m);sfx("step",m.n);
+    return finish(a.t==="joker"?`Joker : ${d} avance d'1 case.`:`${d} avance de ${m.n} case${m.n>1?"s":""}.`)}
+  if(m.k==="rot"){applyMove(G,m);G.rotated.push(m.i);sfx("rot");
+    return finish(`Rotation de la tuile ${SUS[G.tiles[m.i].s][0]} (${m.n===2?"½ tour":"¼ de tour"}).`)}
+  if(m.k==="sw"){const A=SUS[G.tiles[m.x].s][0],B=SUS[G.tiles[m.y].s][0];applyMove(G,m);
+    G.rotated=G.rotated.map(r=>r===m.x?m.y:r===m.y?m.x:r);sfx("swap");
+    return finish(`Échange de ${A} et ${B}.`)}
+}
 function alibi(){
   const who=cur();
-  if(!G.deck.length){finish("Alibi : la pioche est vide.");return}
+  if(!G.deck.length)return finish("Alibi : la pioche est vide.");
   const c=G.deck.shift();sfx("card");
   if(who==="E"){
     setTimeout(()=>sfx("chime"),250);
-    const t=G.tiles.find(t=>t.s===c);t.inn=true;
+    G.tiles.find(t=>t.s===c).inn=true;
     finish(`Alibi : ${SUS[c][0]} est innocenté.`);
+  }else if(isAI("J")){
+    G.jackCards.push(c);finish("Alibi : pioche une carte (cachée).");
   }else{
     G.jackCards.push(c);
-    modal(`<h2>Carte Alibi de Mr. Jack</h2><p>Enquêteur, détournez les yeux.</p><div class="secret" id="sec" hidden>${chip(c)}</div>`,
+    modal(`<h2>Carte Alibi de ${nm("J")}</h2><p>${G.P.E.ai?"Gardez-la pour vous.":`${nm("E")}, détournez les yeux.`}</p><div class="secret" id="sec" hidden>${chip(c)}</div>`,
       [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Cacher et continuer",pri:1,fn:()=>finish("Alibi : pioche une carte (cachée).")}]);
   }
 }
 function witness(){
-  const v=visible(),jc=jackCell(),jv=v.has(jc);let n=0;
+  const v=visible(),jv=v.has(jackCell());let n=0;
   G.tiles.forEach((t,i)=>{if(!t.inn&&(jv?!v.has(i):v.has(i))){t.inn=true;n++}});
   G.time[G.turn-1]=jv?"E":"J";
   sfx("whistle");sfx(jv?"seen":"hidden");if(n)setTimeout(()=>sfx("chime"),2200);setTimeout(()=>sfx("tick"),2500);
-  log(`Appel à témoin : Jack est ${jv?"VISIBLE":"INVISIBLE"}. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""}. Jeton Temps pour ${jv?"l'Enquêteur":"Mr. Jack"}.`);
-  const rem=G.tiles.filter(t=>!t.inn).length,hg=G.time.filter(x=>x==="J").length+G.jackCards.reduce((a,c)=>a+SUS[c][2],0);
-  const inv=rem===1,jk=hg>=6;let end=null;
+  log(`Appel à témoin : Mr. Jack est ${jv?"VISIBLE":"INVISIBLE"}. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""}. Jeton Temps pour ${jv?nm("E"):nm("J")}.`);
+  const rem=G.tiles.filter(t=>!t.inn).length,hg=jackHG(),inv=rem===1,jk=hg>=6;let end=null;
   if(G.pursuit||(inv&&jk)){
-    if(G.turn===8)end=jv?["E","Jack est visible au 8e tour : il est démasqué."]:["J","Jack reste invisible au 8e tour."];
+    if(G.turn===8)end=jv?["E","Mr. Jack est visible au 8e tour : il est démasqué."]:["J","Mr. Jack reste invisible au 8e tour."];
     else if(!G.pursuit){G.pursuit=true;log("Égalité : les deux camps remplissent leur condition. La partie continue jusqu'au 8e tour.")}
-  }else if(inv)end=["E","un seul suspect reste : Jack est démasqué."];
-  else if(jk)end=["J",`Jack cumule ${hg} sabliers.`];
-  else if(G.turn===8)end=["J","Jack n'a pas été démasqué à l'issue du 8e tour."];
-  const head=`<h2>Appel à témoin</h2><p>Mr. Jack est <b>${jv?"visible":"invisible"}</b>. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""} ; le jeton Temps du tour ${G.turn} va à ${jv?"l'Enquêteur":"Mr. Jack"}.</p>${G.pursuit&&!end?`<p><b>Égalité</b> : on joue jusqu'au 8e tour.</p>`:""}`;
+  }else if(inv)end=["E","un seul suspect reste : Mr. Jack est démasqué."];
+  else if(jk)end=["J",`Mr. Jack cumule ${hg} sabliers.`];
+  else if(G.turn===8)end=["J","Mr. Jack n'a pas été démasqué à l'issue du 8e tour."];
+  const head=`<h2>Appel à témoin</h2><p>Mr. Jack est <b>${jv?"visible":"invisible"}</b>. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""} ; le jeton Temps du tour ${G.turn} va à ${jv?nm("E"):nm("J")}.</p>${G.pursuit&&!end?`<p><b>Égalité</b> : on joue jusqu'au 8e tour.</p>`:""}`;
   if(end){
-    G.over=`${end[0]==="E"?"l'Enquêteur":"Mr. Jack"} gagne : ${end[1]}`;
-    setTimeout(()=>sfx(end[0]==="E"?"winE":"winJ"),2400);
-    log(`Fin : ${G.over} Jack était ${SUS[G.jack][0]} (${hg} sabliers).`);render();
-    modal(head+`<h2 style="margin-top:14px">${end[0]==="E"?"L'Enquêteur":"Mr. Jack"} l'emporte</h2><p>${end[1]}</p><p>Mr. Jack était ${chip(G.jack)} avec ${hg} sablier${hg>1?"s":""} au total.</p>`,[{l:"Voir le plateau",pri:1},{l:"Nouvelle partie",fn:newGame}]);
+    const w=end[0];
+    G.over=`${nm(w)} (${ROLE[w]}) gagne : ${end[1]}`;
+    setTimeout(()=>sfx(w==="E"?"winE":"winJ"),2400);
+    log(`Fin : ${G.over} Mr. Jack était ${SUS[G.jack][0]} (${hg} sabliers).`);render();
+    modal(head+`<h2 style="margin-top:14px">${nm(w)} l'emporte</h2><p>${end[1]}</p><p>Mr. Jack (${nm("J")}) était ${chip(G.jack)} avec ${hg} sablier${hg>1?"s":""} au total.</p>`,
+      [{l:"Voir le plateau",pri:1},{l:"Nouvelle partie",fn:()=>setupScreen(false)}]);
     return;
   }
   render();
@@ -409,50 +522,46 @@ function nextTurn(){
 }
 function onDo(d){
   const a=G.act;
-  if(d==="new")return newGame();
+  if(d==="new")return setupScreen(false);
+  if(!a||G.busy)return;
   if(d==="cancel"||d.startsWith("jk"))sfx("click");
   if(d==="cancel"){G.act=null;G.sel=[];return render()}
-  if(d==="mv1"||d==="mv2"){const n=+d[2];moveDet(KEY[a.t],n);return finish(`${LBL[a.t]} avance de ${n} case${n>1?"s":""}.`)}
-  if(d.startsWith("jk")&&d!=="jkback"){G.sel=[d.slice(2)];return render()}
+  if(d==="mv1"||d==="mv2")return doMove({k:"mv",d:KEY[a.t],n:+d[2]});
   if(d==="jkback"){G.sel=[];return render()}
-  if(d==="jm1"){moveDet(G.sel[0],1);return finish(`Joker : ${DET[G.sel[0]][0]} avance d'1 case.`)}
-  if(d==="jm0")return finish(`Joker : ${DET[G.sel[0]][0]} reste sur place.`);
-  if(d[0]==="r"){const i=G.sel[0],t=G.tiles[i],n=+d[1];t.rot=(t.rot+n)%4;G.rotated.push(i);sfx("rot");
-    return finish(`Rotation de la tuile ${SUS[t.s][0]} (${n===2?"½ tour":"¼ de tour"}).`)}
+  if(d.startsWith("jk")){G.sel=[d.slice(2)];return render()}
+  if(d==="jm1"||d==="jm0")return doMove({k:"mv",d:G.sel[0],n:+d[2]});
+  if(d[0]==="r")return doMove({k:"rot",i:G.sel[0],n:+d[1]});
 }
 $("board").addEventListener("click",e=>{
-  if(G.over||!G.act)return;const a=G.act;
+  if(!G||G.over||!G.act||G.busy||isAI(cur()))return;const a=G.act;
   const sl=e.target.closest("[data-slot]"),dt=e.target.closest("[data-det]"),ce=e.target.closest("[data-cell]");
-  if(a.t==="joker"&&dt&&!G.sel[0]){G.sel=[dt.dataset.det];return render()}
+  if(a.t==="joker"&&dt){const k=dt.dataset.det;if(k!==G.sel[0]){sfx("click");G.sel=[k];return render()}}
   if(sl){const p=+sl.dataset.slot,tg=targets();if(!tg.includes(p))return;
-    if(KEY[a.t]){const k=KEY[a.t],n=(p-G.det[k]+12)%12;moveDet(k,n);return finish(`${LBL[a.t]} avance de ${n} case${n>1?"s":""}.`)}
-    if(a.t==="joker"){const k=G.sel[0];if(p===G.det[k])return onDo("jm0");return onDo("jm1")}}
-  if(a.t==="joker"&&dt&&G.sel[0]){const k=dt.dataset.det;if(k!==G.sel[0]){G.sel=[k];return render()}}
+    if(KEY[a.t]){const k=KEY[a.t];return doMove({k:"mv",d:k,n:(p-G.det[k]+12)%12})}
+    if(a.t==="joker"){const k=G.sel[0];return doMove({k:"mv",d:k,n:p===G.det[k]?0:1})}}
   if(ce){const i=+ce.dataset.cell;
     if(a.t==="rotation"&&!G.rotated.includes(i)){sfx("click");G.sel=[i];return render()}
     if(a.t==="echange"){
       if(G.sel[0]===i){G.sel=[];return render()}
-      G.sel.push(i);if(G.sel.length===2)sfx("swap");else sfx("click");
-      if(G.sel.length===2){const[x,y]=G.sel,A=SUS[G.tiles[x].s][0],B=SUS[G.tiles[y].s][0];
-        [G.tiles[x],G.tiles[y]]=[G.tiles[y],G.tiles[x]];
-        const ri=G.rotated.map(r=>r===x?y:r===y?x:r);G.rotated=ri;
-        return finish(`Échange de ${A} et ${B}.`)}
-      return render();
+      G.sel.push(i);
+      if(G.sel.length===2){const[x,y]=G.sel;return doMove({k:"sw",x,y})}
+      sfx("click");return render();
     }}
 });
 $("tokens").addEventListener("click",e=>{const b=e.target.closest("[data-tok]");if(b)pickTok(+b.dataset.tok)});
 $("act").addEventListener("click",e=>{const b=e.target.closest("[data-do]");if(b)onDo(b.dataset.do)});
-$("newBtn").addEventListener("click",()=>modal(`<h2>Nouvelle partie ?</h2><p>La partie en cours sera perdue.</p>`,[{l:"Oui, recommencer",pri:1,fn:newGame},{l:"Annuler"}]));
+$("newBtn").addEventListener("click",()=>{sfx("click");setupScreen(!!G)});
 $("secretBtn").addEventListener("click",()=>{
+  if(!G||G.P.J.ai)return;
   const hg=G.jackCards.reduce((a,c)=>a+SUS[c][2],0),pub=G.time.filter(x=>x==="J").length;
-  modal(`<h2>Dossier secret</h2><p>Réservé à Mr. Jack — Enquêteur, détournez les yeux.</p><div class="secret" id="sec" hidden><p><b>Identité :</b><br>${chip(G.jack)}</p><p><b>Cartes Alibi :</b><br>${G.jackCards.length?G.jackCards.map(chip).join(""):"aucune"}</p><p style="margin:0"><b>Sabliers :</b> ${pub} (jetons Temps) + ${hg} (cartes) = <b>${pub+hg}</b> / 6</p></div>`,
+  modal(`<h2>Dossier secret</h2><p>Réservé à ${nm("J")} (Mr. Jack)${G.P.E.ai?".":` — ${nm("E")}, détournez les yeux.`}</p><div class="secret" id="sec" hidden><p><b>Identité :</b><br>${chip(G.jack)}</p><p><b>Cartes Alibi :</b><br>${G.jackCards.length?G.jackCards.map(chip).join(""):"aucune"}</p><p style="margin:0"><b>Sabliers :</b> ${pub} (jetons Temps) + ${hg} (cartes) = <b>${pub+hg}</b> / 6</p></div>`,
    [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Fermer",pri:1}]);
 });
 function modal(html,btns){
   const m=$("modal"),box=$("mbox");
   box.innerHTML=html+`<div class="btns">${btns.map((b,i)=>`<button class="b ${b.pri?"pri":""}" data-m="${i}">${b.l}</button>`).join("")}</div>`;
   m.classList.add("show");
-  box.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("click",()=>{const b=btns[+el.dataset.m];sfx(b.keep?"card":"click");if(!b.keep)m.classList.remove("show");if(b.fn)b.fn()}));
+  box.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("click",()=>{const b=btns[+el.dataset.m];sfx(b.keep?"card":"click");if(!b.keep)m.classList.remove("show");if(b.fn)b.fn();if(!b.keep&&G)setTimeout(maybeAI,0)}));
   const f=box.querySelector(".pri");if(f)f.focus();
 }
 $("musBtn").addEventListener("click",()=>setAudio("m"));
@@ -461,7 +570,7 @@ $("sfxBtn").addEventListener("click",()=>setAudio("s"));
 document.addEventListener("pointerdown",()=>{ac();startMusic()},{once:true});
 document.addEventListener("keydown",()=>{ac();startMusic()},{once:true});
 audioBtns();
-newGame();
+setupScreen(false);
 }
 </script>
 </body>
