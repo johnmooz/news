@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Envoi de SMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calme, utilitaire, net — un outil qu'on utilise vite au pouce
+   IDEA: le fil de conversation d'un téléphone, qui se remplit pendant qu'on tape
+   PICTURE: un téléphone avec la bulle du message en direct et son compteur de SMS
+   COLOUR and TYPE: blanc, encre bleu nuit, bleu bulle #1f6bff, accent corail pour les alertes ; Figtree
+   LAYOUT: formulaire en une colonne à gauche, téléphone à droite ; empilés sous 760px */
+:root{color-scheme:light;--bg:#f4f6fb;--card:#fff;--ink:#0c1630;--mute:#5b6684;--line:#dde3ef;--blue:#1f6bff;--blue2:#e6eeff;--warn:#ff5a36;--phone:#0c1630;--scr:#fff}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#0b1020;--card:#141a2e;--ink:#e9edf8;--mute:#97a2c0;--line:#26304d;--blue2:#1a2a55;--phone:#000;--scr:#111}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0b1020;--card:#141a2e;--ink:#e9edf8;--mute:#97a2c0;--line:#26304d;--blue2:#1a2a55;--phone:#000;--scr:#111}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Figtree,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,48px) max(4vw,16px)}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0 0 6px;font-weight:800;text-wrap:balance}
+.sub{color:var(--mute);margin:0 0 28px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(20px,4vw,48px);align-items:start}
+@media(max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}.phone-col{order:-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(18px,3vw,28px)}
+label{display:block;font-weight:700;font-size:14px;margin:0 0 6px}
+.field{margin-bottom:20px}
+input,textarea,select{width:100%;font-size:16px;line-height:1.4;font-family:inherit;-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;min-height:48px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-color:var(--blue)}
+.hint{font-size:13px;color:var(--mute);margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;min-height:40px;font-weight:500;font-size:14px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.chip:hover{border-color:var(--blue)}
+.chip .x{color:var(--mute);font-weight:700}
+.chip.on{background:var(--blue2);border-color:var(--blue)}
+.meter{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px;margin-top:8px;color:var(--mute)}
+.meter b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.warn{color:var(--warn);font-size:13px;margin-top:6px;display:none}
+.warn.show{display:block}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.btn{flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-radius:14px;font-weight:700;font-size:16px;font-family:inherit;text-decoration:none;cursor:pointer;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.main{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn[aria-disabled=true]{opacity:.45;pointer-events:none}
+.status{font-size:14px;margin-top:12px;min-height:22px;color:var(--mute)}
+.row{display:flex;gap:8px}.row input{flex:1}.row .chip{flex:none;min-height:48px}
+/* phone */
+.phone{background:var(--phone);border-radius:42px;padding:12px;max-width:340px;margin:0 auto;box-shadow:0 30px 60px -30px rgba(12,22,48,.5)}
+.screen{background:var(--scr);border-radius:32px;overflow:hidden;min-height:500px;display:flex;flex-direction:column}
+.top{padding:18px 16px 12px;text-align:center;border-bottom:1px solid var(--line)}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(160deg,#9fb4e0,#6b7fae);margin:0 auto 6px;display:grid;place-items:center;color:#fff;font-weight:800}
+.to{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.thread{flex:1;padding:16px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px}
+.bubble{align-self:flex-end;max-width:82%;background:var(--blue);color:#fff;padding:9px 13px;border-radius:20px 20px 6px 20px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.35;transition:transform .2s}
+.bubble.empty{background:transparent;color:var(--mute);border:1.5px dashed var(--line)}
+.meta{align-self:flex-end;font-size:12px;color:var(--mute)}
+.bar{margin:10px 12px 14px;border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--mute)}
+.seg{display:flex;gap:4px;margin:14px auto 0;max-width:340px;flex-wrap:wrap;justify-content:center}
+.seg i{width:22px;height:8px;border-radius:4px;background:var(--blue)}
+.seg i.over{background:var(--warn)}
+.note{font-size:13px;color:var(--mute);text-align:center;margin:10px auto 0;max-width:320px}
+@media(prefers-reduced-motion:reduce){.bubble{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Envoyer un SMS</h1>
+  <p class="sub">Rédige ton message, choisis le destinataire, puis ouvre-le dans l'app Messages de ton téléphone.</p>
+  <div class="grid">
+    <form class="card" id="f" autocomplete="off">
+      <div class="field">
+        <label for="num">Destinataire(s)</label>
+        <div class="row">
+          <input id="num" type="tel" inputmode="tel" placeholder="06 12 34 56 78">
+          <button type="button" class="chip" id="save" title="Ajouter aux contacts">+ Contact</button>
+        </div>
+        <div class="hint">Plusieurs numéros : sépare-les par une virgule.</div>
+        <div class="chips" id="contacts"></div>
+      </div>
+      <div class="field">
+        <label for="msg">Message</label>
+        <textarea id="msg" placeholder="Écris ton message…"></textarea>
+        <div class="meter"><span>Caractères <b id="cc">0</b></span><span>Encodage <b id="enc">GSM</b></span><span>SMS <b id="sc">0</b></span><span>Restants <b id="left">160</b></span></div>
+        <div class="warn" id="uw">Ce message contient des caractères spéciaux (ê, â, emoji…) : la limite passe à 70 caractères par SMS.</div>
+      </div>
+      <div class="field">
+        <label>Modèles rapides</label>
+        <div class="chips" id="tpl"></div>
+      </div>
+      <div class="actions">
+        <a class="btn main" id="send" href="#" aria-disabled="true">Ouvrir dans Messages</a>
+        <button type="button" class="btn" id="copy">Copier le message</button>
+        <button type="button" class="btn" id="clear">Effacer</button>
+      </div>
+      <div class="status" id="st" role="status"></div>
+    </form>
+    <div class="phone-col">
+      <div class="phone" aria-label="Aperçu du message">
+        <div class="screen">
+          <div class="top"><div class="avatar" id="av">?</div><div class="to" id="to">Nouveau message</div></div>
+          <div class="thread"><div class="bubble empty" id="bub">Ton message apparaîtra ici</div><div class="meta" id="meta"></div></div>
+          <div class="bar">Message texte</div>
+        </div>
+      </div>
+      <div class="seg" id="seg"></div>
+      <p class="note">Le SMS part depuis ton téléphone, avec ton forfait. Rien n'est envoyé tant que tu n'appuies pas sur Envoyer dans Messages.</p>
+    </div>
+  </div>
+</div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const num=$('num'),msg=$('msg');
+const GSM="@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
+const EXT="^{}\\[~]|€\f";
+const TPL=[
+ {n:"En retard",t:"Désolé, j'ai un peu de retard, j'arrive dans 10 minutes."},
+ {n:"Bien arrivé",t:"Bien arrivé, tout va bien. Bises !"},
+ {n:"Rappelle-moi",t:"Tu peux me rappeler quand tu as un moment ?"},
+ {n:"Merci",t:"Merci beaucoup pour aujourd'hui !"},
+ {n:"Rendez-vous",t:"Je te confirme notre rendez-vous demain à 14h."}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let contacts=store.get('sms-contacts',[]);
+
+function count(text){
+  const chars=[...text];let gsm=true,units=0;
+  for(const c of chars){if(GSM.includes(c))units+=1;else if(EXT.includes(c))units+=2;else{gsm=false;break}}
+  if(!gsm)units=chars.reduce((a,c)=>a+(c.codePointAt(0)>0xFFFF?2:1),0);
+  const one=gsm?160:70,multi=gsm?153:67;
+  const segs=units===0?0:units<=one?1:Math.ceil(units/multi);
+  const left=units===0?one:units<=one?one-units:segs*multi-units;
+  return{gsm,units,segs,left,len:chars.length};
+}
+function clean(n){return n.split(',').map(s=>s.trim().replace(/[^\d+]/g,'')).filter(Boolean)}
+function smsHref(nums,body){
+  const ios=/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent);
+  const to=nums.join(',');const b=encodeURIComponent(body);
+  return ios?`sms:${to}&body=${b}`:`sms:${to}?body=${b}`;
+}
+function renderContacts(){
+  const cur=clean(num.value);
+  $('contacts').innerHTML=contacts.map((c,i)=>`<span class="chip${cur.includes(clean(c.num)[0])?' on':''}" data-i="${i}" role="button" tabindex="0">${esc(c.name)} <span class="x" data-del="${i}" aria-label="Supprimer">×</span></span>`).join('');
+}
+function update(){
+  const r=count(msg.value);const nums=clean(num.value);
+  $('cc').textContent=r.len;$('enc').textContent=r.gsm?'GSM':'Unicode';$('sc').textContent=r.segs;$('left').textContent=r.left;
+  $('uw').classList.toggle('show',!r.gsm&&r.len>0);
+  const b=$('bub');b.textContent=msg.value||'Ton message apparaîtra ici';b.classList.toggle('empty',!msg.value);
+  $('meta').textContent=r.segs>1?`${r.segs} SMS facturés`:'';
+  const c=contacts.find(c=>nums.length===1&&clean(c.num)[0]===nums[0]);
+  $('to').textContent=c?c.name:nums.length?nums.join(', '):'Nouveau message';
+  $('av').textContent=c?c.name[0].toUpperCase():nums.length>1?nums.length:'?';
+  $('seg').innerHTML=Array.from({length:Math.min(r.segs,12)},()=>`<i class="${r.segs>3?'over':''}"></i>`).join('');
+  const ok=nums.length>0&&msg.value.trim().length>0;
+  const s=$('send');s.setAttribute('aria-disabled',ok?'false':'true');s.href=ok?smsHref(nums,msg.value):'#';
+  renderContacts();
+  store.set('sms-draft',{num:num.value,msg:msg.value});
+}
+$('tpl').innerHTML=TPL.map((t,i)=>`<button type="button" class="chip" data-t="${i}">${esc(t.n)}</button>`).join('');
+$('tpl').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(!b)return;msg.value=TPL[b.dataset.t].t;update();msg.focus()});
+$('contacts').addEventListener('click',e=>{
+  const d=e.target.closest('[data-del]');if(d){contacts.splice(+d.dataset.del,1);store.set('sms-contacts',contacts);update();return}
+  const c=e.target.closest('[data-i]');if(!c)return;const v=contacts[c.dataset.i].num;
+  const cur=clean(num.value);const n=clean(v)[0];
+  num.value=(cur.includes(n)?cur.filter(x=>x!==n):[...cur,n]).join(', ');update();
+});
+$('contacts').addEventListener('keydown',e=>{if(e.key==='Enter'){e.target.click()}});
+$('save').addEventListener('click',()=>{
+  const nums=clean(num.value);if(nums.length!==1){$('st').textContent='Saisis un seul numéro pour l’ajouter aux contacts.';return}
+  $('st').innerHTML='';
+  const box=document.createElement('span');box.className='row';box.style.marginTop='4px';
+  box.innerHTML='<input id="cn" placeholder="Nom du contact" aria-label="Nom du contact"><button type="button" class="chip" id="cok">Enregistrer</button>';
+  $('st').appendChild(box);const cn=$('cn');cn.focus();
+  const go=()=>{const v=cn.value.trim();if(!v)return;contacts.push({name:v,num:nums[0]});store.set('sms-contacts',contacts);$('st').textContent=`${v} ajouté aux contacts.`;update()};
+  $('cok').addEventListener('click',go);cn.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}});
+});
+$('send').addEventListener('click',()=>{if($('send').getAttribute('aria-disabled')==='false'){const n=clean(num.value).join(', ');$('st').textContent=`Ouverture de Messages pour ${n}… Si rien ne s’ouvre, copie le message et colle-le dans ton app.`}});
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(msg.value);$('st').textContent='Message copié.'}catch(e){msg.select();$('st').textContent='Sélectionné : fais Copier manuellement.'}});
+$('clear').addEventListener('click',()=>{msg.value='';num.value='';$('st').textContent='';update()});
+$('f').addEventListener('submit',e=>e.preventDefault());
+num.addEventListener('input',update);msg.addEventListener('input',update);
+const d=store.get('sms-draft',null);if(d){num.value=d.num||'';msg.value=d.msg||''}
+update();
+}
+</script>
+</body>
+</html>
