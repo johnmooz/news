@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mr. Jack Pocket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: un plateau de jeu victorien, nocturne, lisible en partie à deux sur le même écran
+   IDEA: la boîte de jeu posée sur une table, sous un bec de gaz
+   PICTURE: le district 3×3 en SVG, ruelles, murs, détectives autour — c'est le jeu lui-même
+   COLOUR and TYPE: suie #17140f, crème de gaz #f1e6c8, rouge sang #c0392b ; IM Fell English SC + Alegreya Sans
+   LAYOUT: plateau à gauche, tableau de bord à droite ; empilé sous 860px */
+:root{color-scheme:dark;--bg:#17140f;--ink:#f1e6c8;--mute:#b9ad90;--card:#221d16;--line:#3d3427;--red:#c0392b;--gold:#e8c46a;--inv:#6fa3d8}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:radial-gradient(ellipse at 30% 0%,#2b2419 0%,var(--bg) 60%) fixed;color:var(--ink);font:16px/1.5 "Alegreya Sans",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"IM Fell English SC",Georgia,serif;font-weight:400;margin:0;line-height:1.05}
+h1{font-size:clamp(30px,5vw,44px)}h2{font-size:24px}h3{font-size:19px}
+.wrap{max-width:1240px;margin:0 auto;padding:18px max(3vw,12px) 40px}
+header{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+header p{margin:0;color:var(--mute)}
+.game{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:860px){.game{grid-template-columns:minmax(0,1fr)}}
+.boardbox{background:#0f0d0a;border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 20px 50px #0008}
+#board{width:100%;height:auto;display:block;touch-action:manipulation}
+.panel{display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.banner{border-radius:12px;padding:12px 16px;font-size:18px;font-weight:700;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.banner.E{background:#1d3046;border:1px solid var(--inv)}
+.banner.J{background:#3d1714;border:1px solid var(--red)}
+.banner small{font-weight:400;color:var(--mute);font-size:14px}
+.tokens{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.tok{width:78px;height:78px;border-radius:50%;border:3px solid var(--gold);background:radial-gradient(circle at 35% 30%,#4a3d2a,#241d14);color:var(--ink);font:700 14px/1.1 "Alegreya Sans",sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px}
+.tok span{font-size:11px;font-weight:400;color:var(--mute)}
+.tok[disabled]{opacity:.28;cursor:default;border-style:dashed}
+.tok.on{background:var(--gold);color:#1b150c}.tok.on span{color:#3b2d12}
+.tok:focus-visible,button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.order{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.order i{font-style:normal;font-size:13px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.order i.E{border-color:var(--inv)}.order i.J{border-color:var(--red)}
+.order i.now{background:var(--ink);color:#17140f;font-weight:700}
+.order i.done{opacity:.4;text-decoration:line-through}
+.act p{margin:0 0 10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{min-height:44px;padding:8px 16px;border-radius:10px;border:1px solid var(--gold);background:#2e261a;color:var(--ink);font:500 16px "Alegreya Sans",sans-serif;cursor:pointer}
+button.b:hover{background:#3d3221}
+button.b.pri{background:var(--gold);color:#1b150c;font-weight:700}
+button.b.ghost{border-color:var(--line);color:var(--mute)}
+button.b.red{border-color:var(--red);background:#3d1714}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center}
+.stats b{display:block;font-size:28px;font-family:"IM Fell English SC",serif;font-weight:400;line-height:1}
+.stats span{font-size:13px;color:var(--mute)}
+.time{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.time div{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;border:1px solid var(--line);color:var(--mute)}
+.time .J{background:var(--red);color:#fff;border-color:var(--red)}
+.time .E{background:var(--inv);color:#0c1622;border-color:var(--inv)}
+.time .cur{border:2px solid var(--gold);color:var(--ink)}
+#log{margin:8px 0 0;padding:0;list-style:none;max-height:190px;overflow:auto;font-size:14px;color:var(--mute)}
+#log li{padding:4px 0;border-bottom:1px solid #2c261d}
+#log li:first-child{color:var(--ink)}
+.rules{margin-top:26px}
+.rules details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.rules summary{cursor:pointer;font-family:"IM Fell English SC",serif;font-size:21px}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:6px 28px;max-width:1100px}
+.rules h3{margin:14px 0 4px}.rules ul{margin:0;padding-left:20px}.rules li{margin:3px 0}
+#modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+#modal.show{display:flex}
+#modal .box{background:#231d15;border:2px solid var(--gold);border-radius:16px;max-width:480px;width:100%;padding:22px;box-shadow:0 30px 80px #000}
+#modal h2{margin-bottom:10px}#modal p{margin:0 0 12px}
+.secret{background:#120f0b;border:1px dashed var(--red);border-radius:10px;padding:12px;margin:0 0 14px}
+.chip{display:inline-flex;align-items:center;gap:6px;margin:3px 6px 3px 0;padding:3px 10px 3px 4px;border-radius:99px;background:#2e261a;font-size:14px}
+.chip i{width:20px;height:20px;border-radius:50%;display:inline-block;border:2px solid var(--ink)}
+@media(prefers-reduced-motion:no-preference){.pulse{animation:p 1.4s ease-in-out infinite}@keyframes p{50%{opacity:.45}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Mr. Jack Pocket</h1><p>Un Enquêteur contre Mr. Jack, à deux sur le même écran.</p></div>
+  <div class="btns"><button class="b ghost" id="musBtn" aria-pressed="true">Musique : oui</button><button class="b ghost" id="sfxBtn" aria-pressed="true">Bruitages : oui</button><button class="b red" id="secretBtn">Dossier secret de Mr. Jack</button><button class="b ghost" id="newBtn">Nouvelle partie</button></div>
+</header>
+
+<div class="game">
+  <div class="boardbox"><svg id="board" viewBox="0 0 500 500" role="img" aria-label="Plateau du district"></svg></div>
+  <div class="panel">
+    <div id="banner" class="banner"></div>
+    <div class="card">
+      <h3 id="phase">La Traque</h3>
+      <div class="order" id="order"></div>
+      <div class="tokens" id="tokens"></div>
+    </div>
+    <div class="card act" id="act"></div>
+    <div class="card">
+      <div class="stats">
+        <div><b id="sRem">9</b><span>suspects restants</span></div>
+        <div><b id="sTime">0</b><span>sabliers publics de Jack</span></div>
+        <div><b id="sCards">0</b><span>cartes Alibi de Jack</span></div>
+      </div>
+      <div class="time" id="time" aria-label="Jetons Temps"></div>
+    </div>
+    <div class="card"><h3>Journal</h3><ul id="log"></ul></div>
+  </div>
+</div>
+
+<section class="rules">
+<details>
+<summary>Règles du jeu</summary>
+<div class="cols">
+<div>
+<h3>But du jeu</h3>
+<ul>
+<li><b>L'Enquêteur</b> gagne s'il innocente tous les suspects sauf un avant la fin du 8e tour.</li>
+<li><b>Mr. Jack</b> gagne dès qu'il cumule 6 sabliers (jetons Temps + cartes Alibi), ou s'il n'est pas démasqué à l'issue du 8e tour.</li>
+<li><b>Égalité :</b> si les deux conditions sont remplies au même tour avant le 8e, on continue jusqu'au 8e tour. À la fin du 8e tour, l'Enquêteur gagne si Jack est visible, sinon Jack l'emporte.</li>
+</ul>
+<h3>Mise en place</h3>
+<ul>
+<li>9 tuiles Quartier en carré 3×3, face Suspect visible.</li>
+<li>Holmes, Watson et le Chien autour du carré, chacun face à un mur : aucun suspect n'est visible au départ.</li>
+<li>Mr. Jack pioche secrètement une carte Alibi : c'est son identité.</li>
+</ul>
+</div>
+<div>
+<h3>La Traque (4 actions)</h3>
+<ul>
+<li><b>Tours impairs :</b> on lance les 4 jetons. Enquêteur 1 action, Jack 2, Enquêteur la dernière.</li>
+<li><b>Tours pairs :</b> on retourne les 4 jetons. Jack 1, Enquêteur 2, Jack la dernière.</li>
+<li><b>Holmes / Watson / Chien :</b> avance le détective de 1 ou 2 cases, sens horaire.</li>
+<li><b>Joker :</b> avance n'importe quel détective d'1 case, ou ne le bouge pas.</li>
+<li><b>Rotation :</b> pivote une tuile d'un quart ou d'un demi-tour (une même tuile une seule fois par tour).</li>
+<li><b>Échange :</b> intervertit 2 tuiles sans changer leur orientation.</li>
+<li><b>Alibi :</b> l'Enquêteur innocente le suspect pioché ; Jack garde la carte cachée et ajoute ses sabliers.</li>
+</ul>
+<h3>L'Appel à témoin</h3>
+<ul>
+<li>Jack <b>visible</b> (vu par au moins un détective) : les suspects invisibles sont innocentés, l'Enquêteur prend le jeton Temps.</li>
+<li>Jack <b>invisible</b> : les suspects visibles sont innocentés, Jack prend le jeton Temps (1 sablier).</li>
+<li>Ici la visibilité est calculée automatiquement : l'annonce est toujours honnête.</li>
+</ul>
+</div>
+</div>
+</details>
+</section>
+</div>
+
+<div id="modal" role="dialog" aria-modal="true"><div class="box" id="mbox"></div></div>
+
+<script>
+{
+const SUS=[
+ ["Inspecteur Lestrade","IL",0,"#3f6fb0"],["Miss Stealthy","MS",1,"#2e8b57"],["John Pizer","JP",1,"#d9d2c3"],
+ ["Joseph Lane","JL",1,"#c9a227"],["Madame","Ma",2,"#c2577a"],["Sergent Goodley","SG",0,"#1f1f1f"],
+ ["Jeremy Bert","JB",1,"#d87a2e"],["William Gull","WG",1,"#7b4fa6"],["John Smith","JS",1,"#a83a32"]];
+const CROSS=3; /* la tuile dont le verso est un carrefour */
+const TOK=[["holmes","alibi"],["watson","toby"],["rotation","echange"],["rotation","joker"]];
+const LBL={holmes:"Holmes",watson:"Watson",toby:"Le Chien",alibi:"Alibi",rotation:"Rotation",echange:"Échange",joker:"Joker"};
+const DET={H:["Holmes","#e8c46a","H"],W:["Watson","#9cc7e6","W"],T:["Le Chien","#c98b5a","C"]};
+const KEY={holmes:"H",watson:"W",toby:"T"};
+const ODD=["E","J","J","E"],EVEN=["J","E","E","J"];
+const WHO={E:"l'Enquêteur",J:"Mr. Jack"};
+const $=id=>document.getElementById(id);
+let G;
+/* ---- audio : tout est synthétisé avec Web Audio, aucun fichier externe ---- */
+const AU={ctx:null,timer:null,on:{m:true,s:true}};
+try{const p=JSON.parse(localStorage.getItem("mjp-audio"));if(p)AU.on=p}catch(e){}
+function ac(){
+  if(!AU.ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    const c=AU.ctx=new C();AU.out=c.createGain();AU.out.gain.value=.9;AU.out.connect(c.destination);
+    const rv=c.createConvolver(),len=c.sampleRate*2.2|0,b=c.createBuffer(2,len,c.sampleRate);
+    for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3)}
+    rv.buffer=b;AU.rv=c.createGain();AU.rv.gain.value=.35;AU.rv.connect(rv);rv.connect(AU.out);
+    AU.mus=c.createGain();AU.mus.gain.value=0;AU.mus.connect(AU.out);AU.mus.connect(AU.rv);
+    AU.fx=c.createGain();AU.fx.gain.value=.6;AU.fx.connect(AU.out);AU.fx.connect(AU.rv);
+    AU.nb=c.createBuffer(1,c.sampleRate,c.sampleRate);const nd=AU.nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  }
+  if(AU.ctx.state==="suspended")AU.ctx.resume();
+  return AU.ctx;
+}
+const hz=m=>440*2**((m-69)/12);
+function tone(f,t,d,{type="sine",v=.3,a=.005,dest=AU.fx,f2}={}){
+  const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(dest);o.start(t);o.stop(t+d+.05);
+}
+function noise(t,d,{f=1000,q=1,v=.3,type="bandpass",f2,a=.005}={}){
+  const c=AU.ctx,s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.nb;
+  fl.type=type;fl.frequency.setValueAtTime(f,t);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t+d);fl.Q.value=q;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  s.connect(fl);fl.connect(g);g.connect(AU.fx);s.start(t,Math.random()*.5);s.stop(t+d+.05);
+}
+function sfx(k,n=1){
+  if(!AU.on.s||!ac())return;const t=AU.ctx.currentTime+.01;
+  switch(k){
+    case"click":tone(900,t,.06,{type:"triangle",v:.15});break;
+    case"tok":noise(t,.05,{f:2500,q:3,v:.5});tone(320,t,.12,{type:"triangle",v:.25});break; /* jeton en bois */
+    case"step":for(let i=0;i<n;i++){const u=t+i*.32;noise(u,.09,{f:350,q:1.5,v:.8,type:"lowpass"});noise(u+.04,.06,{f:1800,q:2,v:.2})}break; /* pas sur les pavés */
+    case"rot":noise(t,.55,{f:200,q:4,v:.6,f2:900});tone(70,t,.5,{type:"sawtooth",v:.06});break; /* pierre qui pivote */
+    case"swap":noise(t,.12,{f:250,v:.8,type:"lowpass"});noise(t+.28,.12,{f:220,v:.8,type:"lowpass"});noise(t+.05,.25,{f:600,f2:1500,q:2,v:.2});break;
+    case"card":noise(t,.22,{f:3000,f2:6000,q:.8,v:.35,type:"highpass"});break; /* carte qu'on glisse */
+    case"chime":[0,7,12].forEach((m,i)=>tone(hz(84+m),t+i*.07,.9,{v:.12}));break; /* innocenté */
+    case"whistle":for(let i=0;i<10;i++)tone(i%2?2350:2100,t+i*.045,.05,{type:"square",v:.05});tone(2100,t+.45,.35,{type:"square",v:.05});break; /* sifflet de police */
+    case"seen":[57,60,64,69].forEach((m,i)=>tone(hz(m),t+.9+i*.08,1.2,{type:"triangle",v:.12}));break;
+    case"hidden":[45,48,51].forEach(m=>tone(hz(m),t+.9,1.6,{type:"sawtooth",v:.05}));tone(hz(33),t+.9,1.8,{v:.3});break;
+    case"tick":for(let i=0;i<4;i++)noise(t+i*.5,.03,{f:i%2?2600:3400,q:8,v:.6});break; /* horloge */
+    case"bell":[0,.9].forEach(d=>{tone(hz(60),t+d,2.2,{v:.2});tone(hz(60)*2.76,t+d,1.2,{v:.06})});break; /* cloche du nouveau tour */
+    case"winE":[60,64,67,72,76].forEach((m,i)=>tone(hz(m),t+i*.13,i===4?1.6:.3,{type:"triangle",v:.18}));break;
+    case"winJ":[48,51,54,57].forEach((m,i)=>tone(hz(m),t+i*.25,2,{type:"sawtooth",v:.06}));for(let i=0;i<6;i++)tone(hz(62-i),t+1.2+i*.16,.14,{type:"square",v:.04});tone(hz(36),t,3,{v:.3});break;
+  }
+}
+/* musique : valse mystérieuse en la mineur, boîte à musique et bourdon grave */
+const CH=[[57,60,64],[53,57,60],[50,53,57],[52,56,59]];
+const MEL=[[76,0,74,72,0,0],[72,0,0,69,0,0],[74,0,72,69,0,65],[68,0,0,71,0,0]];
+function sched(){
+  const e=60/80/2;
+  while(AU.next<AU.ctx.currentTime+.25){
+    const s=AU.step,bar=(s/6|0)%4,i=s%6,ch=CH[bar],t=AU.next,d=AU.mus;
+    if(i===0){tone(hz(ch[0]-24),t,e*6,{type:"triangle",v:.5,a:.05,dest:d});tone(hz(ch[0]-12),t,e*6,{v:.2,a:.2,dest:d})}
+    tone(hz(ch[[0,1,2,1,2,1][i]]+12),t,e*2.5,{type:"triangle",v:.18,dest:d});
+    const m=MEL[bar][i];if(m&&(s/24|0)%2)tone(hz(m),t,e*3,{v:.22,a:.02,dest:d});
+    AU.step++;AU.next+=e;
+  }
+}
+function startMusic(){
+  if(AU.timer||!AU.on.m||!ac())return;
+  AU.mus.gain.cancelScheduledValues(AU.ctx.currentTime);AU.mus.gain.setTargetAtTime(.18,AU.ctx.currentTime,.4);
+  AU.step=0;AU.next=AU.ctx.currentTime+.1;AU.timer=setInterval(sched,50);
+}
+function stopMusic(){if(!AU.timer)return;clearInterval(AU.timer);AU.timer=null;AU.mus.gain.setTargetAtTime(0,AU.ctx.currentTime,.2)}
+function audioBtns(){
+  $("musBtn").textContent=`Musique : ${AU.on.m?"oui":"non"}`;$("musBtn").setAttribute("aria-pressed",AU.on.m);
+  $("sfxBtn").textContent=`Bruitages : ${AU.on.s?"oui":"non"}`;$("sfxBtn").setAttribute("aria-pressed",AU.on.s);
+}
+function setAudio(k){
+  AU.on[k]=!AU.on[k];try{localStorage.setItem("mjp-audio",JSON.stringify(AU.on))}catch(e){}
+  if(k==="m")AU.on.m?startMusic():stopMusic();else sfx("click");
+  audioBtns();
+}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const cur=()=>(G.turn%2?ODD:EVEN)[G.step];
+const face=i=>TOK[i][G.tok[i]?0:1];
+const log=t=>{G.log.unshift(`T${G.turn} · ${t}`);G.log.length=Math.min(G.log.length,60)};
+
+function newGame(){
+  const tiles=shuffle([...Array(9).keys()]).map(s=>({s,rot:Math.random()*4|0,inn:false}));
+  tiles[3].rot=3;tiles[5].rot=1;tiles[7].rot=2; /* murs face à Holmes, Watson et au Chien */
+  const jack=Math.random()*9|0;
+  G={tiles,det:{H:10,W:4,T:7},turn:1,step:0,tok:TOK.map(()=>Math.random()<.5),used:[0,0,0,0],rotated:[],
+     deck:shuffle([...Array(9).keys()].filter(i=>i!==jack)),jack,jackCards:[],time:[],pursuit:false,over:null,act:null,sel:[],log:[]};
+  log("Nouvelle partie. Les jetons Action sont lancés.");
+  render();
+  modal(`<h2>Mr. Jack, à vous seul</h2><p>Enquêteur, détournez les yeux. Mr. Jack, découvrez l'identité que vous avez piochée.</p><div class="secret" id="sec" hidden>${chip(jack)}<p style="margin:8px 0 0">C'est vous pour toute la partie.</p></div>`,
+   [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Cacher et commencer",pri:1}]);
+}
+
+/* ---- ligne de vue ---- */
+function line(p){
+  if(p<3)return{c:[p,3+p,6+p],d:0};
+  if(p<6){const r=p-3;return{c:[r*3+2,r*3+1,r*3],d:1}}
+  if(p<9){const c=8-p;return{c:[6+c,3+c,c],d:2}}
+  const r=11-p;return{c:[r*3,r*3+1,r*3+2],d:3};
+}
+const open=(t,side)=>(t.inn&&t.s===CROSS)?true:side!==t.rot;
+function visible(){
+  const v=new Set();
+  for(const k in G.det){const{c,d}=line(G.det[k]);
+    for(const i of c){const t=G.tiles[i];if(!open(t,d))break;v.add(i);if(!open(t,(d+2)%4))break}}
+  return v;
+}
+const jackCell=()=>G.tiles.findIndex(t=>t.s===G.jack);
+
+/* ---- dessin ---- */
+function slotXY(p){
+  if(p<3)return[130+120*p,34];if(p<6)return[466,130+120*(p-3)];
+  if(p<9)return[130+120*(8-p),466];return[34,130+120*(11-p)];
+}
+function targets(){
+  const a=G.act;if(!a)return[];
+  if(KEY[a.t]){const p=G.det[KEY[a.t]];return[(p+1)%12,(p+2)%12]}
+  if(a.t==="joker"&&G.sel[0]){const p=G.det[G.sel[0]];return[p,(p+1)%12]}
+  return[];
+}
+function render(){
+  const v=visible(),tg=targets(),sel=G.sel;
+  let s=`<defs><pattern id="cob" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#8a7b62"/><circle cx="4" cy="4" r="2.6" fill="#9c8c70"/></pattern>
+  <radialGradient id="glow"><stop offset="0" stop-color="#e8c46a" stop-opacity=".55"/><stop offset="1" stop-color="#e8c46a" stop-opacity="0"/></radialGradient></defs>
+  <rect x="0" y="0" width="500" height="500" rx="10" fill="#1d1912"/>
+  <path d="M250 10 A240 240 0 0 1 490 250" fill="none" stroke="#3d3427" stroke-width="2" stroke-dasharray="4 6"/>
+  <text x="440" y="24" fill="#6b5d45" font-size="11" text-anchor="end">sens horaire ↻</text>`;
+  for(let p=0;p<12;p++){const[x,y]=slotXY(p),on=tg.includes(p);
+    s+=`<circle data-slot="${p}" cx="${x}" cy="${y}" r="${on?22:15}" fill="${on?"#e8c46a33":"#2a231a"}" stroke="${on?"#e8c46a":"#3d3427"}" stroke-width="${on?3:1.5}" ${on?'class="pulse" style="cursor:pointer"':""}/>`}
+  G.tiles.forEach((t,i)=>{
+    const x=70+120*(i%3),y=70+120*(i/3|0),cross=t.inn&&t.s===CROSS,su=SUS[t.s],issel=sel.includes(i),
+      canClick=G.act&&(G.act.t==="echange"||(G.act.t==="rotation"&&!G.rotated.includes(i)));
+    s+=`<g data-cell="${i}" transform="translate(${x} ${y})" style="cursor:${canClick?"pointer":"default"}">
+      <rect width="120" height="120" fill="#4a3f31"/>
+      ${[[4,4],[80,4],[4,80],[80,80]].map(([a,b])=>`<rect x="${a}" y="${b}" width="36" height="36" rx="3" fill="#5e4f3b"/><path d="M${a+4} ${b+18}h28" stroke="#3b3125" stroke-width="2"/>`).join("")}
+      <g transform="rotate(${90*t.rot} 60 60)">
+        <rect x="0" y="43" width="120" height="34" fill="url(#cob)"/>
+        <rect x="43" y="${cross?0:43}" width="34" height="${cross?120:77}" fill="url(#cob)"/>
+        ${cross?"":`<rect x="0" y="0" width="120" height="14" fill="#2a1f16"/><path d="M0 7h120M20 0v7M50 0v7M80 0v7M110 0v7M35 7v7M65 7v7M95 7v7" stroke="#5a4532" stroke-width="1.5"/>`}
+      </g>
+      ${t.inn?`<text x="60" y="113" text-anchor="middle" font-size="10" fill="#c9bb9b" opacity=".7">✕ ${su[0]}</text>`
+       :`${v.has(i)?`<circle cx="60" cy="60" r="44" fill="url(#glow)"/>`:""}
+        <circle cx="60" cy="62" r="24" fill="#0006"/><circle cx="60" cy="60" r="24" fill="${su[3]}" stroke="${v.has(i)?"#e8c46a":"#f1e6c8"}" stroke-width="${v.has(i)?4:2}"/>
+        <text x="60" y="66" text-anchor="middle" font-size="17" font-weight="700" fill="${t.s===2?"#222":"#fff"}">${su[1]}</text>
+        <rect x="8" y="100" width="104" height="17" rx="8" fill="#000a"/><text x="60" y="112.5" text-anchor="middle" font-size="11" fill="#f1e6c8">${su[0]}</text>`}
+      ${G.over&&i===jackCell()?`<rect x="3" y="3" width="114" height="114" fill="none" stroke="#c0392b" stroke-width="6"/>`:""}
+      <rect x="1" y="1" width="118" height="118" fill="none" stroke="${issel?"#e8c46a":"#17140f"}" stroke-width="${issel?5:2}"/>
+    </g>`;
+  });
+  const bySlot={};for(const k in G.det)(bySlot[G.det[k]]=bySlot[G.det[k]]||[]).push(k);
+  for(const p in bySlot){const[x,y]=slotXY(+p),ks=bySlot[p];
+    ks.forEach((k,j)=>{const o=(j-(ks.length-1)/2)*24,horiz=(+p<3||(+p>5&&+p<9)),dx=horiz?o:0,dy=horiz?0:o,[n,c,l]=DET[k],sel2=G.sel[0]===k&&G.act&&G.act.t==="joker";
+      s+=`<g data-det="${k}" style="cursor:${G.act&&G.act.t==="joker"?"pointer":"default"}"><circle cx="${x+dx}" cy="${y+dy+2}" r="16" fill="#0008"/><circle cx="${x+dx}" cy="${y+dy}" r="16" fill="${c}" stroke="${sel2?"#fff":"#17140f"}" stroke-width="${sel2?4:2}"/><text x="${x+dx}" y="${y+dy+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#17140f">${l}</text><title>${n}</title></g>`})}
+  $("board").innerHTML=s;
+
+  const who=G.over?null:cur();
+  $("banner").className="banner "+(who||"");
+  $("banner").innerHTML=G.over?`<span>Partie terminée — ${G.over}</span>`:`<span>Tour ${G.turn}/8 · à ${WHO[who]} de jouer</span><small>${G.turn%2?"tour impair : jetons lancés":"tour pair : jetons retournés"}</small>`;
+  const ord=G.turn%2?ODD:EVEN;
+  $("order").innerHTML=ord.map((w,i)=>`<i class="${w} ${i<G.step?"done":""} ${i===G.step&&!G.over?"now":""}">${i+1}. ${w==="E"?"Enquêteur":"Jack"}</i>`).join("");
+  $("tokens").innerHTML=TOK.map((_,i)=>{const f=face(i),o=TOK[i][G.tok[i]?1:0];
+    return`<button class="tok ${G.act&&G.act.i===i?"on":""}" data-tok="${i}" ${G.used[i]||G.over||(G.act&&G.act.i!==i)?"disabled":""}>${LBL[f]}<span>verso : ${LBL[o]}</span></button>`}).join("");
+  $("act").innerHTML=actPanel();
+  const rem=G.tiles.filter(t=>!t.inn).length;
+  $("sRem").textContent=rem;$("sTime").textContent=G.time.filter(x=>x==="J").length;$("sCards").textContent=G.jackCards.length;
+  $("time").innerHTML=[...Array(8)].map((_,i)=>`<div class="${G.time[i]||""} ${i===G.turn-1&&!G.over?"cur":""}" title="Tour ${i+1}">${G.time[i]==="J"?"⧗":i+1}</div>`).join("");
+  $("log").innerHTML=G.log.map(t=>`<li>${t}</li>`).join("");
+}
+function chip(s){return`<span class="chip"><i style="background:${SUS[s][3]}"></i>${SUS[s][0]} · ${SUS[s][2]} sablier${SUS[s][2]>1?"s":""}</span>`}
+function actPanel(){
+  if(G.over)return`<p>${G.over}</p><div class="btns"><button class="b pri" data-do="new">Rejouer</button></div>`;
+  const a=G.act;
+  if(!a)return`<p><b>${WHO[cur()]}</b>, choisissez un jeton Action ci-dessus.</p><p style="color:var(--mute);margin:0">Halo doré sur le plateau = suspect actuellement visible par un détective.</p>`;
+  const cancel=`<button class="b ghost" data-do="cancel">Annuler</button>`;
+  if(KEY[a.t])return`<p>Déplacez <b>${LBL[a.t]}</b> de 1 ou 2 cases dans le sens horaire (ou cliquez une case dorée).</p><div class="btns"><button class="b pri" data-do="mv1">+1 case</button><button class="b pri" data-do="mv2">+2 cases</button>${cancel}</div>`;
+  if(a.t==="joker"){
+    if(!G.sel[0])return`<p>Joker : quel détective ?</p><div class="btns">${Object.keys(DET).map(k=>`<button class="b" data-do="jk${k}">${DET[k][0]}</button>`).join("")}${cancel}</div>`;
+    return`<p>Joker : <b>${DET[G.sel[0]][0]}</b> avance d'1 case ou reste sur place.</p><div class="btns"><button class="b pri" data-do="jm1">+1 case</button><button class="b" data-do="jm0">Ne pas bouger</button><button class="b ghost" data-do="jkback">Autre détective</button>${cancel}</div>`;
+  }
+  if(a.t==="rotation"){
+    if(G.sel[0]===undefined)return`<p>Rotation : cliquez sur la tuile à pivoter${G.rotated.length?" (pas une tuile déjà tournée ce tour)":""}.</p><div class="btns">${cancel}</div>`;
+    return`<p>Pivoter la tuile <b>${SUS[G.tiles[G.sel[0]].s][0]}</b> :</p><div class="btns"><button class="b pri" data-do="r1">¼ horaire ↻</button><button class="b pri" data-do="r2">½ tour</button><button class="b pri" data-do="r3">¼ antihoraire ↺</button>${cancel}</div>`;
+  }
+  if(a.t==="echange")return`<p>Échange : cliquez sur ${G.sel.length?"la seconde":"deux"} tuile${G.sel.length?"":"s"}.</p><div class="btns">${cancel}</div>`;
+  return"";
+}
+
+/* ---- actions ---- */
+function finish(txt){
+  log(`${WHO[cur()]} — ${txt}`);
+  G.used[G.act.i]=1;G.act=null;G.sel=[];G.step++;
+  render();
+  if(G.step===4)setTimeout(witness,250);
+}
+function pickTok(i){
+  if(G.over||G.act||G.used[i])return;
+  G.act={i,t:face(i)};G.sel=[];sfx("tok");
+  if(G.act.t==="alibi")return alibi();
+  render();
+}
+function moveDet(k,n){G.det[k]=(G.det[k]+n)%12;sfx("step",n)}
+function alibi(){
+  const who=cur();
+  if(!G.deck.length){finish("Alibi : la pioche est vide.");return}
+  const c=G.deck.shift();sfx("card");
+  if(who==="E"){
+    setTimeout(()=>sfx("chime"),250);
+    const t=G.tiles.find(t=>t.s===c);t.inn=true;
+    finish(`Alibi : ${SUS[c][0]} est innocenté.`);
+  }else{
+    G.jackCards.push(c);
+    modal(`<h2>Carte Alibi de Mr. Jack</h2><p>Enquêteur, détournez les yeux.</p><div class="secret" id="sec" hidden>${chip(c)}</div>`,
+      [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Cacher et continuer",pri:1,fn:()=>finish("Alibi : pioche une carte (cachée).")}]);
+  }
+}
+function witness(){
+  const v=visible(),jc=jackCell(),jv=v.has(jc);let n=0;
+  G.tiles.forEach((t,i)=>{if(!t.inn&&(jv?!v.has(i):v.has(i))){t.inn=true;n++}});
+  G.time[G.turn-1]=jv?"E":"J";
+  sfx("whistle");sfx(jv?"seen":"hidden");if(n)setTimeout(()=>sfx("chime"),2200);setTimeout(()=>sfx("tick"),2500);
+  log(`Appel à témoin : Jack est ${jv?"VISIBLE":"INVISIBLE"}. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""}. Jeton Temps pour ${jv?"l'Enquêteur":"Mr. Jack"}.`);
+  const rem=G.tiles.filter(t=>!t.inn).length,hg=G.time.filter(x=>x==="J").length+G.jackCards.reduce((a,c)=>a+SUS[c][2],0);
+  const inv=rem===1,jk=hg>=6;let end=null;
+  if(G.pursuit||(inv&&jk)){
+    if(G.turn===8)end=jv?["E","Jack est visible au 8e tour : il est démasqué."]:["J","Jack reste invisible au 8e tour."];
+    else if(!G.pursuit){G.pursuit=true;log("Égalité : les deux camps remplissent leur condition. La partie continue jusqu'au 8e tour.")}
+  }else if(inv)end=["E","un seul suspect reste : Jack est démasqué."];
+  else if(jk)end=["J",`Jack cumule ${hg} sabliers.`];
+  else if(G.turn===8)end=["J","Jack n'a pas été démasqué à l'issue du 8e tour."];
+  const head=`<h2>Appel à témoin</h2><p>Mr. Jack est <b>${jv?"visible":"invisible"}</b>. ${n} suspect${n>1?"s":""} innocenté${n>1?"s":""} ; le jeton Temps du tour ${G.turn} va à ${jv?"l'Enquêteur":"Mr. Jack"}.</p>${G.pursuit&&!end?`<p><b>Égalité</b> : on joue jusqu'au 8e tour.</p>`:""}`;
+  if(end){
+    G.over=`${end[0]==="E"?"l'Enquêteur":"Mr. Jack"} gagne : ${end[1]}`;
+    setTimeout(()=>sfx(end[0]==="E"?"winE":"winJ"),2400);
+    log(`Fin : ${G.over} Jack était ${SUS[G.jack][0]} (${hg} sabliers).`);render();
+    modal(head+`<h2 style="margin-top:14px">${end[0]==="E"?"L'Enquêteur":"Mr. Jack"} l'emporte</h2><p>${end[1]}</p><p>Mr. Jack était ${chip(G.jack)} avec ${hg} sablier${hg>1?"s":""} au total.</p>`,[{l:"Voir le plateau",pri:1},{l:"Nouvelle partie",fn:newGame}]);
+    return;
+  }
+  render();
+  modal(head,[{l:`Passer au tour ${G.turn+1}`,pri:1,fn:nextTurn}]);
+}
+function nextTurn(){
+  G.turn++;G.step=0;G.used=[0,0,0,0];G.rotated=[];sfx("bell");
+  G.tok=G.turn%2?TOK.map(()=>Math.random()<.5):G.tok.map(f=>!f);
+  log(G.turn%2?"Les jetons Action sont lancés.":"Les jetons Action sont retournés.");
+  render();
+}
+function onDo(d){
+  const a=G.act;
+  if(d==="new")return newGame();
+  if(d==="cancel"||d.startsWith("jk"))sfx("click");
+  if(d==="cancel"){G.act=null;G.sel=[];return render()}
+  if(d==="mv1"||d==="mv2"){const n=+d[2];moveDet(KEY[a.t],n);return finish(`${LBL[a.t]} avance de ${n} case${n>1?"s":""}.`)}
+  if(d.startsWith("jk")&&d!=="jkback"){G.sel=[d.slice(2)];return render()}
+  if(d==="jkback"){G.sel=[];return render()}
+  if(d==="jm1"){moveDet(G.sel[0],1);return finish(`Joker : ${DET[G.sel[0]][0]} avance d'1 case.`)}
+  if(d==="jm0")return finish(`Joker : ${DET[G.sel[0]][0]} reste sur place.`);
+  if(d[0]==="r"){const i=G.sel[0],t=G.tiles[i],n=+d[1];t.rot=(t.rot+n)%4;G.rotated.push(i);sfx("rot");
+    return finish(`Rotation de la tuile ${SUS[t.s][0]} (${n===2?"½ tour":"¼ de tour"}).`)}
+}
+$("board").addEventListener("click",e=>{
+  if(G.over||!G.act)return;const a=G.act;
+  const sl=e.target.closest("[data-slot]"),dt=e.target.closest("[data-det]"),ce=e.target.closest("[data-cell]");
+  if(a.t==="joker"&&dt&&!G.sel[0]){G.sel=[dt.dataset.det];return render()}
+  if(sl){const p=+sl.dataset.slot,tg=targets();if(!tg.includes(p))return;
+    if(KEY[a.t]){const k=KEY[a.t],n=(p-G.det[k]+12)%12;moveDet(k,n);return finish(`${LBL[a.t]} avance de ${n} case${n>1?"s":""}.`)}
+    if(a.t==="joker"){const k=G.sel[0];if(p===G.det[k])return onDo("jm0");return onDo("jm1")}}
+  if(a.t==="joker"&&dt&&G.sel[0]){const k=dt.dataset.det;if(k!==G.sel[0]){G.sel=[k];return render()}}
+  if(ce){const i=+ce.dataset.cell;
+    if(a.t==="rotation"&&!G.rotated.includes(i)){sfx("click");G.sel=[i];return render()}
+    if(a.t==="echange"){
+      if(G.sel[0]===i){G.sel=[];return render()}
+      G.sel.push(i);if(G.sel.length===2)sfx("swap");else sfx("click");
+      if(G.sel.length===2){const[x,y]=G.sel,A=SUS[G.tiles[x].s][0],B=SUS[G.tiles[y].s][0];
+        [G.tiles[x],G.tiles[y]]=[G.tiles[y],G.tiles[x]];
+        const ri=G.rotated.map(r=>r===x?y:r===y?x:r);G.rotated=ri;
+        return finish(`Échange de ${A} et ${B}.`)}
+      return render();
+    }}
+});
+$("tokens").addEventListener("click",e=>{const b=e.target.closest("[data-tok]");if(b)pickTok(+b.dataset.tok)});
+$("act").addEventListener("click",e=>{const b=e.target.closest("[data-do]");if(b)onDo(b.dataset.do)});
+$("newBtn").addEventListener("click",()=>modal(`<h2>Nouvelle partie ?</h2><p>La partie en cours sera perdue.</p>`,[{l:"Oui, recommencer",pri:1,fn:newGame},{l:"Annuler"}]));
+$("secretBtn").addEventListener("click",()=>{
+  const hg=G.jackCards.reduce((a,c)=>a+SUS[c][2],0),pub=G.time.filter(x=>x==="J").length;
+  modal(`<h2>Dossier secret</h2><p>Réservé à Mr. Jack — Enquêteur, détournez les yeux.</p><div class="secret" id="sec" hidden><p><b>Identité :</b><br>${chip(G.jack)}</p><p><b>Cartes Alibi :</b><br>${G.jackCards.length?G.jackCards.map(chip).join(""):"aucune"}</p><p style="margin:0"><b>Sabliers :</b> ${pub} (jetons Temps) + ${hg} (cartes) = <b>${pub+hg}</b> / 6</p></div>`,
+   [{l:"Révéler",fn:()=>{$("sec").hidden=false},keep:1},{l:"Fermer",pri:1}]);
+});
+function modal(html,btns){
+  const m=$("modal"),box=$("mbox");
+  box.innerHTML=html+`<div class="btns">${btns.map((b,i)=>`<button class="b ${b.pri?"pri":""}" data-m="${i}">${b.l}</button>`).join("")}</div>`;
+  m.classList.add("show");
+  box.querySelectorAll("[data-m]").forEach(el=>el.addEventListener("click",()=>{const b=btns[+el.dataset.m];sfx(b.keep?"card":"click");if(!b.keep)m.classList.remove("show");if(b.fn)b.fn()}));
+  const f=box.querySelector(".pri");if(f)f.focus();
+}
+$("musBtn").addEventListener("click",()=>setAudio("m"));
+$("sfxBtn").addEventListener("click",()=>setAudio("s"));
+/* les navigateurs n'autorisent le son qu'après un premier geste : la musique démarre au premier clic */
+document.addEventListener("pointerdown",()=>{ac();startMusic()},{once:true});
+document.addEventListener("keydown",()=>{ac();startMusic()},{once:true});
+audioBtns();
+newGame();
+}
+</script>
+</body>
+</html>
