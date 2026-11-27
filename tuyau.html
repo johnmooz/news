@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plombier — jeu de tuyaux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: atelier de plombier, ludique et net
+   IDEA: un mur carrelé de chaufferie où l'on raccorde des tuyaux en cuivre
+   PICTURE: le plateau lui-même — cuivre au repos, bleu vif sous pression
+   COLOUR and TYPE: carrelage blanc / ardoise la nuit, cuivre, bleu eau, laiton ; Bungee + Rubik
+   LAYOUT: titre modeste, compteurs, outils, puis le plateau avec ascenseur latéral */
+:root{color-scheme:light dark;--bg:light-dark(#eef3f5,#0e181d);--ink:light-dark(#122027,#e6eef1);--mut:light-dark(#566870,#93a7af);--panel:light-dark(#fff,#16242b);--line:light-dark(#cfdade,#263a43);--cell:light-dark(#f8fbfc,#15232a);--grout:light-dark(#cfdade,#0a1317);--cu:#c8763a;--cu2:#7f4119;--cuh:#f3b784;--w:#1f8bff;--w2:#0b4ea6;--wh:#bfe3ff;--ok:#1fa463;--no:#e0434a;--brass:#d6a020;--brass2:#8d6608}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip}
+h1,h2{font-family:Bungee,Rubik,sans-serif;font-weight:400;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(32px,7vw,48px)}h2{font-size:28px}
+button{font:inherit;cursor:pointer}
+.band{padding:clamp(20px,3vw,40px) max(4vw,14px);max-width:1240px;margin:0 auto}
+.hidden{display:none!important}
+.lead{color:var(--mut);max-width:62ch;margin:10px 0 0}
+.demo{display:flex;gap:2px;margin:22px 0;padding:6px;background:var(--grout);border-radius:12px;width:max-content;max-width:100%;overflow:hidden}
+.demo .t{width:clamp(40px,10vw,64px);height:clamp(40px,10vw,64px)}
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:18px}
+.lv{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;color:var(--ink);min-height:44px;transition:border-color .15s,transform .15s}
+.lv:hover,.lv:focus-visible{border-color:var(--cu);transform:translateY(-2px);outline:none}
+.lv b{display:block;font-family:Bungee,sans-serif;font-weight:400;font-size:18px}
+.lv span{color:var(--mut);font-size:14px}
+.custom{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:16px;background:var(--panel);border:2px dashed var(--line);border-radius:14px;padding:14px 16px}
+.custom input{flex:1 1 180px;accent-color:var(--cu);height:32px}
+.custom output{font-weight:700;white-space:nowrap;min-width:9ch}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);font-weight:500;white-space:nowrap}
+.btn:hover,.btn:focus-visible{border-color:var(--cu);outline:none}
+.btn.pri{background:var(--cu);border-color:var(--cu2);color:#fff}
+.rules{margin:20px 0 0;padding-left:20px;color:var(--mut);max-width:70ch}
+.rules b{color:var(--ink)}
+/* jeu */
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.top h2{font-size:24px}.top .lvn{color:var(--mut)}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 12px;font-size:14px;color:var(--mut);white-space:nowrap}
+.chip b{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:4px}
+.chip.bad b{color:var(--no)}.chip.good b{color:var(--ok)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.seg button{min-height:40px;padding:0 14px;border:0;background:none;color:var(--mut);font-weight:500}
+.seg button[aria-pressed=true]{background:var(--cu);color:#fff}
+.wrap{display:flex;gap:8px;align-items:stretch}
+.well{flex:1;overflow:auto;border-radius:14px;background:var(--grout);scrollbar-width:thin;scrollbar-color:var(--cu) transparent;overscroll-behavior:contain}
+.board{display:grid;gap:2px;padding:8px;width:max-content;margin:0 auto}
+.rail{flex:none;width:22px;border-radius:11px;background:var(--panel);border:1px solid var(--line);position:relative;touch-action:none;cursor:pointer}
+.thumb{position:absolute;left:2px;right:2px;top:0;min-height:40px;border-radius:9px;background:linear-gradient(90deg,var(--cu2),var(--cu),var(--cuh),var(--cu));box-shadow:0 1px 3px #0005}
+.t{position:relative;border-radius:6px;background:var(--cell);box-shadow:inset 0 -2px 0 #0000000f;user-select:none;-webkit-tap-highlight-color:transparent}
+.t.p{cursor:pointer}.t.e{background:transparent;box-shadow:none}
+.t svg{display:block;width:100%;height:100%;overflow:visible}
+.rg,.hd{transform-box:view-box;transform-origin:50px 50px;transition:transform .18s ease-out}
+.o{fill:var(--cu2)}.i{fill:var(--cu)}.h{fill:var(--cuh)}.c{fill:var(--cu2)}
+.wet .o{fill:var(--w2)}.wet .i{fill:var(--w)}.wet .h{fill:var(--wh)}.wet .c{fill:var(--w2)}
+.f{display:none;fill:none;stroke:var(--wh);stroke-width:4;stroke-dasharray:5 9}
+.wet .f{display:block;animation:fl .6s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-14}}
+.vb{fill:var(--brass);stroke:var(--brass2);stroke-width:3}
+.hd rect{fill:var(--no);stroke:#0005;stroke-width:2}
+.open .hd rect{fill:var(--ok)}
+.blk .vb{stroke:var(--no);stroke-width:6;animation:pu .9s ease-in-out infinite alternate}
+@keyframes pu{to{stroke-width:2}}
+.lk{display:none;fill:var(--w);animation:dr .8s ease-in infinite}
+.l0 .lk0,.l1 .lk1,.l2 .lk2,.l3 .lk3{display:block}
+@keyframes dr{0%{opacity:1}100%{opacity:.15}}
+.hint{animation:hi .5s ease 3}@keyframes hi{50%{box-shadow:0 0 0 4px var(--brass)}}
+.nope{animation:no .3s}@keyframes no{25%{translate:-3px}75%{translate:3px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:14px;color:var(--mut)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+.ov{position:fixed;inset:0;background:#0009;display:grid;place-items:center;padding:16px;z-index:9}
+.dlg{background:var(--panel);border-radius:18px;padding:24px;max-width:380px;width:100%;text-align:center;border:3px solid var(--w)}
+.dlg p{color:var(--mut)}.dlg .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+@media(prefers-reduced-motion:reduce){.wet .f,.lk,.blk .vb,.hint{animation:none}.rg,.hd{transition:none}}
+</style>
+</head>
+<body>
+
+<section id="menu" class="band">
+  <h1>Plombier</h1>
+  <p class="lead">Raccordez l'arrivée d'eau à l'évacuation : tournez les tuyaux, ouvrez les robinets et orientez les vannes trois voies jusqu'à ce que l'eau circule d'un bout à l'autre.</p>
+  <div class="demo" id="demo"></div>
+  <h2 style="font-size:22px">Choisissez un niveau</h2>
+  <div class="levels" id="levels"></div>
+  <div class="custom">
+    <label for="cnum"><b>Sur mesure</b></label>
+    <input type="range" id="cnum" min="12" max="400" step="4" value="100">
+    <output id="cout">100 tuyaux</output>
+    <button class="btn pri" id="cgo">Jouer</button>
+  </div>
+  <div class="tools" style="margin-top:14px">
+    <button class="btn snd" data-snd="sfx">Bruitages : oui</button>
+    <button class="btn snd" data-snd="mus">Musique : non</button>
+  </div>
+  <ul class="rules">
+    <li><b>Mode Tourner</b> : touchez un tuyau (ou un robinet) pour le faire pivoter d'un quart de tour.</li>
+    <li><b>Mode Robinets</b> : touchez un robinet pour l'ouvrir (poignée verte) ou le fermer (poignée rouge).</li>
+    <li>Les tuyaux <b>sous pression</b> deviennent bleus ; les gouttes signalent une fuite.</li>
+    <li>Sur les grands niveaux, faites défiler le plateau avec l'<b>ascenseur</b> à droite.</li>
+  </ul>
+</section>
+
+<section id="game" class="band hidden">
+  <div class="top"><h2>Plombier</h2><span class="lvn" id="lvn"></span></div>
+  <div class="stats">
+    <span class="chip">Coups<b id="sMoves">0</b></span>
+    <span class="chip">Temps<b id="sTime">0:00</b></span>
+    <span class="chip">Sous pression<b id="sWet">0</b></span>
+    <span class="chip" id="cLeak">Fuites<b id="sLeak">0</b></span>
+    <span class="chip">Robinets ouverts<b id="sVal">0</b></span>
+  </div>
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Mode">
+      <button id="mRot" aria-pressed="true">↻ Tourner</button>
+      <button id="mVal" aria-pressed="false">Robinets</button>
+    </div>
+    <button class="btn" id="bUndo">Annuler</button>
+    <button class="btn" id="bHint">Indice</button>
+    <button class="btn" id="bReset">Recommencer</button>
+    <button class="btn" id="bNew">Nouvelle partie</button>
+    <button class="btn" id="bMenu">Niveaux</button>
+    <button class="btn snd" data-snd="sfx">Bruitages : oui</button>
+    <button class="btn snd" data-snd="mus">Musique : non</button>
+  </div>
+  <div class="wrap">
+    <div class="well" id="well"><div class="board" id="board"></div></div>
+    <div class="rail" id="rail" aria-label="Ascenseur"><div class="thumb" id="thumb"></div></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--cu)"></i>Tuyau vide</span>
+    <span><i style="background:var(--w)"></i>Sous pression</span>
+    <span><i style="background:var(--ok)"></i>Robinet ouvert</span>
+    <span><i style="background:var(--no)"></i>Robinet fermé</span>
+  </div>
+</section>
+
+<div class="ov hidden" id="win"><div class="dlg">
+  <h2>Ça coule !</h2>
+  <p id="wtxt"></p>
+  <div class="row"><button class="btn" id="wAgain">Rejouer</button><button class="btn pri" id="wNext">Niveau suivant</button></div>
+</div></div>
+
+<script>
+{
+const LEVELS=[
+  {n:'Apprenti',p:20,c:5},{n:'Compagnon',p:42,c:7},{n:'Artisan',p:80,c:10},
+  {n:'Maître',p:150,c:12},{n:'Légende',p:300,c:15}];
+const DX=[0,1,0,-1],DY=[-1,0,1,0];
+const rotm=(m,r)=>{r=((r%4)+4)%4;for(let k=0;k<r;k++)m=((m<<1)|(m>>3))&15;return m};
+const pop=m=>(m&1)+(m>>1&1)+(m>>2&1)+(m>>3&1);
+const rnd=n=>Math.random()*n|0;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const $=id=>document.getElementById(id);
+
+/* ---------- dessin ---------- */
+function arm(k){return `<g transform="rotate(${k*90} 50 50)"><rect class="o" x="35" y="0" width="30" height="50"/><rect class="i" x="39" y="0" width="22" height="50"/><rect class="h" x="42" y="0" width="5" height="50"/><rect class="c" x="32" y="0" width="36" height="7" rx="2"/><path class="f" d="M50 50V0"/></g>`}
+function pipe(m){
+  let s='';for(let k=0;k<4;k++)if(m>>k&1)s+=arm(k);
+  s+=pop(m)==1?'<circle class="o" cx="50" cy="50" r="18"/><circle class="i" cx="50" cy="50" r="14"/><circle class="c" cx="50" cy="50" r="4"/>'
+      :'<circle class="o" cx="50" cy="50" r="15"/><circle class="i" cx="50" cy="50" r="11"/>';
+  return s}
+function valveSVG(){return '<circle class="vb" cx="50" cy="50" r="19"/><g class="hd"><rect x="44" y="20" width="12" height="60" rx="6"/></g><circle cx="50" cy="50" r="5" fill="#0006"/>'}
+const leaks='<circle class="lk lk0" cx="50" cy="5" r="6"/><circle class="lk lk1" cx="95" cy="50" r="6"/><circle class="lk lk2" cx="50" cy="95" r="6"/><circle class="lk lk3" cx="5" cy="50" r="6"/>';
+const srcSVG='<g class="wet">'+arm(1)+'</g><rect x="4" y="12" width="62" height="76" rx="14" fill="var(--w2)"/><rect x="10" y="18" width="50" height="64" rx="10" fill="var(--w)"/><path d="M14 46q8-6 16 0t16 0t12 0V78H14z" fill="var(--wh)" opacity=".5"/><circle cx="35" cy="30" r="6" fill="var(--wh)"/>';
+const drnSVG='<g class="dp">'+arm(3)+'</g><circle cx="58" cy="50" r="32" fill="#2b3b43"/><circle class="dh" cx="58" cy="50" r="25" fill="#0b1216"/><path d="M42 42h32M38 50h40M42 58h32" stroke="#56707b" stroke-width="4" stroke-linecap="round"/>';
+
+/* ---------- son ---------- */
+let AC=null,master=null,musBus=null,sfxOn=true,musOn=false,musTimer=null,step=0,nextT=0;
+function ac(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.7;master.connect(AC.destination);musBus=AC.createGain();musBus.gain.value=.13;musBus.connect(master)}catch(e){AC=null}}
+  if(AC&&AC.state==='suspended')AC.resume().catch(()=>{});
+  return AC;
+}
+function tone(f,d,type='sine',v=.2,when=0,f2=null,dest=null){
+  const a=ac();if(!a)return;const t=Math.max(a.currentTime,when||a.currentTime),o=a.createOscillator(),g=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(.0008,t+d);
+  o.connect(g).connect(dest||master);o.start(t);o.stop(t+d+.05);
+}
+let noiseBuf=null;
+function noise(d,freq,v=.2,q=1.2,f2=null){
+  const a=ac();if(!a)return;
+  if(!noiseBuf){noiseBuf=a.createBuffer(1,a.sampleRate,a.sampleRate);const ch=noiseBuf.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=Math.random()*2-1}
+  const t=a.currentTime,s=a.createBufferSource(),bp=a.createBiquadFilter(),g=a.createGain();
+  s.buffer=noiseBuf;bp.type='bandpass';bp.Q.value=q;bp.frequency.setValueAtTime(freq,t);if(f2)bp.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.03);g.gain.exponentialRampToValueAtTime(.0008,t+d);
+  s.connect(bp).connect(g).connect(master);s.start(t);s.stop(t+d+.05);
+}
+const S={
+  rot(){tone(900,.05,'square',.06);tone(320,.09,'triangle',.14,0,180)},
+  open(){tone(280,.25,'sawtooth',.05,0,720);noise(.6,600,.18,1,2200)},
+  close(){tone(620,.2,'sawtooth',.05,0,240);tone(110,.18,'sine',.3)},
+  nope(){tone(150,.14,'square',.08);tone(120,.16,'square',.06,AC?AC.currentTime+.08:0)},
+  bubble(){tone(380+Math.random()*200,.12,'sine',.16,0,1100)},
+  drip(){tone(1500,.12,'sine',.12,0,350)},
+  hint(){[1320,1760,2093].forEach((f,i)=>tone(f,.25,'triangle',.08,ac()?AC.currentTime+i*.07:0))},
+  win(){const a=ac();if(!a)return;const t=a.currentTime;[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,.35,'triangle',.16,t+i*.11));tone(262,1.2,'sine',.2,t+.55);noise(1.4,400,.15,.8,3000)}
+};
+function sfx(n){if(sfxOn)try{S[n]()}catch(e){}}
+// musique : petite boucle pentatonique, ambiance atelier
+const CH=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]],PENTA=[69,72,74,76,79,81];
+const mf=m=>440*2**((m-69)/12);
+function sched(){
+  const a=AC;if(!a)return;
+  while(nextT<a.currentTime+.25){
+    const bar=(step>>3)%4,s=step%8,ch=CH[bar];
+    if(s===0||s===4)tone(mf(ch[0]-12),.45,'triangle',.5,nextT,null,musBus);
+    if(s===2||s===6)tone(mf(ch[0]-12+7),.2,'triangle',.3,nextT,null,musBus);
+    if(s%2===1)ch.forEach(n=>tone(mf(n),.18,'sine',.12,nextT,null,musBus));
+    if(Math.random()<.45)tone(mf(PENTA[rnd(PENTA.length)]),.3,'triangle',.22,nextT,null,musBus);
+    step++;nextT+=60/104/2;
+  }
+}
+function setMusic(on){
+  musOn=on;clearInterval(musTimer);
+  if(on){if(!ac()){musOn=false;return}nextT=AC.currentTime+.05;musTimer=setInterval(sched,60)}
+}
+function sndLabels(){document.querySelectorAll('.snd').forEach(b=>{const m=b.dataset.snd==='mus';b.textContent=(m?'Musique : ':'Bruitages : ')+((m?musOn:sfxOn)?'oui':'non');b.setAttribute('aria-pressed',m?musOn:sfxOn)})}
+document.addEventListener('click',e=>{const b=e.target.closest('.snd');if(!b)return;
+  if(b.dataset.snd==='mus')setMusic(!musOn);else{sfxOn=!sfxOn;if(sfxOn){ac();S.rot()}}
+  sndLabels()});
+
+/* ---------- état ---------- */
+let G=null,mode='rot',timer=null,lastLevel=null;
+
+function dims(p,want){
+  const avail=Math.min(innerWidth-70,1100);
+  const maxc=Math.max(3,Math.floor(avail/42)-2);
+  const c=Math.max(3,Math.min(want,maxc));
+  return {C:c,R:Math.max(2,Math.ceil(p/c))};
+}
+
+function generate(R,C){
+  const n=R*C,m=new Array(n).fill(0),seen=new Uint8Array(n);
+  const st=[rnd(n)];seen[st[0]]=1;
+  while(st.length){
+    const cur=st[st.length-1],r=cur/C|0,c=cur%C;
+    const opts=shuffle([0,1,2,3]).filter(k=>{const nr=r+DY[k],nc=c+DX[k];return nr>=0&&nr<R&&nc>=0&&nc<C&&!seen[nr*C+nc]});
+    if(!opts.length){st.pop();continue}
+    const k=opts[0],j=(r+DY[k])*C+c+DX[k];
+    m[cur]|=1<<k;m[j]|=1<<((k+2)%4);seen[j]=1;st.push(j);
+  }
+  const sr=rnd(R),dr=rnd(R),a=sr*C,b=dr*C+C-1;
+  m[a]|=8;m[b]|=2;
+  // chemin arrivée -> évacuation
+  const par=new Int32Array(n).fill(-1);par[a]=a;const q=[a];
+  while(q.length){const i=q.shift(),r=i/C|0,c=i%C;for(let k=0;k<4;k++){if(!(m[i]>>k&1))continue;const nr=r+DY[k],nc=c+DX[k];if(nr<0||nr>=R||nc<0||nc>=C)continue;const j=nr*C+nc;if(par[j]<0){par[j]=i;q.push(j)}}}
+  const path=[];for(let i=b;;i=par[i]){path.unshift(i);if(i===a)break}
+  return {m,sr,dr,path};
+}
+
+function newGame(level){
+  lastLevel=level;
+  const {R,C}=dims(level.p,level.c),W=C+2,g=generate(R,C);
+  const cells=new Array(R*W).fill(null);
+  const bi=i=>(i/C|0)*W+(i%C)+1;
+  g.m.forEach((m,i)=>cells[bi(i)]={kind:'p',base:m,rot:0,valve:false,open:true});
+  // robinets sur le chemin
+  const onPath=new Set(g.path);
+  let cand=g.path.filter(i=>g.m[i]===5||g.m[i]===10||pop(g.m[i])===3);
+  if(!cand.length)cand=g.path.filter(i=>pop(g.m[i])>=2);
+  if(!cand.length)cand=[g.path[0]];
+  const nv=Math.max(1,Math.min(cand.length,Math.round(g.path.length/6)));
+  shuffle(cand).slice(0,nv).forEach(i=>{const c=cells[bi(i)];c.valve=true;c.open=false});
+  // robinets leurres
+  const off=shuffle(g.m.map((m,i)=>i).filter(i=>!onPath.has(i)&&(g.m[i]===5||g.m[i]===10)));
+  off.slice(0,Math.round(R*C/25)).forEach(i=>{const c=cells[bi(i)];c.valve=true;c.open=Math.random()<.5});
+  cells.forEach(c=>{if(c&&c.base!==15)c.rot=rnd(4)});
+  const src=g.sr*W,drn=g.dr*W+W-1;
+  cells[src]={kind:'src',base:2,rot:0};cells[drn]={kind:'drn',base:8,rot:0};
+  G={R,C,W,cells,src,drn,path:g.path.map(bi),level,moves:0,secs:0,undo:[],won:false,
+     init:cells.map(c=>c&&{rot:c.rot,open:c.open})};
+  render();startTimer();
+  $('menu').classList.add('hidden');$('game').classList.remove('hidden');
+  $('lvn').textContent=`${level.n} · ${R*C} tuyaux · ${R}×${C}`;
+  scrollTo(0,0);requestAnimationFrame(fit);
+}
+
+function tileHTML(c,i){
+  if(!c)return `<div class="t e"></div>`;
+  if(c.kind==='src')return `<div class="t src" title="Arrivée d'eau"><svg viewBox="0 0 100 100">${srcSVG}</svg></div>`;
+  if(c.kind==='drn')return `<div class="t drn" data-i="${i}" title="Évacuation"><svg viewBox="0 0 100 100">${drnSVG}</svg></div>`;
+  return `<div class="t p${c.valve?' v':''}" data-i="${i}"><svg viewBox="0 0 100 100"><g class="rg">${pipe(c.base)}${c.valve?valveSVG():''}</g>${leaks}</svg></div>`;
+}
+
+function render(){
+  const b=$('board'),avail=Math.min(innerWidth-70,1100);
+  const ts=Math.max(40,Math.min(72,Math.floor((avail-16)/G.W)-2));
+  b.style.gridTemplateColumns=`repeat(${G.W},${ts}px)`;b.style.gridAutoRows=ts+'px';
+  b.innerHTML=G.cells.map(tileHTML).join('');
+  const els=b.children;
+  G.cells.forEach((c,i)=>{if(c){c.el=els[i];c.rg=els[i].querySelector('.rg');c.hd=els[i].querySelector('.hd');paint(c)}});
+  flow();
+}
+
+function paint(c){
+  if(c.rg)c.rg.style.transform=`rotate(${c.rot*90}deg)`;
+  if(c.valve){
+    const k=[0,1,2,3].find(k=>c.base>>k&1)||0;
+    c.hd.style.transform=`rotate(${k*90+(c.open?0:90)}deg)`;
+    c.el.classList.toggle('open',c.open);
+  }
+}
+const mask=c=>rotm(c.base,c.rot);
+
+function flow(){
+  const n=G.cells.length,wet=new Uint8Array(n),blk=new Uint8Array(n),lk=new Uint8Array(n),q=[G.src];
+  wet[G.src]=1;
+  while(q.length){
+    const i=q.pop(),m=mask(G.cells[i]),r=i/G.W|0,c=i%G.W;
+    for(let k=0;k<4;k++){
+      if(!(m>>k&1))continue;
+      const nr=r+DY[k],nc=c+DX[k],j=nr*G.W+nc;
+      const nb=(nr>=0&&nr<G.R&&nc>=0&&nc<G.W)?G.cells[j]:null;
+      if(!nb||!(mask(nb)>>((k+2)%4)&1)){lk[i]|=1<<k;continue}
+      if(nb.valve&&!nb.open){blk[j]=1;continue}
+      if(!wet[j]){wet[j]=1;q.push(j)}
+    }
+  }
+  let nw=0,nl=0,vo=0,vt=0;
+  G.cells.forEach((c,i)=>{
+    if(!c)return;
+    if(c.kind==='p'){
+      const e=c.el.classList;e.toggle('wet',!!wet[i]);e.toggle('blk',!!blk[i]);
+      for(let k=0;k<4;k++)e.toggle('l'+k,!!(lk[i]>>k&1));
+      if(wet[i])nw++;
+      if(c.valve){vt++;if(c.open)vo++}
+    }
+    if(c.kind==='drn')c.el.querySelector('.dp').classList.toggle('wet',!!wet[i]);
+    if(lk[i])nl+=pop(lk[i]);
+  });
+  $('sMoves').textContent=G.moves;$('sWet').textContent=nw;$('sLeak').textContent=nl;
+  $('sVal').textContent=`${vo}/${vt}`;$('cLeak').className='chip'+(nl?' bad':'');
+  if(G.prevWet!==undefined&&!wet[G.drn]){if(nw>G.prevWet)sfx('bubble');if(nl>G.leaks)setTimeout(()=>sfx('drip'),90)}
+  G.prevWet=nw;G.leaks=nl;
+  if(wet[G.drn]&&!G.won){G.won=true;stopTimer();setTimeout(()=>{sfx('win');showWin()},450)}
+}
+
+function act(i,t){
+  const c=G.cells[i];
+  if(t==='r'){c.rot++;sfx('rot')}else{c.open=!c.open;sfx(c.open?'open':'close')}
+  G.moves++;G.undo.push({i,t});paint(c);flow();
+}
+
+$('board').addEventListener('click',e=>{
+  const el=e.target.closest('.t.p');if(!el||G.won)return;
+  const i=+el.dataset.i,c=G.cells[i];
+  if(mode==='rot')act(i,'r');
+  else if(c.valve)act(i,'v');
+  else{sfx('nope');el.classList.remove('nope');void el.offsetWidth;el.classList.add('nope')}
+});
+
+function setMode(m){mode=m;$('mRot').setAttribute('aria-pressed',m==='rot');$('mVal').setAttribute('aria-pressed',m==='val')}
+$('mRot').onclick=()=>setMode('rot');$('mVal').onclick=()=>setMode('val');
+
+$('bUndo').onclick=()=>{
+  if(G.won)return;const u=G.undo.pop();if(!u)return;const c=G.cells[u.i];
+  if(u.t==='r')c.rot--;else c.open=!c.open;sfx('rot');
+  G.moves=Math.max(0,G.moves-1);paint(c);flow();
+};
+$('bReset').onclick=()=>{
+  G.cells.forEach((c,i)=>{if(c&&c.kind==='p'){c.rot=G.init[i].rot;c.open=G.init[i].open;paint(c)}});
+  G.moves=0;G.secs=0;G.undo=[];G.won=false;startTimer();flow();
+};
+$('bNew').onclick=()=>newGame(G.level);
+$('bMenu').onclick=()=>{stopTimer();$('game').classList.add('hidden');$('menu').classList.remove('hidden')};
+
+$('bHint').onclick=()=>{
+  if(G.won)return;
+  let target=null;
+  for(const i of G.path){
+    const c=G.cells[i];
+    if(mask(c)!==c.base){
+      let d=0;while(rotm(c.base,c.rot+d)!==c.base)d++;
+      c.rot+=d;G.moves++;target=c;break;
+    }
+  }
+  if(!target)for(const i of G.path){const c=G.cells[i];if(c.valve&&!c.open){c.open=true;G.moves++;target=c;break}}
+  if(!target)return;
+  G.undo=[];paint(target);sfx('hint');
+  target.el.classList.remove('hint');void target.el.offsetWidth;target.el.classList.add('hint');
+  target.el.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+  flow();
+};
+
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function startTimer(){stopTimer();$('sTime').textContent=fmt(G.secs);timer=setInterval(()=>{G.secs++;$('sTime').textContent=fmt(G.secs)},1000)}
+function stopTimer(){clearInterval(timer)}
+
+function showWin(){
+  $('wtxt').textContent=`${G.moves} coups en ${fmt(G.secs)}. `+(G.leaks?`Il reste ${G.leaks} fuite${G.leaks>1?'s':''} : l'eau passe, mais le sol est mouillé !`:'Installation parfaite, aucune fuite.');
+  const idx=LEVELS.indexOf(G.level);
+  $('wNext').textContent=idx>=0&&idx<LEVELS.length-1?`Niveau ${LEVELS[idx+1].n}`:'Nouvelle partie';
+  $('win').classList.remove('hidden');$('wNext').focus();
+}
+$('wAgain').onclick=()=>{$('win').classList.add('hidden');newGame(G.level)};
+$('wNext').onclick=()=>{$('win').classList.add('hidden');const idx=LEVELS.indexOf(G.level);newGame(idx>=0&&idx<LEVELS.length-1?LEVELS[idx+1]:G.level)};
+
+/* ---------- ascenseur latéral ---------- */
+const well=$('well'),rail=$('rail'),thumb=$('thumb');
+function fit(){
+  if(!G)return;
+  const top=well.getBoundingClientRect().top+scrollY;
+  well.style.maxHeight=Math.max(300,innerHeight-Math.min(top,innerHeight*.45)-60)+'px';
+  sync();
+}
+function sync(){
+  const H=well.clientHeight,S=well.scrollHeight;
+  if(S<=H+2){rail.style.visibility='hidden';return}
+  rail.style.visibility='visible';
+  const rh=rail.clientHeight,th=Math.max(40,rh*H/S);
+  thumb.style.height=th+'px';
+  thumb.style.top=(well.scrollTop/(S-H))*(rh-th)+'px';
+}
+well.addEventListener('scroll',sync,{passive:true});
+let drag=null;
+rail.addEventListener('pointerdown',e=>{
+  const r=rail.getBoundingClientRect(),tr=thumb.getBoundingClientRect();
+  const y=e.clientY;
+  drag={off:(y>=tr.top&&y<=tr.bottom)?y-tr.top:tr.height/2};
+  rail.setPointerCapture(e.pointerId);move(e);
+});
+rail.addEventListener('pointermove',e=>{if(drag)move(e)});
+rail.addEventListener('pointerup',()=>drag=null);rail.addEventListener('pointercancel',()=>drag=null);
+function move(e){
+  const r=rail.getBoundingClientRect(),th=thumb.offsetHeight;
+  const f=Math.min(1,Math.max(0,(e.clientY-r.top-drag.off)/(r.height-th)));
+  well.scrollTop=f*(well.scrollHeight-well.clientHeight);
+}
+const ro=new ResizeObserver(sync);ro.observe(well);
+addEventListener('resize',fit);
+
+/* ---------- menu ---------- */
+$('levels').innerHTML=LEVELS.map((l,i)=>`<button class="lv" data-l="${i}"><b>${l.n}</b><span>${l.p} tuyaux</span></button>`).join('');
+$('levels').addEventListener('click',e=>{const b=e.target.closest('.lv');if(b)newGame(LEVELS[+b.dataset.l])});
+$('cnum').oninput=e=>$('cout').textContent=e.target.value+' tuyaux';
+$('cgo').onclick=()=>{const p=+$('cnum').value;newGame({n:'Sur mesure',p,c:Math.round(Math.sqrt(p))})};
+const demoM=[2,10,12,5,3,10,8];
+$('demo').innerHTML=`<div class="t"><svg viewBox="0 0 100 100">${srcSVG}</svg></div>`+
+  [10,10,10].map(m=>`<div class="t wet"><svg viewBox="0 0 100 100">${pipe(m)}</svg></div>`).join('')+
+  `<div class="t wet open"><svg viewBox="0 0 100 100">${pipe(10)}${valveSVG()}</svg></div>`+
+  `<div class="t wet"><svg viewBox="0 0 100 100">${pipe(10)}</svg></div>`+
+  `<div class="t"><svg viewBox="0 0 100 100"><g class="dp wet">${arm(3)}</g>${drnSVG.replace('<g class="dp">'+arm(3)+'</g>','')}</svg></div>`;
+$('demo').querySelector('.open .hd').style.transform='rotate(90deg)';
+}
+</script>
+</body>
+</html>
