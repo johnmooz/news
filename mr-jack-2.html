@@ -91,7 +91,7 @@ button.b.red{border-color:var(--red);background:#3d1714}
 <body>
 <div class="wrap">
 <header>
-  <div><h1>Mr. Jack Pocket</h1><p>Un Enquêteur contre Mr. Jack — seul contre l'ordinateur ou à deux sur le même écran.</p></div>
+  <div><h1>Mr. Jack Pocket</h1><p>Un Enquêteur contre Mr. Jack — joueurs ou ordinateurs, au choix pour chaque rôle.</p></div>
   <div class="btns"><button class="b ghost" id="musBtn" aria-pressed="true">Musique : oui</button><button class="b ghost" id="sfxBtn" aria-pressed="true">Bruitages : oui</button><button class="b red" id="secretBtn">Dossier secret de Mr. Jack</button><button class="b ghost" id="newBtn">Nouvelle partie</button></div>
 </header>
 
@@ -263,7 +263,7 @@ const log=t=>{G.log.unshift(`T${G.turn} · ${t}`);G.log.length=Math.min(G.log.le
 const modalOpen=()=>$("modal").classList.contains("show");
 
 /* ---- écran de départ ---- */
-let SET={n:1,E:{ai:false,name:""},J:{ai:true,name:""}};
+let SET={E:{ai:false,name:""},J:{ai:true,name:""}};
 function rndName(ai,avoid){const L=ai?BOTS:HUMANS;let n;do n=L[Math.random()*L.length|0];while(n===avoid);return n}
 SET.E.name=rndName(false);SET.J.name=rndName(true);
 function setupScreen(canCancel){
@@ -271,20 +271,13 @@ function setupScreen(canCancel){
     <div class="seg"><button data-r="${r}" data-ai="0" class="${p.ai?"":"on"}">Joueur</button><button data-r="${r}" data-ai="1" class="${p.ai?"on":""}">Ordinateur</button></div>
     <label class="nm"><span>Nom</span><input id="nm${r}" maxlength="18" value="${esc(p.name)}" ${p.ai?"readonly":""} autocomplete="off"></label>
     <button class="b ghost" data-dice="${r}">Nom au hasard</button></div>`};
-  box.innerHTML=`<h2>Nouvelle partie</h2><p>Nombre de joueurs</p>
-    <div class="seg big"><button data-n="1" class="${SET.n===1?"on":""}">1 joueur</button><button data-n="2" class="${SET.n===2?"on":""}">2 joueurs</button></div>
+  box.innerHTML=`<h2>Nouvelle partie</h2><p>Pour chaque rôle, choisissez un joueur ou l'ordinateur.</p>
     <div class="roles">${role("E")}${role("J")}</div>
     <div class="btns"><button class="b pri" id="go">Commencer</button>${canCancel?`<button class="b ghost" id="nogo">Annuler</button>`:""}</div>`;
   $("modal").classList.add("show");
   const keep=()=>{SET.E.name=$("nmE").value;SET.J.name=$("nmJ").value};
-  box.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{keep();sfx("click");SET.n=+b.dataset.n;
-    if(SET.n===2)["E","J"].forEach(r=>{if(SET[r].ai){SET[r].ai=false;SET[r].name=rndName(false)}});
-    else if(!SET.E.ai&&!SET.J.ai){SET.J.ai=true;SET.J.name=rndName(true)}
-    setupScreen(canCancel)});
   box.querySelectorAll("[data-ai]").forEach(b=>b.onclick=()=>{keep();sfx("click");const r=b.dataset.r,o=r==="E"?"J":"E",ai=b.dataset.ai==="1";
     if(SET[r].ai!==ai){SET[r].ai=ai;SET[r].name=rndName(ai,SET[o].name)}
-    if(ai){SET.n=1;if(SET[o].ai){SET[o].ai=false;SET[o].name=rndName(false,SET[r].name)}}
-    else if(SET.n===1&&!SET[o].ai){SET.n=2}
     setupScreen(canCancel)});
   box.querySelectorAll("[data-dice]").forEach(b=>b.onclick=()=>{keep();sfx("card");const r=b.dataset.dice,o=r==="E"?"J":"E";SET[r].name=rndName(SET[r].ai,SET[o].name);setupScreen(canCancel)});
   $("go").onclick=()=>{keep();sfx("bell");
@@ -506,13 +499,15 @@ function witness(){
     const w=end[0];
     G.over=`${nm(w)} (${ROLE[w]}) gagne : ${end[1]}`;
     setTimeout(()=>sfx(w==="E"?"winE":"winJ"),2400);
-    log(`Fin : ${G.over} Mr. Jack était ${SUS[G.jack][0]} (${hg} sabliers).`);render();
+    log(`Fin : ${G.over} Mr. Jack était ${SUS[G.jack][0]} (${hg} sablier${hg>1?"s":""}).`);render();
     modal(head+`<h2 style="margin-top:14px">${nm(w)} l'emporte</h2><p>${end[1]}</p><p>Mr. Jack (${nm("J")}) était ${chip(G.jack)} avec ${hg} sablier${hg>1?"s":""} au total.</p>`,
       [{l:"Voir le plateau",pri:1},{l:"Nouvelle partie",fn:()=>setupScreen(false)}]);
     return;
   }
   render();
   modal(head,[{l:`Passer au tour ${G.turn+1}`,pri:1,fn:nextTurn}]);
+  /* ordinateur contre ordinateur : on enchaîne tout seul après quelques secondes */
+  if(G.P.E.ai&&G.P.J.ai){const g=G,t=G.turn;setTimeout(()=>{if(G===g&&G.turn===t&&!G.over&&modalOpen()){$("modal").classList.remove("show");nextTurn()}},4000)}
 }
 function nextTurn(){
   G.turn++;G.step=0;G.used=[0,0,0,0];G.rotated=[];sfx("bell");
