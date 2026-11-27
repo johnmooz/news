@@ -23,6 +23,7 @@ input{font:inherit}
 .stepper .val{font-size:40px;font-weight:900;min-width:50px;text-align:center}
 .prow{display:flex;gap:8px;align-items:center;margin:8px 0}
 .prow .idx{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;color:#10192f;flex:none}
+.dice{background:var(--panel2);color:var(--ink);width:40px;height:42px;font-size:18px;flex:none;padding:0}
 .prow input{flex:1;min-width:0;background:#0f1830;border:1px solid #33456f;color:var(--ink);padding:11px 12px;border-radius:10px}
 .prow input::placeholder{color:#6b7da3}
 .seg{display:flex;background:#0f1830;border-radius:10px;padding:3px;flex:none}
@@ -156,7 +157,13 @@ td.r,th.r{text-align:right}
 <div id="modal"></div>
 <script>
 // ================== Données ==================
-const NAMES=["Léa","Hugo","Chloé","Lucas","Manon","Nathan","Inès","Louis","Jade","Gabriel","Zoé","Arthur","Camille","Jules","Lina","Paul","Emma","Tom","Alice","Noah","Rose","Sacha","Lou","Marius","Margaux","Victor"];
+const NAMES=["Jo","Tim","Virg","Telio","Jacqueline","Alain","Ophélie","Toto","Nath","Sandra","Greg","Lucas","Théo","Alizée","Manu","Céline","Fred","Juju","Mimi","Seb","Coco","Steph","Pat","Cathy"];
+const BOT_NAMES=["Bit-Bot","Octet","Pixel","Algo-9","Kernel","Proxy","Giga-Byte","Nano-X","Turbo-Byte","Binaire","Cookie.exe","Wifi-Max","Cache-Cache","Robo-RAM","Data-Max","Gigaflop","Firmware","Bug-Zéro","CPU-Tron","Méga-Hertz","Disque-Dur","Ping-404","Logiciel","Cyber-Toto"];
+function randName(ai,taken){
+  const pool=(ai?BOT_NAMES:NAMES).filter(n=>!taken.has(n));
+  return pool.length?pool[Math.floor(Math.random()*pool.length)]:(ai?"Bot-"+Math.floor(Math.random()*900+100):"Joueur "+Math.floor(Math.random()*90+10));
+}
+const isAutoName=n=>!n||NAMES.includes(n)||BOT_NAMES.includes(n);
 const NUM_FR=["ZÉRO","UN","DEUX","TROIS","QUATRE","CINQ","SIX","SEPT","HUIT","NEUF","DIX","ONZE","DOUZE","TREIZE"];
 const NUM_COL=["#6c757d","#8d6e63","#00a6c7","#e63946","#2a9d8f","#f77f00","#7b2cbf","#d00069","#4f9d2d","#b5651d","#3a0ca3","#1d63d8","#495057","#2d6a4f"];
 const P_COL=["#ffbe0b","#fb5607","#ff006e","#8338ec","#3a86ff","#06d6a0","#4cc9f0","#f15bb5"];
@@ -303,7 +310,7 @@ function schedMusic(){
   const c=AU.ctx;if(!c||c.state!=="running")return;
   if(!AU.music||AU.next<c.currentTime-.1){AU.next=c.currentTime+.05;if(!AU.music)return;}
   const sl=60/96/2;
-  while(AU.next<c.currentTime+.25){playStep(AU.step,AU.next,sl);AU.next+=sl;AU.step=(AU.step+1)%64;}
+  while(AU.next<c.currentTime+.25){try{playStep(AU.step,AU.next,sl);}catch(e){}AU.next+=sl;AU.step=(AU.step+1)%64;}
 }
 function playStep(step,t,sl){
   const V=(G?G.mode:setup.mode)==="v",bar=(V?PROG_V:PROG)[Math.floor(step/8)],s=step%8,D=AU.mus;
@@ -326,13 +333,14 @@ function duckMusic(sec){
   if(!AU.ctx||!AU.music)return;const t=AU.ctx.currentTime,g=AU.mus.gain;
   g.cancelScheduledValues(t);g.setTargetAtTime(.05,t,.08);g.setTargetAtTime(.24,t+sec,.6);
 }
-function sfx(name,v){
+function sfx(name,v){try{sfxRaw(name,v);}catch(e){console.warn("son ignoré",e);}}
+function sfxRaw(name,v){
   if(!AU.ctx||!AU.sound)return;
   if(AU.ctx.state!=="running"){AU.ctx.resume().catch(()=>{});updAudioHint();return;}
   const t=AU.ctx.currentTime+.01;
   switch(name){
     case "flip": noise(t,.13,{f:2200,f2:6500,q:.7,g:.22});tone(1100,t+.06,.04,{type:"square",g:.04,lp:3500});break;
-    case "num":{const m=67+[0,2,4,5,7,9,11,12,14,16,17,19,21][v||0];tone(mtof(m),t,.4,{type:"triangle",g:.22});tone(mtof(m+12),t,.18,{g:.07});break;}
+    case "num":{const m=67+([0,2,4,5,7,9,11,12,14,16,17,19,21,23][v]??0);tone(mtof(m),t,.4,{type:"triangle",g:.22});tone(mtof(m+12),t,.18,{g:.07});break;}
     case "bonus": [0,4,7,12].forEach((s,i)=>tone(mtof(76+s),t+i*.06,.28,{type:"square",g:.06,lp:4000}));break;
     case "chance": [0,7,12,19].forEach((s,i)=>tone(mtof(79+s),t+i*.05,.6,{g:.11}));break;
     case "second": noise(t,.5,{f:3000,f2:9000,q:3,g:.15});[19,12,7,0,12].forEach((s,i)=>tone(mtof(72+s),t+i*.07,.45,{g:.1}));break;
@@ -370,7 +378,7 @@ try{const s=JSON.parse(localStorage.getItem("flip7setup")||"null");if(s&&s.playe
 function ensureSetup(){
   if(setup.mode!=="v")setup.mode="n";
   while(setup.players.length<8)setup.players.push({name:"",ai:setup.players.length>0});
-  setup.players.forEach((p,i)=>{if(!p.ph)p.ph=NAMES[(i*7+3)%NAMES.length];});
+  setup.players.forEach(p=>{delete p.ph;});
 }
 function saveSetup(){try{localStorage.setItem("flip7setup",JSON.stringify(setup))}catch(e){}}
 
@@ -380,7 +388,7 @@ function renderSetup(){
   const rows=setup.players.slice(0,setup.n).map((p,i)=>`
     <div class="prow">
       <div class="idx" style="background:${P_COL[i]}">${i+1}</div>
-      <input maxlength="14" value="${esc(p.name)}" placeholder="${esc(p.ph)} (au hasard)" oninput="setup.players[${i}].name=this.value">
+      <input maxlength="14" value="${esc(p.name)}" placeholder="${p.ai?"Nom d'ordi au hasard":"Prénom au hasard"}" oninput="setup.players[${i}].name=this.value"><button class="dice" onclick="rollName(${i})" title="Au hasard">🎲</button>
       <div class="seg"><button class="${p.ai?"":"on"}" onclick="setAI(${i},false)">👤 Joueur</button><button class="${p.ai?"on":""}" onclick="setAI(${i},true)">🤖 Ordi</button></div>
     </div>`).join("");
   document.body.classList.toggle("veng",setup.mode==="v");
@@ -409,14 +417,17 @@ function renderSetup(){
     <div class="box"><h2>Nombre de joueurs</h2>
       <div class="stepper"><button onclick="setN(-1)">−</button><div class="val">${setup.n}</div><button onclick="setN(1)">+</button></div>
     </div>
-    <div class="box"><h2>Joueurs</h2>${rows}</div>
+    <div class="box"><h2 style="display:flex;justify-content:space-between;align-items:center">Joueurs<button class="ghost" style="padding:6px 10px;font-size:13px;text-transform:none;letter-spacing:0" onclick="rollAll()">🎲 Tous au hasard</button></h2>${rows}</div>
     <button class="big" onclick="startGame()">Lancer la partie</button>
     <div class="box"><details><summary>Rappel des règles ${V?"(Vengeance)":""}</summary><ul>${rules}</ul></details></div>
   </div>`;
 }
 function setN(d){setup.n=Math.max(1,Math.min(8,setup.n+d));renderSetup();}
 function setMode(m){setup.mode=m;saveSetup();renderSetup();}
-function setAI(i,v){setup.players[i].ai=v;renderSetup();}
+function takenNames(except){return new Set(setup.players.slice(0,setup.n).filter((_,j)=>j!==except).map(p=>p.name.trim()).filter(Boolean));}
+function rollName(i){const p=setup.players[i];p.name=randName(p.ai,takenNames(i));saveSetup();renderSetup();}
+function rollAll(){for(let i=0;i<setup.n;i++)setup.players[i].name="";for(let i=0;i<setup.n;i++)setup.players[i].name=randName(setup.players[i].ai,takenNames(i));saveSetup();renderSetup();}
+function setAI(i,v){const p=setup.players[i];if(p.ai!==v){p.ai=v;if(p.name&&isAutoName(p.name.trim()))p.name=randName(v,takenNames(i));}saveSetup();renderSetup();}
 
 function startGame(reuse){
   unlockAudio();
@@ -426,8 +437,7 @@ function startGame(reuse){
   else{
     saveSetup();
     const used=new Set(setup.players.slice(0,setup.n).map(p=>p.name.trim()).filter(Boolean));
-    const pool=shuffle(NAMES.filter(n=>!used.has(n)));
-    players=setup.players.slice(0,setup.n).map(p=>({name:p.name.trim()||pool.pop(),ai:p.ai}));
+    players=setup.players.slice(0,setup.n).map(p=>{let n=p.name.trim();if(!n){n=randName(p.ai,used);used.add(n);}return{name:n,ai:p.ai};});
   }
   document.body.classList.toggle("veng",mode==="v");
   G={id:Math.random(),mode,round:0,deck:buildDeck(mode),discard:[],log:[],cur:-1,over:false,prompt:null,
