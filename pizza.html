@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pizzaïolo Express</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, rapide, une petite pizzeria de quartier en plein coup de feu
+   IDEA: le comptoir d'un pizzaïolo — fiches punaisées, plan de travail en bois, four à bois
+   PICTURE: la pizza qu'on prépare, dessinée en SVG, qui s'étale, se garnit et dore au four
+   COLOUR and TYPE: nappe vichy rouge, bois chaud, brique sombre et braise orange; Fredoka + Nunito
+   LAYOUT: fiches en haut, four et comptoir, plan de travail et bacs d'ingrédients; 2 colonnes au-dessus de 820px */
+:root{color-scheme:light;--red:#c8321f;--red2:#9a2314;--paper:#fffaf0;--ink:#2b1a12;--wood:#b07040;--wood2:#7a4522;--brick:#341a12;--fire:#ff8a2a;--ok:#2f8a3a}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;color:var(--ink);font:16px/1.45 Nunito,system-ui,sans-serif;overflow-x:clip;min-height:100vh;
+background:#fff3ef;background-image:linear-gradient(90deg,rgba(200,50,31,.22) 50%,transparent 50%),linear-gradient(rgba(200,50,31,.22) 50%,transparent 50%);background-size:36px 36px}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:focus-visible{outline:3px solid #1d6fd6;outline-offset:2px}
+h1,h2,h3,.f{font-family:Fredoka,Nunito,sans-serif}
+[hidden]{display:none!important}
+.wrap{max-width:1120px;margin:0 auto;padding:10px max(2vw,8px) 24px}
+/* menu */
+.menu{display:grid;gap:18px;justify-items:center;text-align:center;padding:18px 0}
+.hero{width:min(300px,70vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 40% 35%,#c98a55,#8a4f26 70%);box-shadow:0 14px 0 #5e3317,0 22px 40px rgba(0,0,0,.25);display:grid;place-items:center}
+.hero svg{width:92%;animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.menu h1{margin:0;font-size:clamp(36px,8vw,52px);line-height:1.05;color:var(--red);text-shadow:0 3px 0 #fff,0 5px 0 rgba(0,0,0,.12)}
+.card{background:var(--paper);border-radius:18px;padding:16px;box-shadow:0 4px 0 rgba(0,0,0,.12);max-width:560px;width:100%}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mode{border:0;border-radius:16px;padding:14px 10px;min-height:44px;color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.mode b{display:block;font:700 24px Fredoka,sans-serif}.mode small{font-size:14px;opacity:.92}
+.mode.e{background:var(--ok)}.mode.h{background:var(--red)}
+.mode:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.best{font-size:14px;margin-top:4px;opacity:.85}
+.btn{border:0;border-radius:12px;padding:10px 16px;min-height:44px;background:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18);font-weight:800}
+.btn.dark{background:var(--ink);color:#fff}
+.how{text-align:start;margin:0;padding-inline-start:20px;font-size:15px}.how li{margin:3px 0}
+/* hud */
+.hud{display:flex;align-items:center;gap:10px;background:var(--red);color:#fff;border-radius:14px;padding:6px 8px 6px 14px;box-shadow:0 4px 0 var(--red2);margin-bottom:10px}
+.hud .hearts{font-size:22px;letter-spacing:2px}.hud .hearts .off{opacity:.3}
+.hud .sc{font:700 22px Fredoka,sans-serif;margin-inline-start:auto;white-space:nowrap}.hud .lv{font-size:14px;opacity:.9;white-space:nowrap}
+.hud .btn{min-height:40px;padding:6px 12px;background:#fff;color:var(--red2)}
+/* tickets */
+.rail{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;min-height:128px;border-bottom:5px solid #8a8a8a;background:linear-gradient(#0000 92%,rgba(0,0,0,.08));scroll-snap-type:x mandatory}
+.ticket{flex:0 0 132px;scroll-snap-align:start;position:relative;text-align:start;border:0;background:var(--paper);border-radius:4px 4px 10px 10px;padding:14px 10px 18px;box-shadow:0 3px 6px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:3px}
+.ticket:nth-child(odd){transform:rotate(-1.2deg)}.ticket:nth-child(even){transform:rotate(1deg)}
+.ticket .pin{position:absolute;top:4px;left:50%;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--red);box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}
+.ticket b{font:600 17px/1.1 Fredoka,sans-serif}
+.ticket small{font-size:13px;line-height:1.3;color:#5a463a}
+.ticket .q{font:700 26px Fredoka;color:#c9b8a6;text-align:center}
+.ticket .no{font-size:13px;color:#8a7464}
+.pat{position:absolute;left:10px;right:10px;bottom:7px;height:6px;border-radius:3px;background:#eadfcf;overflow:hidden}.pat i{display:block;height:100%;width:100%;background:#3b9a46}
+.ticket.can{outline:3px dashed var(--ok);outline-offset:2px;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{translate:0 -3px}}
+.wait{align-self:center;color:#7a5a48;font-weight:700;padding:0 8px}
+/* layout */
+.layout{display:grid;gap:12px;margin-top:12px}
+@media(min-width:820px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}}
+.col{display:grid;gap:12px}
+.oven{background:var(--brick);border-radius:90px 90px 16px 16px;padding:18px 12px 12px;position:relative;box-shadow:inset 0 0 0 6px #4a261a,0 5px 0 #1e0e09}
+.oven::before{content:"";position:absolute;inset:auto 20% 8px;height:40%;border-radius:50%;background:radial-gradient(var(--fire),transparent 70%);opacity:.45;animation:flick 1.6s ease-in-out infinite alternate;pointer-events:none}
+@keyframes flick{to{opacity:.7;transform:scaleX(1.08)}}
+.lbl{font:600 15px Fredoka,sans-serif;color:#fff;text-align:center;margin:0 0 8px;display:flex;justify-content:center;gap:10px;align-items:center;flex-wrap:wrap}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;position:relative}
+.slot{border:0;border-radius:14px;background:rgba(0,0,0,.35);min-height:96px;padding:4px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff}
+.slot svg{width:min(84px,100%);height:auto}
+.slot .empty{margin:auto;font-size:13px;opacity:.6}
+.cb{width:90%;height:7px;border-radius:4px;position:relative;background:linear-gradient(90deg,#8d8d8d 0 41%,#3fbf50 41% 68%,#f0a020 68% 86%,#e2361f 86%)}
+.cb i{position:absolute;top:-3px;width:4px;height:13px;margin-left:-2px;background:#fff;border-radius:2px;left:0}
+.st{font-style:normal;font-size:13px;font-weight:800;white-space:nowrap}
+.st.s1{color:#7dff8a}.st.s2{color:#ffc04a}.st.s3{color:#ff6a50}
+.slot.s1{box-shadow:0 0 0 3px #3fbf50}.slot.s3{box-shadow:0 0 0 3px #e2361f}
+.pass{background:#6b6b6b;border-radius:16px;padding:10px;box-shadow:0 5px 0 #464646;background-image:linear-gradient(135deg,#7a7a7a,#585858)}
+.pass .slot{min-height:84px;background:rgba(255,255,255,.12)}
+.pass .slot.sel{background:#fff;color:var(--ink);box-shadow:0 0 0 3px var(--ok)}
+.mini{border:0;border-radius:10px;padding:4px 10px;min-height:32px;background:#fff;color:var(--red2);font-weight:800;font-size:14px}
+/* table */
+.table{background:linear-gradient(180deg,var(--wood),#985a30);border-radius:16px;padding:10px;box-shadow:0 5px 0 var(--wood2);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}
+.work{display:grid;justify-items:center;gap:4px}
+.pz,.dough{border:0;background:none;padding:0;width:100%;max-width:230px;display:grid;justify-items:center}
+.pz svg,.dough svg{width:100%;height:auto}
+.dough span{background:var(--paper);border-radius:10px;padding:4px 10px;font-weight:800;font-size:14px}
+.squish svg{animation:sq .25s}
+@keyframes sq{40%{transform:scale(1.08,.9)}}
+.hint{margin:0;color:#fff;font-weight:800;font-size:14px;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.side{display:grid;gap:7px}
+.sauce{border:0;border-radius:12px;min-height:44px;background:var(--paper);display:flex;align-items:center;gap:8px;padding:6px 10px;font-weight:800;font-size:14px;text-align:start;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.sauce i{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.15)}
+.sauce.on{box-shadow:0 0 0 3px var(--ok),0 3px 0 rgba(0,0,0,.2)}
+.go{border:0;border-radius:12px;min-height:48px;background:var(--fire);color:#fff;font:700 18px Fredoka,sans-serif;box-shadow:0 4px 0 #b9520c}
+.go:disabled,.trash:disabled{opacity:.4;cursor:default}
+.trash{border:0;border-radius:12px;min-height:40px;background:rgba(0,0,0,.25);color:#fff;font-weight:800;font-size:14px}
+.bins{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px;background:#e8e2d8;border-radius:16px;padding:8px;box-shadow:inset 0 2px 6px rgba(0,0,0,.15)}
+.chip{border:0;border-radius:12px;background:#fff;padding:5px 3px 6px;min-height:58px;display:grid;justify-items:center;align-content:start;gap:1px;font-size:13px;font-weight:700;line-height:1.1;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.chip svg{width:28px;height:28px}
+.chip.ch{background:#fff7dc}
+.chip.on{background:#dff3df;box-shadow:0 0 0 3px var(--ok)}
+.chip.dis{opacity:.5}
+/* overlays */
+.ov{position:fixed;inset:0;background:rgba(43,26,18,.6);display:grid;place-items:center;padding:16px;z-index:20}
+.ov .card{max-height:88vh;overflow:auto;text-align:center}
+.ov h2{margin:0 0 6px;font-size:34px;line-height:1.05;color:var(--red)}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.big{font:700 52px/1 Fredoka;color:var(--ink);margin:6px 0}
+.book{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;text-align:start;margin-top:10px}
+.rc{background:#fff;border-radius:12px;padding:8px;display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:center}
+.rc svg{width:56px}.rc b{font:600 16px Fredoka}.rc small{display:block;font-size:13px;color:#5a463a;line-height:1.3}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-weight:800;max-width:min(92vw,460px);text-align:center;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}#toast.good{background:var(--ok)}#toast.bad{background:var(--red)}
+@media(max-width:600px){.table{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}.ticket{flex-basis:122px}.slot{min-height:88px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<div class="wrap">
+  <section id="menu" class="menu">
+    <div class="hero" id="hero"></div>
+    <h1>Pizzaïolo Express</h1>
+    <div class="card">
+      <div class="modes">
+        <button class="mode e" data-act="start" data-m="facile"><b>Facile</b><small>Les ingrédients sont écrits sur les fiches</small></button>
+        <button class="mode h" data-act="start" data-m="difficile"><b>Difficile</b><small>Juste le nom de la pizza, et des clients pressés</small></button>
+      </div>
+      <p class="best" id="best"></p>
+      <div class="row"><button class="btn" data-act="book">Carnet de recettes</button></div>
+    </div>
+    <div class="card">
+      <ol class="how">
+        <li>Touche le tas de pâtes, puis touche la pâte 5 fois pour l'aplatir.</li>
+        <li>Choisis une sauce : tomate, crème fraîche ou barbecue.</li>
+        <li>Ajoute fromages et garnitures (touche à nouveau pour retirer).</li>
+        <li>Enfourne : jusqu'à 3 pizzas cuisent en même temps.</li>
+        <li>Sors-la quand la jauge est dans le vert, puis touche la pizza prête et la bonne fiche.</li>
+        <li>Un client qui attend trop part fâché : 3 départs et c'est fini !</li>
+      </ol>
+    </div>
+  </section>
+
+  <main id="game" hidden>
+    <div class="hud"><span class="hearts" id="hearts"></span><span class="lv" id="lv"></span><span class="sc" id="sc">0</span><button class="btn" data-act="pause">Pause</button></div>
+    <div class="rail" id="rail"></div>
+    <div class="layout">
+      <div class="col">
+        <div class="oven"><p class="lbl">Four — touche une pizza pour la sortir</p><div class="slots" id="ovens"></div></div>
+        <div class="pass"><p class="lbl" id="passLbl"></p><div class="slots" id="counter"></div></div>
+      </div>
+      <div class="col">
+        <div class="table">
+          <div class="work" id="work"></div>
+          <div class="side" id="side"></div>
+        </div>
+        <div class="bins" id="bins"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="ov" id="ov" hidden><div class="card" id="ovc"></div></div>
+<div id="toast"></div>
+
+<script>
+{
+const BASES={tomate:{n:'Sauce tomate',c:'#c8321f'},creme:{n:'Crème fraîche',c:'#f4ead3'},barbecue:{n:'Sauce barbecue',c:'#6b2a14'}};
+const ING={
+ mozzarella:{n:'Mozzarella',s:'blob',ch:1,c:8},chevre:{n:'Chèvre',s:'slice',ch:1,c:6},emmental:{n:'Emmental',s:'shred',ch:1,c:13},bleu:{n:'Bleu',s:'speck',ch:1,c:6},
+ jambon:{n:'Jambon',s:'ham',c:6},merguez:{n:'Merguez',s:'merguez',c:7},lardons:{n:'Lardons',s:'lardon',c:11},poulet:{n:'Poulet',s:'chicken',c:7},
+ ananas:{n:'Ananas',s:'pine',c:7},champignons:{n:'Champignons',s:'mush',c:6},poivrons:{n:'Poivrons',s:'pepper',c:7},oignons:{n:'Oignons',s:'onion',c:7},
+ olives:{n:'Olives',s:'olive',c:7},pommes:{n:'Pommes de terre',s:'potato',c:6},oeuf:{n:'Œuf',s:'egg',c:1},basilic:{n:'Basilic',s:'basil',c:6},miel:{n:'Miel',s:'honey',c:5}
+};
+const RECIPES=[
+ {n:'Margherita',b:'tomate',i:['mozzarella','basilic']},
+ {n:'Reine',b:'tomate',i:['mozzarella','jambon','champignons']},
+ {n:'Hawaïenne',b:'tomate',i:['mozzarella','jambon','ananas']},
+ {n:'4 Fromages',b:'tomate',i:['mozzarella','chevre','emmental','bleu']},
+ {n:'Chèvre-Miel',b:'creme',i:['mozzarella','chevre','miel']},
+ {n:'Orientale',b:'tomate',i:['mozzarella','merguez','poivrons','oignons']},
+ {n:'Barbecue',b:'barbecue',i:['mozzarella','poulet','oignons']},
+ {n:'Savoyarde',b:'creme',i:['emmental','lardons','pommes','oignons']},
+ {n:'Végétarienne',b:'tomate',i:['mozzarella','champignons','poivrons','olives','oignons']},
+ {n:'Carbonara',b:'creme',i:['mozzarella','lardons','oeuf']},
+ {n:'Flambée',b:'creme',i:['lardons','oignons']},
+ {n:'Hawaï BBQ',b:'barbecue',i:['mozzarella','poulet','ananas']}
+];
+const CFG={facile:{int:l=>Math.max(11,21-l*1.5),pat:l=>Math.max(65,105-l*5),show:true},
+           difficile:{int:l=>Math.max(7,15-l*1.2),pat:l=>Math.max(42,75-l*4),show:false}};
+const COOK=8; // secondes pour atteindre "cuite"
+const $=id=>document.getElementById(id);
+const nm=k=>ING[k].n;
+
+function shp(s,x,y,a){const t=`transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a|0})"`;
+ switch(s){
+ case'blob':return`<g ${t}><path d="M-11 -3Q-9 -12 0 -10Q10 -11 11 -1Q12 9 2 10Q-10 12 -11 -3Z" fill="#fbf6ea" stroke="#e6d9bd" stroke-width="1.2"/></g>`;
+ case'slice':return`<g ${t}><circle r="9" fill="#fffdf7" stroke="#d2cab8" stroke-width="2.4"/></g>`;
+ case'shred':return`<g ${t}><rect x="-7" y="-2" width="14" height="4" rx="2" fill="#f2cf5b"/></g>`;
+ case'speck':return`<g ${t}><circle r="7" fill="#eef1f3" stroke="#d6dce2"/><circle cx="-2" cy="-1" r="1.8" fill="#4f74a0"/><circle cx="3" cy="2" r="1.4" fill="#4f74a0"/></g>`;
+ case'ham':return`<g ${t}><rect x="-8" y="-7" width="16" height="14" rx="3" fill="#f29ba1" stroke="#dc7480" stroke-width="1.5"/></g>`;
+ case'merguez':return`<g ${t}><rect x="-9" y="-3.5" width="18" height="7" rx="3.5" fill="#8c2a1b"/><rect x="-6" y="-2" width="8" height="1.6" rx=".8" fill="#b9513b"/></g>`;
+ case'lardon':return`<g ${t}><rect x="-5" y="-3" width="10" height="6" rx="1.5" fill="#f1c6b6" stroke="#c47b66" stroke-width="1.2"/></g>`;
+ case'chicken':return`<g ${t}><ellipse rx="9" ry="6" fill="#d6a364" stroke="#b47f40" stroke-width="1.2"/></g>`;
+ case'pine':return`<g ${t}><path d="M0 -9L9 7L-9 7Z" fill="#f6d046" stroke="#d6a51c" stroke-width="1.4" stroke-linejoin="round"/></g>`;
+ case'mush':return`<g ${t}><rect x="-2.5" y="-1" width="5" height="8" rx="2" fill="#efe2cc"/><path d="M-9 1Q-9 -8 0 -8Q9 -8 9 1Z" fill="#b98c62"/></g>`;
+ case'pepper':return`<g ${t}><path d="M-9 2Q0 -8 9 2" fill="none" stroke="#3c9a3a" stroke-width="4" stroke-linecap="round"/></g>`;
+ case'onion':return`<g ${t}><circle r="7" fill="none" stroke="#a965b3" stroke-width="2.4"/></g>`;
+ case'olive':return`<g ${t}><circle r="4.5" fill="none" stroke="#1f1a18" stroke-width="3.2"/></g>`;
+ case'potato':return`<g ${t}><circle r="8" fill="#efd78c" stroke="#cfae54" stroke-width="1.4"/></g>`;
+ case'egg':return`<g ${t}><path d="M-16 -2Q-15 -15 0 -14Q16 -13 15 1Q14 15 0 14Q-17 13 -16 -2Z" fill="#fff"/><circle r="7" fill="#f4ad16"/></g>`;
+ case'basil':return`<g ${t}><ellipse rx="8" ry="4.5" fill="#2f8a3a"/><path d="M-7 0H7" stroke="#1f6328" stroke-width="1"/></g>`;
+ case'honey':return`<g ${t}><path d="M-14 0q7 -7 14 0t14 0" fill="none" stroke="#e39d14" stroke-width="3.2" stroke-linecap="round" opacity=".9"/></g>`;
+ }return'';}
+
+function lerp(a,b,t){return a+(b-a)*t}
+function hex(c){return[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))}
+const STOPS=[[0,'#f3dcb0'],[1,'#e0a352'],[1.5,'#b9733a'],[1.9,'#5a3420'],[2.4,'#24150d']];
+function crust(c){for(let i=1;i<STOPS.length;i++){const[a,ca]=STOPS[i-1],[b,cb]=STOPS[i];if(c<=b||i===STOPS.length-1){const t=Math.max(0,Math.min(1,(c-a)/(b-a)));const A=hex(ca),B=hex(cb);return`rgb(${A.map((v,j)=>Math.round(lerp(v,B[j],t))).join(',')})`;}}}
+const burnOp=c=>Math.max(0,Math.min(.8,(c-1.35)*.9));
+const stage=c=>c<.9?0:c<=1.5?1:c<=1.9?2:3;
+const STXT=['Pas cuite','Parfaite !','Trop cuite','Brûlée !'];
+
+function genPos(k){const n=ING[k].c,out=[];
+ if(k==='oeuf')return[[(Math.random()-.5)*16,(Math.random()-.5)*16,Math.random()*360]];
+ for(let i=0;i<n;i++){const r=(k==='miel'?55:68)*Math.sqrt(Math.random()),a=Math.random()*Math.PI*2;out.push([Math.cos(a)*r,Math.sin(a)*r,Math.random()*360]);}
+ return out;}
+function makePizza(r,cook){const p={flat:5,base:r.b,ings:[...r.i],pos:{},cook:cook||0};r.i.forEach(k=>p.pos[k]=genPos(k));return p;}
+
+function pizzaSVG(p){
+ const f=Math.min(p.flat,5),R=34+f*11.6;
+ let h=`<svg viewBox="-100 -100 200 200" aria-hidden="true"><ellipse cx="0" cy="${(R*.1+5).toFixed(1)}" rx="${R}" ry="${R*.97}" fill="rgba(0,0,0,.22)"/>`;
+ h+=`<circle class="crust" r="${R}" fill="${crust(p.cook)}"/>`;
+ if(f<5)h+=`<ellipse cx="${-R*.3}" cy="${-R*.35}" rx="${R*.35}" ry="${R*.2}" fill="rgba(255,255,255,.4)"/>`;
+ else h+=`<circle r="${R-4}" fill="none" stroke="rgba(120,70,30,.18)" stroke-width="3"/>`;
+ if(p.base)h+=`<circle r="${R-11}" fill="${BASES[p.base].c}"/>`;
+ const order=[...p.ings].sort((a,b)=>(ING[b].ch?1:0)-(ING[a].ch?1:0));
+ for(const k of order)for(const q of p.pos[k])h+=shp(ING[k].s,q[0],q[1],q[2]);
+ h+=`<circle class="toast" r="${R}" fill="#2a160c" opacity="${burnOp(p.cook).toFixed(2)}"/>`;
+ return h+'</svg>';}
+
+const S={running:false};
+let best={};try{best=JSON.parse(localStorage.getItem('pizzaiolo-best')||'{}')}catch(e){}
+function saveBest(){try{localStorage.setItem('pizzaiolo-best',JSON.stringify(best))}catch(e){}}
+function showBest(){$('best').textContent=`Meilleurs scores — Facile : ${best.facile||0} · Difficile : ${best.difficile||0}`;}
+
+let ac;function beep(f,d,type){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(.07,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d);}catch(e){}}
+let tt;function toast(m,c){const t=$('toast');t.textContent=m;t.className='show '+(c||'');clearTimeout(tt);tt=setTimeout(()=>t.className='',2200);}
+
+function newGame(mode){
+ Object.assign(S,{mode,running:true,paused:false,score:0,hearts:3,served:0,level:1,tickets:[],ovens:[null,null,null],counter:[null,null,null],work:null,sel:-1,spawn:1,id:0,lastR:null});
+ $('menu').hidden=true;$('game').hidden=false;$('ov').hidden=true;window.scrollTo(0,0);
+ renderTop();renderRail();renderOvens();renderCounter();renderWork();}
+
+function addTicket(){let r;do{r=RECIPES[Math.random()*RECIPES.length|0]}while(r===S.lastR);S.lastR=r;
+ const max=CFG[S.mode].pat(S.level);S.tickets.push({id:++S.id,r,t:max,max});renderRail();beep(988,.12);}
+
+function renderTop(){$('hearts').innerHTML=[0,1,2].map(i=>`<span class="${i<S.hearts?'':'off'}">♥</span>`).join('');
+ $('sc').textContent=S.score+' pts';$('lv').textContent=`${S.mode==='facile'?'Facile':'Difficile'} · niv. ${S.level}`;}
+
+function renderRail(){const show=CFG[S.mode].show,can=S.sel>=0;
+ $('rail').innerHTML=S.tickets.length?S.tickets.map(t=>`<button class="ticket ${can?'can':''}" data-act="serve" data-id="${t.id}"><span class="pin"></span><span class="no">Commande n°${t.id}</span><b>${t.r.n}</b>${show?`<small>${BASES[t.r.b].n}<br>${t.r.i.map(nm).join(', ')}</small>`:'<span class="q">?</span>'}<span class="pat"><i id="pb${t.id}"></i></span></button>`).join(''):'<span class="wait">En attente de clients…</span>';
+ updBars();}
+function updBars(){for(const t of S.tickets){const b=$('pb'+t.id);if(!b)continue;const r=Math.max(0,t.t/t.max);b.style.width=(r*100).toFixed(1)+'%';b.style.background=r<.25?'#d8341f':r<.5?'#f0a020':'#3b9a46';}}
+
+function renderOvens(){$('ovens').innerHTML=S.ovens.map((p,i)=>`<button class="slot" data-act="oven" data-i="${i}" id="ov${i}">${p?pizzaSVG(p)+'<span class="cb"><i></i></span><em class="st"></em>':'<span class="empty">Libre</span>'}</button>`).join('');updOvens();}
+function updOvens(){S.ovens.forEach((p,i)=>{if(!p)return;const el=$('ov'+i);if(!el)return;const s=stage(p.cook);
+ el.querySelector('.crust').setAttribute('fill',crust(p.cook));el.querySelector('.toast').setAttribute('opacity',burnOp(p.cook).toFixed(2));
+ el.querySelector('.cb i').style.left=Math.min(100,p.cook/2.2*100).toFixed(1)+'%';
+ const st=el.querySelector('.st');st.textContent=s===0?'Cuisson…':STXT[s];st.className='st s'+s;el.className='slot s'+s;});}
+
+function renderCounter(){$('counter').innerHTML=S.counter.map((p,i)=>`<button class="slot ${S.sel===i?'sel':''}" data-act="pick" data-i="${i}">${p?pizzaSVG(p)+`<em class="st s${stage(p.cook)}">${STXT[stage(p.cook)]}</em>`:'<span class="empty">Vide</span>'}</button>`).join('');
+ $('passLbl').innerHTML=S.sel>=0?'Touche la fiche du client <button class="mini" data-act="trashSel">Jeter</button>':'Pizzas prêtes — touche une pizza, puis sa fiche';}
+
+let squish=false;
+function hint(p){return p.flat<5?`Touche la pâte pour l'étaler (${p.flat}/5)`:!p.base?'Choisis une sauce':'Garnis-la, puis enfourne !';}
+function renderWork(){const p=S.work;
+ $('work').innerHTML=p?`<button class="pz ${squish?'squish':''}" data-act="work" aria-label="Pizza en préparation">${pizzaSVG(p)}</button><p class="hint">${hint(p)}</p>`
+  :`<button class="dough" data-act="work"><svg viewBox="-100 -80 200 160" aria-hidden="true">${[[-38,20],[38,20],[0,-14]].map(([x,y])=>`<ellipse cx="${x}" cy="${y+30}" rx="36" ry="10" fill="rgba(0,0,0,.2)"/><circle cx="${x}" cy="${y}" r="34" fill="#f3dcb0"/><ellipse cx="${x-10}" cy="${y-12}" rx="12" ry="7" fill="rgba(255,255,255,.45)"/>`).join('')}</svg><span>Prendre une pâte</span></button>`;
+ squish=false;
+ const ok=p&&p.flat>=5;
+ $('side').innerHTML=Object.entries(BASES).map(([k,b])=>`<button class="sauce ${p&&p.base===k?'on':''}" data-act="base" data-k="${k}"><i style="background:${b.c}"></i>${b.n}</button>`).join('')
+  +`<button class="go" data-act="bake" ${ok&&p.base?'':'disabled'}>Enfourner</button><button class="trash" data-act="trashWork" ${p?'':'disabled'}>Jeter la pizza</button>`;
+ $('bins').innerHTML=Object.entries(ING).map(([k,g])=>`<button class="chip ${g.ch?'ch':''} ${p&&p.ings.includes(k)?'on':''} ${ok&&p.base?'':'dis'}" data-act="ing" data-k="${k}"><svg viewBox="-17 -17 34 34" aria-hidden="true">${shp(g.s,0,0,0)}</svg><span>${g.n}</span></button>`).join('');}
+
+function serve(id){
+ if(S.sel<0){toast("Touche d'abord une pizza prête sur le comptoir");return;}
+ const p=S.counter[S.sel],t=S.tickets.find(x=>x.id===id);if(!p||!t)return;
+ const r=t.r,have=new Set(p.ings),need=new Set(r.i);
+ const miss=r.i.filter(k=>!have.has(k)),extra=p.ings.filter(k=>!need.has(k)),s=stage(p.cook);
+ S.counter[S.sel]=null;S.sel=-1;
+ let msg='';
+ if(p.base!==r.b)msg=`il fallait de la ${BASES[r.b].n.toLowerCase()}`;
+ else if(miss.length)msg='il manque '+miss.map(nm).join(', ').toLowerCase();
+ else if(extra.length)msg='en trop : '+extra.map(nm).join(', ').toLowerCase();
+ else if(s===0)msg='pas assez cuite';
+ else if(s===3)msg='elle est brûlée';
+ if(msg){toast(`${r.n} refusée — ${msg}`,'bad');beep(150,.3,'square');}
+ else{const pts=(s===1?20:10)+Math.ceil(10*t.t/t.max);S.score+=pts;S.served++;S.level=1+Math.floor(S.served/3);
+  S.tickets=S.tickets.filter(x=>x!==t);toast(`${r.n} servie ! +${pts}${s===2?' (un peu trop cuite)':''}`,'good');beep(1046,.14);setTimeout(()=>beep(1318,.2),110);}
+ renderRail();renderCounter();renderTop();}
+
+function act(a,el){
+ if(a==='start')return newGame(el.dataset.m);
+ if(a==='book')return openBook();
+ if(a==='close'){$('ov').hidden=true;if(S.running)S.paused=false;return;}
+ if(a==='menu'){S.running=false;$('ov').hidden=true;$('game').hidden=true;$('menu').hidden=false;showBest();return;}
+ if(!S.running||S.paused){if(a==='again')newGame(S.mode);return;}
+ if(a==='pause'){S.paused=true;openOv(`<h2>Pause</h2><p>Les fours et les clients attendent…</p><div class="row"><button class="btn dark" data-act="close">Reprendre</button><button class="btn" data-act="menu">Quitter</button></div>`);return;}
+ const p=S.work;
+ if(a==='work'){if(!p){S.work={flat:0,base:null,ings:[],pos:{},cook:0};beep(330,.08);}
+  else if(p.flat<5){p.flat++;squish=true;beep(220+p.flat*40,.07,'triangle');}
+  else return;renderWork();return;}
+ if(a==='base'){if(!p)return toast("Prends d'abord une pâte");if(p.flat<5)return toast("Étale d'abord la pâte");p.base=el.dataset.k;beep(500,.06);renderWork();return;}
+ if(a==='ing'){const k=el.dataset.k;if(!p)return toast("Prends d'abord une pâte");if(p.flat<5)return toast("Étale d'abord la pâte");if(!p.base)return toast("Mets d'abord une sauce");
+  const i=p.ings.indexOf(k);if(i>=0){p.ings.splice(i,1);delete p.pos[k];}else{p.ings.push(k);p.pos[k]=genPos(k);}beep(640,.05);renderWork();return;}
+ if(a==='bake'){if(!p||p.flat<5||!p.base)return;const i=S.ovens.indexOf(null);if(i<0)return toast('Le four est plein (3 pizzas max)');
+  S.ovens[i]=p;S.work=null;beep(260,.2,'sawtooth');renderOvens();renderWork();return;}
+ if(a==='trashWork'){S.work=null;renderWork();return;}
+ if(a==='oven'){const i=+el.dataset.i,o=S.ovens[i];if(!o)return;const j=S.counter.indexOf(null);if(j<0)return toast('Le comptoir est plein : sers ou jette une pizza');
+  S.ovens[i]=null;S.counter[j]=o;S.sel=j;beep(720,.1);renderOvens();renderCounter();renderRail();return;}
+ if(a==='pick'){const i=+el.dataset.i;if(!S.counter[i])return;S.sel=S.sel===i?-1:i;renderCounter();renderRail();return;}
+ if(a==='trashSel'){if(S.sel>=0){S.counter[S.sel]=null;S.sel=-1;renderCounter();renderRail();}return;}
+ if(a==='serve')serve(+el.dataset.id);}
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el)act(el.dataset.act,el);});
+
+function openOv(h){$('ovc').innerHTML=h;$('ov').hidden=false;}
+function openBook(){openOv(`<h2>Carnet de recettes</h2><div class="book">${RECIPES.map(r=>`<div class="rc">${pizzaSVG(makePizza(r,1.1))}<div><b>${r.n}</b><small>${BASES[r.b].n} · ${r.i.map(nm).join(', ')}</small></div></div>`).join('')}</div><div class="row"><button class="btn dark" data-act="close">Fermer</button></div>`);}
+
+function gameOver(){S.running=false;const nb=S.score>(best[S.mode]||0);if(nb){best[S.mode]=S.score;saveBest();}beep(200,.5,'square');
+ openOv(`<h2>Service terminé !</h2><p>3 clients sont partis fâchés.</p><div class="big">${S.score} pts</div><p>${S.served} pizza${S.served>1?'s':''} servie${S.served>1?'s':''} · niveau ${S.level}${nb?'<br><b>Nouveau record !</b>':''}</p><div class="row"><button class="btn dark" data-act="again">Rejouer</button><button class="btn" data-act="menu">Menu</button></div>`);}
+
+function step(dt){
+ S.spawn-=dt;if(S.spawn<=0){if(S.tickets.length<4)addTicket();S.spawn=CFG[S.mode].int(S.level);}
+ if(!S.tickets.length&&S.spawn>2)S.spawn=2;
+ for(const t of S.tickets)t.t-=dt;
+ const gone=S.tickets.filter(t=>t.t<=0);
+ if(gone.length){S.tickets=S.tickets.filter(t=>t.t>0);S.hearts-=gone.length;toast(`Le client de la ${gone[0].r.n} est parti fâché !`,'bad');beep(180,.35,'square');renderRail();renderTop();if(S.hearts<=0){gameOver();return;}}
+ updBars();
+ for(const o of S.ovens)if(o)o.cook+=dt/COOK;
+ updOvens();}
+
+let last=0;
+function loop(ts){const dt=Math.min(.1,(ts-last)/1000||0);last=ts;if(S.running&&!S.paused)step(dt);requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.running&&!S.paused)act('pause');});
+
+$('hero').innerHTML=pizzaSVG(makePizza(RECIPES[1],1.15));
+showBest();
+}
+</script>
+</body></html>
