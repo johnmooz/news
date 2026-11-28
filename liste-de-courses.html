@@ -1,1 +1,405 @@
-cc
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liste de courses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: pratique, direct, un vrai outil de rayon
+   IDEA: le magasin et son ticket de caisse — étals à gauche, ticket à droite
+   PICTURE: la grille des produits elle-même, chaque produit sur sa vignette avec étiquette prix jaune
+   COLOUR and TYPE: blanc, encre, rouge enseigne #d7262e, étiquette jaune #ffd23f ; Archivo large + Plex Mono pour le ticket
+   LAYOUT: recherche + rayons en haut, grille, ticket en panneau latéral (bas d'écran sur mobile) */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#121314);--ink:light-dark(#17181a,#f1f1ee);--mute:light-dark(#62656b,#a3a6ab);
+--surf:light-dark(#f3f2ee,#1d1f21);--line:light-dark(#e3e1db,#2e3033);--red:light-dark(#d7262e,#ff5d61);
+--tag:#ffd23f;--paper:light-dark(#fffdf6,#1a1b1c)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,14px)}
+header{border-top:8px solid var(--red);padding:20px 0 6px}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.05;margin:0;font-weight:800;font-stretch:112%;text-wrap:balance}
+.sub{color:var(--mute);margin:6px 0 14px;font-size:15px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;height:48px;border:2px solid var(--ink);border-radius:12px;padding:0 44px 0 14px;background:var(--bg);font-size:16px}
+.search button{position:absolute;right:4px;top:4px;width:40px;height:40px;border:0;background:none;font-size:20px;color:var(--mute)}
+.tools select{height:48px;border:2px solid var(--line);border-radius:12px;padding:0 10px;background:var(--bg);font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 10px;scrollbar-width:none;position:sticky;top:0;background:var(--bg);z-index:5}
+.chips button{flex:none;height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--line);background:var(--surf);white-space:nowrap;font-size:15px}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.layout{display:grid;gap:28px;padding-bottom:110px}
+@media(min-width:980px){.layout{grid-template-columns:minmax(0,1fr) 380px;padding-bottom:40px}}
+h2{font-size:21px;margin:22px 0 10px;font-weight:800;font-stretch:112%;display:flex;gap:8px;align-items:center}
+h2 small{font-weight:400;color:var(--mute);font-size:14px;font-stretch:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+@media(max-width:400px){.grid{grid-template-columns:1fr 1fr;gap:8px}}
+.card{position:relative;background:var(--surf);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:6px;border:2px solid transparent}
+.card.has{border-color:var(--red)}
+.pic{height:86px;display:grid;place-items:center;font-size:52px;border-radius:10px;background:radial-gradient(circle at 50% 40%,light-dark(#fff,#2a2c2f),transparent 70%)}
+.card h3{font-size:15px;line-height:1.25;margin:0;font-weight:600}
+.unit{font-size:13px;color:var(--mute)}
+.tag{position:absolute;top:8px;right:8px;background:var(--tag);color:#17181a;font-weight:800;font-size:14px;padding:3px 8px;border-radius:6px;white-space:nowrap;transform:rotate(3deg);box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.row{display:flex;gap:6px;align-items:center;margin-top:auto}
+.step{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;background:var(--bg)}
+.step button{width:34px;height:40px;border:0;background:none;font-size:20px;font-weight:700}
+.step output{min-width:22px;text-align:center;font-weight:700}
+.add{flex:1;height:42px;border:0;border-radius:10px;background:var(--red);color:#fff;font-weight:700;font-size:15px}
+.in{font-size:13px;color:var(--red);font-weight:700}
+.empty{padding:30px 0;color:var(--mute)}
+.empty button{margin-top:10px}
+.btn{height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--ink);background:var(--bg);font-weight:700}
+.btn.main{background:var(--ink);color:var(--bg)}
+/* ticket */
+#cart{background:var(--paper);border:1.5px solid var(--line);border-radius:4px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:14px}
+@media(min-width:980px){#cart{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;align-self:start;margin-top:22px}}
+@media(max-width:979px){#cart{position:fixed;inset:auto 0 0 0;max-height:88vh;overflow:auto;z-index:20;border-radius:16px 16px 0 0;transform:translateY(105%);transition:transform .25s;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+#cart.open{transform:none}}
+@media(prefers-reduced-motion:reduce){#cart{transition:none}}
+.tk{padding:16px}
+.tkhead{display:flex;justify-content:space-between;align-items:center;border-bottom:2px dashed var(--line);padding-bottom:10px}
+.tkhead b{font-family:Archivo,sans-serif;font-size:20px;font-weight:800;font-stretch:112%}
+.close{width:44px;height:44px;border:0;background:var(--surf);border-radius:10px;font-size:20px}
+@media(min-width:980px){.close{display:none}}
+.cat{margin:12px 0 4px;color:var(--mute);font-size:12px}
+.li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:6px 8px;align-items:center;padding:6px 0;border-bottom:1px dotted var(--line)}
+.li .e{font-size:20px}
+.li .n{line-height:1.3}
+.li .n small{display:block;color:var(--mute);font-size:12px}
+.li .p{text-align:right;white-space:nowrap;font-weight:600}
+.li .ctl{grid-column:2/4;display:flex;gap:8px;justify-content:space-between;align-items:center}
+.li .step button{width:40px;height:36px}
+.rm{border:0;background:none;color:var(--red);font-size:13px;height:36px;font-family:inherit;text-decoration:underline}
+.total{display:flex;justify-content:space-between;font-size:18px;font-weight:600;border-top:2px dashed var(--line);margin-top:10px;padding-top:10px}
+.note{font-size:12px;color:var(--mute);margin:6px 0 0}
+.sec{border-top:2px dashed var(--line);margin-top:14px;padding-top:12px}
+.sec h4{margin:0 0 8px;font-family:Archivo,sans-serif;font-size:16px}
+.form{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:8px}
+.form input,.form select{height:44px;border:1.5px solid var(--line);border-radius:8px;padding:0 10px;background:var(--bg);font-size:16px;font-family:Archivo,sans-serif}
+.form .full{grid-column:1/3}
+textarea{width:100%;min-height:180px;border:1.5px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font:14px/1.45 "IBM Plex Mono",monospace;resize:vertical}
+.chk{display:flex;gap:8px;align-items:center;margin:6px 0 8px;font-family:Archivo,sans-serif;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:var(--red)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{font-family:Archivo,sans-serif;flex:1}
+.copy{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important}
+.bar{position:fixed;left:10px;right:10px;bottom:10px;z-index:15;height:58px;border:0;border-radius:16px;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-weight:700;font-size:16px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.bar span:last-child{background:var(--tag);color:#17181a;padding:4px 10px;border-radius:8px;white-space:nowrap}
+@media(min-width:980px){.bar{display:none}}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--red);color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;z-index:30;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+.toast.on{opacity:1}
+.foot{color:var(--mute);font-size:13px;padding:10px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Liste de courses</h1>
+    <p class="sub">Choisissez un rayon ou cherchez un produit, réglez la quantité, ajoutez. Le ticket se copie en un geste pour l'envoyer par SMS / MMS.</p>
+    <div class="tools">
+      <div class="search"><input id="q" type="search" placeholder="Rechercher : poulet, riz, yaourt…" autocomplete="off" aria-label="Rechercher un produit"><button id="qx" aria-label="Effacer la recherche" hidden>✕</button></div>
+      <select id="sort" aria-label="Trier">
+        <option value="cat">Trier par rayon</option>
+        <option value="az">Nom A → Z</option>
+        <option value="pu">Prix croissant</option>
+        <option value="pd">Prix décroissant</option>
+      </select>
+    </div>
+  </header>
+  <nav class="chips" id="chips" aria-label="Rayons"></nav>
+  <div class="layout">
+    <main id="grid"></main>
+    <aside id="cart" aria-label="Ma liste"></aside>
+  </div>
+  <p class="foot">Prix indicatifs généralement constatés en grande surface en France (novembre 2026), marques distributeur ou premiers prix courants. Ils varient selon l'enseigne, la région et les promos.</p>
+</div>
+<button class="bar" id="bar"><span id="barTxt">Ma liste · 0 article</span><span id="barTot">0,00 €</span></button>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const CATS=[['fl','Fruits et légumes','🥕'],['vi','Viande','🥩'],['po','Poisson','🐟'],['ch','Charcuterie','🥓'],['la','Crèmerie & œufs','🥛'],['fr','Fromage','🧀'],['bo','Boulangerie','🥖'],['pa','Pâtes & sauces','🍝'],['ri','Riz & féculents','🍚'],['co','Conserves','🥫'],['pd','Céréales & petit-déj','🥣'],['su','Épicerie sucrée','🍪'],['sa','Épicerie salée','🫒'],['sg','Surgelés','🧊'],['bs','Boissons','🧃'],['hy','Hygiène','🧴'],['en','Entretien','🧽'],['pe','Divers','📝']];
+const RAW=`fl|🍎|Pommes Gala|1 kg|2.49
+fl|🍌|Bananes|1 kg|1.99
+fl|🍊|Oranges|1 kg|2.29
+fl|🍊|Clémentines|1 kg|2.79
+fl|🍋|Citrons|filet 500 g|1.79
+fl|🍐|Poires|1 kg|2.99
+fl|🍇|Raisin|500 g|2.99
+fl|🥝|Kiwis|x6|1.99
+fl|🍅|Tomates|1 kg|2.99
+fl|🥕|Carottes|1 kg|1.29
+fl|🥔|Pommes de terre|2,5 kg|3.49
+fl|🧅|Oignons jaunes|1 kg|1.69
+fl|🧄|Ail|filet 250 g|1.99
+fl|🥒|Concombre|pièce|0.99
+fl|🥒|Courgettes|1 kg|2.49
+fl|🥬|Salade laitue|pièce|1.19
+fl|🥦|Brocoli|500 g|1.79
+fl|🫑|Poivrons|x3|2.49
+fl|🥑|Avocats|x2|2.29
+fl|🍄|Champignons de Paris|500 g|2.49
+fl|🥬|Poireaux|1 kg|2.29
+vi|🍗|Filets de poulet|1 kg|11.90
+vi|🍗|Cuisses de poulet|1 kg|4.99
+vi|🐔|Poulet entier|1,5 kg|8.49
+vi|🥩|Steaks hachés 5% x10|1 kg|10.99
+vi|🥩|Entrecôte|300 g|8.49
+vi|🥩|Bœuf bourguignon|1 kg|13.90
+vi|🍖|Côtes de porc|1 kg|7.99
+vi|🍖|Rôti de porc|1 kg|9.49
+vi|🌭|Saucisses de Toulouse|500 g|4.49
+vi|🦃|Escalopes de dinde|1 kg|10.49
+ch|🍖|Jambon blanc x4|160 g|2.49
+ch|🥓|Lardons fumés|2 x 100 g|2.19
+ch|🥓|Jambon sec x6|120 g|2.99
+ch|🌭|Saucisson sec|250 g|3.99
+ch|🍗|Blanc de poulet tranches|120 g|2.29
+po|🐟|Pavés de saumon x2|250 g|6.49
+po|🐟|Filets de cabillaud|400 g|7.99
+po|🍤|Crevettes cuites|200 g|4.49
+po|🐟|Surimi|250 g|2.29
+la|🥛|Lait demi-écrémé|6 x 1 L|5.49
+la|🧈|Beurre doux|250 g|2.49
+la|🥚|Œufs plein air|x12|3.79
+la|🥛|Yaourts nature|x8|1.79
+la|🍓|Yaourts aux fruits|x8|2.39
+la|🍮|Crèmes dessert chocolat|x4|1.69
+la|🥛|Crème fraîche épaisse|20 cl|1.39
+la|🥛|Crème liquide|20 cl|1.19
+la|🥛|Fromage blanc|500 g|1.69
+fr|🧀|Emmental râpé|200 g|2.29
+fr|🧀|Comté 12 mois|200 g|4.49
+fr|🧀|Camembert|250 g|1.99
+fr|🧀|Mozzarella|125 g|0.99
+fr|🧀|Bûche de chèvre|180 g|2.29
+fr|🧀|Raclette en tranches|400 g|5.49
+fr|🧀|Parmesan|100 g|2.99
+fr|🧀|Fromage à tartiner|150 g|1.89
+bo|🥖|Baguette|pièce|1.10
+bo|🍞|Pain de mie|500 g|1.79
+bo|🥐|Croissants x6|240 g|2.49
+bo|🫓|Tortillas x8|320 g|1.99
+bo|🍞|Biscottes|300 g|1.59
+pa|🍝|Spaghetti|500 g|0.95
+pa|🍝|Penne|500 g|0.95
+pa|🍝|Coquillettes|500 g|0.95
+pa|🍝|Tagliatelles aux œufs|250 g|1.69
+pa|🥟|Raviolis frais|300 g|2.49
+pa|🥔|Gnocchi|500 g|1.79
+pa|🍜|Nouilles chinoises|250 g|1.49
+pa|🍅|Sauce tomate basilic|400 g|1.89
+pa|🌿|Pesto|190 g|2.29
+pa|🥩|Sauce bolognaise|400 g|2.19
+ri|🍚|Riz long grain|1 kg|1.89
+ri|🍚|Riz basmati|1 kg|2.99
+ri|🍙|Riz arborio (risotto)|1 kg|2.79
+ri|🌾|Semoule couscous|1 kg|1.69
+ri|🫘|Lentilles vertes|500 g|1.59
+ri|🌾|Quinoa|500 g|2.99
+ri|🥔|Purée en flocons|4 x 125 g|1.99
+co|🐟|Thon au naturel|3 x 140 g|5.49
+co|🌽|Maïs doux|3 x 140 g|2.29
+co|🫛|Petits pois carottes|800 g|1.59
+co|🫛|Haricots verts|800 g|1.49
+co|🍅|Tomates pelées|400 g|0.89
+co|🫘|Pois chiches|400 g|0.89
+co|🫘|Haricots rouges|400 g|0.89
+co|🐟|Sardines à l'huile|135 g|1.49
+co|🥫|Cassoulet|840 g|3.49
+co|🥫|Raviolis bolognaise|800 g|2.49
+co|🍑|Pêches au sirop|820 g|2.19
+pd|🥣|Corn flakes|500 g|2.19
+pd|🥣|Muesli|750 g|2.99
+pd|🥣|Céréales au chocolat|375 g|2.79
+pd|🌾|Flocons d'avoine|500 g|1.29
+pd|🍯|Miel|500 g|4.99
+pd|🍓|Confiture de fraises|370 g|2.29
+pd|🍫|Pâte à tartiner|400 g|3.29
+pd|☕|Café moulu|250 g|4.49
+pd|☕|Capsules de café x10|52 g|3.49
+pd|🫖|Thé|25 sachets|1.99
+pd|🍫|Chocolat en poudre|450 g|3.49
+su|🍫|Chocolat noir|100 g|1.69
+su|🍫|Chocolat au lait|100 g|1.69
+su|🍪|Petits beurre|200 g|1.29
+su|🍪|Cookies|200 g|1.99
+su|🍬|Sucre en poudre|1 kg|1.29
+su|🌾|Farine T45|1 kg|0.99
+su|🍎|Compotes pomme|x4|1.49
+su|🍰|Madeleines|250 g|1.99
+sa|🫒|Huile d'olive|1 L|7.99
+sa|🌻|Huile de tournesol|1 L|2.19
+sa|🧂|Sel fin|750 g|0.79
+sa|🧂|Poivre moulu|50 g|1.99
+sa|🍶|Vinaigre balsamique|50 cl|2.49
+sa|🟡|Moutarde de Dijon|370 g|1.59
+sa|🍅|Ketchup|560 g|2.49
+sa|🥚|Mayonnaise|235 g|1.99
+sa|🧊|Bouillon cubes|x10|1.49
+sa|🥔|Chips|150 g|1.69
+sa|🥜|Cacahuètes|200 g|1.89
+sa|🫒|Olives vertes|150 g|1.79
+sg|🍕|Pizza|400 g|2.99
+sg|🍟|Frites|1 kg|2.29
+sg|🫛|Haricots verts surgelés|1 kg|2.49
+sg|🥬|Épinards hachés|1 kg|1.99
+sg|🐟|Poisson pané|400 g|2.99
+sg|🍨|Glace vanille|1 L|3.49
+sg|🥘|Poêlée de légumes|1 kg|2.79
+bs|💧|Eau minérale|6 x 1,5 L|2.49
+bs|🫧|Eau gazeuse|6 x 1,25 L|3.49
+bs|🧃|Jus d'orange|1 L|1.99
+bs|🥤|Soda cola|1,5 L|1.99
+bs|🍺|Bière blonde|6 x 25 cl|4.49
+bs|🍷|Vin rouge|75 cl|4.99
+bs|🍒|Sirop de grenadine|75 cl|2.29
+hy|🧻|Papier toilette|x12|4.99
+hy|🪥|Dentifrice|75 ml|1.99
+hy|🧴|Gel douche|250 ml|1.99
+hy|🧴|Shampooing|250 ml|2.49
+hy|🧼|Savon|x2|1.49
+hy|🤧|Mouchoirs|15 étuis|1.79
+hy|🧴|Déodorant|200 ml|2.49
+en|🧺|Lessive liquide|40 lavages|8.99
+en|🍽️|Liquide vaisselle|750 ml|1.49
+en|🍽️|Tablettes lave-vaisselle|x30|4.99
+en|🧽|Éponges|x3|1.29
+en|🗑️|Sacs poubelle 30 L|x50|2.49
+en|🧻|Essuie-tout|x2|2.49
+en|🧴|Nettoyant multi-usages|750 ml|1.99`;
+const P=RAW.split('\n').map((l,i)=>{const[c,e,n,u,p]=l.split('|');return{id:'p'+i,c,e,n,u,p:+p}});
+const catOf=Object.fromEntries(CATS.map(c=>[c[0],c]));
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const eur=n=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+const $=id=>document.getElementById(id);
+
+let st={cart:{},custom:[],prices:true};
+try{const s=JSON.parse(localStorage.getItem('courses-v1'));if(s&&s.cart)st=Object.assign(st,s)}catch(e){}
+const save=()=>{try{localStorage.setItem('courses-v1',JSON.stringify(st))}catch(e){}};
+let cat='all',q='',pend={},confirmClear=false;
+const all=()=>P.concat(st.custom);
+const byId=id=>all().find(x=>x.id===id);
+
+function chips(){
+  $('chips').innerHTML=[['all','Tout','🛒']].concat(CATS.filter(c=>c[0]!=='pe'||st.custom.length)).map(c=>
+    `<button data-c="${c[0]}" aria-pressed="${cat===c[0]}">${c[2]} ${esc(c[1])}</button>`).join('');
+}
+function card(x){
+  const n=st.cart[x.id]||0,k=pend[x.id]||1;
+  return `<article class="card${n?' has':''}" data-id="${esc(x.id)}">
+  <div class="pic" aria-hidden="true">${esc(x.e)}</div>
+  ${x.p?`<span class="tag">${eur(x.p)}</span>`:''}
+  <div><h3>${esc(x.n)}</h3><span class="unit">${esc(x.u||'')}</span></div>
+  ${n?`<span class="in">Dans la liste : ${n}</span>`:''}
+  <div class="row"><div class="step"><button data-a="dec" aria-label="Moins">−</button><output>${k}</output><button data-a="inc" aria-label="Plus">+</button></div>
+  <button class="add" data-a="add">Ajouter</button></div></article>`;
+}
+function grid(){
+  const nq=norm(q.trim());
+  let L=all().filter(x=>(cat==='all'||x.c===cat)&&(!nq||norm(x.n+' '+catOf[x.c][1]).includes(nq)));
+  const s=$('sort').value;
+  let h='';
+  if(!L.length){
+    h=`<div class="empty"><p>Aucun produit ne correspond à « ${esc(q)} ».</p>${q.trim()?`<button class="btn main" data-a="addq">Ajouter « ${esc(q.trim())} » à la liste</button>`:''}</div>`;
+  }else if(s==='cat'){
+    for(const c of CATS){const g=L.filter(x=>x.c===c[0]);if(!g.length)continue;
+      h+=`<h2>${c[2]} ${esc(c[1])} <small>${g.length}</small></h2><div class="grid">${g.map(card).join('')}</div>`}
+  }else{
+    L=L.slice().sort(s==='az'?(a,b)=>a.n.localeCompare(b.n,'fr'):s==='pu'?(a,b)=>a.p-b.p:(a,b)=>b.p-a.p);
+    h=`<h2>${L.length} produits</h2><div class="grid">${L.map(card).join('')}</div>`;
+  }
+  $('grid').innerHTML=h;
+}
+function items(){return CATS.flatMap(c=>all().filter(x=>x.c===c[0]&&st.cart[x.id]).map(x=>({x,n:st.cart[x.id]})))}
+function totals(){const it=items();return{it,count:it.reduce((a,b)=>a+b.n,0),tot:it.reduce((a,b)=>a+b.n*b.x.p,0)}}
+function message(){
+  const{it,tot}=totals();
+  const d=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  let m=`🛒 LISTE DE COURSES – ${d}\n`;let last='';
+  for(const{x,n}of it){
+    if(x.c!==last){last=x.c;m+=`\n${catOf[x.c][2]} ${catOf[x.c][1]}\n`}
+    m+=`- ${n} × ${x.n}${x.u?` (${x.u})`:''}${st.prices&&x.p?` – ${eur(n*x.p)}`:''}\n`;
+  }
+  if(st.prices)m+=`\nTotal estimé : ${eur(tot)}`;
+  return m.replace(/ | /g,' ').trim();
+}
+function cart(){
+  const{it,count,tot}=totals();
+  let h=`<div class="tk"><div class="tkhead"><b>Ma liste</b><button class="close" data-a="close" aria-label="Fermer">✕</button></div>`;
+  if(!it.length)h+=`<p class="note" style="font-size:14px;padding:14px 0">Votre ticket est vide. Ajoutez des produits depuis les rayons.</p>`;
+  let last='';
+  for(const{x,n}of it){
+    if(x.c!==last){last=x.c;h+=`<div class="cat">${esc(catOf[x.c][1])}</div>`}
+    h+=`<div class="li" data-id="${esc(x.id)}"><span class="e" aria-hidden="true">${esc(x.e)}</span>
+    <span class="n">${esc(x.n)}<small>${esc(x.u||'')}${x.p?' · '+eur(x.p)+' /u':''}</small></span>
+    <span class="p">${x.p?eur(n*x.p):'—'}</span>
+    <div class="ctl"><div class="step"><button data-a="cdec" aria-label="Moins">−</button><output>${n}</output><button data-a="cinc" aria-label="Plus">+</button></div><button class="rm" data-a="rm">Retirer</button></div></div>`;
+  }
+  if(it.length)h+=`<div class="total"><span>${count} article${count>1?'s':''}</span><span>${eur(tot)}</span></div><p class="note">Total estimé, hors articles sans prix.</p>`;
+  h+=`<div class="sec"><h4>Article perso</h4><form class="form" id="cf">
+    <input class="full" id="cn" placeholder="Nom (ex. Pain sans gluten)" required aria-label="Nom de l'article">
+    <select id="cc" aria-label="Rayon">${CATS.map(c=>`<option value="${c[0]}"${c[0]==='pe'?' selected':''}>${esc(c[1])}</option>`).join('')}</select>
+    <input id="cq" type="number" min="1" value="1" inputmode="numeric" aria-label="Quantité">
+    <input id="cp" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Prix € (facultatif)" aria-label="Prix">
+    <button class="btn main">Ajouter</button></form></div>`;
+  h+=`<div class="sec"><h4>Message à envoyer</h4>
+    <label class="chk"><input type="checkbox" id="pr" ${st.prices?'checked':''}> Inclure les prix et le total</label>
+    <textarea id="msg" readonly aria-label="Texte de la liste">${esc(it.length?message():'')}</textarea>
+    <div class="acts" style="margin-top:8px"><button class="btn copy" data-a="copy" ${it.length?'':'disabled'}>Copier la liste</button>
+    <button class="btn" data-a="clear" ${it.length?'':'disabled'}>${confirmClear?'Confirmer ?':'Vider'}</button></div>
+    <p class="note">Collez ensuite dans Messages pour l'envoyer par SMS / MMS.</p></div></div>`;
+  $('cart').innerHTML=h;
+  $('barTxt').textContent=`Ma liste · ${count} article${count>1?'s':''}`;
+  $('barTot').textContent=eur(tot);
+}
+const render=()=>{chips();grid();cart()};
+let tt;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),1600)}
+function set(id,n){if(n<=0)delete st.cart[id];else st.cart[id]=n;
+  if(n<=0&&id[0]==='c'){st.custom=st.custom.filter(x=>x.id!==id);if(cat==='pe'&&!st.custom.length)cat='all'}
+  save();render()}
+
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;cat=b.dataset.c;chips();grid();window.scrollTo({top:$('chips').offsetTop-4})});
+$('q').addEventListener('input',e=>{q=e.target.value;$('qx').hidden=!q;if(q)cat='all';chips();grid()});
+$('qx').addEventListener('click',()=>{q='';$('q').value='';$('qx').hidden=true;grid();$('q').focus()});
+$('sort').addEventListener('change',grid);
+$('grid').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='addq'){const id='c'+Date.now();st.custom.push({id,c:'pe',e:'📝',n:q.trim(),u:'',p:0});st.cart[id]=1;save();toast('Ajouté : '+q.trim());q='';$('q').value='';$('qx').hidden=true;render();return}
+  const id=b.closest('.card').dataset.id,k=pend[id]||1;
+  if(a==='inc')pend[id]=k+1;
+  if(a==='dec')pend[id]=Math.max(1,k-1);
+  if(a==='add'){st.cart[id]=(st.cart[id]||0)+k;pend[id]=1;save();toast(`Ajouté : ${k} × ${byId(id).n}`);cart()}
+  const c=b.closest('.card');c.outerHTML=card(byId(id));
+});
+$('cart').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a;
+  if(a==='close'){$('cart').classList.remove('open');return}
+  if(a==='copy'){const t=$('msg');let ok=false;
+    try{await navigator.clipboard.writeText(t.value);ok=true}catch(err){try{t.removeAttribute('readonly');t.select();ok=document.execCommand('copy');t.setAttribute('readonly','')}catch(er){}}
+    b.textContent=ok?'Copié ✓':'Sélectionnez le texte puis Copier';if(!ok){t.focus();t.select()}
+    setTimeout(()=>{b.textContent='Copier la liste'},2200);return}
+  if(a==='clear'){if(!confirmClear){confirmClear=true;cart();setTimeout(()=>{confirmClear=false;cart()},3000);return}
+    confirmClear=false;st.cart={};st.custom=[];cat='all';save();render();toast('Liste vidée');return}
+  const r=b.closest('.li');if(!r)return;const id=r.dataset.id,n=st.cart[id]||0;
+  if(a==='cinc')set(id,n+1);if(a==='cdec')set(id,n-1);if(a==='rm')set(id,0);
+});
+$('cart').addEventListener('change',e=>{if(e.target.id==='pr'){st.prices=e.target.checked;save();$('msg').value=totals().it.length?message():''}});
+$('cart').addEventListener('submit',e=>{e.preventDefault();
+  const n=$('cn').value.trim();if(!n)return;const c=$('cc').value,id='c'+Date.now();
+  st.custom.push({id,c,e:catOf[c][2],n,u:'',p:Math.max(0,+$('cp').value||0)});
+  st.cart[id]=Math.max(1,parseInt($('cq').value)||1);save();toast('Ajouté : '+n);render()});
+$('bar').addEventListener('click',()=>$('cart').classList.add('open'));
+render();
+}
+</script>
+</body>
+</html>
