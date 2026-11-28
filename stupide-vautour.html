@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stupide Vautour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: joyeux, malicieux, jeu de société familial
+   IDEA: une table de jeu posée dans la savane au coucher du soleil
+   PICTURE: la grande carte enjeu (souris ou vautour dessiné) et les mises qui se retournent
+   COLOUR and TYPE: ocre soleil couchant, prune profonde du tapis, turquoise vif ; Luckiest Guy + Nunito
+   LAYOUT: tableau des scores, tapis (enjeu + mises), main de 15 cartes en bas */
+:root{color-scheme:light dark;
+--bg:light-dark(#f3a43b,#1c0f17);--ink:light-dark(#2b1520,#f7e6d3);
+--felt:light-dark(#3a1d2e,#2e1724);--felt-ink:#f7e6d3;--panel:light-dark(#fff3e2,#2a1621);
+--acc:#1fb5a8;--neg:#d7263d;--gold:#f6c445;--line:light-dark(#2b152033,#f7e6d322)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+h1,h2,.big{font-family:"Luckiest Guy",Impact,sans-serif;font-weight:400;letter-spacing:.02em;line-height:1.05;margin:0}
+h1{font-size:clamp(34px,6vw,52px)}h2{font-size:28px}
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(16px,3vw,32px) max(4vw,14px)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin-bottom:16px}
+.tog{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:800;cursor:pointer;border:0;border-radius:12px;min-height:44px;padding:0 16px;background:var(--panel);color:var(--ink);box-shadow:0 3px 0 #0003}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #0003}
+button.on{background:var(--acc);color:#05201d}
+.primary{background:var(--felt);color:var(--felt-ink);font-family:"Luckiest Guy",sans-serif;font-weight:400;font-size:22px;padding:0 28px;min-height:56px}
+:root[data-theme=dark] .primary,.dk .primary{background:var(--acc);color:#05201d}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .primary{background:var(--acc);color:#05201d}}
+.panel{background:var(--panel);border-radius:22px;padding:clamp(16px,3vw,28px);box-shadow:0 8px 0 #0002}
+.setup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:center}
+.hero svg{width:100%;height:auto;display:block}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.prow{display:grid;grid-template-columns:18px minmax(0,1fr) 44px auto;gap:10px;align-items:center;margin:10px 0}
+.dice{padding:0;width:44px;display:grid;place-items:center}.dice svg{width:24px;height:24px}
+@media(max-width:420px){.prow{grid-template-columns:18px minmax(0,1fr) 44px}.prow .seg{grid-column:2/4}}
+.dot{width:18px;height:18px;border-radius:50%}
+input[type=text]{font:inherit;font-size:16px;font-weight:700;min-height:44px;width:100%;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:light-dark(#fff,#1c0f17);color:var(--ink)}
+.rules{margin-top:18px}.rules summary{cursor:pointer;font-weight:900}
+.rules p{margin:.5em 0;max-width:70ch}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.sc{background:var(--panel);border-radius:16px;padding:10px 14px;border-left:8px solid var(--c);box-shadow:0 4px 0 #0002}
+.sc b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc .big{font-size:28px}.sc small{opacity:.75}
+.felt{background:var(--felt);color:var(--felt-ink);border-radius:26px;padding:clamp(16px,3vw,28px);display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(16px,3vw,36px);align-items:center;box-shadow:inset 0 0 0 6px #ffffff10,0 10px 0 #0003}
+.stake{text-align:center}
+.rcard{width:clamp(150px,22vw,210px);aspect-ratio:5/7;border-radius:18px;background:#fff8ef;color:#2b1520;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px;box-shadow:0 8px 0 #0004;border:6px solid var(--gold);margin:0 auto}
+.rcard.neg{border-color:var(--neg)}
+.rcard .big{font-size:clamp(38px,5vw,52px)}.rcard.neg .big{color:var(--neg)}.rcard.pos .big{color:#b57d00}
+.rcard svg{width:82%;height:auto}
+.rcard.back{background:repeating-linear-gradient(45deg,#f3a43b 0 12px,#e28f22 12px 24px);border-color:#fff8ef}
+.flipin{animation:flip .45s ease}
+@keyframes flip{from{transform:rotateY(90deg)}to{transform:none}}
+.meta{margin-top:10px;font-weight:700}.pot{color:var(--gold)}
+.bids{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+.slot{text-align:center}
+.slot .nm{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc{width:76px;aspect-ratio:5/7;margin:6px auto 0;border-radius:12px;display:grid;place-items:center;font-family:"Luckiest Guy",sans-serif;font-size:34px;background:#fff8ef;color:#2b1520;border:5px solid var(--c);box-shadow:0 5px 0 #0005;position:relative}
+.pc.hid{background:repeating-linear-gradient(-45deg,var(--c) 0 8px,#0000 8px 16px),#fff8ef;color:transparent}
+.pc.wait{background:#ffffff14;border-style:dashed;color:#f7e6d399;font:700 13px Nunito,sans-serif}
+.pc.cx{opacity:.5}.pc.cx::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:5px;background:var(--neg);transform:rotate(-30deg);border-radius:3px}
+.pc.win{transform:scale(1.12);box-shadow:0 0 0 5px var(--gold),0 8px 0 #0005}
+.pc.lose{transform:scale(1.12);box-shadow:0 0 0 5px var(--neg),0 8px 0 #0005}
+.msg{min-height:3.2em;margin:16px 0 10px;font-weight:800;font-size:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.msg span{flex:1 1 260px}
+.hand{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:10px}
+.hc{min-height:78px;padding:0;font-family:"Luckiest Guy",sans-serif;font-weight:400;font-size:30px;background:#fff8ef;color:#2b1520;border:4px solid var(--c);border-radius:12px;box-shadow:0 5px 0 #0003;transition:transform .12s}
+.hc:not(:disabled):hover{transform:translateY(-6px)}
+.hc:disabled{opacity:.22;cursor:default;box-shadow:none}
+.hand.idle .hc:not(:disabled){opacity:.75;cursor:default;transform:none}
+.who{font-weight:900;margin:18px 0 8px}
+.log{margin-top:18px}.log summary{cursor:pointer;font-weight:900}
+.log ol{margin:.5em 0;padding-left:1.4em;font-size:15px}
+.ov{position:fixed;inset:0;background:#1c0f17ee;display:grid;place-items:center;padding:20px;z-index:9;color:#f7e6d3;text-align:center}
+.ov .box{max-width:520px;width:100%}
+.ov p{font-size:18px}
+.rank{list-style:none;padding:0;margin:18px 0;text-align:left}
+.rank li{display:grid;grid-template-columns:2.2em minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:#ffffff12;margin-bottom:8px;border-left:8px solid var(--c)}
+.rank .big{font-size:26px}.rank small{display:block;opacity:.7;font-size:13px}
+.hide{display:none!important}
+@media(max-width:700px){.setup{grid-template-columns:minmax(0,1fr)}.hero{max-width:300px;margin:0 auto}
+.felt{grid-template-columns:minmax(0,1fr)}.pc{width:62px;font-size:28px}.bids{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}}
+@media(prefers-reduced-motion:reduce){.flipin{animation:none}.hc,.pc{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="mouse" viewBox="0 0 120 100">
+  <ellipse cx="60" cy="92" rx="40" ry="6" fill="#0002"/>
+  <circle cx="28" cy="30" r="22" fill="#9a8f8a"/><circle cx="28" cy="30" r="13" fill="#f3a6b5"/>
+  <circle cx="92" cy="30" r="22" fill="#9a8f8a"/><circle cx="92" cy="30" r="13" fill="#f3a6b5"/>
+  <ellipse cx="60" cy="58" rx="34" ry="30" fill="#b3a8a2"/><ellipse cx="60" cy="50" rx="26" ry="16" fill="#c9bfb9"/>
+  <circle cx="47" cy="52" r="5" fill="#2b1520"/><circle cx="73" cy="52" r="5" fill="#2b1520"/>
+  <circle cx="48.5" cy="50.5" r="1.6" fill="#fff"/><circle cx="74.5" cy="50.5" r="1.6" fill="#fff"/>
+  <ellipse cx="60" cy="68" rx="6" ry="4.5" fill="#e66b86"/>
+  <path d="M40 70h-22M40 75l-20 5M80 70h22M80 75l20 5" stroke="#5a4b47" stroke-width="2" stroke-linecap="round"/>
+  <path d="M54 78q6 5 12 0" stroke="#2b1520" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+ </symbol>
+ <symbol id="vulture" viewBox="0 0 120 100">
+  <ellipse cx="60" cy="94" rx="40" ry="5" fill="#0002"/>
+  <path d="M8 70Q22 30 52 44L60 90 68 44Q98 30 112 70 92 60 82 70 76 60 68 66 60 92 52 66 44 60 38 70 28 60 8 70Z" fill="#3b2a2a"/>
+  <ellipse cx="60" cy="56" rx="18" ry="26" fill="#4a3434"/>
+  <path d="M42 40q18-12 36 0q-4 8-18 8t-18-8z" fill="#f2ede4"/>
+  <circle cx="60" cy="26" r="14" fill="#e98b8b"/>
+  <circle cx="54" cy="23" r="3.4" fill="#2b1520"/><circle cx="66" cy="23" r="3.4" fill="#2b1520"/>
+  <path d="M50 17l8 4M70 17l-8 4" stroke="#2b1520" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M55 30q5-3 10 0l-3 12q-2 3-4 0z" fill="#e9b341"/>
+ </symbol>
+</svg>
+
+<div class="wrap">
+ <header>
+  <h1>Stupide Vautour</h1>
+  <div class="tog">
+   <button id="bMus" aria-pressed="true">♪ Musique</button>
+   <button id="bSfx" aria-pressed="true">Bruitages</button>
+   <button id="bQuit" class="hide">Quitter la partie</button>
+  </div>
+ </header>
+
+ <section id="setup" class="panel">
+  <div class="setup">
+   <div class="hero">
+    <svg viewBox="0 0 320 240" role="img" aria-label="Une souris et un vautour se disputent une carte">
+     <circle cx="160" cy="250" r="150" fill="#f6c445" opacity=".55"/>
+     <rect x="118" y="70" width="84" height="118" rx="12" fill="#fff8ef" stroke="#f6c445" stroke-width="6" transform="rotate(-6 160 130)"/>
+     <text x="160" y="146" text-anchor="middle" font-family="Luckiest Guy" font-size="52" fill="#b57d00" transform="rotate(-6 160 130)">+10</text>
+     <use href="#mouse" x="0" y="120" width="130" height="108"/>
+     <use href="#vulture" x="190" y="96" width="130" height="120"/>
+    </svg>
+   </div>
+   <div>
+    <h2>Nouvelle partie</h2>
+    <p style="margin:6px 0 14px">De 2 à 5 joueurs, humains ou ordinateurs. Les humains misent chacun leur tour sur le même appareil, en secret.</p>
+    <div><b>Nombre de joueurs</b></div>
+    <div class="seg" id="count" style="margin:8px 0 6px"></div>
+    <div id="prows"></div>
+    <div class="tog" style="margin-top:12px;align-items:center"><button class="primary" id="bStart">Jouer</button><button id="bRandAll">Tous les noms au hasard</button></div>
+   </div>
+  </div>
+  <details class="rules">
+   <summary>Rappel des règles</summary>
+   <p>Chaque joueur a 15 cartes de 1 à 15. À chaque tour, une carte enjeu est retournée : une souris (+1 à +10) ou un vautour (−1 à −5). Tout le monde mise une carte en secret, puis on révèle.</p>
+   <p>Souris : la mise la plus forte la remporte. Vautour : la mise la plus faible doit le prendre. Les mises identiques s'annulent ; c'est alors la meilleure mise restante qui compte. Si tout s'annule, l'enjeu reste en jeu et s'ajoute à la carte suivante.</p>
+   <p>Après 15 tours, le plus gros total gagne.</p>
+  </details>
+ </section>
+
+ <section id="game" class="hide">
+  <div class="scores" id="scores"></div>
+  <div class="felt">
+   <div class="stake">
+    <div id="rcard"></div>
+    <div class="meta" id="turnInfo"></div>
+    <div class="meta pot" id="potInfo"></div>
+   </div>
+   <div><div class="bids" id="bids"></div></div>
+  </div>
+  <div class="msg"><span id="msg"></span><button class="primary hide" id="bNext">Tour suivant</button></div>
+  <div class="who" id="who"></div>
+  <div class="hand" id="hand"></div>
+  <details class="log"><summary>Historique des tours</summary><ol id="log"></ol></details>
+ </section>
+</div>
+
+<div class="ov hide" id="ovPass"><div class="box">
+ <h2 id="passT"></h2><p>Les autres joueurs ne regardent pas l'écran.</p>
+ <button class="primary" id="bReveal"></button>
+</div></div>
+
+<div class="ov hide" id="ovEnd"><div class="box">
+ <h2 id="endT"></h2><ol class="rank" id="rank"></ol>
+ <div class="tog" style="justify-content:center"><button class="primary" id="bAgain">Rejouer</button><button id="bSet">Changer les réglages</button></div>
+</div></div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COLORS=['#1fb5a8','#e4572e','#6a4c93','#2f7dd1','#c98b00'];
+const AI_NAMES=['Robo-Rapace','Cyber-Condor','Bot Busard','Méca-Milan','Puce Pygargue','Turbo Charognard','Gigaoctet le Gypaète'];
+const HUMAN_NAMES=['Jo','Virginie','Tim','Telio','Toto','Sandra','Luna','Nat','Léa','Hugo','Zoé','Max','Inès','Noé','Lou','Rose','Jules','Manon'];
+const DICE='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8" cy="8" r="1.7"/><circle cx="16" cy="8" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="8" cy="16" r="1.7"/><circle cx="16" cy="16" r="1.7"/></g></svg>';
+const humanName=i=>'Joueur '+(i+1);
+function randomName(i){const p=cfg.p[i],pool=p.ai?AI_NAMES:HUMAN_NAMES,
+ used=cfg.p.slice(0,cfg.n).filter((_,k)=>k!==i).map(q=>q.name.toLowerCase()),
+ free=pool.filter(n=>!used.includes(n.toLowerCase())&&n!==p.name);
+ return free.length?free[Math.random()*free.length|0]:p.name}
+
+/* ---------- réglages ---------- */
+let cfg={n:3,p:[{name:'Joueur 1',ai:false},{name:'Robo-Rapace',ai:true},{name:'Cyber-Condor',ai:true},{name:'Bot Busard',ai:true},{name:'Méca-Milan',ai:true}],mus:true,sfx:true};
+try{const s=JSON.parse(localStorage.getItem('sv-cfg'));if(s&&s.p&&s.p.length===5)cfg=Object.assign(cfg,s)}catch(e){}
+const save=()=>{try{localStorage.setItem('sv-cfg',JSON.stringify(cfg))}catch(e){}};
+
+function renderSetup(){
+ $('count').innerHTML=[2,3,4,5].map(k=>`<button data-n="${k}" class="${k===cfg.n?'on':''}" aria-pressed="${k===cfg.n}">${k}</button>`).join('');
+ $('prows').innerHTML=cfg.p.slice(0,cfg.n).map((p,i)=>`<div class="prow">
+  <span class="dot" style="background:${COLORS[i]}"></span>
+  <input type="text" id="nm${i}" data-i="${i}" maxlength="22" value="${esc(p.name)}" aria-label="Nom du joueur ${i+1}">
+  <button class="dice" data-r="${i}" aria-label="Nom au hasard pour le joueur ${i+1}" title="Nom au hasard">${DICE}</button>
+  <span class="seg"><button data-t="${i}" data-ai="0" class="${p.ai?'':'on'}">Humain</button><button data-t="${i}" data-ai="1" class="${p.ai?'on':''}">Ordi</button></span></div>`).join('');
+}
+$('count').onclick=e=>{const b=e.target.closest('[data-n]');if(!b)return;sfx('click');cfg.n=+b.dataset.n;save();renderSetup()};
+$('prows').oninput=e=>{const i=e.target.dataset.i;if(i!=null){cfg.p[i].name=e.target.value;save()}};
+$('bRandAll').onclick=()=>{sfx('flip');for(let i=0;i<cfg.n;i++)cfg.p[i].name=randomName(i);save();renderSetup()};
+$('prows').onclick=e=>{const d=e.target.closest('[data-r]');if(d){sfx('flip');const i=+d.dataset.r;cfg.p[i].name=randomName(i);save();renderSetup();return}
+ const b=e.target.closest('[data-t]');if(!b)return;sfx('click');
+ const i=+b.dataset.t,ai=b.dataset.ai==='1',p=cfg.p[i];if(p.ai===ai)return;p.ai=ai;
+ const used=cfg.p.slice(0,cfg.n).map(q=>q.name);
+ if(ai&&(/^Joueur \d+$/.test(p.name)||HUMAN_NAMES.includes(p.name)||!p.name.trim()))p.name=randomName(i);
+ else if(!ai&&AI_NAMES.includes(p.name))p.name=randomName(i);
+ save();renderSetup()};
+
+/* ---------- audio (synthétisé) ---------- */
+let ac,master,musG,sfxG,musTimer,step=0,nextT=0;
+function audio(){if(ac)return;try{ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=.9;master.connect(ac.destination);
+ musG=ac.createGain();musG.gain.value=cfg.mus?.13:0;musG.connect(master);sfxG=ac.createGain();sfxG.gain.value=cfg.sfx?.5:0;sfxG.connect(master)}catch(e){ac=null}}
+function tone(f,t,d,type,g,dest,f2){const o=ac.createOscillator(),v=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+ v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v);v.connect(dest);o.start(t);o.stop(t+d+.05);return o}
+function noise(t,d,g,freq,dest){const b=ac.createBuffer(1,ac.sampleRate*d,ac.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;
+ const s=ac.createBufferSource(),f=ac.createBiquadFilter(),v=ac.createGain();s.buffer=b;f.type='bandpass';f.frequency.value=freq;f.Q.value=1.2;
+ v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f);f.connect(v);v.connect(dest);s.start(t)}
+function sfx(k){audio();if(!ac||!cfg.sfx)return;const t=ac.currentTime+.01;
+ if(k==='click')tone(660,t,.08,'sine',.35,sfxG);
+ if(k==='flip'){noise(t,.12,.6,2400,sfxG);noise(t+.07,.08,.4,1500,sfxG)}
+ if(k==='win')[523,659,784,1046].forEach((f,i)=>tone(f,t+i*.08,.25,'triangle',.35,sfxG));
+ if(k==='vulture'){const o=tone(520,t,.55,'sawtooth',.25,sfxG,140),l=ac.createOscillator(),lg=ac.createGain();l.frequency.value=28;lg.gain.value=60;l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(t+.6);tone(380,t+.32,.3,'square',.12,sfxG,120)}
+ if(k==='cancel'){tone(220,t,.22,'square',.18,sfxG);tone(233,t,.22,'square',.18,sfxG);tone(180,t+.2,.25,'square',.15,sfxG)}
+ if(k==='end')[392,523,659,784,659,1046].forEach((f,i)=>tone(f,t+i*.13,.4,'triangle',.3,sfxG));
+}
+// musique d'ambiance : marimba pentatonique, basse et shaker, 96 bpm
+const SCALE=[293.7,349.2,392,440,523.3,587.3,698.5];
+const MEL=[0,2,4,2,5,4,2,1, 0,2,3,4,6,4,3,2, 4,5,4,2,1,2,0,-1, 3,4,5,4,2,1,0,-1];
+const BASS=[146.8,146.8,174.6,130.8];
+function schedule(){if(!ac)return;const sp=60/96/2;if(nextT<ac.currentTime)nextT=ac.currentTime+.05;
+ while(nextT<ac.currentTime+.3){const s=step%32,m=MEL[s];
+  if(m>=0&&(s%2===0||Math.random()<.5))tone(SCALE[m],nextT,.45,'triangle',.5,musG);
+  if(s%8===0)tone(BASS[(step/8|0)%4],nextT,1.6,'sine',.7,musG);
+  if(s%2===1)noise(nextT,.05,.12,6000,musG);
+  if(s%4===2&&Math.random()<.4)tone(SCALE[(m+2+7)%7]*2,nextT,.2,'sine',.15,musG);
+  nextT+=sp;step++}}
+function music(on){audio();if(!ac)return;if(ac.state==='suspended')ac.resume();musG.gain.setTargetAtTime(on?.13:0,ac.currentTime,.3);
+ if(on&&!musTimer)musTimer=setInterval(schedule,100);if(!on&&musTimer){clearInterval(musTimer);musTimer=null}}
+function syncTog(){$('bMus').classList.toggle('on',cfg.mus);$('bMus').setAttribute('aria-pressed',cfg.mus);$('bSfx').classList.toggle('on',cfg.sfx);$('bSfx').setAttribute('aria-pressed',cfg.sfx)}
+$('bMus').onclick=()=>{cfg.mus=!cfg.mus;save();syncTog();music(cfg.mus)};
+$('bSfx').onclick=()=>{cfg.sfx=!cfg.sfx;save();syncTog();audio();if(sfxG)sfxG.gain.value=cfg.sfx?.5:0;sfx('click')};
+
+/* ---------- partie ---------- */
+let P=[],deck=[],pot=[],turn=0,bids={},queue=[],cur=-1,phase='',timer;
+const humans=()=>P.filter(p=>!p.ai).length;
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const sign=v=>v>0?'+'+v:'−'+Math.abs(v);
+
+function start(){
+ const list=cfg.p.slice(0,cfg.n).map((p,i)=>({name:(p.name||'').trim()||(p.ai?AI_NAMES[i]:humanName(i)),ai:p.ai,c:COLORS[i]}));
+ const seen={};list.forEach(p=>{const k=p.name.toLowerCase();if(seen[k]){seen[k]++;p.name+=' '+seen[k]}else seen[k]=1});
+ P=list.map(p=>({...p,hand:new Set(Array.from({length:15},(_,i)=>i+1)),won:[]}));
+ deck=shuffle([1,2,3,4,5,6,7,8,9,10,-1,-2,-3,-4,-5]);pot=[];turn=0;$('log').innerHTML='';
+ $('setup').classList.add('hide');$('game').classList.remove('hide');$('bQuit').classList.remove('hide');$('ovEnd').classList.add('hide');
+ if(cfg.mus)music(true);round();
+}
+const score=p=>sum(p.won);
+
+function renderScores(){$('scores').innerHTML=P.map(p=>`<div class="sc" style="--c:${p.c}"><b>${esc(p.name)}${p.ai?' <small>(ordi)</small>':''}</b>
+ <span class="big">${score(p)}</span> <small>${p.won.filter(v=>v>0).length} souris · ${p.won.filter(v=>v<0).length} vautours</small></div>`).join('')}
+function renderStake(anim){const v=pot[pot.length-1],neg=v<0;
+ $('rcard').innerHTML=`<div class="rcard ${neg?'neg':'pos'} ${anim?'flipin':''}"><span class="big">${sign(v)}</span><svg viewBox="0 0 120 100"><use href="#${neg?'vulture':'mouse'}"/></svg><span class="big" style="font-size:20px">${neg?'Vautour':'Souris'}</span></div>`;
+ $('turnInfo').textContent=`Tour ${turn} sur 15`;
+ $('potInfo').textContent=pot.length>1?`+ reporté : ${pot.slice(0,-1).map(sign).join(', ')} (total ${sign(sum(pot))})`:'';}
+function renderBids(reveal,res){$('bids').innerHTML=P.map((p,i)=>{let cls='wait',txt='réfléchit…';
+ if(bids[i]!=null){cls='hid';txt='?'}
+ if(reveal){cls='';txt=bids[i];if(res.cancel.includes(bids[i]))cls='cx';if(res.w===i)cls=res.neg?'lose':'win'}
+ return `<div class="slot"><div class="nm">${esc(p.name)}</div><div class="pc ${cls} ${reveal?'flipin':''}" style="--c:${p.c}">${txt}</div></div>`}).join('')}
+function renderHand(i,active){const p=P[i];if(i<0){$('who').textContent='';$('hand').innerHTML='';return}
+ $('who').textContent=active?`Main de ${p.name} : choisissez votre mise`:`Main de ${p.name}`;
+ $('hand').className='hand'+(active?'':' idle');
+ $('hand').innerHTML=Array.from({length:15},(_,k)=>k+1).map(v=>`<button class="hc" style="--c:${p.c}" data-v="${v}" ${p.hand.has(v)?'':'disabled'} aria-label="Miser ${v}">${v}</button>`).join('')}
+function viewHand(){const h=P.findIndex(p=>!p.ai);if(humans()===1)renderHand(h,false);else renderHand(-1)}
+
+function aiPick(p){
+ const hand=[...p.hand].sort((a,b)=>a-b),imp=c=>c>0?c:-c*1.7,ps=sum(pot),last=pot[pot.length-1];
+ const me=Math.max(.5,last>0?Math.max(ps,last):Math.abs(Math.min(ps,last))*1.7);
+ const rest=[...deck,last].map(imp);
+ const r=(rest.filter(x=>x<me).length+.5*rest.filter(x=>x===me).length)/rest.length;
+ let idx=Math.round(r*(hand.length-1)+(Math.random()*2.4-1.2));
+ return hand[Math.max(0,Math.min(hand.length-1,idx))];
+}
+
+function round(){
+ if(!deck.length)return end();
+ turn++;phase='bid';bids={};pot.push(deck.pop());sfx('flip');
+ renderScores();renderStake(true);
+ P.forEach((p,i)=>{if(p.ai){const v=aiPick(p);bids[i]=v;p.hand.delete(v)}});
+ renderBids(false);$('bNext').classList.add('hide');
+ queue=P.map((p,i)=>p.ai?-1:i).filter(i=>i>=0);
+ const v=pot[pot.length-1];
+ $('msg').textContent=v>0?`Une souris ${sign(v)} : la plus forte mise l'emporte.`:`Un vautour ${sign(v)} : la plus faible mise le récupère !`;
+ viewHand();timer=setTimeout(nextHuman,P.every(p=>p.ai)?900:300);
+}
+function nextHuman(){
+ if(!queue.length){phase='wait';viewHand();timer=setTimeout(reveal,700);return}
+ cur=queue.shift();
+ if(humans()>1){renderHand(-1);$('passT').textContent=`Au tour de ${P[cur].name}`;$('bReveal').textContent=`Je suis ${P[cur].name}`;$('ovPass').classList.remove('hide')}
+ else{phase='pick';renderHand(cur,true)}
+}
+$('bReveal').onclick=()=>{sfx('click');$('ovPass').classList.add('hide');phase='pick';renderHand(cur,true)};
+$('hand').onclick=e=>{const b=e.target.closest('[data-v]');if(!b||phase!=='pick'||b.disabled)return;
+ const v=+b.dataset.v;bids[cur]=v;P[cur].hand.delete(v);sfx('flip');phase='';renderBids(false);
+ if(humans()>1)renderHand(-1);else renderHand(cur,false);nextHuman()};
+
+function resolve(){const last=pot[pot.length-1],neg=last<0,cnt={};
+ Object.values(bids).forEach(v=>cnt[v]=(cnt[v]||0)+1);
+ const cancel=Object.keys(cnt).filter(v=>cnt[v]>1).map(Number),uniq=Object.keys(cnt).filter(v=>cnt[v]===1).map(Number);
+ let w=-1;if(uniq.length){const t=neg?Math.min(...uniq):Math.max(...uniq);w=+Object.keys(bids).find(i=>bids[i]===t)}
+ return{neg,cancel,w}}
+function reveal(){
+ phase='reveal';const res=resolve(),total=sum(pot),items=pot.map(sign).join(', ');sfx('flip');renderBids(true,res);
+ let txt,li;
+ if(res.w>=0){const p=P[res.w];p.won.push(...pot);
+  txt=res.neg?`${p.name} a misé le plus bas (${bids[res.w]}) et récupère le vautour : ${sign(total)} !`:`${p.name} remporte ${pot.length>1?'les cartes':'la souris'} avec ${bids[res.w]} : ${sign(total)} !`;
+  if(res.cancel.length)txt+=` (annulé : ${res.cancel.join(', ')})`;
+  setTimeout(()=>sfx(total<0?'vulture':'win'),250);li=`${items} → ${p.name}`;pot=[];
+ }else{setTimeout(()=>sfx('cancel'),250);
+  if(deck.length){txt=`Toutes les mises s'annulent ! L'enjeu est reporté au tour suivant.`;li=`${items} → reporté`}
+  else{txt=`Toutes les mises s'annulent ! Personne ne prend la dernière carte.`;li=`${items} → défaussé`;pot=[]}}
+ $('msg').textContent=txt;renderScores();viewHand();
+ const l=document.createElement('li');l.textContent=`Tour ${turn} : ${li} — mises ${P.map((p,i)=>p.name+' '+bids[i]).join(', ')}`;$('log').prepend(l);
+ $('bNext').textContent=deck.length?'Tour suivant':'Voir les résultats';
+ if(P.every(p=>p.ai))timer=setTimeout(round,2600);else{$('bNext').classList.remove('hide')}
+}
+$('bNext').onclick=()=>{sfx('click');round()};
+
+function end(){phase='end';sfx('end');
+ const r=P.map(p=>({p,s:score(p)})).sort((a,b)=>b.s-a.s),top=r[0].s,win=r.filter(x=>x.s===top);
+ $('endT').textContent=win.length>1?`Égalité entre ${win.map(x=>x.p.name).join(' et ')} !`:`${win[0].p.name} gagne !`;
+ let place=0,prev=null;
+ $('rank').innerHTML=r.map((x,i)=>{if(x.s!==prev){place=i+1;prev=x.s}
+  return `<li style="--c:${x.p.c}"><span class="big">${place}</span><span><b>${esc(x.p.name)}</b><small>${x.p.won.length?x.p.won.slice().sort((a,b)=>b-a).map(sign).join(' '):'aucune carte'}</small></span><span class="big">${x.s}</span></li>`}).join('');
+ $('ovEnd').classList.remove('hide')}
+function quit(){clearTimeout(timer);phase='';$('ovPass').classList.add('hide');$('ovEnd').classList.add('hide');$('game').classList.add('hide');$('setup').classList.remove('hide');$('bQuit').classList.add('hide');renderSetup()}
+$('bAgain').onclick=()=>{sfx('click');start()};
+$('bSet').onclick=()=>{sfx('click');quit()};
+$('bQuit').onclick=()=>{sfx('click');quit()};
+$('bStart').onclick=()=>{audio();if(ac&&ac.state==='suspended')ac.resume();sfx('click');start()};
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('bNext').classList.contains('hide')&&phase==='reveal'){e.preventDefault();$('bNext').click()}});
+
+renderSetup();syncTog();
+}
+</script>
+</body>
+</html>
