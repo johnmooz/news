@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Télémètre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: instrument de mesure, sobre et précis
+   IDEA: le télémètre laser de chantier — viseur, réticule, afficheur
+   PICTURE: la vue caméra plein écran avec réticule orange et lecture géante
+   COLOUR and TYPE: aluminium, noir, pointeur orange #ff4f00 ; Geist
+   LAYOUT: lecture en haut, viseur au centre, commandes en bas */
+:root{--al:#e9eaec;--ink:#111;--or:#ff4f00;--night:#141517;--mut:#6b6f76}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;background:var(--night);color:#fff;font:16px/1.5 Geist,system-ui,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+button{font:inherit;min-height:48px;border-radius:12px;border:0;padding:0 18px;font-weight:500;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.pri{background:var(--or);color:#fff}.sec{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.screen{position:fixed;inset:0;display:none;flex-direction:column}.screen.on{display:flex}
+/* accueil */
+#home{background:var(--al);color:var(--ink);padding:max(env(safe-area-inset-top),24px) 22px max(env(safe-area-inset-bottom),24px);overflow-y:auto}
+h1{font-size:40px;line-height:1.05;margin:8px 0 6px;font-weight:700;letter-spacing:-.02em}
+.lead{color:#3a3d42;margin:0 0 22px;max-width:60ch}
+.scale{height:38px;margin:6px 0 26px;background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 10px) bottom/100% 12px no-repeat,repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 50px) bottom/100% 24px no-repeat;border-bottom:2px solid var(--ink);position:relative}
+.scale::after{content:"";position:absolute;left:62%;bottom:-2px;width:3px;height:38px;background:var(--or)}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.card h2{font-size:19px;margin:0 0 4px}.card p{margin:0 0 14px;color:#4a4e55;font-size:15px}
+.card button{width:100%}.card button[disabled]{background:#cfd1d5;color:#777}
+.tag{display:inline-block;font-size:13px;padding:2px 8px;border-radius:99px;background:#eef0f2;color:#444;margin-bottom:8px}
+.tag.ok{background:#ffe3d6;color:#a33200}
+.note{font-size:13px;color:var(--mut);margin-top:10px}
+/* viseur commun */
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.reticle{position:absolute;left:50%;top:50%;width:76px;height:76px;transform:translate(-50%,-50%);pointer-events:none}
+.top{position:relative;z-index:2;padding:max(env(safe-area-inset-top),16px) 18px 18px;background:linear-gradient(rgba(0,0,0,.72),transparent)}
+.read{font-size:clamp(56px,18vw,96px);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.read small{font-size:.38em;font-weight:500;margin-left:6px;color:#ffd2bd}
+.sub{font-size:15px;color:#ddd;min-height:1.5em;margin-top:6px}
+.bot{position:relative;z-index:2;margin-top:auto;padding:22px 16px max(env(safe-area-inset-bottom),16px);background:linear-gradient(transparent,rgba(0,0,0,.78));display:flex;flex-wrap:wrap;gap:10px}
+.bot button{flex:1 1 140px}
+.field{display:flex;align-items:center;gap:10px;flex:1 1 100%;color:#eee;font-size:15px}
+.field input{width:96px;font:16px Geist,sans-serif;padding:10px;border-radius:10px;border:0;background:rgba(255,255,255,.92);color:#111;text-align:right}
+.bar{height:6px;border-radius:3px;background:rgba(255,255,255,.2);flex:1 1 100%;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--or);transition:width .15s}
+#xrui{display:none;position:fixed;inset:0;flex-direction:column;color:#fff}
+#xrui.on{display:flex}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<section id="home" class="screen on">
+  <h1>Télémètre</h1>
+  <p class="lead">Visez, lisez la distance. La page choisit la meilleure méthode disponible sur votre téléphone.</p>
+  <div class="scale" aria-hidden="true"></div>
+
+  <div class="card">
+    <span class="tag" id="arTag">Vérification…</span>
+    <h2>Mode capteur 3D (AR)</h2>
+    <p>Mesure la distance réelle jusqu’à la surface visée, et entre deux points. Sur iPhone Pro, ARKit s’appuie sur le LiDAR.</p>
+    <button class="pri" id="arBtn" disabled>Démarrer la mesure AR</button>
+    <p class="note" id="arNote"></p>
+  </div>
+
+  <div class="card">
+    <span class="tag ok">Fonctionne dans Safari</span>
+    <h2>Mode inclinomètre</h2>
+    <p>Tenez le téléphone à une hauteur connue et visez le pied de l’objet : la distance se calcule à partir de l’angle. Mesure aussi la hauteur d’un objet.</p>
+    <button class="pri" id="incBtn">Démarrer l’inclinomètre</button>
+    <p class="note">Précision typique : ±5 à 10 % sur terrain plat, entre 2 et 30 m.</p>
+  </div>
+  <p class="note" id="err" role="alert"></p>
+</section>
+
+<!-- Inclinomètre -->
+<section id="inc" class="screen">
+  <video id="cam" playsinline muted autoplay></video>
+  <svg class="reticle" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="26" fill="none" stroke="#ff4f00" stroke-width="2"/><path d="M38 0v22M38 54v22M0 38h22M54 38h22" stroke="#ff4f00" stroke-width="2"/><circle cx="38" cy="38" r="2.5" fill="#ff4f00"/></svg>
+  <div class="top">
+    <div class="read" id="incRead">—</div>
+    <div class="sub" id="incSub">Visez le pied de l’objet, au sol</div>
+  </div>
+  <div class="bot">
+    <label class="field">Hauteur du téléphone (m)<input id="h" type="number" inputmode="decimal" step="0.01" min="0.2" max="3" value="1.50"></label>
+    <button class="pri" id="lock">Verrouiller la distance</button>
+    <button class="sec" id="incBack">Retour</button>
+  </div>
+</section>
+
+<!-- AR (overlay DOM) -->
+<div id="xrui">
+  <svg class="reticle" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="26" fill="none" stroke="#ff4f00" stroke-width="2"/><path d="M38 0v22M38 54v22M0 38h22M54 38h22" stroke="#ff4f00" stroke-width="2"/><circle cx="38" cy="38" r="2.5" fill="#ff4f00"/></svg>
+  <div class="top">
+    <div class="read" id="arRead">—</div>
+    <div class="sub" id="arSub">Balayez lentement la scène…</div>
+  </div>
+  <div class="bot">
+    <div class="bar"><i id="arConf"></i></div>
+    <button class="pri" id="ptA">Point A</button>
+    <button class="sec" id="arStop">Terminer</button>
+  </div>
+</div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const show=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))};
+const fmt=m=>{if(!isFinite(m)||m<0)return'—';if(m<1)return Math.round(m*100)+'<small>cm</small>';return(m<10?m.toFixed(2):m.toFixed(1)).replace('.',',')+'<small>m</small>'};
+const fail=t=>{$('err').textContent=t};
+try{const s=localStorage.getItem('tel-h');if(s)$('h').value=s}catch(e){}
+
+/* ---------- Mode AR (WebXR hit-test) ---------- */
+let xr=null;
+(async()=>{
+  const tag=$('arTag'),btn=$('arBtn'),note=$('arNote');
+  let ok=false;
+  try{ok=!!(navigator.xr&&await navigator.xr.isSessionSupported('immersive-ar'))}catch(e){}
+  if(ok){tag.textContent='Disponible sur cet appareil';tag.className='tag ok';btn.disabled=false}
+  else{
+    tag.textContent='Non disponible ici';
+    const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    note.textContent=ios?'Safari sur iPhone ne donne pas accès au LiDAR aux pages web (pas de WebXR AR). Ouvrez cette page dans un navigateur WebXR pour iOS (ex. « XR Browser ») ou utilisez l’inclinomètre.':'Ouvrez cette page dans Chrome sur un Android compatible ARCore, en HTTPS.';
+  }
+})();
+
+$('arBtn').onclick=async()=>{
+  fail('');
+  const ui=$('xrui');
+  try{
+    const session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay'],domOverlay:{root:ui}});
+    const canvas=document.createElement('canvas');
+    const gl=canvas.getContext('webgl',{xrCompatible:true,alpha:true});
+    await session.updateRenderState({baseLayer:new XRWebGLLayer(session,gl)});
+    const ref=await session.requestReferenceSpace('local');
+    const viewer=await session.requestReferenceSpace('viewer');
+    const src=await session.requestHitTestSource({space:viewer});
+    xr={session,a:null,last:null,ema:null,miss:0};
+    ui.classList.add('on');
+    session.addEventListener('end',()=>{ui.classList.remove('on');xr=null;$('ptA').textContent='Point A'});
+    const d3=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y,p.z-q.z);
+    const frame=(t,f)=>{
+      if(!xr)return;
+      session.requestAnimationFrame(frame);
+      const L=session.renderState.baseLayer;
+      gl.bindFramebuffer(gl.FRAMEBUFFER,L.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);
+      const pose=f.getViewerPose(ref);const hits=f.getHitTestResults(src);
+      if(!pose||!hits.length){xr.miss++;if(xr.miss>20){$('arSub').textContent='Aucune surface détectée — visez une zone texturée';$('arConf').style.width='15%'}return}
+      xr.miss=0;
+      const hp=hits[0].getPose(ref).transform.position;xr.last={x:hp.x,y:hp.y,z:hp.z};
+      const raw=xr.a?d3(xr.a,hp):d3(pose.transform.position,hp);
+      xr.ema=xr.ema==null?raw:xr.ema*.7+raw*.3;
+      $('arRead').innerHTML=fmt(xr.ema);
+      $('arSub').textContent=xr.a?'Distance A → réticule':'Distance téléphone → surface visée';
+      $('arConf').style.width='100%';
+    };
+    session.requestAnimationFrame(frame);
+  }catch(e){fail('Impossible de lancer l’AR : '+(e&&e.message||e))}
+};
+$('ptA').onclick=()=>{
+  if(!xr)return;
+  if(xr.a){xr.a=null;xr.ema=null;$('ptA').textContent='Point A';return}
+  if(xr.last){xr.a=xr.last;xr.ema=null;$('ptA').textContent='Effacer A'}
+};
+$('arStop').onclick=()=>{if(xr)xr.session.end()};
+
+/* ---------- Mode inclinomètre ---------- */
+let stream=null,beta=null,dist=null,sm=null;
+const H=()=>{const v=parseFloat(String($('h').value).replace(',','.'));return v>0?v:1.5};
+$('h').onchange=()=>{try{localStorage.setItem('tel-h',H())}catch(e){}};
+const onOri=e=>{
+  if(e.beta==null)return;
+  sm=sm==null?e.beta:sm*.8+e.beta*.2;beta=sm;render();
+};
+function render(){
+  if(beta==null)return;
+  const h=H(),down=90-beta; // degrés sous l’horizontale (portrait)
+  if(dist==null){
+    if(down<1){$('incRead').innerHTML='—';$('incSub').textContent='Inclinez vers le sol, visez le pied de l’objet';return}
+    const d=h/Math.tan(down*Math.PI/180);
+    $('incRead').innerHTML=d>200?'&gt; 200<small>m</small>':fmt(d);
+    $('incSub').textContent='Angle '+down.toFixed(1).replace('.',',')+'° sous l’horizon';
+  }else{
+    const up=-down,hh=h+dist*Math.tan(up*Math.PI/180);
+    $('incRead').innerHTML=fmt(Math.max(0,hh));
+    $('incSub').innerHTML='Hauteur visée · distance verrouillée '+fmt(dist).replace(/<[^>]+>/g,' ');
+  }
+}
+$('incBtn').onclick=async()=>{
+  fail('');
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted')throw new Error('accès aux capteurs de mouvement refusé');
+    }
+    window.addEventListener('deviceorientation',onOri);
+    show('inc');
+    try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cam').srcObject=stream}
+    catch(e){$('incSub').textContent='Caméra indisponible — le calcul fonctionne quand même'}
+  }catch(e){show('home');fail('Inclinomètre indisponible : '+(e.message||e)+'. La page doit être ouverte en HTTPS.')}
+};
+$('lock').onclick=()=>{
+  if(dist!=null){dist=null;$('lock').textContent='Verrouiller la distance';render();return}
+  if(beta==null||90-beta<1)return;
+  dist=H()/Math.tan((90-beta)*Math.PI/180);
+  $('lock').textContent='Nouvelle mesure';
+  render();
+};
+$('incBack').onclick=()=>{
+  window.removeEventListener('deviceorientation',onOri);
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  dist=null;beta=null;sm=null;$('lock').textContent='Verrouiller la distance';show('home');
+};
+}
+</script>
+</body>
+</html>
